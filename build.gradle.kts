@@ -18,7 +18,7 @@ plugins {
     id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.3"
 }
 
-group = "io.github.uaikit"
+group = "io.github.ugaikit"
 version = "0.2.0"
 
 repositories {
@@ -31,6 +31,7 @@ java {
 }
 
 centralPortal {
+//    version = "0.2.0"
     username = project.property("sonataUID").toString()
     password = project.property("sonataPWD").toString()
     publishingType = USER_MANAGED
@@ -72,7 +73,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("org.example.ITTestKt")
+    mainClass.set("io.github.ugaikit.gemini4kt.ITTestKt")
 }
 
 tasks {
@@ -176,7 +177,7 @@ tasks {
 }
 
 ktlint {
-    setVersion("1.0.0")
+//    setVersion("0.2.1")
     verbose.set(true)
     outputToConsole.set(true)
     coloredOutput.set(true)

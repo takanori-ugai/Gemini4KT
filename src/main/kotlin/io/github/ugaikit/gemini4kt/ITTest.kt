@@ -55,10 +55,10 @@ fun main() {
                         Part(text = "What is this picture?"),
                         Part(
                             inlineData =
-                            InlineData(
-                                mimeType = "image/jpeg",
-                                data = base64Image,
-                            ),
+                                InlineData(
+                                    mimeType = "image/jpeg",
+                                    data = base64Image,
+                                ),
                         ),
                     ),
                 ),
