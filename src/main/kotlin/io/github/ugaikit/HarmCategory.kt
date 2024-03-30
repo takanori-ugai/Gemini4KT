@@ -1,4 +1,4 @@
-package io.github.uaikit
+package io.github.ugaikit
 
 /**
  * Enum class representing different categories of harmful content.

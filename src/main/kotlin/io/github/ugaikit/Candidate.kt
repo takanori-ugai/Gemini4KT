@@ -1,11 +1,11 @@
-package io.github.uaikit
+package io.github.ugaikit
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Candidate(
-    val content: io.github.uaikit.Content,
+    val content: io.github.ugaikit.Content,
     val finishReason: String,
     val index: Int,
-    val safetyRatings: List<io.github.uaikit.SafetyRating>,
+    val safetyRatings: List<io.github.ugaikit.SafetyRating>,
 )

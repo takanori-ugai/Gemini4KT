@@ -1,15 +1,15 @@
-package io.github.uaikit
+package io.github.ugaikit
 
 import java.io.File
 import java.util.Base64
 
 fun main() {
     val apiKey = System.getenv("GEMINI_API_KEY")
-    val gemini = io.github.uaikit.Gemini(apiKey)
+    val gemini = io.github.ugaikit.Gemini(apiKey)
     val text = "Write a story about a magic backpack."
     val inputJson =
         GenerateContentRequest(
-            listOf(io.github.uaikit.Content(listOf(Part(text)))),
+            listOf(io.github.ugaikit.Content(listOf(Part(text)))),
             safetySettings =
                 listOf(
                     SafetySetting(
@@ -19,19 +19,19 @@ fun main() {
                 ),
         )
     println(gemini.generateContent(inputJson, model = "gemini-1.0-pro").candidates[0].content.parts[0].text!!.replace("\n\n", "\n"))
-    val inputJson2 = io.github.uaikit.CountTokensRequest(listOf(io.github.uaikit.Content(listOf(Part(text)))))
+    val inputJson2 = io.github.ugaikit.CountTokensRequest(listOf(io.github.ugaikit.Content(listOf(Part(text)))))
     println(gemini.countTokens(inputJson2))
     val embedRequest =
-        io.github.uaikit.EmbedContentRequest(
-            content = io.github.uaikit.Content(listOf(Part(text))),
+        io.github.ugaikit.EmbedContentRequest(
+            content = io.github.ugaikit.Content(listOf(Part(text))),
             model = "models/embedding-001",
         )
     println(gemini.embedContent(embedRequest, model = "embedding-001"))
     val batchEmbedRequest =
-        io.github.uaikit.BatchEmbedRequest(
+        io.github.ugaikit.BatchEmbedRequest(
             listOf(
-                io.github.uaikit.EmbedContentRequest(
-                    content = io.github.uaikit.Content(listOf(Part(text))),
+                io.github.ugaikit.EmbedContentRequest(
+                    content = io.github.ugaikit.Content(listOf(Part(text))),
                     model = "models/embedding-001",
                 ),
             ),
@@ -49,7 +49,7 @@ fun main() {
     val inputWithImage =
         GenerateContentRequest(
             listOf(
-                io.github.uaikit.Content(
+                io.github.ugaikit.Content(
                     listOf(
                         Part(text = "What is this picture?"),
                         Part(

@@ -1,4 +1,4 @@
-package io.github.uaikit
+package io.github.ugaikit
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
