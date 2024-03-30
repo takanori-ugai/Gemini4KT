@@ -16,6 +16,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class GenerateContentResponse(
-    val candidates: List<io.github.ugaikit.gemini4kt.Candidate>,
-    val promptFeedback: PromptFeedback,
+    val candidates: List<Candidate>,
+    val promptFeedback: PromptFeedback? = null,
 )
