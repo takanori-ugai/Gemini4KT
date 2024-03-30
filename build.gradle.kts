@@ -32,8 +32,8 @@ java {
 
 centralPortal {
 //    version = "0.2.0"
-    username = project.property("sonataUID").toString()
-    password = project.property("sonataPWD").toString()
+    username = project.property("sonataUID") as String
+    password = project.property("sonataPWD") as String
     publishingType = USER_MANAGED
     pom {
         name = "gemini4kt"
