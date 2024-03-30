@@ -1,4 +1,4 @@
-package org.example
+package io.github.uaikit
 
 import kotlinx.serialization.Serializable
 
@@ -16,6 +16,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class GenerateContentResponse(
-    val candidates: List<Candidate>,
+    val candidates: List<io.github.uaikit.Candidate>,
     val promptFeedback: PromptFeedback,
 )

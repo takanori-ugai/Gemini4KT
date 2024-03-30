@@ -1,11 +1,11 @@
-package org.example
+package io.github.uaikit
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class EmbedContentRequest(
-    val content: Content,
+    val content: io.github.uaikit.Content,
     val model: String,
-    val taskType: TaskType? = null,
+    val taskType: io.github.uaikit.TaskType? = null,
     val title: String? = null,
 )

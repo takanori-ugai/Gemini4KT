@@ -1,4 +1,4 @@
-package org.example
+package io.github.uaikit
 
 import kotlinx.serialization.Serializable
 

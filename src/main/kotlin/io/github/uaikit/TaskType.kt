@@ -1,4 +1,4 @@
-package org.example
+package io.github.uaikit
 
 /**
  * Enumerates the types of tasks that can be performed.
