@@ -1,5 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.gitlab.arturbosch.detekt.Detekt
+import net.thebugmc.gradle.sonatypepublisher.PublishingType.USER_MANAGED
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
@@ -14,12 +15,11 @@ plugins {
     id("com.diffplug.spotless") version "6.25.0"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
     jacoco
-    `maven-publish`
-    signing
+    id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.3"
 }
 
-group = "io.github.takanori-ugai"
-version = "1.0-SNAPSHOT"
+group = "io.github.uaikit"
+version = "0.2.0"
 
 repositories {
     mavenCentral()
@@ -30,56 +30,38 @@ java {
     withSourcesJar()
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "io.github.takanori-ugai"
-            artifactId = "Gemini4KT"
-            version = "0.3-SNAPSHOT"
-            from(components["java"])
-            pom {
-                name = "Gemini4KT"
-                description = "A lightweight Kotlin library for the Gemini API."
-                url = "https://github.com/takanori-ugai/Gemini4KT"
-                properties =
-                    mapOf(
-                        "myProp" to "value",
-                        "prop.with.dots" to "anotherValue",
-                    )
-                licenses {
-                    license {
-                        name = "The Apache License, Version 2.0"
-                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                    }
-                }
-                developers {
-                    developer {
-                        id = "takanori-ugai"
-                        name = "Takanori Ugai"
-                        email = "ugai@fujitsu.com"
-                    }
-                }
-                scm {
-                    connection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
-                    developerConnection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
-                    url = "https://github.com/takanori-ugai/Gemini4KT"
-                }
+centralPortal {
+    username = project.property("sonataUID").toString()
+    password = project.property("sonataPWD").toString()
+    publishingType = USER_MANAGED
+    pom {
+        name = "gemini4kt"
+        description = "A lightweight Kotlin library for the Gemini API."
+        url = "https://github.com/takanori-ugai/Gemini4KT"
+        properties =
+            mapOf(
+                "myProp" to "value",
+                "prop.with.dots" to "anotherValue",
+            )
+        licenses {
+            license {
+                name = "The Apache License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         }
-    }
-    repositories {
-        maven {
-            url = uri("https://maven.pkg.jetbrains.space/fujitsu/p/main/maven")
-            credentials {
-                username = property("spaceUID") as String
-                password = property("spacePWD") as String
+        developers {
+            developer {
+                id = "takanori-ugai"
+                name = "Takanori Ugai"
+                email = "ugai@fujitsu.com"
             }
         }
+        scm {
+            connection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
+            developerConnection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
+            url = "https://github.com/takanori-ugai/Gemini4KT"
+        }
     }
-}
-
-signing {
-    sign(publishing.publications["maven"])
 }
 
 dependencies {
