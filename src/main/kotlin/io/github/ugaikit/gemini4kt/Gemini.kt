@@ -1,4 +1,4 @@
-package io.github.ugaikit
+package io.github.ugaikit.gemini4kt
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.encodeToString
@@ -34,20 +34,20 @@ class Gemini(private val apiKey: String) {
      * @return The response from the Gemini API as a [GenerateContentResponse] object.
      */
     fun generateContent(
-        inputJson: io.github.ugaikit.GenerateContentRequest,
+        inputJson: io.github.ugaikit.gemini4kt.GenerateContentRequest,
         model: String = "gemini-pro",
-    ): io.github.ugaikit.GenerateContentResponse {
+    ): io.github.ugaikit.gemini4kt.GenerateContentResponse {
         val urlString = "$baseUrl/$model:generateContent?key=$apiKey"
-        return json.decodeFromString<io.github.ugaikit.GenerateContentResponse>(getContent(urlString, json.encodeToString<io.github.ugaikit.GenerateContentRequest>(inputJson)))
+        return json.decodeFromString<io.github.ugaikit.gemini4kt.GenerateContentResponse>(getContent(urlString, json.encodeToString<io.github.ugaikit.gemini4kt.GenerateContentRequest>(inputJson)))
     }
 
     fun countTokens(
-        inputJson: io.github.ugaikit.CountTokensRequest,
+        inputJson: io.github.ugaikit.gemini4kt.CountTokensRequest,
         model: String = "gemini-pro",
-    ): io.github.ugaikit.TotalTokens {
+    ): io.github.ugaikit.gemini4kt.TotalTokens {
         val urlString = "$baseUrl/$model:countTokens?key=$apiKey"
         println(inputJson)
-        return json.decodeFromString<io.github.ugaikit.TotalTokens>(getContent(urlString, json.encodeToString<io.github.ugaikit.CountTokensRequest>(inputJson)))
+        return json.decodeFromString<io.github.ugaikit.gemini4kt.TotalTokens>(getContent(urlString, json.encodeToString<io.github.ugaikit.gemini4kt.CountTokensRequest>(inputJson)))
     }
 
     /**
@@ -57,11 +57,11 @@ class Gemini(private val apiKey: String) {
      * @return The batch embed response as a [BatchEmbedResponse] object.
      */
     fun batchEmbedContents(
-        inputJson: io.github.ugaikit.BatchEmbedRequest,
+        inputJson: io.github.ugaikit.gemini4kt.BatchEmbedRequest,
         model: String = "embedding-001",
-    ): io.github.ugaikit.BatchEmbedResponse {
+    ): io.github.ugaikit.gemini4kt.BatchEmbedResponse {
         val urlString = "$baseUrl/$model:batchEmbedContents?key=$apiKey"
-        return json.decodeFromString<io.github.ugaikit.BatchEmbedResponse>(getContent(urlString, json.encodeToString<io.github.ugaikit.BatchEmbedRequest>(inputJson)))
+        return json.decodeFromString<io.github.ugaikit.gemini4kt.BatchEmbedResponse>(getContent(urlString, json.encodeToString<io.github.ugaikit.gemini4kt.BatchEmbedRequest>(inputJson)))
     }
 
     /**
@@ -71,11 +71,11 @@ class Gemini(private val apiKey: String) {
      * @return The embed response as an [EmbedResponse] object.
      */
     fun embedContent(
-        inputJson: io.github.ugaikit.EmbedContentRequest,
+        inputJson: io.github.ugaikit.gemini4kt.EmbedContentRequest,
         model: String = "embedding-001",
-    ): io.github.ugaikit.EmbedResponse {
+    ): io.github.ugaikit.gemini4kt.EmbedResponse {
         val urlString = "$baseUrl/$model:embedContent?key=$apiKey"
-        return json.decodeFromString<io.github.ugaikit.EmbedResponse>(getContent(urlString, json.encodeToString<io.github.ugaikit.EmbedContentRequest>(inputJson)))
+        return json.decodeFromString<io.github.ugaikit.gemini4kt.EmbedResponse>(getContent(urlString, json.encodeToString<io.github.ugaikit.gemini4kt.EmbedContentRequest>(inputJson)))
     }
 
     /**
@@ -83,9 +83,9 @@ class Gemini(private val apiKey: String) {
      *
      * @return The collection of models as a [ModelCollection] object.
      */
-    fun getModels(): io.github.ugaikit.ModelCollection {
+    fun getModels(): io.github.ugaikit.gemini4kt.ModelCollection {
         val urlString = "$baseUrl?key=$apiKey"
-        return json.decodeFromString<io.github.ugaikit.ModelCollection>(getContent(urlString))
+        return json.decodeFromString<io.github.ugaikit.gemini4kt.ModelCollection>(getContent(urlString))
     }
 
     /**
@@ -100,7 +100,7 @@ class Gemini(private val apiKey: String) {
         inputJson: String? = null,
     ): String {
         try {
-            io.github.ugaikit.logger.info { inputJson }
+            io.github.ugaikit.gemini4kt.logger.info { inputJson }
             val url = URL(urlStr)
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = if (inputJson == null) "GET" else "POST"
@@ -111,18 +111,18 @@ class Gemini(private val apiKey: String) {
             }
             val resCode = conn.responseCode
             if (resCode != 200) {
-                io.github.ugaikit.logger.error { "Error: ${conn.responseCode}" }
+                io.github.ugaikit.gemini4kt.logger.error { "Error: ${conn.responseCode}" }
                 conn.inputStream.bufferedReader().use { reader ->
-                    io.github.ugaikit.logger.error { "Error Message: ${reader.readText()}" }
+                    io.github.ugaikit.gemini4kt.logger.error { "Error Message: ${reader.readText()}" }
                 }
                 return "{}"
             }
-            io.github.ugaikit.logger.info { "GenerateContentResponse Code: $resCode" }
+            io.github.ugaikit.gemini4kt.logger.info { "GenerateContentResponse Code: $resCode" }
             conn.inputStream.bufferedReader().use { reader ->
                 return reader.readText()
             }
         } catch (e: IOException) {
-            io.github.ugaikit.logger.error { e.stackTrace.contentToString() }
+            io.github.ugaikit.gemini4kt.logger.error { e.stackTrace.contentToString() }
             return ""
         }
     }

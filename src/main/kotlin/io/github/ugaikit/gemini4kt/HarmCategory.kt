@@ -1,4 +1,4 @@
-package io.github.ugaikit
+package io.github.ugaikit.gemini4kt
 
 /**
  * Enum class representing different categories of harmful content.
@@ -8,10 +8,15 @@ package io.github.ugaikit
  * @property HARM_CATEGORY_SEXUALLY_EXPLICIT Represents content that is sexually explicit.
  * @property HARM_CATEGORY_DANGEROUS_CONTENT Represents content that may be considered dangerous.
  */
-enum class HarmProbability {
-    HARM_PROBABILITY_UNSPECIFIED,
-    NEGLIGIBLE,
-    LOW,
-    MEDIUM,
-    HIGH,
+enum class HarmCategory {
+    HARM_CATEGORY_UNSPECIFIED,
+    HARM_CATEGORY_DEROGATORY,
+    HARM_CATEGORY_TOXICITY,
+    HARM_CATEGORY_VIOLENCE,
+    HARM_CATEGORY_SEXUAL,
+    HARM_CATEGORY_MEDICAL,
+    HARM_CATEGORY_HARASSMENT,
+    HARM_CATEGORY_HATE_SPEECH,
+    HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    HARM_CATEGORY_DANGEROUS_CONTENT,
 }

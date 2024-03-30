@@ -1,4 +1,4 @@
-package io.github.ugaikit
+package io.github.ugaikit.gemini4kt
 
 /**
  * Enumerates the possible thresholds for content blocking or filtering based on safety assessments.
