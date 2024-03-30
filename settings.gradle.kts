@@ -1,4 +1,4 @@
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
-rootProject.name = "GeminiAPI"
+rootProject.name = "gemini4kt"
