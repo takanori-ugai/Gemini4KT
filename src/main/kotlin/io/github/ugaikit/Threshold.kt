@@ -1,4 +1,4 @@
-package io.github.uaikit
+package io.github.ugaikit
 
 /**
  * Enumerates the possible thresholds for content blocking or filtering based on safety assessments.
