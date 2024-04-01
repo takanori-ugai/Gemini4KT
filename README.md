@@ -15,7 +15,7 @@ export GEMINI_API_KEY=your-api-key
 ./gradlew run
 ```
 
-Look at org.example.ITTest.kt as sample usage.
+Look at io.github.ugaikit.gemini4kt.ITTest.kt as sample usage.
 
 ## API Document
 The API Document can be found at [https://takanori-ugai.github.io/Gemini4KT/](https://takanori-ugai.github.io/Gemini4KT/).
