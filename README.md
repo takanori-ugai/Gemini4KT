@@ -25,6 +25,7 @@ The API Document can be found at [https://takanori-ugai.github.io/Gemini4KT/](ht
 dependencies {
     implementation("io.github.ugaikit:gemini4kt:0.2.0")
 }
+```
 
 ## Multiplatform Support
 [Google Generative AI SDK for Kotlin Multiplatform](https://github.com/PatilShreyas/generative-ai-kmp) supports
