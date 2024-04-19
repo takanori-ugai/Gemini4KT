@@ -41,7 +41,7 @@ fun main() {
 
     println(gemini.getModels())
 
-    val path = Any::class.java.getResource("/scones.jpg")
+    val path = Gemini::class.java.getResource("/scones.jpg")
     val imagePath = "scones.jpg"
     val imageFile = File(imagePath)
     val image = File(path.toURI())
