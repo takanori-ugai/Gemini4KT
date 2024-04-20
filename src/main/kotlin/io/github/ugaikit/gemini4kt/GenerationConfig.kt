@@ -9,4 +9,6 @@ data class GenerationConfig(
     val maxOutputTokens: Int,
     val topP: Double,
     val topK: Int,
+    val response_mime_type: String? = null,
+    // "application/json" only for Gemini 1.5 pro
 )
