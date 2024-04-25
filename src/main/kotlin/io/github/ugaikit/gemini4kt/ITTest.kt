@@ -3,6 +3,8 @@ package io.github.ugaikit.gemini4kt
 import java.io.File
 import java.util.Base64
 
+val embedModel = "text-embedding-004"
+
 fun main() {
     val apiKey = System.getenv("GEMINI_API_KEY")
     val gemini = Gemini(apiKey)
@@ -24,9 +26,9 @@ fun main() {
     val embedRequest =
         EmbedContentRequest(
             content = Content(listOf(Part(text))),
-            model = "models/embedding-001",
+            model = "models/$embedModel",
         )
-    println(gemini.embedContent(embedRequest, model = "embedding-001"))
+    println(gemini.embedContent(embedRequest, model = embedModel))
     val batchEmbedRequest =
         BatchEmbedRequest(
             listOf(
@@ -36,7 +38,7 @@ fun main() {
                 ),
             ),
         )
-    println(gemini.batchEmbedContents(batchEmbedRequest, model = "text-embedding-004"))
+    println(gemini.batchEmbedContents(batchEmbedRequest, model = embedModel))
 
     println(gemini.getModels())
 
