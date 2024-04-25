@@ -18,4 +18,7 @@ data class Candidate(
     val finishReason: String,
     val index: Int,
     val safetyRatings: List<SafetyRating>,
+    val citationMetadata: CitationMetadata? = null,
+    val tokenCount: Int? = null,
+    val groundingAttributions: List<GroundingAttribution> = emptyList(),
 )
