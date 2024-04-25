@@ -4,7 +4,7 @@
 
 This is a Kotlin wrapper library for Gemini's RestAPI, a lightweight library that does not require the Android SDK. Currently, it is JVM-only.
 
-See [RestAPI specifications](https://ai.google.dev/tutorials/rest_quickstart?hl=en).
+See [RestAPI specifications](https://ai.google.dev/tutorials/rest_quickstart?hl=en) and https://ai.google.dev/api/rest/ for more information.
 
 ## Running the Example
 
