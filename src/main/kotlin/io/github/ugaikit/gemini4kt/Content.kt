@@ -12,6 +12,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Content(
-    val parts: List<io.github.ugaikit.gemini4kt.Part>,
+    val parts: List<Part>,
     val role: String? = null,
 )

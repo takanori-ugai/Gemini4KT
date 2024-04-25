@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GenerateContentRequest(
-    val contents: List<io.github.ugaikit.gemini4kt.Content>,
+    val contents: List<Content>,
     val safetySettings: List<SafetySetting> = emptyList(),
     val generationConfig: GenerationConfig? = null,
 )
