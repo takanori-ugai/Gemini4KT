@@ -19,4 +19,7 @@ data class Part(
     val text: String? = null,
     @SerialName("inline_data")
     val inlineData: InlineData? = null,
+    val functionCall: FunctionCall? = null,
+    val functionResponse: FunctionResponse? = null,
+    val fileData: FileData? = null,
 )
