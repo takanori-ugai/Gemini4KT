@@ -23,7 +23,7 @@ The API Document can be found at [https://takanori-ugai.github.io/Gemini4KT/](ht
 ## Usage in Gradle
 ```gradle.kts
 dependencies {
-    implementation("io.github.ugaikit:gemini4kt:0.2.0")
+    implementation("io.github.ugaikit:gemini4kt:0.3.0")
 }
 ```
 
