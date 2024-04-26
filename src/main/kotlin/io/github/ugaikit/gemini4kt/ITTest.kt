@@ -147,7 +147,7 @@ fun main() {
         gemini.generateContent(
             exFunction,
             "gemini-1.5-pro-latest",
-        ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
+        ).candidates[0].content.parts[0],
     )
 
 }

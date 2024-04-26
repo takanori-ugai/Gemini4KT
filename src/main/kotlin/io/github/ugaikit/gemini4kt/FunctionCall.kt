@@ -15,5 +15,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FunctionCall(
     val name: String,
-    val args: List<String>,
+    val args: Map<String, String>,
 )
