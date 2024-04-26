@@ -11,5 +11,5 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Tool(
-    val functionDeclarations: FunctionDeclaration,
+    val functionDeclarations: List<FunctionDeclaration>,
 )

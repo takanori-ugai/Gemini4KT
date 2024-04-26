@@ -25,11 +25,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Schema(
     val type: String,
-    val format: String,
-    val description: String,
-    val nullable: Boolean,
-    val enum: List<String>,
-    val properties: Map<String, Schema>,
-    val required: List<String>,
-    val items: Schema,
+    val format: String? = null,
+    val description: String? = null,
+    val nullable: Boolean = false,
+    val enum: List<String> = emptyList(),
+    val properties: Map<String, Schema> = emptyMap(),
+    val required: List<String> = emptyList(),
+    val items: Schema? = null,
 )
