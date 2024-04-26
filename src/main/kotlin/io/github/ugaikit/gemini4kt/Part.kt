@@ -4,15 +4,16 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Represents a part of content, which can either be text or inline data.
+ * Represents a part of content, which can be one of several types such as text, inline data, function call, function response, or file data.
  *
- * This class is designed to accommodate different types of content within a single structure,
- * allowing for flexibility in representing content elements that might include plain text,
- * images, or other binary data as inline content.
- *
- * @property text The text content of the part. It is nullable to allow for parts that contain only inline data.
- * @property inline_data An [InlineData] object representing binary data (e.g., an image) included inline.
- *                       It is nullable to allow for parts that contain only text.
+ * @property text Optional plain text content of the part. It is nullable to accommodate parts that contain non-textual data.
+ * @property inlineData Optional [InlineData] associated with this part, providing additional data inline.
+ * It is nullable to accommodate parts without inline data.
+ * @property functionCall Optional [FunctionCall] representing a call to a function within this part.
+ * It is nullable to accommodate parts that are not function calls.
+ * @property functionResponse Optional [FunctionResponse] representing the response from a function call within this part.
+ * It is nullable to accommodate parts that do not contain function responses.
+ * @property fileData Optional [FileData] representing file data associated with this part. It is nullable to accommodate parts that do not include file data.
  */
 @Serializable
 data class Part(
