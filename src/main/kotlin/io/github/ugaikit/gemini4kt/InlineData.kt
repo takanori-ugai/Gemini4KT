@@ -16,3 +16,24 @@ data class InlineData(
     val mimeType: String,
     val data: String,
 )
+
+fun buildInlineData(init: InlineDataBuilder.() -> Unit): InlineData {
+    val builder = InlineDataBuilder()
+    builder.init()
+    return builder.build()
+}
+
+class InlineDataBuilder {
+    private var mimeType: String = ""
+    private var data: String = ""
+
+    fun mimeType(init: () -> String) = apply { mimeType = init() }
+
+    fun data(init: () -> String) = apply { data = init() }
+
+    fun build() =
+        InlineData(
+            mimeType = mimeType,
+            data = data,
+        )
+}
