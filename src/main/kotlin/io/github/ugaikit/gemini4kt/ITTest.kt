@@ -258,6 +258,18 @@ fun main() {
                 ),
         )
 
+    val examplePart =
+        buildPart {
+            text { "This is an example text." }
+            inlineData {
+                buildInlineData {
+                    mimeType { "text/plain" }
+                    data { "This is an example inline data." }
+                }
+            }
+        }
+    println(examplePart)
+
     println(
         gemini.generateContent(
             exFunction2,
