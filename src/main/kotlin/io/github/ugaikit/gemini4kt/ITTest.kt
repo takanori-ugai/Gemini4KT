@@ -172,36 +172,34 @@ fun main() {
         GenerateContentRequest(
             contents =
                 listOf(
-                    Content(
-                        role = "user",
-                        parts = listOf(Part(text = "Which theaters in Mountain View show Barbie movie?")),
-                    ),
-                    Content(
-                        role = "model",
-                        parts =
-                            listOf(
-                                Part(
-                                    functionCall =
-                                        FunctionCall(
-                                            name = "find_theaters",
-                                            args = mapOf("location" to "Mountain View, CA", "description" to "Barbie"),
-                                        ),
-                                ),
-                            ),
-                    ),
-                    Content(
-                        role = "function",
-                        parts =
-                            listOf(
-                                Part(
-                                    functionResponse =
-                                        FunctionResponse(
-                                            name = "find_theaters",
-                                            response = content,
-                                        ),
-                                ),
-                            ),
-                    ),
+                    content {
+                        role = "user"
+                        part { Part(text = "Which theaters in Mountain View show Barbie movie?") }
+                    },
+                    content {
+                        role = "model"
+                        part {
+                            Part(
+                                functionCall =
+                                    FunctionCall(
+                                        name = "find_theaters",
+                                        args = mapOf("location" to "Mountain View, CA", "description" to "Barbie"),
+                                    ),
+                            )
+                        }
+                    },
+                    content {
+                        role = "function"
+                        part {
+                            Part(
+                                functionResponse =
+                                    FunctionResponse(
+                                        name = "find_theaters",
+                                        response = content,
+                                    ),
+                            )
+                        }
+                    },
                 ),
             tools =
                 listOf(
@@ -258,17 +256,27 @@ fun main() {
                 ),
         )
 
+    val exInlineData =
+        inlineData {
+            mimeType { "text/plain" }
+            data { "This is an example inline data." }
+        }
     val examplePart =
-        buildPart {
+        part {
             text { "This is an example text." }
-            inlineData {
-                buildInlineData {
-                    mimeType { "text/plain" }
-                    data { "This is an example inline data." }
-                }
-            }
+            inlineData { exInlineData }
         }
     println(examplePart)
+
+    val ex2 =
+        Part(
+            text = "This is an example text.",
+            inlineData =
+                InlineData(
+                    "text/plain",
+                    "This is an example inline data.",
+                ),
+        )
 
     println(
         gemini.generateContent(
