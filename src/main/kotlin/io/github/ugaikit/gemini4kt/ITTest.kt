@@ -1,5 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import java.io.File
 import java.util.Base64
 
@@ -97,7 +100,7 @@ fun main() {
                                         """
                                         find movie titles currently playing in theaters based on any description,
                                         genre, title words, etc.
-                                        """.trimIndent(),
+                                        """.replace("\n", "").trimIndent(),
                                     parameters =
                                         Schema(
                                             type = "object",
@@ -150,6 +153,134 @@ fun main() {
         ).candidates[0].content.parts[0],
     )
 
+    val content =
+        JsonObject(
+            mapOf(
+                "name" to JsonPrimitive("the_theater"),
+                "content" to
+                    JsonObject(
+                        mapOf(
+                            "movie" to JsonPrimitive("Barbie"),
+                            "theaters" to
+                                JsonArray(
+                                    listOf(
+                                        JsonObject(
+                                            mapOf(
+                                                "name" to JsonPrimitive("AMC Mountain View 16"),
+                                                "address" to JsonPrimitive("2000 W El Camino Real, Mountain View, CA 94040"),
+                                            ),
+                                        ),
+                                        JsonObject(
+                                            mapOf(
+                                                "name" to JsonPrimitive("Regal Edwards 14"),
+                                                "address" to JsonPrimitive("245 Castro St, Mountain View, CA 94040"),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                        ),
+                    ),
+            ),
+        )
+    val exFunction2 =
+        GenerateContentRequest(
+            contents =
+                listOf(
+                    Content(
+                        role = "user",
+                        parts = listOf(Part(text = "Which theaters in Mountain View show Barbie movie?")),
+                    ),
+                    Content(
+                        role = "model",
+                        parts =
+                            listOf(
+                                Part(
+                                    functionCall =
+                                        FunctionCall(
+                                            name = "find_theaters",
+                                            args = mapOf("location" to "Mountain View, CA", "description" to "Barbie"),
+                                        ),
+                                ),
+                            ),
+                    ),
+                    Content(
+                        role = "function",
+                        parts =
+                            listOf(
+                                Part(
+                                    functionResponse =
+                                        FunctionResponse(
+                                            name = "find_theaters",
+                                            response = content,
+                                        ),
+                                ),
+                            ),
+                    ),
+                ),
+            tools =
+                listOf(
+                    Tool(
+                        functionDeclarations =
+                            listOf(
+                                FunctionDeclaration(
+                                    name = "find_movies",
+                                    description =
+                                        """
+                                        find movie titles currently playing in theaters based on any description,
+                                        genre, title words, etc.
+                                        """.replace("\n", "").trimIndent(),
+                                    parameters =
+                                        Schema(
+                                            type = "object",
+                                            properties =
+                                                mapOf(
+                                                    "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
+                                                    "description" to Schema(type = "string", description = "Any kind of description including category or genre"),
+                                                ),
+                                            required = listOf("description"),
+                                        ),
+                                ),
+                                FunctionDeclaration(
+                                    name = "find_theaters",
+                                    description = "find theaters based on location and optionally movie title which is currently playing in theaters",
+                                    parameters =
+                                        Schema(
+                                            type = "object",
+                                            properties =
+                                                mapOf(
+                                                    "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
+                                                    "movie" to Schema(type = "string", description = "Any movie title"),
+                                                ),
+                                            required = listOf("location"),
+                                        ),
+                                ),
+                                FunctionDeclaration(
+                                    name = "get_showtimes",
+                                    description = "Find the start times for movies playing in a specific theater",
+                                    parameters =
+                                        Schema(
+                                            type = "object",
+                                            properties =
+                                                mapOf(
+                                                    "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
+                                                    "movie" to Schema(type = "string", description = "Any movie title"),
+                                                    "theater" to Schema(type = "string", description = "Name of the theater"),
+                                                    "date" to Schema(type = "string", description = "Date for requested showtime"),
+                                                ),
+                                            required = listOf("location", "movie", "theater", "date"),
+                                        ),
+                                ),
+                            ),
+                    ),
+                ),
+        )
+
+    println(
+        gemini.generateContent(
+            exFunction2,
+            "gemini-1.5-pro-latest",
+        ).candidates[0].content.parts[0],
+    )
 }
 
 class ITTest

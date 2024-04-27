@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Represents the response from a function call, including the function's name
@@ -16,5 +17,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FunctionResponse(
     val name: String,
-    val args: List<String>,
+    val response: JsonObject,
 )
