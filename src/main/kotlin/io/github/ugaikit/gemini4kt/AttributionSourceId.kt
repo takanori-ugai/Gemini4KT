@@ -21,3 +21,20 @@ data class AttributionSourceId(
     val groundingPassage: GroundingPassageId? = null,
     val semanticRetrieverChunk: SemanticRetrieverChunk? = null,
 )
+
+class AttributionSourceIdBuilder {
+    var groundingPassage: GroundingPassageId? = null
+    var semanticRetrieverChunk: SemanticRetrieverChunk? = null
+
+    fun groundingPassage(init: () -> GroundingPassageId?) {
+        groundingPassage = init()
+    }
+
+    fun semanticRetrieverChunk(init: () -> SemanticRetrieverChunk?) {
+        semanticRetrieverChunk = init()
+    }
+
+    fun build() = AttributionSourceId(groundingPassage, semanticRetrieverChunk)
+}
+
+fun attributionSourceId(init: AttributionSourceIdBuilder.() -> Unit): AttributionSourceId = AttributionSourceIdBuilder().apply(init).build()

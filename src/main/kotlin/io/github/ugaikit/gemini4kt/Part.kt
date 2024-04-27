@@ -28,7 +28,7 @@ data class Part(
     val fileData: FileData? = null,
 )
 
-fun buildPart(init: PartBuilder.() -> Unit): Part {
+fun part(init: PartBuilder.() -> Unit): Part {
     val builder = PartBuilder()
     builder.init()
     return builder.build()
