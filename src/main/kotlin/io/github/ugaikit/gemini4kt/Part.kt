@@ -27,3 +27,36 @@ data class Part(
     val functionResponse: FunctionResponse? = null,
     val fileData: FileData? = null,
 )
+
+fun buildPart(init: PartBuilder.() -> Unit): Part {
+    val builder = PartBuilder()
+    builder.init()
+    return builder.build()
+}
+
+class PartBuilder {
+    private var text: String? = null
+    private var inlineData: InlineData? = null
+    private var functionCall: FunctionCall? = null
+    private var functionResponse: FunctionResponse? = null
+    private var fileData: FileData? = null
+
+    fun text(init: () -> String?) = apply { text = init() }
+
+    fun inlineData(init: () -> InlineData?) = apply { inlineData = init() }
+
+    fun functionCall(init: () -> FunctionCall?) = apply { functionCall = init() }
+
+    fun functionResponse(init: () -> FunctionResponse?) = apply { functionResponse = init() }
+
+    fun fileData(init: () -> FileData?) = apply { fileData = init() }
+
+    fun build() =
+        Part(
+            text = text,
+            inlineData = inlineData,
+            functionCall = functionCall,
+            functionResponse = functionResponse,
+            fileData = fileData,
+        )
+}
