@@ -13,3 +13,15 @@ import kotlinx.serialization.Serializable
 data class Tool(
     val functionDeclarations: List<FunctionDeclaration>,
 )
+
+class ToolBuilder {
+    private val functionDeclarations: MutableList<FunctionDeclaration> = mutableListOf()
+
+    fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit) {
+        functionDeclarations.add(FunctionDeclarationBuilder().apply(init).build())
+    }
+
+    fun build() = Tool(functionDeclarations)
+}
+
+fun tool(init: ToolBuilder.() -> Unit): Tool = ToolBuilder().apply(init).build()

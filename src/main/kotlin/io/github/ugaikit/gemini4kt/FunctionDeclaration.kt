@@ -15,4 +15,22 @@ import kotlinx.serialization.Serializable
  * construct valid calls to the function by adhering to this schema.
  */
 @Serializable
-data class FunctionDeclaration(val name: String, val description: String, val parameters: Schema)
+data class FunctionDeclaration(
+    val name: String,
+    val description: String,
+    val parameters: Schema,
+)
+
+class FunctionDeclarationBuilder {
+    var name: String = ""
+    var description: String = ""
+    private var parameters: Schema? = null
+
+    fun parameters(init: SchemaBuilder.() -> Unit) {
+        parameters = SchemaBuilder().apply(init).build()
+    }
+
+    fun build() = FunctionDeclaration(name, description, parameters ?: throw IllegalStateException("Parameters must be initialized"))
+}
+
+fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit): FunctionDeclaration = FunctionDeclarationBuilder().apply(init).build()

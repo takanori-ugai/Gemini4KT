@@ -39,3 +39,28 @@ data class GenerationConfig(
     val responseMimeType: String? = null,
     // "application/json" only for Gemini 1.5 pro
 )
+
+class GenerationConfigBuilder {
+    private val stopSequences: MutableList<String> = mutableListOf()
+    var temperature: Double = 0.0
+    var maxOutputTokens: Int = 0
+    var topP: Double = 0.0
+    var topK: Int = 0
+    var responseMimeType: String? = null
+
+    fun stopSequence(sequence: String) {
+        stopSequences.add(sequence)
+    }
+
+    fun build() =
+        GenerationConfig(
+            stopSequences = stopSequences,
+            temperature = temperature,
+            maxOutputTokens = maxOutputTokens,
+            topP = topP,
+            topK = topK,
+            responseMimeType = responseMimeType,
+        )
+}
+
+fun generationConfig(init: GenerationConfigBuilder.() -> Unit): GenerationConfig = GenerationConfigBuilder().apply(init).build()

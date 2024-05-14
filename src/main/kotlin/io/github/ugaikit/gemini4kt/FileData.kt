@@ -18,3 +18,12 @@ data class FileData(
     val mimeType: String,
     val fileUri: String,
 )
+
+class FileDataBuilder {
+    var mimeType: String = ""
+    var fileUri: String = ""
+
+    fun build() = FileData(mimeType, fileUri)
+}
+
+fun fileData(init: FileDataBuilder.() -> Unit): FileData = FileDataBuilder().apply(init).build()

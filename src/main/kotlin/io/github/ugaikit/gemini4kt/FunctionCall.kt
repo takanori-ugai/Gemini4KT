@@ -17,3 +17,19 @@ data class FunctionCall(
     val name: String,
     val args: Map<String, String>,
 )
+
+class FunctionCallBuilder {
+    var name: String = ""
+    private val args: MutableMap<String, String> = mutableMapOf()
+
+    fun arg(
+        key: String,
+        value: String,
+    ) {
+        args[key] = value
+    }
+
+    fun build() = FunctionCall(name, args)
+}
+
+fun functionCall(init: FunctionCallBuilder.() -> Unit): FunctionCall = FunctionCallBuilder().apply(init).build()

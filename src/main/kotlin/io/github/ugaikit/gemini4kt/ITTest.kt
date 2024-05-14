@@ -11,16 +11,13 @@ fun main() {
     val gemini = Gemini(apiKey)
     val text = "Write a story about a magic backpack."
     val inputJson =
-        GenerateContentRequest(
-            listOf(Content(listOf(Part(text)))),
-            safetySettings =
-                listOf(
-                    SafetySetting(
-                        category = HarmCategory.HARM_CATEGORY_HARASSMENT,
-                        threshold = Threshold.BLOCK_ONLY_HIGH,
-                    ),
-                ),
-        )
+        generateContentRequest {
+            content { part { text { text } } }
+            safetySetting {
+                category = HarmCategory.HARM_CATEGORY_HARASSMENT
+                threshold = Threshold.BLOCK_ONLY_HIGH
+            }
+        }
     println(
         gemini.generateContent(
             inputJson,
@@ -79,36 +76,40 @@ fun main() {
     )
 
     val findMoviesFunction =
-        FunctionDeclaration(
-            name = "find_movies",
-            description = "find movie titles currently playing in theaters based on any description, genre, title words, etc.",
-            parameters =
-                Schema(
-                    type = "object",
-                    properties =
-                        mapOf(
-                            "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
-                            "description" to Schema(type = "string", description = "Any kind of description including category or genre"),
-                        ),
-                    required = listOf("description"),
-                ),
-        )
+        functionDeclaration {
+            name = "find_movies"
+            description = "find movie titles currently playing in theaters based on any description, genre, title words, etc."
+            parameters {
+                type = "object"
+                property("location") {
+                    type = "string"
+                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
+                }
+                property("description") {
+                    type = "string"
+                    description = "Any kind of description including category or genre"
+                }
+                required("description")
+            }
+        }
 
     val findTheatersFunction =
-        FunctionDeclaration(
-            name = "find_theaters",
-            description = "find theaters based on location and optionally movie title which is currently playing in theaters",
-            parameters =
-                Schema(
-                    type = "object",
-                    properties =
-                        mapOf(
-                            "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
-                            "movie" to Schema(type = "string", description = "Any movie title"),
-                        ),
-                    required = listOf("location"),
-                ),
-        )
+        functionDeclaration {
+            name = "find_theaters"
+            description = "find theaters based on location and optionally movie title which is currently playing in theaters"
+            parameters {
+                type = "object"
+                property("location") {
+                    type = "string"
+                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
+                }
+                property("movie") {
+                    type = "string"
+                    description = "Any movie title"
+                }
+                required("location")
+            }
+        }
 
     val getShowtimesFunction =
         FunctionDeclaration(
@@ -132,18 +133,28 @@ fun main() {
         GenerateContentRequest(
             contents =
                 listOf(
-                    Content(
-                        role = "user",
-                        parts = listOf(Part(text = "Which theaters in Mountain View show Barbie movie?")),
-                    ),
+                    content {
+                        role = "user"
+                        part {
+                            text {
+                                "Which theaters in Mountain View show Barbie movie?"
+                            }
+                        }
+                    },
                 ),
             tools =
                 listOf(
                     Tool(
-                        functionDeclarations = listOf(findMoviesFunction, findTheatersFunction, getShowtimesFunction),
+                        functionDeclarations =
+                            listOf(
+                                findMoviesFunction,
+                                findTheatersFunction,
+                                getShowtimesFunction,
+                            ),
                     ),
                 ),
         )
+
     println(
         gemini.generateContent(
             exFunction,
@@ -174,30 +185,27 @@ fun main() {
                 listOf(
                     content {
                         role = "user"
-                        part { Part(text = "Which theaters in Mountain View show Barbie movie?") }
+                        part { text { "Which theaters in Mountain View show Barbie movie?" } }
                     },
                     content {
                         role = "model"
                         part {
-                            Part(
-                                functionCall =
-                                    FunctionCall(
-                                        name = "find_theaters",
-                                        args = mapOf("location" to "Mountain View, CA", "description" to "Barbie"),
-                                    ),
-                            )
+                            functionCall {
+                                name = "find_theaters"
+                                arg("location", "Mountain View, CA")
+                                arg("movie", "Barbie")
+                            }
                         }
                     },
                     content {
                         role = "function"
                         part {
-                            Part(
-                                functionResponse =
-                                    FunctionResponse(
-                                        name = "find_theaters",
-                                        response = content,
-                                    ),
-                            )
+                            functionResponse {
+                                FunctionResponse(
+                                    name = "find_theaters",
+                                    response = content,
+                                )
+                            }
                         }
                     },
                 ),
@@ -256,27 +264,15 @@ fun main() {
                 ),
         )
 
-    val exInlineData =
-        inlineData {
-            mimeType { "text/plain" }
-            data { "This is an example inline data." }
-        }
     val examplePart =
         part {
             text { "This is an example text." }
-            inlineData { exInlineData }
+            inlineData {
+                mimeType { "text/plain" }
+                data { "This is an example inline data." }
+            }
         }
     println(examplePart)
-
-    val ex2 =
-        Part(
-            text = "This is an example text.",
-            inlineData =
-                InlineData(
-                    "text/plain",
-                    "This is an example inline data.",
-                ),
-        )
 
     println(
         gemini.generateContent(

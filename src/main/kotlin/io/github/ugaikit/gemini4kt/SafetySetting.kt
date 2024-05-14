@@ -18,3 +18,12 @@ data class SafetySetting(
     val category: HarmCategory,
     val threshold: Threshold,
 )
+
+class SafetySettingBuilder {
+    lateinit var category: HarmCategory
+    lateinit var threshold: Threshold
+
+    fun build() = SafetySetting(category, threshold)
+}
+
+fun safetySetting(init: SafetySettingBuilder.() -> Unit): SafetySetting = SafetySettingBuilder().apply(init).build()
