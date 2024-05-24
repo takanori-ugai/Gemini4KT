@@ -11,9 +11,11 @@ import kotlinx.serialization.Serializable
  * It is nullable to accommodate parts without inline data.
  * @property functionCall Optional [FunctionCall] representing a call to a function within this part.
  * It is nullable to accommodate parts that are not function calls.
- * @property functionResponse Optional [FunctionResponse] representing the response from a function call within this part.
+ * @property functionResponse Optional [FunctionResponse] representing the response from a function
+ * call within this part.
  * It is nullable to accommodate parts that do not contain function responses.
- * @property fileData Optional [FileData] representing file data associated with this part. It is nullable to accommodate parts that do not include file data.
+ * @property fileData Optional [FileData] representing file data associated with this part.
+ * It is nullable to accommodate parts that do not include file data.
  */
 @Serializable
 data class Part(

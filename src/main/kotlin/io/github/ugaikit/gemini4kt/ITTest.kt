@@ -1,5 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.Base64
 
@@ -150,6 +153,111 @@ fun main() {
         ).candidates[0].content.parts[0],
     )
 
+    @Serializable
+    data class MovieContent(val movie: String, val theaters: List<Map<String, String>>)
+    val babie =
+        MovieContent(
+            movie = "Barbie",
+            listOf(
+                mapOf("name" to "AMC Mountain View 16", "address" to "2000 W El Camino Real, Mountain View, CA 94040"),
+                mapOf("name" to "Regal Edwards 14", "address" to "245 Castro St, Mountain View, CA 94040"),
+            ),
+        )
+    val json = Json { ignoreUnknownKeys = true }
+    val babieString = json.encodeToString(babie)
+    val exFunction2 =
+        GenerateContentRequest(
+            contents =
+                listOf(
+                    Content(
+                        role = "user",
+                        parts = listOf(Part(text = "Which theaters in Mountain View show Barbie movie?")),
+                    ),
+                    Content(
+                        role = "model",
+                        parts =
+                            listOf(
+                                Part(
+                                    functionCall =
+                                        FunctionCall(
+                                            name = "find_theaters",
+                                            args = mapOf("location" to "Mountain View, CA", "movie" to "Barbie"),
+                                        ),
+                                ),
+                            ),
+                    ),
+                    Content(
+                        role = "function",
+                        parts =
+                            listOf(
+                                Part(functionResponse = FunctionResponse(name = "find_theaters", response = mapOf("name" to "find_theaters", "content" to babieString))),
+                            ),
+                    ),
+                ),
+            tools =
+                listOf(
+                    Tool(
+                        functionDeclarations =
+                            listOf(
+                                FunctionDeclaration(
+                                    name = "find_movies",
+                                    description =
+                                        """
+                                        find movie titles currently playing in theaters based on any description,
+                                        genre, title words, etc.
+                                        """.trimIndent(),
+                                    parameters =
+                                        Schema(
+                                            type = "object",
+                                            properties =
+                                                mapOf(
+                                                    "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
+                                                    "description" to Schema(type = "string", description = "Any kind of description including category or genre"),
+                                                ),
+                                            required = listOf("description"),
+                                        ),
+                                ),
+                                FunctionDeclaration(
+                                    name = "find_theaters",
+                                    description = "find theaters based on location and optionally movie title which is currently playing in theaters",
+                                    parameters =
+                                        Schema(
+                                            type = "object",
+                                            properties =
+                                                mapOf(
+                                                    "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
+                                                    "movie" to Schema(type = "string", description = "Any movie title"),
+                                                ),
+                                            required = listOf("location"),
+                                        ),
+                                ),
+                                FunctionDeclaration(
+                                    name = "get_showtimes",
+                                    description = "Find the start times for movies playing in a specific theater",
+                                    parameters =
+                                        Schema(
+                                            type = "object",
+                                            properties =
+                                                mapOf(
+                                                    "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
+                                                    "movie" to Schema(type = "string", description = "Any movie title"),
+                                                    "theater" to Schema(type = "string", description = "Name of the theater"),
+                                                    "date" to Schema(type = "string", description = "Date for requested showtime"),
+                                                ),
+                                            required = listOf("location", "movie", "theater", "date"),
+                                        ),
+                                ),
+                            ),
+                    ),
+                ),
+        )
+
+    println(
+        gemini.generateContent(
+            exFunction2,
+            "gemini-1.5-pro-latest",
+        ).candidates[0].content.parts[0],
+    )
 }
 
 class ITTest

@@ -16,5 +16,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FunctionResponse(
     val name: String,
-    val args: List<String>,
+    val args: List<String> = emptyList(),
+    val response: Map<String, String>,
 )
