@@ -1,8 +1,11 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import java.io.File
 import java.util.Base64
 
@@ -278,7 +281,6 @@ fun main() {
             "gemini-1.5-pro-latest",
         ).candidates[0].content.parts[0],
     )
-
 }
 
 class ITTest
