@@ -158,7 +158,7 @@ fun main() {
     println(
         gemini.generateContent(
             exFunction,
-            "gemini-1.5-pro-latest",
+            "gemini-1.5-flash-latest",
         ).candidates[0].content.parts[0],
     )
 
@@ -277,7 +277,7 @@ fun main() {
     println(
         gemini.generateContent(
             exFunction2,
-            "gemini-1.5-pro-latest",
+            "gemini-1.5-flash-latest",
         ).candidates[0].content.parts[0],
     )
 }
