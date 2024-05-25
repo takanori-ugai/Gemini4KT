@@ -4,8 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Represents a component of a message or document, encapsulating different
- * types of content that can be included within a part.
+ * Represents a part of content, which can be one of several types such as text, inline data, function call, function response, or file data.
  *
  * @property text The plain text content of the part, if available. Null if
  * this part does not contain text.
