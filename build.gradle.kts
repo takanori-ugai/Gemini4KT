@@ -201,7 +201,7 @@ detekt {
 }
 
 jacoco {
-    toolVersion = "0.8.11"
+    toolVersion = "0.8.12"
 }
 
 spotbugs {
@@ -217,7 +217,7 @@ spotless {
         removeUnusedImports()
 
         // Choose one of these formatters.
-        googleJavaFormat("1.21.0") // has its own section below
+        googleJavaFormat("1.22.0") // has its own section below
         formatAnnotations() // fixes formatting of type annotations, see below
     }
 }
