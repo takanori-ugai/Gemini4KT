@@ -15,7 +15,7 @@ plugins {
     id("com.diffplug.spotless") version "6.25.0"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
     jacoco
-    id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.3"
+    id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
 }
 
 group = "io.github.ugaikit"
