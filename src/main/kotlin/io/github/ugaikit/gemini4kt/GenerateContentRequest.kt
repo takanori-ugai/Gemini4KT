@@ -36,6 +36,7 @@ data class GenerateContentRequest(
     val safetySettings: List<SafetySetting> = emptyList(),
     val systemInstruction: Content? = null,
     val generationConfig: GenerationConfig? = null,
+    val cachedContent: String? = null,
 )
 
 class GenerateContentRequestBuilder {
