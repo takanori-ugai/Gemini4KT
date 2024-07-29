@@ -15,5 +15,5 @@ data class CachedContent(
     val displayName: String,
     val model: String,
     val systemInstruction: Content,
-    val toolConfig: ToolConfig
+    val toolConfig: ToolConfig,
 )
