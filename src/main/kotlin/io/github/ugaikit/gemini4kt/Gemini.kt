@@ -24,7 +24,8 @@ class Gemini(private val apiKey: String) {
      * JSON configuration setup to ignore unknown keys during deserialization.
      */
     private val json = Json { ignoreUnknownKeys = true }
-    private val baseUrl = "https://generativelanguage.googleapis.com/v1beta/models"
+    private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
+    private val baseUrl = "$bUrl/models"
 
     /**
      * Generates content based on the provided input JSON using a specified model.
@@ -43,6 +44,76 @@ class Gemini(private val apiKey: String) {
         )
     }
 
+    /**
+     * Creates a new cached content entry in the system.
+     *
+     * @param inputJson The [CachedContent] object to be created.
+     * @param model The model identifier, defaulting to "gemini-1.5-flash-001".
+     * @return The created [CachedContent] object as returned by the server.
+     */
+    fun createCachedContent(
+        inputJson: CachedContent,
+        model: String = "gemini-1.5-flash-001",
+    ): CachedContent {
+        val urlString = "$bUrl/cachedContents?key=$apiKey"
+        return json.decodeFromString<CachedContent>(
+            getContent(urlString, json.encodeToString<CachedContent>(inputJson)),
+        )
+    }
+
+    /**
+     * Retrieves a list of cached content entries.
+     *
+     * @param pageSize The maximum number of entries to return, default is 1000.
+     * @param pageToken An optional token for pagination, used to fetch the next
+     * set of results.
+     * @return A [CachedContentList] containing the list of cached content entries.
+     */
+    fun listCachedContent(
+        pageSize: Int = 1000,
+        pageToken: String? = null,
+    ): CachedContentList {
+        val urlString =
+            buildString {
+                append("$bUrl/cachedContents?pageSize=$pageSize&key=$apiKey")
+                if (pageToken != null) append("&pageToken=$pageToken")
+            }
+        return json.decodeFromString<CachedContentList>(
+            getContent(urlString),
+        )
+    }
+
+    /**
+     * Fetches cached content by name.
+     *
+     * @param name The unique name identifier for the cached content.
+     * @return A [CachedContentList] containing the cached content matching the
+     * given name.
+     */
+    fun getCachedContent(name: String): CachedContentList {
+        val urlString = "$bUrl/cachedContents/$name&key=$apiKey"
+        return json.decodeFromString<CachedContentList>(
+            getContent(urlString),
+        )
+    }
+
+    /**
+     * Deletes a specific cached content entry by name.
+     *
+     * @param name The unique name identifier of the cached content to be deleted.
+     */
+    fun deleteCachedContent(name: String) {
+        val urlString = "$bUrl/cachedContents/$name&key=$apiKey"
+        deleteContent(urlString)
+    }
+
+    /**
+     * Counts the number of tokens in the provided text using a specified model.
+     *
+     * @param inputJson The request object containing the text to analyze.
+     * @param model The model to use for counting tokens, default is "gemini-pro".
+     * @return A [TotalTokens] object containing the total number of tokens.
+     */
     fun countTokens(
         inputJson: CountTokensRequest,
         model: String = "gemini-pro",
@@ -132,6 +203,29 @@ class Gemini(private val apiKey: String) {
         } catch (e: IOException) {
             logger.error { e.stackTrace.contentToString() }
             return ""
+        }
+    }
+
+    /**
+     * Sends a DELETE request to the specified URL to delete content.
+     *
+     * @param urlStr The URL string where the DELETE request is sent.
+     */
+    fun deleteContent(urlStr: String) {
+        try {
+            val url = URL(urlStr)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "DELETE"
+            val resCode = conn.responseCode
+            if (resCode != 200) {
+                logger.error { "Error: ${conn.responseCode}" }
+                conn.inputStream.bufferedReader().use { reader ->
+                    logger.error { "Error Message: ${reader.readText()}" }
+                }
+            }
+            logger.info { "GenerateContentResponse Code: $resCode" }
+        } catch (e: IOException) {
+            logger.error { e.stackTrace.contentToString() }
         }
     }
 }
