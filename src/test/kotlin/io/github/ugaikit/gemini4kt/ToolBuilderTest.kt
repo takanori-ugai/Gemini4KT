@@ -4,7 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ToolBuilderTest {
-
     /**
      * Tests the `ToolBuilder` with a single function declaration.
      *
@@ -62,7 +61,8 @@ class ToolBuilderTest {
 
                 functionDeclaration {
                     name = "functionTwo"
-                    description = "find movie titles currently playing in theaters based on any description, genre, title words, etc."
+                    description = "find movie titles currently playing in theaters" +
+                        " based on any description, genre, title words, etc."
                     parameters {
                         type = "object"
                         property("location") {
