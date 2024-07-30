@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CachedContent(
-    val contents: List<Content>,
+    val contents: List<Content>? = null,
     val tools: List<Tool>? = null,
     val createTime: String? = null,
     val updateTime: String? = null,
@@ -13,7 +13,7 @@ data class CachedContent(
     val ttl: String? = null,
     val name: String? = null,
     val displayName: String? = null,
-    val model: String = "gemini-1.5-flash-001",
-    val systemInstruction: Content,
+    val model: String? = null,
+    val systemInstruction: Content? = null,
     val toolConfig: ToolConfig? = null,
 )

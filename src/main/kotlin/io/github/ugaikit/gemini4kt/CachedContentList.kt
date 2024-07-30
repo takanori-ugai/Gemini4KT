@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CachedContentList(
-    val cachedContents: List<CachedContent>,
-    val nextPageToken: String,
+    val cachedContents: List<CachedContent>? = null,
+    val nextPageToken: String? = null,
 )

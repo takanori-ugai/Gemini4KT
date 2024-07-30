@@ -90,9 +90,9 @@ class Gemini(private val apiKey: String) {
      * @return A [CachedContentList] containing the cached content matching the
      * given name.
      */
-    fun getCachedContent(name: String): CachedContentList {
-        val urlString = "$bUrl/cachedContents/$name&key=$apiKey"
-        return json.decodeFromString<CachedContentList>(
+    fun getCachedContent(name: String): CachedContent {
+        val urlString = "$bUrl/$name?key=$apiKey"
+        return json.decodeFromString<CachedContent>(
             getContent(urlString),
         )
     }
@@ -103,7 +103,7 @@ class Gemini(private val apiKey: String) {
      * @param name The unique name identifier of the cached content to be deleted.
      */
     fun deleteCachedContent(name: String) {
-        val urlString = "$bUrl/cachedContents/$name&key=$apiKey"
+        val urlString = "$bUrl/$name?key=$apiKey"
         deleteContent(urlString)
     }
 
@@ -191,7 +191,7 @@ class Gemini(private val apiKey: String) {
             val resCode = conn.responseCode
             if (resCode != 200) {
                 logger.error { "Error: ${conn.responseCode}" }
-                conn.inputStream.bufferedReader().use { reader ->
+                conn.errorStream.bufferedReader().use { reader ->
                     logger.error { "Error Message: ${reader.readText()}" }
                 }
                 return "{}"
@@ -218,8 +218,8 @@ class Gemini(private val apiKey: String) {
             conn.requestMethod = "DELETE"
             val resCode = conn.responseCode
             if (resCode != 200) {
-                logger.error { "Error: ${conn.responseCode}" }
-                conn.inputStream.bufferedReader().use { reader ->
+                logger.error { "Error: $resCode" }
+                conn.errorStream.bufferedReader().use { reader ->
                     logger.error { "Error Message: ${reader.readText()}" }
                 }
             }
