@@ -83,6 +83,19 @@ fun main() {
         ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
     )
 
+    val str = "This is a pen".repeat(10000)
+    val cachedContent =
+        CachedContent(
+            contents = listOf(Content(listOf(Part(text = str)), "user")),
+            model = "models/gemini-1.5-flash-001",
+            systemInstruction = Content(listOf(Part(text = "Hello, world!")), "system"),
+        )
+    val cache = gemini.createCachedContent(cachedContent)
+    println(cache)
+    println(gemini.listCachedContent())
+    println(gemini.getCachedContent(cache.name!!))
+    println(gemini.deleteCachedContent(cache.name!!))
+
     val findMoviesFunction =
         FunctionDeclaration(
             name = "find_movies",
