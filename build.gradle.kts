@@ -4,8 +4,8 @@ import net.thebugmc.gradle.sonatypepublisher.PublishingType.USER_MANAGED
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("jvm") version "2.0.10"
-    kotlin("plugin.serialization") version "2.0.10"
+    kotlin("jvm") version "2.0.20"
+    kotlin("plugin.serialization") version "2.0.20"
     application
     id("org.jetbrains.dokka") version "1.9.20"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
@@ -177,7 +177,6 @@ tasks {
 }
 
 ktlint {
-//    setVersion("0.2.1")
     verbose.set(true)
     outputToConsole.set(true)
     coloredOutput.set(true)
@@ -201,7 +200,7 @@ detekt {
 }
 
 jacoco {
-    toolVersion = "0.8.11"
+    toolVersion = "0.8.12"
 }
 
 spotbugs {
@@ -217,11 +216,11 @@ spotless {
         removeUnusedImports()
 
         // Choose one of these formatters.
-        googleJavaFormat("1.21.0") // has its own section below
+        googleJavaFormat("1.23.0") // has its own section below
         formatAnnotations() // fixes formatting of type annotations, see below
     }
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(11)
 }
