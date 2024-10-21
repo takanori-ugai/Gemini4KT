@@ -5,14 +5,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("jvm") version "2.0.20"
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("jvm") version "2.0.21"
+    kotlin("plugin.serialization") version "2.0.21"
     application
     id("org.jetbrains.dokka") version "1.9.20"
     id("io.gitlab.arturbosch.detekt") version "1.23.7"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.github.jk1.dependency-license-report") version "2.9"
-    id("com.github.spotbugs") version "6.0.22"
+    id("com.github.spotbugs") version "6.0.25"
     id("com.diffplug.spotless") version "6.25.0"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
     jacoco
@@ -67,9 +67,9 @@ centralPortal {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
-    runtimeOnly("ch.qos.logback:logback-classic:1.5.8")
+    runtimeOnly("ch.qos.logback:logback-classic:1.5.10")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
 
@@ -217,7 +217,7 @@ spotless {
         removeUnusedImports()
 
         // Choose one of these formatters.
-        googleJavaFormat("1.23.0") // has its own section below
+        googleJavaFormat("1.24.0") // has its own section below
         formatAnnotations() // fixes formatting of type annotations, see below
     }
 }
