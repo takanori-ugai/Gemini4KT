@@ -29,7 +29,7 @@ fun main() {
     println(
         gemini.generateContent(
             inputJson,
-            model = "gemini-1.5-pro-latest",
+            model = "gemini-2.0-flash-exp",
         ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
     )
     val inputJson2 = CountTokensRequest(listOf(Content(listOf(Part(text)))))
@@ -79,7 +79,7 @@ fun main() {
     println(
         gemini.generateContent(
             inputWithImage,
-            "gemini-1.5-pro-latest",
+            "gemini-2.0-flash-exp",
         ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
     )
 
@@ -87,7 +87,7 @@ fun main() {
     val cachedContent =
         CachedContent(
             contents = listOf(Content(listOf(Part(text = str)), "user")),
-            model = "models/gemini-1.5-flash-001",
+            model = "models/gemini-1.5-flash-002",
             systemInstruction = Content(listOf(Part(text = "Hello, world!")), "system"),
         )
     val cache = gemini.createCachedContent(cachedContent)
@@ -165,7 +165,7 @@ fun main() {
     println(
         gemini.generateContent(
             exFunction,
-            "gemini-1.5-pro-latest",
+            "gemini-2.0-flash-exp",
         ).candidates[0].content.parts[0],
     )
 
@@ -291,7 +291,7 @@ fun main() {
     println(
         gemini.generateContent(
             exFunction2,
-            "gemini-1.5-pro-latest",
+            "gemini-2.0-flash-exp",
         ).candidates[0].content.parts[0],
     )
 }

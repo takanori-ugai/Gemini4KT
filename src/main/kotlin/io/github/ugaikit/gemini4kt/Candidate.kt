@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
 data class Candidate(
     val content: Content,
     val finishReason: String,
-    val index: Int,
+    val index: Int? = null,
     val safetyRatings: List<SafetyRating>,
     val citationMetadata: CitationMetadata? = null,
     val tokenCount: Int? = null,
