@@ -20,5 +20,7 @@ data class Candidate(
     val safetyRatings: List<SafetyRating>,
     val citationMetadata: CitationMetadata? = null,
     val tokenCount: Int? = null,
+    val avgLogprobs: Double? = null,
+    val logprobsResult: LogprobsResult? = null,
     val groundingAttributions: List<GroundingAttribution> = emptyList(),
 )
