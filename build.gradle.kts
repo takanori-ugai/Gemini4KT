@@ -8,7 +8,7 @@ plugins {
     kotlin("jvm") version "2.1.0"
     kotlin("plugin.serialization") version "2.1.0"
     application
-    id("org.jetbrains.dokka") version "1.9.20"
+    id("org.jetbrains.dokka") version "2.0.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.7"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.github.jk1.dependency-license-report") version "2.9"
