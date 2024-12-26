@@ -9,6 +9,7 @@ plugins {
     kotlin("plugin.serialization") version "2.1.0"
     application
     id("org.jetbrains.dokka") version "2.0.0"
+    id("org.jetbrains.dokka-javadoc") version "2.0.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.7"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.github.jk1.dependency-license-report") version "2.9"
@@ -128,24 +129,6 @@ tasks {
         sourceDirectories.setFrom(files(listOf("src/main/java", "src/main/kotlin")))
     }
 
-    dokkaHtml.configure {
-        dokkaSourceSets {
-            configureEach {
-                jdkVersion.set(11)
-                noStdlibLink.set(true)
-            }
-        }
-    }
-
-    dokkaJavadoc.configure {
-        dokkaSourceSets {
-            configureEach {
-                jdkVersion.set(11)
-                noStdlibLink.set(true)
-            }
-        }
-    }
-
     test {
         testLogging {
 //            exceptionFormat = TestExceptionFormat.FULL
@@ -174,6 +157,14 @@ tasks {
         manifest {
             attributes["Main-Class"] = application.mainClass
         }
+    }
+}
+
+dokka.dokkaSourceSets {
+    configureEach {
+        jdkVersion.set(11)
+        enableJdkDocumentationLink.set(false)
+        enableKotlinStdLibDocumentationLink.set(false)
     }
 }
 
