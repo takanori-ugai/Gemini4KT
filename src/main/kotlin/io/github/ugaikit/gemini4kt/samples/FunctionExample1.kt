@@ -11,12 +11,10 @@ import java.util.Properties
 
 fun main() {
     val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-    val prop =
-        Properties().also {
-            it.load(path)
-        }
+    val prop = Properties().also { it.load(path) }
     val apiKey = prop.getProperty("apiKey")
     val gemini = Gemini(apiKey)
+
     val findMoviesFunction =
         FunctionDeclaration(
             name = "find_movies",
@@ -26,8 +24,16 @@ fun main() {
                     type = "object",
                     properties =
                         mapOf(
-                            "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
-                            "description" to Schema(type = "string", description = "Any kind of description including category or genre"),
+                            "location" to
+                                Schema(
+                                    type = "string",
+                                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616",
+                                ),
+                            "description" to
+                                Schema(
+                                    type = "string",
+                                    description = "Any kind of description including category or genre",
+                                ),
                         ),
                     required = listOf("description"),
                 ),
@@ -42,8 +48,16 @@ fun main() {
                     type = "object",
                     properties =
                         mapOf(
-                            "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
-                            "movie" to Schema(type = "string", description = "Any movie title"),
+                            "location" to
+                                Schema(
+                                    type = "string",
+                                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616",
+                                ),
+                            "movie" to
+                                Schema(
+                                    type = "string",
+                                    description = "Any movie title",
+                                ),
                         ),
                     required = listOf("location"),
                 ),
@@ -58,10 +72,26 @@ fun main() {
                     type = "object",
                     properties =
                         mapOf(
-                            "location" to Schema(type = "string", description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"),
-                            "movie" to Schema(type = "string", description = "Any movie title"),
-                            "theater" to Schema(type = "string", description = "Name of the theater"),
-                            "date" to Schema(type = "string", description = "Date for requested showtime"),
+                            "location" to
+                                Schema(
+                                    type = "string",
+                                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616",
+                                ),
+                            "movie" to
+                                Schema(
+                                    type = "string",
+                                    description = "Any movie title",
+                                ),
+                            "theater" to
+                                Schema(
+                                    type = "string",
+                                    description = "Name of the theater",
+                                ),
+                            "date" to
+                                Schema(
+                                    type = "string",
+                                    description = "Date for requested showtime",
+                                ),
                         ),
                     required = listOf("location", "movie", "theater", "date"),
                 ),
@@ -73,16 +103,25 @@ fun main() {
                 listOf(
                     Content(
                         role = "user",
-                        parts = listOf(Part(text = "Which theaters in Mountain View show Barbie movie?")),
+                        parts =
+                            listOf(
+                                Part(text = "Which theaters in Mountain View show Barbie movie?"),
+                            ),
                     ),
                 ),
             tools =
                 listOf(
                     Tool(
-                        functionDeclarations = listOf(findMoviesFunction, findTheatersFunction, getShowtimesFunction),
+                        functionDeclarations =
+                            listOf(
+                                findMoviesFunction,
+                                findTheatersFunction,
+                                getShowtimesFunction,
+                            ),
                     ),
                 ),
         )
+
     println(
         gemini.generateContent(
             exFunction,
