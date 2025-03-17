@@ -1,5 +1,7 @@
 # Gemini4KT
 
+We will not maintain this library anymore. We are moving to Google Gen AI Java SDK(https://github.com/googleapis/java-genai).
+
 ## Kotlin Wrapper Library for Gemini's RestAPI
 
 This is a Kotlin wrapper library for Gemini's RestAPI, a lightweight library that does not require the Android SDK. Currently, it is JVM-only.
