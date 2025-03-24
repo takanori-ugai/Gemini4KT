@@ -70,7 +70,7 @@ centralPortal {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.5")
-    runtimeOnly("ch.qos.logback:logback-classic:1.5.17")
+    runtimeOnly("ch.qos.logback:logback-classic:1.5.18")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
 
