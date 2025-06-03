@@ -28,7 +28,7 @@ fun main() {
                         threshold = Threshold.BLOCK_ONLY_HIGH,
                     ),
                 ),
-            systemInstruction = Content(listOf(Part("You are a helpful assistant."))),
+            systemInstruction = Content(listOf(Part("You are a excellent assistant"))),
         )
     println(
         gemini.generateContent(
