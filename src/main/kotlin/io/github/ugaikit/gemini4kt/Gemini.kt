@@ -198,7 +198,10 @@ class Gemini(private val apiKey: String) {
             }
             logger.info { "GenerateContentResponse Code: $resCode" }
             conn.inputStream.bufferedReader().use { reader ->
-                return reader.readText()
+                val txt = reader.readText()
+                logger.debug { "Content length: ${txt.length}" }
+                logger.debug { "Content preview: ${txt.take(100)}" } // Log only the first 100 characters
+                return txt
             }
         } catch (e: IOException) {
             logger.error { e.stackTrace.contentToString() }
