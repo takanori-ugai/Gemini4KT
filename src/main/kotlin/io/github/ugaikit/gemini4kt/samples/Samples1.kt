@@ -28,11 +28,12 @@ fun main() {
                         threshold = Threshold.BLOCK_ONLY_HIGH,
                     ),
                 ),
+            systemInstruction = Content(listOf(Part("You are a helpful assistant."))),
         )
     println(
         gemini.generateContent(
             inputJson,
-            model = "gemini-1.5-flash",
+            model = "gemini-2.0-flash-lite",
         ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
     )
 }
