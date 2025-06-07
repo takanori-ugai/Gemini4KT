@@ -22,7 +22,7 @@ fun main() {
     val cachedContent =
         CachedContent(
             contents = listOf(Content(listOf(Part(text = str)), "user")),
-            model = "models/gemini-1.5-flash-002",
+            model = "models/gemini-1.5-flash",
             systemInstruction = Content(listOf(Part(text = "Hello, world!")), "system"),
         )
     val cache = gemini.createCachedContent(cachedContent)
@@ -30,6 +30,7 @@ fun main() {
     println(cache)
     println(gemini.listCachedContent())
     println(gemini.getCachedContent(cache.name!!))
+    println("--------------------------------------------------------------")
 
     val text = "Summarize the sentences."
     val inputJson =
@@ -47,7 +48,7 @@ fun main() {
     println(
         gemini.generateContent(
             inputJson,
-            model = "gemini-1.5-flash-002",
+            model = "gemini-1.5-flash",
         ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
     )
 
