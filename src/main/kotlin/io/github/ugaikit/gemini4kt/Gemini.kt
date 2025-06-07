@@ -53,7 +53,7 @@ class Gemini(private val apiKey: String) {
      */
     fun createCachedContent(
         inputJson: CachedContent,
-        model: String = "gemini-1.5-flash-001",
+        model: String = "gemini-1.5-flash",
     ): CachedContent {
         val urlString = "$bUrl/cachedContents?key=$apiKey"
         return json.decodeFromString<CachedContent>(
@@ -111,12 +111,12 @@ class Gemini(private val apiKey: String) {
      * Counts the number of tokens in the provided text using a specified model.
      *
      * @param inputJson The request object containing the text to analyze.
-     * @param model The model to use for counting tokens, default is "gemini-pro".
+     * @param model The model to use for counting tokens, default is "gemini-2.0-flash-lite".
      * @return A [TotalTokens] object containing the total number of tokens.
      */
     fun countTokens(
         inputJson: CountTokensRequest,
-        model: String = "gemini-pro",
+        model: String = "gemini-2.0-flash-lite",
     ): TotalTokens {
         val urlString = "$baseUrl/$model:countTokens?key=$apiKey"
         println(inputJson)

@@ -17,7 +17,7 @@ data class Candidate(
     val content: Content,
     val finishReason: String,
     val index: Int? = null,
-    val safetyRatings: List<SafetyRating>,
+    val safetyRatings: List<SafetyRating>? = null,
     val citationMetadata: CitationMetadata? = null,
     val tokenCount: Int? = null,
     val avgLogprobs: Double? = null,
