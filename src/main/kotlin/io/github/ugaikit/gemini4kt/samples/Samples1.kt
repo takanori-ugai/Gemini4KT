@@ -3,9 +3,11 @@ package io.github.ugaikit.gemini4kt.samples
 import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
+import io.github.ugaikit.gemini4kt.GenerationConfig
 import io.github.ugaikit.gemini4kt.HarmCategory
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.SafetySetting
+import io.github.ugaikit.gemini4kt.ThinkingConfig
 import io.github.ugaikit.gemini4kt.Threshold
 import java.util.Properties
 
@@ -17,7 +19,7 @@ fun main() {
         }
     val apiKey = prop.getProperty("apiKey")
     val gemini = Gemini(apiKey)
-    val text = "Write a story about a magic backpack in Japanese."
+    val text = "Write a story about a magic backpack."
     val inputJson =
         GenerateContentRequest(
             listOf(Content(listOf(Part(text)))),
@@ -29,11 +31,15 @@ fun main() {
                     ),
                 ),
 //            systemInstruction = Content(listOf(Part("You are a excellent assistant"))),
+            generationConfig =
+                GenerationConfig(
+                    thinkingConfig = ThinkingConfig(-1),
+                ),
         )
     println(
         gemini.generateContent(
             inputJson,
-            model = "gemini-2.0-flash-lite",
+            model = "gemini-2.5-flash-lite-preview-06-17",
         ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
     )
 }
