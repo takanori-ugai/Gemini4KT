@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -34,6 +35,7 @@ data class GenerateContentRequest(
     val tools: List<Tool> = emptyList(),
     val toolConfig: ToolConfig? = null,
     val safetySettings: List<SafetySetting> = emptyList(),
+    @SerialName("system_instruction")
     val systemInstruction: Content? = null,
     val generationConfig: GenerationConfig? = null,
     val cachedContent: String? = null,

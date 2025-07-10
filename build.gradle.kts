@@ -13,15 +13,15 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.github.jk1.dependency-license-report") version "2.9"
-    id("com.github.spotbugs") version "6.1.7"
-    id("com.diffplug.spotless") version "7.0.3"
-    id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
+    id("com.github.spotbugs") version "6.2.1"
+    id("com.diffplug.spotless") version "7.0.4"
+    id("org.jlleitschuh.gradle.ktlint") version "12.3.0"
     jacoco
     id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
 }
 
 group = "io.github.ugaikit"
-version = "0.6.0"
+version = "0.7.0"
 
 repositories {
     mavenCentral()

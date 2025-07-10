@@ -17,7 +17,7 @@ fun main() {
         }
     val apiKey = prop.getProperty("apiKey")
     val gemini = Gemini(apiKey)
-    val text = "Write a story about a magic backpack."
+    val text = "Write a story about a magic backpack in Japanese."
     val inputJson =
         GenerateContentRequest(
             listOf(Content(listOf(Part(text)))),
@@ -28,11 +28,12 @@ fun main() {
                         threshold = Threshold.BLOCK_ONLY_HIGH,
                     ),
                 ),
+//            systemInstruction = Content(listOf(Part("You are a excellent assistant"))),
         )
     println(
         gemini.generateContent(
             inputJson,
-            model = "gemini-1.5-flash",
+            model = "gemini-2.0-flash-lite",
         ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
     )
 }
