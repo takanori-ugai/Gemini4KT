@@ -13,7 +13,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.github.jk1.dependency-license-report") version "2.9"
-    id("com.github.spotbugs") version "6.2.0"
+    id("com.github.spotbugs") version "6.2.2"
     id("com.diffplug.spotless") version "7.0.4"
     id("org.jlleitschuh.gradle.ktlint") version "12.3.0"
     jacoco
@@ -21,7 +21,7 @@ plugins {
 }
 
 group = "io.github.ugaikit"
-version = "0.6.0"
+version = "0.7.0"
 
 repositories {
     mavenCentral()
@@ -69,7 +69,7 @@ centralPortal {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.6")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     runtimeOnly("ch.qos.logback:logback-classic:1.5.18")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
