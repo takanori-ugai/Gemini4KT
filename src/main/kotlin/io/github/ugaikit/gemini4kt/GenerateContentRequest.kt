@@ -40,3 +40,48 @@ data class GenerateContentRequest(
     val generationConfig: GenerationConfig? = null,
     val cachedContent: String? = null,
 )
+
+class GenerateContentRequestBuilder {
+    private val contents: MutableList<Content> = mutableListOf()
+    private val tools: MutableList<Tool> = mutableListOf()
+    private var toolConfig: ToolConfig? = null
+    private val safetySettings: MutableList<SafetySetting> = mutableListOf()
+    private var systemInstruction: Content? = null
+    private var generationConfig: GenerationConfig? = null
+
+    fun content(init: ContentBuilder.() -> Unit) {
+        contents.add(ContentBuilder().apply(init).build())
+    }
+
+    fun tool(init: ToolBuilder.() -> Unit) {
+        tools.add(ToolBuilder().apply(init).build())
+    }
+
+    fun toolConfig(init: ToolConfigBuilder.() -> Unit) {
+        toolConfig = ToolConfigBuilder().apply(init).build()
+    }
+
+    fun safetySetting(init: SafetySettingBuilder.() -> Unit) {
+        safetySettings.add(SafetySettingBuilder().apply(init).build())
+    }
+
+    fun systemInstruction(init: ContentBuilder.() -> Unit) {
+        systemInstruction = ContentBuilder().apply(init).build()
+    }
+
+    fun generationConfig(init: GenerationConfigBuilder.() -> Unit) {
+        generationConfig = GenerationConfigBuilder().apply(init).build()
+    }
+
+    fun build() =
+        GenerateContentRequest(
+            contents = contents,
+            tools = tools,
+            toolConfig = toolConfig,
+            safetySettings = safetySettings,
+            systemInstruction = systemInstruction,
+            generationConfig = generationConfig,
+        )
+}
+
+fun generateContentRequest(init: GenerateContentRequestBuilder.() -> Unit): GenerateContentRequest = GenerateContentRequestBuilder().apply(init).build()

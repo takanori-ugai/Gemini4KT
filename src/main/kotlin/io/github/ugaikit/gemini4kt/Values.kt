@@ -15,3 +15,15 @@ import kotlinx.serialization.Serializable
 data class Values(
     val values: List<Double>,
 )
+
+class ValuesBuilder {
+    private val values: MutableList<Double> = mutableListOf()
+
+    fun value(value: Double) {
+        values.add(value)
+    }
+
+    fun build() = Values(values)
+}
+
+fun values(init: ValuesBuilder.() -> Unit): Values = ValuesBuilder().apply(init).build()

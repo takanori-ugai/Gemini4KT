@@ -21,3 +21,13 @@ data class SafetyRating(
     val probability: HarmProbability,
     val blocked: Boolean? = null,
 )
+
+class SafetyRatingBuilder {
+    lateinit var category: HarmCategory
+    lateinit var probability: HarmProbability
+    var blocked: Boolean? = null
+
+    fun build() = SafetyRating(category, probability, blocked)
+}
+
+fun safetyRating(init: SafetyRatingBuilder.() -> Unit): SafetyRating = SafetyRatingBuilder().apply(init).build()

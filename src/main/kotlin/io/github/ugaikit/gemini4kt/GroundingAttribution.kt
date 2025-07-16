@@ -16,3 +16,20 @@ data class GroundingAttribution(
     val sourceId: AttributionSourceId,
     val content: Content,
 )
+
+class GroundingAttributionBuilder {
+    lateinit var sourceId: AttributionSourceId
+    lateinit var content: Content
+
+    fun sourceId(init: AttributionSourceIdBuilder.() -> Unit) {
+        sourceId = AttributionSourceIdBuilder().apply(init).build()
+    }
+
+    fun content(init: ContentBuilder.() -> Unit) {
+        content = ContentBuilder().apply(init).build()
+    }
+
+    fun build() = GroundingAttribution(sourceId, content)
+}
+
+fun groundingAttribution(init: GroundingAttributionBuilder.() -> Unit): GroundingAttribution = GroundingAttributionBuilder().apply(init).build()

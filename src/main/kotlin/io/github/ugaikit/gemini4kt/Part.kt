@@ -27,7 +27,7 @@ data class Part(
     val fileData: FileData? = null,
 )
 
-fun buildPart(init: PartBuilder.() -> Unit): Part {
+fun part(init: PartBuilder.() -> Unit): Part {
     val builder = PartBuilder()
     builder.init()
     return builder.build()
@@ -42,9 +42,9 @@ class PartBuilder {
 
     fun text(init: () -> String?) = apply { text = init() }
 
-    fun inlineData(init: () -> InlineData?) = apply { inlineData = init() }
+    fun inlineData(init: InlineDataBuilder.() -> Unit) = apply { inlineData = InlineDataBuilder().apply(init).build() }
 
-    fun functionCall(init: () -> FunctionCall?) = apply { functionCall = init() }
+    fun functionCall(init: FunctionCallBuilder.() -> Unit) = apply { functionCall = FunctionCallBuilder().apply(init).build() }
 
     fun functionResponse(init: () -> FunctionResponse?) = apply { functionResponse = init() }
 
