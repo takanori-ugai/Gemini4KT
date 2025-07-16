@@ -11,4 +11,6 @@ import kotlinx.serialization.Serializable
  * processing the input through an embedding model or algorithm.
  */
 @Serializable
-data class EmbedResponse(val embedding: Values)
+data class EmbedResponse(
+    val embedding: Values,
+)

@@ -32,10 +32,14 @@ fun main() {
         )
 
     println(
-        gemini.generateContent(
-            inputJson,
-            model = "gemini-2.0-flash-exp",
-        ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
+        gemini
+            .generateContent(
+                inputJson,
+                model = "gemini-2.0-flash-exp",
+            ).candidates[0]
+            .content.parts[0]
+            .text!!
+            .replace("\n\n", "\n"),
     )
 
     val inputJson2 =
@@ -92,10 +96,14 @@ fun main() {
         )
 
     println(
-        gemini.generateContent(
-            inputWithImage,
-            "gemini-2.0-flash-exp",
-        ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
+        gemini
+            .generateContent(
+                inputWithImage,
+                "gemini-2.0-flash-exp",
+            ).candidates[0]
+            .content.parts[0]
+            .text!!
+            .replace("\n\n", "\n"),
     )
 
     val str = "This is a pen".repeat(10000)
@@ -216,10 +224,12 @@ fun main() {
         )
 
     println(
-        gemini.generateContent(
-            exFunction,
-            "gemini-2.0-flash-exp",
-        ).candidates[0].content.parts[0],
+        gemini
+            .generateContent(
+                exFunction,
+                "gemini-2.0-flash-exp",
+            ).candidates[0]
+            .content.parts[0],
     )
 
     val content =
@@ -301,10 +311,12 @@ fun main() {
     println(examplePart)
 
     println(
-        gemini.generateContent(
-            exFunction2,
-            "gemini-2.0-flash-exp",
-        ).candidates[0].content.parts[0],
+        gemini
+            .generateContent(
+                exFunction2,
+                "gemini-2.0-flash-exp",
+            ).candidates[0]
+            .content.parts[0],
     )
 }
 

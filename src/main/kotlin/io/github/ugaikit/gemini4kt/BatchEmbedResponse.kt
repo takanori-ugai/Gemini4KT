@@ -9,4 +9,6 @@ import kotlinx.serialization.Serializable
  * for a corresponding request in the batch.
  */
 @Serializable
-data class BatchEmbedResponse(val embeddings: List<Values>)
+data class BatchEmbedResponse(
+    val embeddings: List<Values>,
+)

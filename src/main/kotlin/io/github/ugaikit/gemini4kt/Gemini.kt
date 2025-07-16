@@ -19,7 +19,9 @@ private val logger = KotlinLogging.logger {}
  *
  * @property apiKey The API key used for authenticating requests to the Gemini API.
  */
-class Gemini(private val apiKey: String) {
+class Gemini(
+    private val apiKey: String,
+) {
     /**
      * JSON configuration setup to ignore unknown keys during deserialization.
      */

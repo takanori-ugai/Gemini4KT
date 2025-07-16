@@ -37,10 +37,14 @@ fun main() {
                 ),
         )
     println(
-        gemini.generateContent(
-            inputJson,
-            model = "gemini-2.5-flash-lite-preview-06-17",
-        ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
+        gemini
+            .generateContent(
+                inputJson,
+                model = "gemini-2.5-flash-lite-preview-06-17",
+            ).candidates[0]
+            .content.parts[0]
+            .text!!
+            .replace("\n\n", "\n"),
     )
 }
 

@@ -46,10 +46,14 @@ fun main() {
             cachedContent = cache.name,
         )
     println(
-        gemini.generateContent(
-            inputJson,
-            model = "gemini-1.5-flash",
-        ).candidates[0].content.parts[0].text!!.replace("\n\n", "\n"),
+        gemini
+            .generateContent(
+                inputJson,
+                model = "gemini-1.5-flash",
+            ).candidates[0]
+            .content.parts[0]
+            .text!!
+            .replace("\n\n", "\n"),
     )
 
     println(gemini.deleteCachedContent(cache.name!!))

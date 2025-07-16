@@ -14,9 +14,10 @@ fun main() {
     // Load the API key from the properties file
     val apiKey =
         Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-            Properties().apply {
-                load(inputStream)
-            }.getProperty("apiKey")
+            Properties()
+                .apply {
+                    load(inputStream)
+                }.getProperty("apiKey")
         }
 
     // Initialize the Gemini client with the API key

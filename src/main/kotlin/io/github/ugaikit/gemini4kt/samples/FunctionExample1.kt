@@ -123,10 +123,12 @@ fun main() {
         )
 
     println(
-        gemini.generateContent(
-            exFunction,
-            "gemini-2.0-flash-exp",
-        ).candidates[0].content.parts[0],
+        gemini
+            .generateContent(
+                exFunction,
+                "gemini-2.0-flash-exp",
+            ).candidates[0]
+            .content.parts[0],
     )
 }
 

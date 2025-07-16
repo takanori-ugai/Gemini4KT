@@ -15,4 +15,8 @@ import kotlinx.serialization.Serializable
  * construct valid calls to the function by adhering to this schema.
  */
 @Serializable
-data class FunctionDeclaration(val name: String, val description: String, val parameters: Schema)
+data class FunctionDeclaration(
+    val name: String,
+    val description: String,
+    val parameters: Schema,
+)
