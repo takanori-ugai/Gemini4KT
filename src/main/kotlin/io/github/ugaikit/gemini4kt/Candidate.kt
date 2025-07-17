@@ -58,8 +58,8 @@ class CandidateBuilder {
             safetyRatings,
             citationMetadata,
             tokenCount,
-            avgLogprobe,
-            logProbsResult,
+            avgLogprobs,
+            logprobsResult,
             groundingAttributions,
         )
 }
