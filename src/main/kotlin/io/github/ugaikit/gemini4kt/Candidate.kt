@@ -32,8 +32,8 @@ class CandidateBuilder {
     private var safetyRatings: MutableList<SafetyRating> = mutableListOf()
     var citationMetadata: CitationMetadata? = null
     var tokenCount: Int? = null
-    var avgLogprobs: Double? = null,
-    var logprobsResult: LogprobsResult? = null,
+    var avgLogprobs: Double? = null
+    var logprobsResult: LogprobsResult? = null
     private var groundingAttributions: MutableList<GroundingAttribution> = mutableListOf()
 
     fun content(init: ContentBuilder.() -> Unit) {
