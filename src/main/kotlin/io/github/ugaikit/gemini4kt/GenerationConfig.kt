@@ -30,14 +30,14 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class GenerationConfig(
-    val stopSequences: List<String>,
-    val temperature: Double,
-    val maxOutputTokens: Int,
-    val topP: Double,
-    val topK: Int,
+    val stopSequences: List<String>? = null,
+    val temperature: Double? = null,
+    val maxOutputTokens: Int? = null,
+    val topP: Double? = null,
+    val topK: Int? = null,
     @SerialName("response_mime_type")
     val responseMimeType: String? = null,
-    // "application/json" only for Gemini 1.5 pro
+    val thinkingConfig: ThinkingConfig? = null,
 )
 
 class GenerationConfigBuilder {

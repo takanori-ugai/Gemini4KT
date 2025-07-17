@@ -1,25 +1,27 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.gitlab.arturbosch.detekt.Detekt
 import net.thebugmc.gradle.sonatypepublisher.PublishingType.USER_MANAGED
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("jvm") version "2.0.0"
-    kotlin("plugin.serialization") version "2.0.0"
+    kotlin("jvm") version "2.2.0"
+    kotlin("plugin.serialization") version "2.2.0"
     application
-    id("org.jetbrains.dokka") version "1.9.20"
-    id("io.gitlab.arturbosch.detekt") version "1.23.6"
+    id("org.jetbrains.dokka") version "2.0.0"
+    id("org.jetbrains.dokka-javadoc") version "2.0.0"
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("com.github.jk1.dependency-license-report") version "2.8"
-    id("com.github.spotbugs") version "6.0.19"
-    id("com.diffplug.spotless") version "6.25.0"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+    id("com.github.jk1.dependency-license-report") version "2.9"
+    id("com.github.spotbugs") version "6.2.2"
+    id("com.diffplug.spotless") version "7.1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "13.0.0"
     jacoco
     id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
 }
 
 group = "io.github.ugaikit"
-version = "0.4.0"
+version = "0.7.0"
 
 repositories {
     mavenCentral()
@@ -66,9 +68,9 @@ centralPortal {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
-    runtimeOnly("ch.qos.logback:logback-classic:1.5.6")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
+    runtimeOnly("ch.qos.logback:logback-classic:1.5.18")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
 
@@ -88,12 +90,12 @@ tasks {
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = "11"
+        compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
         doLast { println("Finished compiling Kotlin source code") }
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "11"
+        compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
         doLast { println("Finished compiling Kotlin Test source code") }
     }
 
@@ -127,24 +129,6 @@ tasks {
         sourceDirectories.setFrom(files(listOf("src/main/java", "src/main/kotlin")))
     }
 
-    dokkaHtml.configure {
-        dokkaSourceSets {
-            configureEach {
-                jdkVersion.set(11)
-                noStdlibLink.set(true)
-            }
-        }
-    }
-
-    dokkaJavadoc.configure {
-        dokkaSourceSets {
-            configureEach {
-                jdkVersion.set(11)
-                noStdlibLink.set(true)
-            }
-        }
-    }
-
     test {
         testLogging {
 //            exceptionFormat = TestExceptionFormat.FULL
@@ -176,8 +160,15 @@ tasks {
     }
 }
 
+dokka.dokkaSourceSets {
+    configureEach {
+        jdkVersion.set(11)
+        enableJdkDocumentationLink.set(false)
+        enableKotlinStdLibDocumentationLink.set(false)
+    }
+}
+
 ktlint {
-//    setVersion("0.2.1")
     verbose.set(true)
     outputToConsole.set(true)
     coloredOutput.set(true)
@@ -201,7 +192,7 @@ detekt {
 }
 
 jacoco {
-    toolVersion = "0.8.12"
+    toolVersion = "0.8.13"
 }
 
 spotbugs {
@@ -217,11 +208,11 @@ spotless {
         removeUnusedImports()
 
         // Choose one of these formatters.
-        googleJavaFormat("1.22.0") // has its own section below
+        googleJavaFormat("1.27.0") // has its own section below
         formatAnnotations() // fixes formatting of type annotations, see below
     }
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(11)
 }

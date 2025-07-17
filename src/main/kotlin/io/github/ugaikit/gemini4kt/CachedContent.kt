@@ -4,16 +4,16 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CachedContent(
-    val contents: List<Content>,
-    val tools: List<Tool>,
-    val createTime: String,
-    val updateTime: String,
-    val usageMetadata: UsageMetadata,
+    val contents: List<Content>? = null,
+    val tools: List<Tool>? = null,
+    val createTime: String? = null,
+    val updateTime: String? = null,
+    val usageMetadata: UsageMetadata? = null,
     val expireTime: String? = null,
     val ttl: String? = null,
-    val name: String,
-    val displayName: String,
-    val model: String,
-    val systemInstruction: Content,
-    val toolConfig: ToolConfig,
+    val name: String? = null,
+    val displayName: String? = null,
+    val model: String? = null,
+    val systemInstruction: Content? = null,
+    val toolConfig: ToolConfig? = null,
 )

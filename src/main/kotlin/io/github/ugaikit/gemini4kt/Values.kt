@@ -12,7 +12,9 @@ import kotlinx.serialization.Serializable
  * @property values A list of [Double] representing the numeric values contained within this instance.
  */
 @Serializable
-data class Values(val values: List<Double>)
+data class Values(
+    val values: List<Double>,
+)
 
 class ValuesBuilder {
     private val values: MutableList<Double> = mutableListOf()

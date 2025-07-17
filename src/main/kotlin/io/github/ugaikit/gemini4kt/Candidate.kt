@@ -16,10 +16,12 @@ import kotlinx.serialization.Serializable
 data class Candidate(
     val content: Content,
     val finishReason: String,
-    val index: Int,
-    val safetyRatings: List<SafetyRating>,
+    val index: Int? = null,
+    val safetyRatings: List<SafetyRating>? = null,
     val citationMetadata: CitationMetadata? = null,
     val tokenCount: Int? = null,
+    val avgLogprobs: Double? = null,
+    val logprobsResult: LogprobsResult? = null,
     val groundingAttributions: List<GroundingAttribution> = emptyList(),
 )
 
@@ -30,6 +32,8 @@ class CandidateBuilder {
     private var safetyRatings: MutableList<SafetyRating> = mutableListOf()
     var citationMetadata: CitationMetadata? = null
     var tokenCount: Int? = null
+    var avgLogprobs: Double? = null
+    var logprobsResult: LogprobsResult? = null
     private var groundingAttributions: MutableList<GroundingAttribution> = mutableListOf()
 
     fun content(init: ContentBuilder.() -> Unit) {
@@ -54,6 +58,8 @@ class CandidateBuilder {
             safetyRatings,
             citationMetadata,
             tokenCount,
+            avgLogprobs,
+            logprobsResult,
             groundingAttributions,
         )
 }

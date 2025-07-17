@@ -10,7 +10,9 @@ import kotlinx.serialization.Serializable
  * details of the functions declared by this tool.
  */
 @Serializable
-data class ToolConfig(val functionCallingConfig: FunctionCallingConfig)
+data class ToolConfig(
+    val functionCallingConfig: FunctionCallingConfig,
+)
 
 class ToolConfigBuilder {
     private var functionCallingConfig: FunctionCallingConfig? = null

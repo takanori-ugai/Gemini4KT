@@ -11,4 +11,6 @@ import kotlinx.serialization.Serializable
  * based on its token count.
  */
 @Serializable
-data class TotalTokens(val totalTokens: Int)
+data class TotalTokens(
+    val totalTokens: Int,
+)
