@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.gitlab.arturbosch.detekt.Detekt
 import net.thebugmc.gradle.sonatypepublisher.PublishingType.USER_MANAGED
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -11,7 +10,7 @@ plugins {
     id("org.jetbrains.dokka") version "2.0.0"
     id("org.jetbrains.dokka-javadoc") version "2.0.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.9"
     id("com.github.jk1.dependency-license-report") version "2.9"
     id("com.github.spotbugs") version "6.2.3"
     id("com.diffplug.spotless") version "7.2.1"
@@ -153,10 +152,11 @@ tasks {
         }
     }
 
-    withType<ShadowJar> {
+    shadowJar {
         manifest {
             attributes["Main-Class"] = application.mainClass
         }
+        minimize()
     }
 }
 
