@@ -22,8 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Use a secret
-        run: echo "My secret is ${{ secrets.GEMINI_API_KEY  }}"
       - uses: actions/checkout@v4.2.1
       - uses: actions/cache@v4
         with:
@@ -41,4 +39,4 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4.1.0
       - name: Build with Gradle
-        run: ./gradlew build run
+        run: ./gradlew build
