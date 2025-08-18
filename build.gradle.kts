@@ -10,7 +10,7 @@ plugins {
     id("org.jetbrains.dokka") version "2.0.0"
     id("org.jetbrains.dokka-javadoc") version "2.0.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    id("com.gradleup.shadow") version "9.0.1"
+    id("com.gradleup.shadow") version "9.0.2"
     id("com.github.jk1.dependency-license-report") version "2.9"
     id("com.github.spotbugs") version "6.2.4"
     id("com.diffplug.spotless") version "7.2.1"
