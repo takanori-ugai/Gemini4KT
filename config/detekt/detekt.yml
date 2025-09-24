@@ -1,2 +1,3 @@
 build:
   maxIssues: 30
+  warningsAsErrors: false
