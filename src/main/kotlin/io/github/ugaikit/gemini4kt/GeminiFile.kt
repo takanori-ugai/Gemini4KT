@@ -12,5 +12,5 @@ data class GeminiFile(
     val updateTime: String,
     val expirationTime: String,
     val sha256Hash: String,
-    val sizeBytes: Long
+    val sizeBytes: Long,
 )

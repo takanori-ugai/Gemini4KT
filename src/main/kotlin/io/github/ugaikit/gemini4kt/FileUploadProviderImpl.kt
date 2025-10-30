@@ -13,14 +13,20 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 @Serializable
-data class FileWrapper(val file: GeminiFile)
+data class FileWrapper(
+    val file: GeminiFile,
+)
+
 class FileUploadProviderImpl(
     private val apiKey: String,
     private val httpConnectionProvider: HttpConnectionProvider = DefaultHttpConnectionProvider(),
-    private val json: Json = Json { ignoreUnknownKeys = true }
+    private val json: Json = Json { ignoreUnknownKeys = true },
 ) : FileUploadProvider {
-
-    override suspend fun upload(file: File, mimeType: String, displayName: String): GeminiFile {
+    override suspend fun upload(
+        file: File,
+        mimeType: String,
+        displayName: String,
+    ): GeminiFile {
         val baseUrl = "https://generativelanguage.googleapis.com"
         val uploadUrl = getUploadUrl(baseUrl, apiKey, mimeType, displayName, file.length())
         return uploadFile(uploadUrl, file, mimeType)
@@ -31,9 +37,9 @@ class FileUploadProviderImpl(
         apiKey: String,
         mimeType: String,
         displayName: String,
-        fileSize: Long
-    ): String {
-        return withContext(Dispatchers.IO) {
+        fileSize: Long,
+    ): String =
+        withContext(Dispatchers.IO) {
             val url = URL("$baseUrl/upload/v1beta/files?key=$apiKey")
             val connection = httpConnectionProvider.getConnection(url)
             connection.requestMethod = "POST"
@@ -44,7 +50,20 @@ class FileUploadProviderImpl(
             connection.addRequestProperty("Content-Type", "application/json")
             connection.doOutput = true
 
-            val fileWrapper = FileWrapper(GeminiFile(displayName = displayName, name = "", uri = "", mimeType = "", createTime = "", updateTime = "", expirationTime = "", sha256Hash = "", sizeBytes = 0))
+            val fileWrapper =
+                FileWrapper(
+                    GeminiFile(
+                        displayName = displayName,
+                        name = "",
+                        uri = "",
+                        mimeType = "",
+                        createTime = "",
+                        updateTime = "",
+                        expirationTime = "",
+                        sha256Hash = "",
+                        sizeBytes = 0,
+                    ),
+                )
             val requestBody = json.encodeToString(fileWrapper)
             connection.outputStream.write(requestBody.toByteArray())
 
@@ -55,10 +74,13 @@ class FileUploadProviderImpl(
             connection.headerFields["x-goog-upload-url"]?.get(0)
                 ?: throw IOException("Upload URL not found in response headers")
         }
-    }
 
-    private suspend fun uploadFile(uploadUrl: String, file: File, mimeType: String): GeminiFile {
-        return withContext(Dispatchers.IO) {
+    private suspend fun uploadFile(
+        uploadUrl: String,
+        file: File,
+        mimeType: String,
+    ): GeminiFile =
+        withContext(Dispatchers.IO) {
             val url = URL(uploadUrl)
             val connection = httpConnectionProvider.getConnection(url)
             connection.requestMethod = "POST"
@@ -86,5 +108,4 @@ class FileUploadProviderImpl(
             val response = connection.inputStream.bufferedReader().use { it.readText() }
             json.decodeFromString<FileWrapper>(response).file
         }
-    }
 }

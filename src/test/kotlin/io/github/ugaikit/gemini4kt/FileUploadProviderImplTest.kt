@@ -12,7 +12,6 @@ import java.io.File
 import java.net.HttpURLConnection
 
 class FileUploadProviderImplTest {
-
     private lateinit var fileUploadProvider: FileUploadProviderImpl
     private lateinit var conn: HttpURLConnection
     private lateinit var httpConnectionProvider: HttpConnectionProvider
@@ -32,7 +31,8 @@ class FileUploadProviderImplTest {
             file.writeText("test content")
             val mimeType = "text/plain"
             val displayName = "Test File"
-            val response = """
+            val response =
+                """
                 {
                     "file": {
                         "name": "files/test-file",
@@ -46,7 +46,7 @@ class FileUploadProviderImplTest {
                         "sizeBytes": 12
                     }
                 }
-            """.trimIndent()
+                """.trimIndent()
             val uploadUrl = "https://example.com/upload"
 
             every { conn.responseCode } returns 200

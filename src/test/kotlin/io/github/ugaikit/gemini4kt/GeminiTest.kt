@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -15,7 +16,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
-import kotlinx.coroutines.runBlocking
 
 class GeminiTest {
     private lateinit var httpConnectionProvider: HttpConnectionProvider
@@ -28,11 +28,12 @@ class GeminiTest {
         httpConnectionProvider = mockk()
         conn = mockk(relaxed = true)
         fileUploadProvider = mockk()
-        gemini = Gemini(
-            apiKey = "test-api-key",
-            httpConnectionProvider = httpConnectionProvider,
-            fileUploadProvider = fileUploadProvider
-        )
+        gemini =
+            Gemini(
+                apiKey = "test-api-key",
+                httpConnectionProvider = httpConnectionProvider,
+                fileUploadProvider = fileUploadProvider,
+            )
     }
 
     @Test
@@ -133,21 +134,25 @@ class GeminiTest {
     @Test
     fun `generateContent with fileData calls getContent with correct parameters`() {
         val geminiSpy = spyk(gemini)
-        val request = GenerateContentRequest(
-            contents = listOf(
-                Content(
-                    parts = listOf(
-                        Part(
-                            text = "Please describe this file.",
-                            fileData = FileData(
-                                mimeType = "audio/mpeg",
-                                fileUri = "https://example.com/test.mp3"
-                            )
-                        )
-                    )
-                )
+        val request =
+            GenerateContentRequest(
+                contents =
+                    listOf(
+                        Content(
+                            parts =
+                                listOf(
+                                    Part(
+                                        text = "Please describe this file.",
+                                        fileData =
+                                            FileData(
+                                                mimeType = "audio/mpeg",
+                                                fileUri = "https://example.com/test.mp3",
+                                            ),
+                                    ),
+                                ),
+                        ),
+                    ),
             )
-        )
         val responseJson = """{"candidates": []}"""
         every { geminiSpy.getContent(any(), any()) } returns responseJson
 

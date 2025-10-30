@@ -2,8 +2,8 @@ package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.FileData
-import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Gemini
+import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -25,28 +25,33 @@ fun main() {
         }
 
         println("Uploading file...")
-        val uploadedFile = gemini.uploadFile(
-            file = imageFile,
-            mimeType = "image/jpeg",
-            displayName = "Scones"
-        )
+        val uploadedFile =
+            gemini.uploadFile(
+                file = imageFile,
+                mimeType = "image/jpeg",
+                displayName = "Scones",
+            )
         println("File uploaded successfully. URI: ${uploadedFile.uri}")
 
-        val request = GenerateContentRequest(
-            contents = listOf(
-                Content(
-                    parts = listOf(
-                        Part(text = "What is in this image?"),
-                        Part(
-                            fileData = FileData(
-                                mimeType = uploadedFile.mimeType,
-                                fileUri = uploadedFile.uri
-                            )
-                        )
-                    )
-                )
+        val request =
+            GenerateContentRequest(
+                contents =
+                    listOf(
+                        Content(
+                            parts =
+                                listOf(
+                                    Part(text = "What is in this image?"),
+                                    Part(
+                                        fileData =
+                                            FileData(
+                                                mimeType = uploadedFile.mimeType,
+                                                fileUri = uploadedFile.uri,
+                                            ),
+                                    ),
+                                ),
+                        ),
+                    ),
             )
-        )
 
         println("Generating content from file...")
         try {

@@ -2,8 +2,8 @@ package io.github.ugaikit.gemini4kt
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.encodeToString
-import java.io.File
 import kotlinx.serialization.json.Json
+import java.io.File
 import java.io.IOException
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
@@ -192,9 +192,7 @@ class Gemini(
         file: File,
         mimeType: String,
         displayName: String,
-    ): GeminiFile {
-        return fileUploadProvider.upload(file, mimeType, displayName)
-    }
+    ): GeminiFile = fileUploadProvider.upload(file, mimeType, displayName)
 
     /**
      * Performs a POST request to the specified URL string with the given input JSON payload.
