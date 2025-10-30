@@ -2,6 +2,7 @@ package io.github.ugaikit.gemini4kt
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.encodeToString
+import java.io.File
 import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.io.OutputStreamWriter
@@ -30,6 +31,7 @@ internal class DefaultHttpConnectionProvider : HttpConnectionProvider {
 class Gemini(
     private val apiKey: String,
     private val httpConnectionProvider: HttpConnectionProvider = DefaultHttpConnectionProvider(),
+    private val fileUploadProvider: FileUploadProvider = FileUploadProviderImpl(apiKey),
 ) {
     /**
      * JSON configuration setup to ignore unknown keys during deserialization.
@@ -176,6 +178,22 @@ class Gemini(
     fun getModels(): ModelCollection {
         val urlString = "$baseUrl?key=$apiKey"
         return json.decodeFromString<ModelCollection>(getContent(urlString))
+    }
+
+    /**
+     * Uploads a file to the Gemini API.
+     *
+     * @param file The file to upload.
+     * @param mimeType The MIME type of the file.
+     * @param displayName The display name of the file.
+     * @return The uploaded file as a [File] object.
+     */
+    suspend fun uploadFile(
+        file: File,
+        mimeType: String,
+        displayName: String,
+    ): GeminiFile {
+        return fileUploadProvider.upload(file, mimeType, displayName)
     }
 
     /**
