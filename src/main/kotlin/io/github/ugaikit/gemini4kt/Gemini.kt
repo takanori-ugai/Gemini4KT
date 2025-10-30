@@ -18,9 +18,7 @@ interface HttpConnectionProvider {
 }
 
 internal class DefaultHttpConnectionProvider : HttpConnectionProvider {
-    override fun getConnection(url: URL): HttpURLConnection {
-        return url.openConnection() as HttpURLConnection
-    }
+    override fun getConnection(url: URL): HttpURLConnection = url.openConnection() as HttpURLConnection
 }
 
 /**
