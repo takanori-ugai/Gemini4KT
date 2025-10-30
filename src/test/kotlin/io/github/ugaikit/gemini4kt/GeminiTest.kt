@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
 
@@ -19,12 +21,19 @@ class GeminiTest {
     private lateinit var httpConnectionProvider: HttpConnectionProvider
     private lateinit var conn: HttpURLConnection
     private lateinit var gemini: Gemini
+    private lateinit var fileUploadProvider: FileUploadProvider
 
     @BeforeEach
     fun setup() {
         httpConnectionProvider = mockk()
         conn = mockk(relaxed = true)
-        gemini = Gemini(apiKey = "test-api-key", httpConnectionProvider = httpConnectionProvider)
+        fileUploadProvider = mockk()
+        gemini =
+            Gemini(
+                apiKey = "test-api-key",
+                httpConnectionProvider = httpConnectionProvider,
+                fileUploadProvider = fileUploadProvider,
+            )
     }
 
     @Test
@@ -108,6 +117,42 @@ class GeminiTest {
     fun `generateContent calls getContent with correct parameters`() {
         val geminiSpy = spyk(gemini)
         val request = GenerateContentRequest(contents = emptyList())
+        val responseJson = """{"candidates": []}"""
+        every { geminiSpy.getContent(any(), any()) } returns responseJson
+
+        val response = geminiSpy.generateContent(request)
+
+        assertNotNull(response)
+        verify {
+            geminiSpy.getContent(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=test-api-key",
+                Json.encodeToString(request),
+            )
+        }
+    }
+
+    @Test
+    fun `generateContent with fileData calls getContent with correct parameters`() {
+        val geminiSpy = spyk(gemini)
+        val request =
+            GenerateContentRequest(
+                contents =
+                    listOf(
+                        Content(
+                            parts =
+                                listOf(
+                                    Part(
+                                        text = "Please describe this file.",
+                                        fileData =
+                                            FileData(
+                                                mimeType = "audio/mpeg",
+                                                fileUri = "https://example.com/test.mp3",
+                                            ),
+                                    ),
+                                ),
+                        ),
+                    ),
+            )
         val responseJson = """{"candidates": []}"""
         every { geminiSpy.getContent(any(), any()) } returns responseJson
 
@@ -258,6 +303,23 @@ class GeminiTest {
                 "https://generativelanguage.googleapis.com/v1beta/models?key=test-api-key",
                 null,
             )
+        }
+    }
+
+    @Test
+    fun `uploadFile calls fileUploadProvider with correct parameters`() {
+        runBlocking {
+            val file = File("test.txt")
+            val mimeType = "text/plain"
+            val displayName = "Test File"
+            val expectedFile = mockk<GeminiFile>()
+
+            every { runBlocking { fileUploadProvider.upload(file, mimeType, displayName) } } returns expectedFile
+
+            val result = gemini.uploadFile(file, mimeType, displayName)
+
+            assertEquals(expectedFile, result)
+            verify { runBlocking { fileUploadProvider.upload(file, mimeType, displayName) } }
         }
     }
 }
