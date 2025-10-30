@@ -13,6 +13,16 @@ import java.net.URL
  */
 private val logger = KotlinLogging.logger {}
 
+interface HttpConnectionProvider {
+    fun getConnection(url: URL): HttpURLConnection
+}
+
+internal class DefaultHttpConnectionProvider : HttpConnectionProvider {
+    override fun getConnection(url: URL): HttpURLConnection {
+        return url.openConnection() as HttpURLConnection
+    }
+}
+
 /**
  * Represents a client for interacting with the Gemini API, providing methods to extract content,
  * embed content, and retrieve model information.
@@ -21,6 +31,7 @@ private val logger = KotlinLogging.logger {}
  */
 class Gemini(
     private val apiKey: String,
+    private val httpConnectionProvider: HttpConnectionProvider = DefaultHttpConnectionProvider(),
 ) {
     /**
      * JSON configuration setup to ignore unknown keys during deserialization.
@@ -183,7 +194,7 @@ class Gemini(
         try {
             logger.info { inputJson }
             val url = URL(urlStr)
-            val conn = url.openConnection() as HttpURLConnection
+            val conn = httpConnectionProvider.getConnection(url)
             conn.requestMethod = if (inputJson == null) "GET" else "POST"
             conn.setRequestProperty("Content-Type", "application/json")
             if (inputJson != null) {
@@ -219,7 +230,7 @@ class Gemini(
     fun deleteContent(urlStr: String) {
         try {
             val url = URL(urlStr)
-            val conn = url.openConnection() as HttpURLConnection
+            val conn = httpConnectionProvider.getConnection(url)
             conn.requestMethod = "DELETE"
             val resCode = conn.responseCode
             if (resCode != 200) {

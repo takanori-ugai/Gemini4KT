@@ -71,6 +71,7 @@ dependencies {
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.13")
     runtimeOnly("ch.qos.logback:logback-classic:1.5.20")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
+    testImplementation("io.mockk:mockk:1.13.11")
 }
 
 application {
