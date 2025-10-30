@@ -50,7 +50,7 @@ class FileUploadProviderImplTest {
             val uploadUrl = "https://example.com/upload"
 
             every { conn.responseCode } returns 200
-            every { conn.headerFields } returns mapOf("x-goog-upload-url" to listOf(uploadUrl))
+            every { conn.headerFields } returns mapOf("X-Goog-Upload-URL" to listOf(uploadUrl))
             every { conn.outputStream } returns ByteArrayOutputStream()
             every { conn.inputStream } returns ByteArrayInputStream(response.toByteArray())
 
