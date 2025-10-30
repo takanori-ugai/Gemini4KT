@@ -7,9 +7,15 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.util.Properties
 
 fun main() {
-    val apiKey = System.getenv("GEMINI_API_KEY")
+    val path = Gemini::class.java.getResourceAsStream("/prop.properties")
+    val prop =
+        Properties().also {
+            it.load(path)
+        }
+    val apiKey = prop.getProperty("apiKey")
     if (apiKey.isNullOrEmpty()) {
         println("API key not found. Please set the GEMINI_API_KEY environment variable.")
         return
@@ -55,7 +61,7 @@ fun main() {
 
         println("Generating content from file...")
         try {
-            val response = gemini.generateContent(request, model = "gemini-pro-vision")
+            val response = gemini.generateContent(request, model = "gemini-2.0-flash")
             response.candidates.forEach { candidate ->
                 candidate.content.parts.forEach { part ->
                     println(part.text)

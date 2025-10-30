@@ -3,7 +3,6 @@ package io.github.ugaikit.gemini4kt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.IOException
@@ -64,14 +63,15 @@ class FileUploadProviderImpl(
                         sizeBytes = 0,
                     ),
                 )
-            val requestBody = json.encodeToString(fileWrapper)
+            val requestBody = """{ "file" : { "displayName" : "$displayName" }}"""
+
             connection.outputStream.write(requestBody.toByteArray())
 
             if (connection.responseCode != HttpURLConnection.HTTP_OK) {
                 throw IOException("Failed to get upload URL: ${connection.responseCode} ${connection.responseMessage}")
             }
 
-            connection.headerFields["x-goog-upload-url"]?.get(0)
+            connection.headerFields["X-Goog-Upload-URL"]?.get(0)
                 ?: throw IOException("Upload URL not found in response headers")
         }
 

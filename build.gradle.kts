@@ -69,12 +69,10 @@ centralPortal {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.13")
-    implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     runtimeOnly("ch.qos.logback:logback-classic:1.5.20")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("io.mockk:mockk:1.13.11")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 }
 
 application {
