@@ -122,13 +122,13 @@ tasks {
         }
     }
 
-    withType<JacocoReport> {
-        dependsOn("test")
-        executionData(withType<Test>())
-        classDirectories.setFrom(files(listOf("build/classes/kotlin/main")))
+//    withType<JacocoReport> {
+//        dependsOn("test")
+//        executionData(withType<Test>())
+//        classDirectories.setFrom(files(listOf("build/classes/kotlin/main")))
         //  sourceDirectories = files(listOf("src/main/java", "src/main/kotlin"))
-        sourceDirectories.setFrom(files(listOf("src/main/java", "src/main/kotlin")))
-    }
+//        sourceDirectories.setFrom(files(listOf("src/main/java", "src/main/kotlin")))
+//    }
 
     test {
         testLogging {
