@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents a call to a function, specifying the function's name and the
@@ -15,5 +16,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FunctionCall(
     val name: String,
-    val args: Map<String, String>,
+    val args: Map<String, JsonElement>,
 )
