@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -266,7 +267,11 @@ fun main() {
                                     functionCall =
                                         FunctionCall(
                                             name = "find_theaters",
-                                            args = mapOf("location" to "Mountain View, CA", "description" to "Barbie"),
+                                            args =
+                                                mapOf(
+                                                    "location" to JsonPrimitive("Mountain View, CA"),
+                                                    "description" to JsonPrimitive("Barbie"),
+                                                ),
                                         ),
                                 ),
                             ),
