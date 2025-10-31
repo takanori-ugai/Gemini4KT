@@ -4,47 +4,29 @@ import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.FunctionDeclaration
 import io.github.ugaikit.gemini4kt.FunctionResponse
 import io.github.ugaikit.gemini4kt.Gemini
+import io.github.ugaikit.gemini4kt.GeminiFunction
+import io.github.ugaikit.gemini4kt.GeminiParameter
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
+import io.github.ugaikit.gemini4kt.buildFunctionDeclaration
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
+@GeminiFunction(description = "add two numbers")
 fun add(
-    a: Int,
-    b: Int,
+    @GeminiParameter(description = "first number") a: Int,
+    @GeminiParameter(description = "second number") b: Int,
 ): Int = a + b
 
 fun main() {
     val apiKey = System.getenv("GEMINI_API_KEY")
     val gemini = Gemini(apiKey)
 
-    val addFunction =
-        FunctionDeclaration(
-            name = "add",
-            description = "add two numbers",
-            parameters =
-                Schema(
-                    type = "object",
-                    properties =
-                        mapOf(
-                            "a" to
-                                Schema(
-                                    type = "integer",
-                                    description = "first number",
-                                ),
-                            "b" to
-                                Schema(
-                                    type = "integer",
-                                    description = "second number",
-                                ),
-                        ),
-                    required = listOf("a", "b"),
-                ),
-        )
+    val addFunction = buildFunctionDeclaration(::add)
 
     val tools = listOf(Tool(functionDeclarations = listOf(addFunction)))
 

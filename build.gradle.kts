@@ -67,6 +67,7 @@ centralPortal {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.13")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
