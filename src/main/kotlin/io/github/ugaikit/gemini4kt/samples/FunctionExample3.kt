@@ -1,14 +1,12 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Content
-import io.github.ugaikit.gemini4kt.FunctionDeclaration
 import io.github.ugaikit.gemini4kt.FunctionResponse
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.GeminiFunction
 import io.github.ugaikit.gemini4kt.GeminiParameter
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
-import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
 import io.github.ugaikit.gemini4kt.buildFunctionDeclaration
 import kotlinx.serialization.json.buildJsonObject
