@@ -9,6 +9,7 @@ import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
@@ -22,7 +23,9 @@ import kotlinx.serialization.json.put
 fun findWeather(
     location: String,
     unit: String?,
-): String = "The weather in $location is super sunny"
+): String {
+    return "The weather in $location is super sunny"
+}
 
 fun main() {
     val apiKey = System.getenv("GEMINI_API_KEY")
