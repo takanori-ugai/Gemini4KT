@@ -118,7 +118,8 @@ tasks {
         reports {
             xml.required.set(true)
             csv.required.set(true)
-            html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
+            dependsOn(test)
+//            html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
         }
     }
 
@@ -136,6 +137,7 @@ tasks {
             showStandardStreams = true
         }
         useJUnitPlatform()
+        finalizedBy(jacocoTestReport) // report is always generated after tests run
     }
 
     withType<Detekt>().configureEach {
