@@ -132,6 +132,33 @@ class GeminiTest {
     }
 
     @Test
+    fun `generateContent with google search calls getContent with correct parameters`() {
+        val geminiSpy = spyk(gemini)
+        val request =
+            GenerateContentRequest(
+                contents = emptyList(),
+                tools =
+                    listOf(
+                        Tool(
+                            googleSearch = mapOf(),
+                        ),
+                    ),
+            )
+        val responseJson = """{"candidates": []}"""
+        every { geminiSpy.getContent(any(), any()) } returns responseJson
+
+        val response = geminiSpy.generateContent(request)
+
+        assertNotNull(response)
+        verify {
+            geminiSpy.getContent(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=test-api-key",
+                Json.encodeToString(request),
+            )
+        }
+    }
+
+    @Test
     fun `generateContent with fileData calls getContent with correct parameters`() {
         val geminiSpy = spyk(gemini)
         val request =
