@@ -6,25 +6,28 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class ToolConfigTest {
-
     @Test
     fun `ToolConfig serializes correctly with retrievalConfig`() {
         val latLng = LatLng(latitude = 34.0522, longitude = -118.2437)
         val retrievalConfig = RetrievalConfig(latLng = latLng, languageCode = "en-US")
         val functionCallingConfig = FunctionCallingConfig(mode = Mode.ANY, allowedFunctionNames = listOf("search", "translate"))
-        val toolConfig = ToolConfig(
-            functionCallingConfig = functionCallingConfig,
-            retrievalConfig = retrievalConfig
-        )
+        val toolConfig =
+            ToolConfig(
+                functionCallingConfig = functionCallingConfig,
+                retrievalConfig = retrievalConfig,
+            )
 
         val json = Json
 
         val actualJsonString = json.encodeToString(toolConfig)
-        val expectedJsonString = """{"functionCallingConfig":{"mode":"ANY","allowedFunctionNames":["search","translate"]},"retrievalConfig":{"latLng":{"latitude":34.0522,"longitude":-118.2437},"languageCode":"en-US"}}"""
+        val expectedJsonString =
+            """
+            {"functionCallingConfig":{"mode":"ANY","allowedFunctionNames":["search","translate"]},"retrievalConfig":{"latLng":{"latitude":34.0522,"longitude":-118.2437},"languageCode":"en-US"}}
+            """.trimIndent()
 
         assertEquals(
             Json.parseToJsonElement(expectedJsonString),
-            Json.parseToJsonElement(actualJsonString)
+            Json.parseToJsonElement(actualJsonString),
         )
     }
 }
