@@ -18,3 +18,33 @@ data class FileData(
     val mimeType: String,
     val fileUri: String,
 )
+
+/**
+ * Builder class for constructing a FileData object.
+ */
+class FileDataBuilder {
+    /**
+     * The MIME type of the file.
+     */
+    var mimeType: String = ""
+
+    /**
+     * The URI of the file.
+     */
+    var fileUri: String = ""
+
+    /**
+     * Builds and returns a FileData object with the current state of the builder.
+     *
+     * @return A new instance of FileData.
+     */
+    fun build() = FileData(mimeType, fileUri)
+}
+
+/**
+ * DSL function to create a FileData object using a builder pattern.
+ *
+ * @param init A lambda function to initialize the FileDataBuilder.
+ * @return A new instance of FileData.
+ */
+fun fileData(init: FileDataBuilder.() -> Unit): FileData = FileDataBuilder().apply(init).build()

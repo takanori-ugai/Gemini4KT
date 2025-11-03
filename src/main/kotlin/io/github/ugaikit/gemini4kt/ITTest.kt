@@ -18,20 +18,13 @@ fun main() {
     val text = "Write a story about a magic backpack."
 
     val inputJson =
-        GenerateContentRequest(
-            contents =
-                listOf(
-                    Content(parts = listOf(Part(text))),
-                ),
-            safetySettings =
-                listOf(
-                    SafetySetting(
-                        category = HarmCategory.HARM_CATEGORY_HARASSMENT,
-                        threshold = Threshold.BLOCK_ONLY_HIGH,
-                    ),
-                ),
-        )
-
+        generateContentRequest {
+            content { part { text { text } } }
+            safetySetting {
+                category = HarmCategory.HARM_CATEGORY_HARASSMENT
+                threshold = Threshold.BLOCK_ONLY_HIGH
+            }
+        }
     println(
         gemini
             .generateContent(
@@ -121,52 +114,40 @@ fun main() {
     println(gemini.deleteCachedContent(cache.name!!))
 
     val findMoviesFunction =
-        FunctionDeclaration(
-            name = "find_movies",
-            description = "find movie titles currently playing in theaters based on any description, genre, title words, etc.",
-            parameters =
-                Schema(
-                    type = "object",
-                    properties =
-                        mapOf(
-                            "location" to
-                                Schema(
-                                    type = "string",
-                                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616",
-                                ),
-                            "description" to
-                                Schema(
-                                    type = "string",
-                                    description = "Any kind of description including category or genre",
-                                ),
-                        ),
-                    required = listOf("description"),
-                ),
-        )
+        functionDeclaration {
+            name = "find_movies"
+            description = "find movie titles currently playing in theaters based on any description, genre, title words, etc."
+            parameters {
+                type = "object"
+                property("location") {
+                    type = "string"
+                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
+                }
+                property("description") {
+                    type = "string"
+                    description = "Any kind of description including category or genre"
+                }
+                required("description")
+            }
+        }
 
     val findTheatersFunction =
-        FunctionDeclaration(
-            name = "find_theaters",
-            description = "find theaters based on location and optionally movie title which is currently playing in theaters",
-            parameters =
-                Schema(
-                    type = "object",
-                    properties =
-                        mapOf(
-                            "location" to
-                                Schema(
-                                    type = "string",
-                                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616",
-                                ),
-                            "movie" to
-                                Schema(
-                                    type = "string",
-                                    description = "Any movie title",
-                                ),
-                        ),
-                    required = listOf("location"),
-                ),
-        )
+        functionDeclaration {
+            name = "find_theaters"
+            description = "find theaters based on location and optionally movie title which is currently playing in theaters"
+            parameters {
+                type = "object"
+                property("location") {
+                    type = "string"
+                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
+                }
+                property("movie") {
+                    type = "string"
+                    description = "Any movie title"
+                }
+                required("location")
+            }
+        }
 
     val getShowtimesFunction =
         FunctionDeclaration(
@@ -206,10 +187,14 @@ fun main() {
         GenerateContentRequest(
             contents =
                 listOf(
-                    Content(
-                        role = "user",
-                        parts = listOf(Part(text = "Which theaters in Mountain View show Barbie movie?")),
-                    ),
+                    content {
+                        role = "user"
+                        part {
+                            text {
+                                "Which theaters in Mountain View show Barbie movie?"
+                            }
+                        }
+                    },
                 ),
             tools =
                 listOf(
@@ -255,40 +240,31 @@ fun main() {
         GenerateContentRequest(
             contents =
                 listOf(
-                    Content(
-                        role = "user",
-                        parts = listOf(Part(text = "Which theaters in Mountain View show Barbie movie?")),
-                    ),
-                    Content(
-                        role = "model",
-                        parts =
-                            listOf(
-                                Part(
-                                    functionCall =
-                                        FunctionCall(
-                                            name = "find_theaters",
-                                            args =
-                                                mapOf(
-                                                    "location" to JsonPrimitive("Mountain View, CA"),
-                                                    "description" to JsonPrimitive("Barbie"),
-                                                ),
-                                        ),
-                                ),
-                            ),
-                    ),
-                    Content(
-                        role = "function",
-                        parts =
-                            listOf(
-                                Part(
-                                    functionResponse =
-                                        FunctionResponse(
-                                            name = "find_theaters",
-                                            response = content,
-                                        ),
-                                ),
-                            ),
-                    ),
+                    content {
+                        role = "user"
+                        part { text { "Which theaters in Mountain View show Barbie movie?" } }
+                    },
+                    content {
+                        role = "model"
+                        part {
+                            functionCall {
+                                name = "find_theaters"
+                                arg("location", "Mountain View, CA")
+                                arg("movie", "Barbie")
+                            }
+                        }
+                    },
+                    content {
+                        role = "function"
+                        part {
+                            functionResponse {
+                                FunctionResponse(
+                                    name = "find_theaters",
+                                    response = content,
+                                )
+                            }
+                        }
+                    },
                 ),
             tools =
                 listOf(
@@ -304,13 +280,11 @@ fun main() {
         )
 
     val examplePart =
-        buildPart {
+        part {
             text { "This is an example text." }
             inlineData {
-                buildInlineData {
-                    mimeType { "text/plain" }
-                    data { "This is an example inline data." }
-                }
+                mimeType { "text/plain" }
+                data { "This is an example inline data." }
             }
         }
     println(examplePart)

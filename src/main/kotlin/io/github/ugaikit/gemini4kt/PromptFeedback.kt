@@ -17,3 +17,15 @@ import kotlinx.serialization.Serializable
 data class PromptFeedback(
     val safetyRatings: List<SafetyRating>,
 )
+
+class PromptFeedbackBuilder {
+    private val safetyRatings: MutableList<SafetyRating> = mutableListOf()
+
+    fun safetyRating(init: SafetyRatingBuilder.() -> Unit) {
+        safetyRatings.add(SafetyRatingBuilder().apply(init).build())
+    }
+
+    fun build() = PromptFeedback(safetyRatings)
+}
+
+fun promptFeedback(init: PromptFeedbackBuilder.() -> Unit): PromptFeedback = PromptFeedbackBuilder().apply(init).build()

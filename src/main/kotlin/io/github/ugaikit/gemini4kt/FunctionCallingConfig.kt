@@ -19,3 +19,16 @@ data class FunctionCallingConfig(
     val mode: Mode,
     val allowedFunctionNames: List<String>,
 )
+
+class FunctionCallingConfigBuilder {
+    var mode: Mode = Mode.AUTO
+    private val allowedFunctionNames: MutableList<String> = mutableListOf()
+
+    fun allowFunction(name: String) {
+        allowedFunctionNames.add(name)
+    }
+
+    fun build() = FunctionCallingConfig(mode, allowedFunctionNames)
+}
+
+fun functionCallingConfig(init: FunctionCallingConfigBuilder.() -> Unit): FunctionCallingConfig = FunctionCallingConfigBuilder().apply(init).build()

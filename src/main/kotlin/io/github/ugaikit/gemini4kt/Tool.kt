@@ -17,3 +17,15 @@ data class Tool(
     @SerialName("google_search")
     val googleSearch: Map<String, String>? = null,
 )
+
+class ToolBuilder {
+    private val functionDeclarations: MutableList<FunctionDeclaration> = mutableListOf()
+
+    fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit) {
+        functionDeclarations.add(FunctionDeclarationBuilder().apply(init).build())
+    }
+
+    fun build() = Tool(functionDeclarations)
+}
+
+fun tool(init: ToolBuilder.() -> Unit): Tool = ToolBuilder().apply(init).build()

@@ -33,3 +33,47 @@ data class Schema(
     val required: List<String> = emptyList(),
     val items: Schema? = null,
 )
+
+class SchemaBuilder {
+    var type: String = "object" // Default type
+    var format: String? = null
+    var description: String? = null
+    var nullable: Boolean = false
+    private val enumInternal: MutableList<String> = mutableListOf()
+    private val propertiesInternal: MutableMap<String, SchemaBuilder.() -> Unit> = mutableMapOf()
+    private val requiredInternal: MutableList<String> = mutableListOf()
+    var items: SchemaBuilder? = null
+
+    fun enum(vararg values: String) {
+        enumInternal.addAll(values)
+    }
+
+    fun property(
+        name: String,
+        init: SchemaBuilder.() -> Unit,
+    ) {
+        propertiesInternal[name] = init
+    }
+
+    fun required(vararg fields: String) {
+        requiredInternal.addAll(fields)
+    }
+
+    fun items(init: SchemaBuilder.() -> Unit) {
+        items = SchemaBuilder().apply(init)
+    }
+
+    fun build(): Schema {
+        val properties = propertiesInternal.mapValues { SchemaBuilder().apply(it.value).build() }
+        return Schema(
+            type = type,
+            format = format,
+            description = description,
+            nullable = nullable,
+            enum = enumInternal,
+            properties = properties,
+            required = requiredInternal,
+            items = items?.build(),
+        )
+    }
+}

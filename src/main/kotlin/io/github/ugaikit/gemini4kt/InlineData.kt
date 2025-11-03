@@ -17,7 +17,7 @@ data class InlineData(
     val data: String,
 )
 
-fun buildInlineData(init: InlineDataBuilder.() -> Unit): InlineData {
+fun inlineData(init: InlineDataBuilder.() -> Unit): InlineData {
     val builder = InlineDataBuilder()
     builder.init()
     return builder.build()
