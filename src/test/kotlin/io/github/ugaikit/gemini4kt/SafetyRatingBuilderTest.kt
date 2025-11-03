@@ -7,14 +7,14 @@ import org.junit.jupiter.api.assertThrows
 import kotlin.UninitializedPropertyAccessException
 
 class SafetyRatingBuilderTest {
-
     @Test
     fun `build with all properties`() {
-        val safetyRating = safetyRating {
-            category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
-            probability = HarmProbability.NEGLIGIBLE
-            blocked = true
-        }
+        val safetyRating =
+            safetyRating {
+                category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
+                probability = HarmProbability.NEGLIGIBLE
+                blocked = true
+            }
 
         assertEquals(HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, safetyRating.category)
         assertEquals(HarmProbability.NEGLIGIBLE, safetyRating.probability)
@@ -23,10 +23,11 @@ class SafetyRatingBuilderTest {
 
     @Test
     fun `build with required properties only`() {
-        val safetyRating = safetyRating {
-            category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
-            probability = HarmProbability.NEGLIGIBLE
-        }
+        val safetyRating =
+            safetyRating {
+                category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
+                probability = HarmProbability.NEGLIGIBLE
+            }
 
         assertEquals(HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, safetyRating.category)
         assertEquals(HarmProbability.NEGLIGIBLE, safetyRating.probability)

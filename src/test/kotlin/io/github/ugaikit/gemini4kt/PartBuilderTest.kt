@@ -10,9 +10,10 @@ import org.junit.jupiter.api.Test
 class PartBuilderTest {
     @Test
     fun `build with text`() {
-        val part = part {
-            text { "Hello" }
-        }
+        val part =
+            part {
+                text { "Hello" }
+            }
         assertEquals("Hello", part.text)
         assertNull(part.inlineData)
         assertNull(part.functionCall)
@@ -22,12 +23,13 @@ class PartBuilderTest {
 
     @Test
     fun `build with inlineData`() {
-        val part = part {
-            inlineData {
-                mimeType { "image/png" }
-                data { "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" }
+        val part =
+            part {
+                inlineData {
+                    mimeType { "image/png" }
+                    data { "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" }
+                }
             }
-        }
         assertNull(part.text)
         assertNotNull(part.inlineData)
         assertEquals("image/png", part.inlineData?.mimeType)
@@ -35,12 +37,13 @@ class PartBuilderTest {
 
     @Test
     fun `build with functionCall`() {
-        val part = part {
-            functionCall {
-                name = "get_weather"
-                arg("city", Json.parseToJsonElement("\"New York\""))
+        val part =
+            part {
+                functionCall {
+                    name = "get_weather"
+                    arg("city", Json.parseToJsonElement("\"New York\""))
+                }
             }
-        }
         assertNull(part.text)
         assertNotNull(part.functionCall)
         assertEquals("get_weather", part.functionCall?.name)
@@ -48,14 +51,15 @@ class PartBuilderTest {
 
     @Test
     fun `build with functionResponse`() {
-        val part = part {
-            functionResponse {
-                FunctionResponse(
-                    name = "get_weather",
-                    response = JsonObject(mapOf("weather" to Json.parseToJsonElement("\"sunny\""))),
-                )
+        val part =
+            part {
+                functionResponse {
+                    FunctionResponse(
+                        name = "get_weather",
+                        response = JsonObject(mapOf("weather" to Json.parseToJsonElement("\"sunny\""))),
+                    )
+                }
             }
-        }
         assertNull(part.text)
         assertNotNull(part.functionResponse)
         assertEquals("get_weather", part.functionResponse?.name)
@@ -63,14 +67,15 @@ class PartBuilderTest {
 
     @Test
     fun `build with fileData`() {
-        val part = part {
-            fileData {
-                FileData(
-                    mimeType = "image/png",
-                    fileUri = "gs://bucket/image.png",
-                )
+        val part =
+            part {
+                fileData {
+                    FileData(
+                        mimeType = "image/png",
+                        fileUri = "gs://bucket/image.png",
+                    )
+                }
             }
-        }
         assertNull(part.text)
         assertNotNull(part.fileData)
         assertEquals("image/png", part.fileData?.mimeType)

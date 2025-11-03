@@ -6,22 +6,22 @@ import org.junit.jupiter.api.assertThrows
 import kotlin.UninitializedPropertyAccessException
 
 class GroundingAttributionBuilderTest {
-
     @Test
     fun `build with all properties`() {
-        val groundingAttribution = groundingAttribution {
-            sourceId {
-                groundingPassage {
-                    GroundingPassageId(
-                        passageId = "passage123",
-                        partIndex = 1,
-                    )
+        val groundingAttribution =
+            groundingAttribution {
+                sourceId {
+                    groundingPassage {
+                        GroundingPassageId(
+                            passageId = "passage123",
+                            partIndex = 1,
+                        )
+                    }
+                }
+                content {
+                    part { text { "Attribution content" } }
                 }
             }
-            content {
-                part { text { "Attribution content" } }
-            }
-        }
 
         assertNotNull(groundingAttribution.sourceId)
         assertNotNull(groundingAttribution.content)

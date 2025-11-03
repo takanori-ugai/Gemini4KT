@@ -8,11 +8,12 @@ import org.junit.jupiter.api.Test
 class AttributionSourceIdBuilderTest {
     @Test
     fun `build with groundingPassage`() {
-        val attributionSourceId = attributionSourceId {
-            groundingPassage {
-                GroundingPassageId(passageId = "passage123", partIndex = 1)
+        val attributionSourceId =
+            attributionSourceId {
+                groundingPassage {
+                    GroundingPassageId(passageId = "passage123", partIndex = 1)
+                }
             }
-        }
         assertNotNull(attributionSourceId.groundingPassage)
         assertEquals("passage123", attributionSourceId.groundingPassage?.passageId)
         assertNull(attributionSourceId.semanticRetrieverChunk)
@@ -20,11 +21,12 @@ class AttributionSourceIdBuilderTest {
 
     @Test
     fun `build with semanticRetrieverChunk`() {
-        val attributionSourceId = attributionSourceId {
-            semanticRetrieverChunk {
-                SemanticRetrieverChunk(source = "source123", chunk = "chunk content")
+        val attributionSourceId =
+            attributionSourceId {
+                semanticRetrieverChunk {
+                    SemanticRetrieverChunk(source = "source123", chunk = "chunk content")
+                }
             }
-        }
         assertNull(attributionSourceId.groundingPassage)
         assertNotNull(attributionSourceId.semanticRetrieverChunk)
         assertEquals("source123", attributionSourceId.semanticRetrieverChunk?.source)
@@ -32,14 +34,15 @@ class AttributionSourceIdBuilderTest {
 
     @Test
     fun `build with both properties`() {
-        val attributionSourceId = attributionSourceId {
-            groundingPassage {
-                GroundingPassageId(passageId = "passage123", partIndex = 1)
+        val attributionSourceId =
+            attributionSourceId {
+                groundingPassage {
+                    GroundingPassageId(passageId = "passage123", partIndex = 1)
+                }
+                semanticRetrieverChunk {
+                    SemanticRetrieverChunk(source = "source123", chunk = "chunk content")
+                }
             }
-            semanticRetrieverChunk {
-                SemanticRetrieverChunk(source = "source123", chunk = "chunk content")
-            }
-        }
         assertNotNull(attributionSourceId.groundingPassage)
         assertNotNull(attributionSourceId.semanticRetrieverChunk)
     }
