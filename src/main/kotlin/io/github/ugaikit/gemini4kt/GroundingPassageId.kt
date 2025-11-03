@@ -16,3 +16,17 @@ data class GroundingPassageId(
     val passageId: String,
     val partIndex: Int,
 )
+
+class GroundingPassageIdBuilder {
+    lateinit var passageId: String
+    var partIndex: Int = 0
+
+    fun build(): GroundingPassageId =
+        GroundingPassageId(
+            passageId = passageId,
+            partIndex = partIndex,
+        )
+}
+
+fun groundingPassageId(init: GroundingPassageIdBuilder.() -> Unit): GroundingPassageId =
+    GroundingPassageIdBuilder().apply(init).build()

@@ -16,3 +16,19 @@ import kotlinx.serialization.Serializable
 data class CitationMetadata(
     val citationSources: List<CitationSource>,
 )
+
+class CitationMetadataBuilder {
+    private val citationSources: MutableList<CitationSource> = mutableListOf()
+
+    fun citationSource(init: CitationSourceBuilder.() -> Unit) {
+        citationSources.add(CitationSourceBuilder().apply(init).build())
+    }
+
+    fun build(): CitationMetadata =
+        CitationMetadata(
+            citationSources = citationSources,
+        )
+}
+
+fun citationMetadata(init: CitationMetadataBuilder.() -> Unit): CitationMetadata =
+    CitationMetadataBuilder().apply(init).build()
