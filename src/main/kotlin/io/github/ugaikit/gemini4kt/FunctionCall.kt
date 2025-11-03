@@ -21,11 +21,11 @@ data class FunctionCall(
 
 class FunctionCallBuilder {
     var name: String = ""
-    private val args: MutableMap<String, String> = mutableMapOf()
+    private val args: MutableMap<String, JsonElement> = mutableMapOf()
 
     fun arg(
         key: String,
-        value: String,
+        value: JsonElement,
     ) {
         args[key] = value
     }

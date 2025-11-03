@@ -249,8 +249,8 @@ fun main() {
                         part {
                             functionCall {
                                 name = "find_theaters"
-                                arg("location", "Mountain View, CA")
-                                arg("movie", "Barbie")
+                                arg("location", JsonPrimitive("Mountain View, CA"))
+                                arg("movie", JsonPrimitive("Barbie"))
                             }
                         }
                     },
