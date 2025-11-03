@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -248,8 +249,8 @@ fun main() {
                         part {
                             functionCall {
                                 name = "find_theaters"
-                                arg("location", "Mountain View, CA")
-                                arg("movie", "Barbie")
+                                arg("location", JsonPrimitive("Mountain View, CA"))
+                                arg("movie", JsonPrimitive("Barbie"))
                             }
                         }
                     },

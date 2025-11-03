@@ -33,7 +33,7 @@ class ToolBuilderTest {
                     }
                 }
             }
-        assertEquals(1, tool.functionDeclarations.size)
+        assertEquals(1, tool.functionDeclarations!!.size)
         assertEquals("testFunction", tool.functionDeclarations[0].name)
         assertEquals("object", tool.functionDeclarations[0].parameters.type)
     }
@@ -78,7 +78,7 @@ class ToolBuilderTest {
                 }
             }
 
-        assertEquals(2, tool.functionDeclarations.size)
+        assertEquals(2, tool.functionDeclarations!!.size)
         assertEquals("functionOne", tool.functionDeclarations[0].name)
         assertEquals("object", tool.functionDeclarations[0].parameters.type)
         assertEquals("functionTwo", tool.functionDeclarations[1].name)
@@ -96,6 +96,6 @@ class ToolBuilderTest {
     fun `test ToolBuilder with no function declarations`() {
         val tool = tool {}
 
-        assertEquals(0, tool.functionDeclarations.size)
+        assertEquals(0, tool.functionDeclarations!!.size)
     }
 }

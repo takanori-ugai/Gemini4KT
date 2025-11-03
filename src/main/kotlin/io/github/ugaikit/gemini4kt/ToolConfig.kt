@@ -12,6 +12,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ToolConfig(
     val functionCallingConfig: FunctionCallingConfig,
+    val retrievalConfig: RetrievalConfig? = null,
 )
 
 class ToolConfigBuilder {

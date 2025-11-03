@@ -1,21 +1,20 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.gitlab.arturbosch.detekt.Detekt
 import net.thebugmc.gradle.sonatypepublisher.PublishingType.USER_MANAGED
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("jvm") version "2.2.0"
-    kotlin("plugin.serialization") version "2.2.0"
+    kotlin("jvm") version "2.2.21"
+    kotlin("plugin.serialization") version "2.2.21"
     application
-    id("org.jetbrains.dokka") version "2.0.0"
-    id("org.jetbrains.dokka-javadoc") version "2.0.0"
+    id("org.jetbrains.dokka") version "2.1.0"
+    id("org.jetbrains.dokka-javadoc") version "2.1.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("com.github.jk1.dependency-license-report") version "2.9"
-    id("com.github.spotbugs") version "6.2.2"
-    id("com.diffplug.spotless") version "7.1.0"
-    id("org.jlleitschuh.gradle.ktlint") version "13.0.0"
+    id("com.gradleup.shadow") version "9.2.2"
+    id("com.github.jk1.dependency-license-report") version "3.0.1"
+    id("com.github.spotbugs") version "6.4.4"
+    id("com.diffplug.spotless") version "8.0.0"
+    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
     jacoco
     id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
 }
@@ -68,10 +67,13 @@ centralPortal {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
-    runtimeOnly("ch.qos.logback:logback-classic:1.5.18")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.13")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    runtimeOnly("ch.qos.logback:logback-classic:1.5.20")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
+    testImplementation("io.mockk:mockk:1.14.6")
 }
 
 application {
@@ -117,17 +119,18 @@ tasks {
         reports {
             xml.required.set(true)
             csv.required.set(true)
-            html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
+            dependsOn(test)
+//            html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
         }
     }
 
-    withType<JacocoReport> {
-        dependsOn("test")
-        executionData(withType<Test>())
-        classDirectories.setFrom(files(listOf("build/classes/kotlin/main")))
-        //  sourceDirectories = files(listOf("src/main/java", "src/main/kotlin"))
-        sourceDirectories.setFrom(files(listOf("src/main/java", "src/main/kotlin")))
-    }
+//    withType<JacocoReport> {
+//        dependsOn("test")
+//        executionData(withType<Test>())
+//        classDirectories.setFrom(files(listOf("build/classes/kotlin/main")))
+//  sourceDirectories = files(listOf("src/main/java", "src/main/kotlin"))
+//        sourceDirectories.setFrom(files(listOf("src/main/java", "src/main/kotlin")))
+//    }
 
     test {
         testLogging {
@@ -135,6 +138,7 @@ tasks {
             showStandardStreams = true
         }
         useJUnitPlatform()
+        finalizedBy(jacocoTestReport) // report is always generated after tests run
     }
 
     withType<Detekt>().configureEach {
@@ -153,10 +157,11 @@ tasks {
         }
     }
 
-    withType<ShadowJar> {
+    shadowJar {
         manifest {
             attributes["Main-Class"] = application.mainClass
         }
+        minimize()
     }
 }
 

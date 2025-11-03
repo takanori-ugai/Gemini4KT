@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.File
 import java.io.IOException
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
@@ -13,6 +14,14 @@ import java.net.URL
  */
 private val logger = KotlinLogging.logger {}
 
+interface HttpConnectionProvider {
+    fun getConnection(url: URL): HttpURLConnection
+}
+
+internal class DefaultHttpConnectionProvider : HttpConnectionProvider {
+    override fun getConnection(url: URL): HttpURLConnection = url.openConnection() as HttpURLConnection
+}
+
 /**
  * Represents a client for interacting with the Gemini API, providing methods to extract content,
  * embed content, and retrieve model information.
@@ -21,6 +30,8 @@ private val logger = KotlinLogging.logger {}
  */
 class Gemini(
     private val apiKey: String,
+    private val httpConnectionProvider: HttpConnectionProvider = DefaultHttpConnectionProvider(),
+    private val fileUploadProvider: FileUploadProvider = FileUploadProviderImpl(apiKey),
 ) {
     /**
      * JSON configuration setup to ignore unknown keys during deserialization.
@@ -170,6 +181,20 @@ class Gemini(
     }
 
     /**
+     * Uploads a file to the Gemini API.
+     *
+     * @param file The file to upload.
+     * @param mimeType The MIME type of the file.
+     * @param displayName The display name of the file.
+     * @return The uploaded file as a [File] object.
+     */
+    suspend fun uploadFile(
+        file: File,
+        mimeType: String,
+        displayName: String,
+    ): GeminiFile = fileUploadProvider.upload(file, mimeType, displayName)
+
+    /**
      * Performs a POST request to the specified URL string with the given input JSON payload.
      *
      * @param urlStr The URL to which the POST request is made.
@@ -183,7 +208,7 @@ class Gemini(
         try {
             logger.info { inputJson }
             val url = URL(urlStr)
-            val conn = url.openConnection() as HttpURLConnection
+            val conn = httpConnectionProvider.getConnection(url)
             conn.requestMethod = if (inputJson == null) "GET" else "POST"
             conn.setRequestProperty("Content-Type", "application/json")
             if (inputJson != null) {
@@ -219,7 +244,7 @@ class Gemini(
     fun deleteContent(urlStr: String) {
         try {
             val url = URL(urlStr)
-            val conn = url.openConnection() as HttpURLConnection
+            val conn = httpConnectionProvider.getConnection(url)
             conn.requestMethod = "DELETE"
             val resCode = conn.responseCode
             if (resCode != 200) {
