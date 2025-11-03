@@ -30,5 +30,4 @@ class CitationMetadataBuilder {
         )
 }
 
-fun citationMetadata(init: CitationMetadataBuilder.() -> Unit): CitationMetadata =
-    CitationMetadataBuilder().apply(init).build()
+fun citationMetadata(init: CitationMetadataBuilder.() -> Unit): CitationMetadata = CitationMetadataBuilder().apply(init).build()

@@ -43,5 +43,4 @@ class CitationSourceBuilder {
         )
 }
 
-fun citationSource(init: CitationSourceBuilder.() -> Unit): CitationSource =
-    CitationSourceBuilder().apply(init).build()
+fun citationSource(init: CitationSourceBuilder.() -> Unit): CitationSource = CitationSourceBuilder().apply(init).build()
