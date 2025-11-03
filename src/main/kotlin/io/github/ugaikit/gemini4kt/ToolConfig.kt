@@ -17,12 +17,17 @@ data class ToolConfig(
 
 class ToolConfigBuilder {
     private var functionCallingConfig: FunctionCallingConfig? = null
+    var retrievalConfig: RetrievalConfig? = null
 
     fun functionCallingConfig(init: FunctionCallingConfigBuilder.() -> Unit) {
         functionCallingConfig = FunctionCallingConfigBuilder().apply(init).build()
     }
 
-    fun build() = ToolConfig(functionCallingConfig ?: throw IllegalStateException("FunctionCallingConfig must be initialized"))
+    fun build() =
+        ToolConfig(
+            functionCallingConfig = functionCallingConfig ?: throw IllegalStateException("FunctionCallingConfig must be initialized"),
+            retrievalConfig = retrievalConfig,
+        )
 }
 
 fun toolConfig(init: ToolConfigBuilder.() -> Unit): ToolConfig = ToolConfigBuilder().apply(init).build()

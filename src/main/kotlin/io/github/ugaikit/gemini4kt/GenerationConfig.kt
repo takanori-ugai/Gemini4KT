@@ -42,11 +42,12 @@ data class GenerationConfig(
 
 class GenerationConfigBuilder {
     private val stopSequences: MutableList<String> = mutableListOf()
-    var temperature: Double = 0.0
-    var maxOutputTokens: Int = 0
-    var topP: Double = 0.0
-    var topK: Int = 0
+    var temperature: Double? = null
+    var maxOutputTokens: Int? = null
+    var topP: Double? = null
+    var topK: Int? = null
     var responseMimeType: String? = null
+    var thinkingConfig: ThinkingConfig? = null
 
     fun stopSequence(sequence: String) {
         stopSequences.add(sequence)
@@ -60,6 +61,7 @@ class GenerationConfigBuilder {
             topP = topP,
             topK = topK,
             responseMimeType = responseMimeType,
+            thinkingConfig = thinkingConfig,
         )
 }
 

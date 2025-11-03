@@ -48,6 +48,7 @@ class GenerateContentRequestBuilder {
     private val safetySettings: MutableList<SafetySetting> = mutableListOf()
     private var systemInstruction: Content? = null
     private var generationConfig: GenerationConfig? = null
+    var cachedContent: String? = null
 
     fun content(init: ContentBuilder.() -> Unit) {
         contents.add(ContentBuilder().apply(init).build())
@@ -81,6 +82,7 @@ class GenerateContentRequestBuilder {
             safetySettings = safetySettings,
             systemInstruction = systemInstruction,
             generationConfig = generationConfig,
+            cachedContent = cachedContent,
         )
 }
 
