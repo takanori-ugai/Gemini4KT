@@ -55,7 +55,7 @@ class CandidateBuilder {
             content,
             finishReason,
             index,
-            safetyRatings,
+            if (safetyRatings.isEmpty()) null else safetyRatings,
             citationMetadata,
             tokenCount,
             avgLogprobs,
