@@ -98,4 +98,13 @@ class ToolBuilderTest {
 
         assertEquals(0, tool.functionDeclarations!!.size)
     }
+
+    @Test
+    fun `test ToolBuilder with googleSearch`() {
+        val tool =
+            tool {
+                googleSearch = mapOf("query" to "Kotlin")
+            }
+        assertEquals("Kotlin", tool.googleSearch?.get("query"))
+    }
 }
