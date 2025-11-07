@@ -24,3 +24,44 @@ data class Candidate(
     val logprobsResult: LogprobsResult? = null,
     val groundingAttributions: List<GroundingAttribution> = emptyList(),
 )
+
+class CandidateBuilder {
+    lateinit var content: Content
+    lateinit var finishReason: String
+    var index: Int = 0
+    private var safetyRatings: MutableList<SafetyRating> = mutableListOf()
+    var citationMetadata: CitationMetadata? = null
+    var tokenCount: Int? = null
+    var avgLogprobs: Double? = null
+    var logprobsResult: LogprobsResult? = null
+    private var groundingAttributions: MutableList<GroundingAttribution> = mutableListOf()
+
+    fun content(init: ContentBuilder.() -> Unit) {
+        content = ContentBuilder().apply(init).build()
+    }
+
+    fun safetyRating(init: SafetyRatingBuilder.() -> Unit) {
+        val builder = SafetyRatingBuilder().apply(init)
+        safetyRatings.add(builder.build())
+    }
+
+    fun groundingAttribution(init: GroundingAttributionBuilder.() -> Unit) {
+        val builder = GroundingAttributionBuilder().apply(init)
+        groundingAttributions.add(builder.build())
+    }
+
+    fun build() =
+        Candidate(
+            content,
+            finishReason,
+            index,
+            if (safetyRatings.isEmpty()) null else safetyRatings,
+            citationMetadata,
+            tokenCount,
+            avgLogprobs,
+            logprobsResult,
+            groundingAttributions,
+        )
+}
+
+fun candidate(init: CandidateBuilder.() -> Unit): Candidate = CandidateBuilder().apply(init).build()

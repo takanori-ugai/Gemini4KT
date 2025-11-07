@@ -15,3 +15,17 @@ data class Content(
     val parts: List<Part>,
     val role: String? = null,
 )
+
+class ContentBuilder {
+    private var parts: MutableList<Part> = mutableListOf()
+    var role: String? = null
+
+    fun part(init: PartBuilder.() -> Unit) {
+        val builder = PartBuilder().apply(init)
+        parts.add(builder.build())
+    }
+
+    fun build() = Content(parts, role)
+}
+
+fun content(init: ContentBuilder.() -> Unit): Content = ContentBuilder().apply(init).build()
