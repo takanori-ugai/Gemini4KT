@@ -26,7 +26,7 @@ class FileDataBuilder {
     /**
      * The MIME type of the file.
      */
-    var mimeType: String = ""
+    lateinit var mimeType: String
 
     /**
      * The URI of the file.
