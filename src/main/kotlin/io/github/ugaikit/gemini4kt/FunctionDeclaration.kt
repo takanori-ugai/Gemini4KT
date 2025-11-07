@@ -22,8 +22,8 @@ data class FunctionDeclaration(
 )
 
 class FunctionDeclarationBuilder {
-    var name: String = ""
-    var description: String = ""
+    lateinit var name: String
+    lateinit var description: String
     private var parameters: Schema? = null
 
     fun parameters(init: SchemaBuilder.() -> Unit) {
