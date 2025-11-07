@@ -31,7 +31,7 @@ class FileDataBuilder {
     /**
      * The URI of the file.
      */
-    var fileUri: String = ""
+    lateinit var fileUri: String
 
     /**
      * Builds and returns a FileData object with the current state of the builder.
