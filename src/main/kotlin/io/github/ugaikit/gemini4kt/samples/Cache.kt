@@ -10,6 +10,8 @@ import io.github.ugaikit.gemini4kt.SafetySetting
 import io.github.ugaikit.gemini4kt.Threshold
 import java.util.Properties
 
+private const val REPEAT_COUNT = 10000
+
 fun main() {
     val path = Gemini::class.java.getResourceAsStream("/prop.properties")
     val prop =
@@ -18,7 +20,7 @@ fun main() {
         }
     val apiKey = prop.getProperty("apiKey")
     val gemini = Gemini(apiKey)
-    val str = "This is a pen".repeat(10000)
+    val str = "This is a pen".repeat(REPEAT_COUNT)
     val cachedContent =
         CachedContent(
             contents = listOf(Content(listOf(Part(text = str)), "user")),
@@ -56,7 +58,7 @@ fun main() {
             .replace("\n\n", "\n"),
     )
 
-    println(gemini.deleteCachedContent(cache.name!!))
+    gemini.deleteCachedContent(cache.name!!)
 }
 
 class Cache

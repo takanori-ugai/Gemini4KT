@@ -7,49 +7,51 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class GenerateContentRequestBuilderTest {
-    @Test
-    fun `build with all properties`() {
-        val request =
-            generateContentRequest {
-                content {
-                    role = "user"
-                    part { text { "Hello" } }
-                }
-                tool {
-                    functionDeclaration {
-                        name = "get_weather"
-                        description = "Returns the weather for a city."
-                        parameters {
-                            type = "OBJECT"
-                            property("city") {
-                                type = "STRING"
-                                description = "The city to get the weather for."
-                            }
+    private fun buildFullRequest(): GenerateContentRequest =
+        generateContentRequest {
+            content {
+                role = "user"
+                part { text { "Hello" } }
+            }
+            tool {
+                functionDeclaration {
+                    name = "get_weather"
+                    description = "Returns the weather for a city."
+                    parameters {
+                        type = "OBJECT"
+                        property("city") {
+                            type = "STRING"
+                            description = "The city to get the weather for."
                         }
                     }
                 }
-                toolConfig {
-                    functionCallingConfig {
-                        mode = Mode.ANY
-                    }
-                }
-                safetySetting {
-                    category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
-                    threshold = Threshold.BLOCK_ONLY_HIGH
-                }
-                systemInstruction {
-                    role = "system"
-                    part { text { "You are a helpful assistant." } }
-                }
-                generationConfig {
-                    temperature = 0.9
-                    topK = 1
-                    topP = 1.0
-                    maxOutputTokens = 2048
-                    stopSequence(".")
-                }
-                cachedContent = "cached-content-123"
             }
+            toolConfig {
+                functionCallingConfig {
+                    mode = Mode.ANY
+                }
+            }
+            safetySetting {
+                category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
+                threshold = Threshold.BLOCK_ONLY_HIGH
+            }
+            systemInstruction {
+                role = "system"
+                part { text { "You are a helpful assistant." } }
+            }
+            generationConfig {
+                temperature = 0.9
+                topK = 1
+                topP = 1.0
+                maxOutputTokens = 2048
+                stopSequence(".")
+            }
+            cachedContent = "cached-content-123"
+        }
+
+    @Test
+    fun `build with all properties`() {
+        val request = buildFullRequest()
 
         assertEquals(1, request.contents.size)
         assertEquals("user", request.contents[0].role)

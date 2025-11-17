@@ -1,8 +1,9 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlinx.serialization.*
-import kotlinx.serialization.json.*
-import org.junit.jupiter.api.Assertions.*
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class AttributionSourceIdTest {

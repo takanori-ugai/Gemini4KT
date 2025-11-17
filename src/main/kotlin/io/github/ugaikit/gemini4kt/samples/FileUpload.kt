@@ -7,6 +7,7 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.io.IOException
 import java.util.Properties
 
 fun main() {
@@ -67,7 +68,7 @@ fun main() {
                     println(part.text)
                 }
             }
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             println("An error occurred: ${e.message}")
             e.printStackTrace()
         }

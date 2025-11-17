@@ -14,6 +14,17 @@ annotation class GeminiParameter(
     val description: String,
 )
 
+private fun getTypeName(type: kotlin.reflect.KClassifier): String =
+    when (type) {
+        Int::class -> "integer"
+        String::class -> "string"
+        Boolean::class -> "boolean"
+        Double::class -> "number"
+        Float::class -> "number"
+        Long::class -> "integer"
+        else -> throw IllegalArgumentException("Unsupported parameter type: $type")
+    }
+
 fun buildFunctionDeclaration(function: KFunction<*>): FunctionDeclaration {
     val functionAnnotation =
         function.findAnnotation<GeminiFunction>()
@@ -26,16 +37,7 @@ fun buildFunctionDeclaration(function: KFunction<*>): FunctionDeclaration {
                     ?: throw IllegalArgumentException(
                         "Parameter '${param.name}' must be annotated with @GeminiParameter",
                     )
-            val typeName =
-                when (param.type.classifier) {
-                    Int::class -> "integer"
-                    String::class -> "string"
-                    Boolean::class -> "boolean"
-                    Double::class -> "number"
-                    Float::class -> "number"
-                    Long::class -> "integer"
-                    else -> throw IllegalArgumentException("Unsupported parameter type: ${param.type}")
-                }
+            val typeName = getTypeName(param.type.classifier!!)
             param.name!! to Schema(type = typeName, description = paramAnnotation.description)
         }
 

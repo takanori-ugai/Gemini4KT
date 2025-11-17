@@ -30,7 +30,12 @@ class FunctionDeclarationBuilder {
         parameters = SchemaBuilder().apply(init).build()
     }
 
-    fun build() = FunctionDeclaration(name, description, parameters ?: throw IllegalStateException("Parameters must be initialized"))
+    fun build() =
+        FunctionDeclaration(
+            name,
+            description,
+            parameters ?: error("Parameters must be initialized"),
+        )
 }
 
 fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit): FunctionDeclaration = FunctionDeclarationBuilder().apply(init).build()

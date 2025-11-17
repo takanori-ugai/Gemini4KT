@@ -22,6 +22,8 @@ class GeminiTest {
     private lateinit var conn: HttpURLConnection
     private lateinit var gemini: Gemini
     private lateinit var fileUploadProvider: FileUploadProvider
+    private val baseUrl = "https://generativelanguage.googleapis.com/v1beta"
+    private val apiKey = "test-api-key"
 
     @BeforeEach
     fun setup() {
@@ -30,7 +32,7 @@ class GeminiTest {
         fileUploadProvider = mockk()
         gemini =
             Gemini(
-                apiKey = "test-api-key",
+                apiKey = apiKey,
                 httpConnectionProvider = httpConnectionProvider,
                 fileUploadProvider = fileUploadProvider,
             )
@@ -125,7 +127,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=test-api-key",
+                "$baseUrl/models/gemini-pro:generateContent?key=$apiKey",
                 Json.encodeToString(request),
             )
         }
@@ -152,7 +154,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=test-api-key",
+                "$baseUrl/models/gemini-pro:generateContent?key=$apiKey",
                 Json.encodeToString(request),
             )
         }
@@ -188,7 +190,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=test-api-key",
+                "$baseUrl/models/gemini-pro:generateContent?key=$apiKey",
                 Json.encodeToString(request),
             )
         }
@@ -206,7 +208,7 @@ class GeminiTest {
         assertEquals("cachedContent-123", response.name)
         verify {
             geminiSpy.getContent(
-                "https://generativelanguage.googleapis.com/v1beta/cachedContents?key=test-api-key",
+                "$baseUrl/cachedContents?key=$apiKey",
                 Json.encodeToString(request),
             )
         }
@@ -223,7 +225,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "https://generativelanguage.googleapis.com/v1beta/cachedContents?pageSize=1000&key=test-api-key",
+                "$baseUrl/cachedContents?pageSize=1000&key=$apiKey",
                 null,
             )
         }
@@ -241,7 +243,7 @@ class GeminiTest {
         assertEquals(name, response.name)
         verify {
             geminiSpy.getContent(
-                "https://generativelanguage.googleapis.com/v1beta/cachedContent-123?key=test-api-key",
+                "$baseUrl/cachedContent-123?key=$apiKey",
                 null,
             )
         }
@@ -257,7 +259,7 @@ class GeminiTest {
 
         verify {
             geminiSpy.deleteContent(
-                "https://generativelanguage.googleapis.com/v1beta/cachedContent-123?key=test-api-key",
+                "$baseUrl/cachedContent-123?key=$apiKey",
             )
         }
     }
@@ -274,7 +276,7 @@ class GeminiTest {
         assertEquals(10, response.totalTokens)
         verify {
             geminiSpy.getContent(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:countTokens?key=test-api-key",
+                "$baseUrl/models/gemini-2.0-flash-lite:countTokens?key=$apiKey",
                 Json.encodeToString(request),
             )
         }
@@ -292,7 +294,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "https://generativelanguage.googleapis.com/v1beta/models/embedding-001:batchEmbedContents?key=test-api-key",
+                "$baseUrl/models/embedding-001:batchEmbedContents?key=$apiKey",
                 Json.encodeToString(request),
             )
         }
@@ -310,7 +312,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent?key=test-api-key",
+                "$baseUrl/models/embedding-001:embedContent?key=$apiKey",
                 Json.encodeToString(request),
             )
         }
@@ -327,7 +329,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "https://generativelanguage.googleapis.com/v1beta/models?key=test-api-key",
+                "$baseUrl/models?key=$apiKey",
                 null,
             )
         }

@@ -28,6 +28,7 @@ internal class DefaultHttpConnectionProvider : HttpConnectionProvider {
  *
  * @property apiKey The API key used for authenticating requests to the Gemini API.
  */
+@Suppress("TooManyFunctions")
 class Gemini(
     private val apiKey: String,
     private val httpConnectionProvider: HttpConnectionProvider = DefaultHttpConnectionProvider(),
@@ -39,6 +40,11 @@ class Gemini(
     private val json = Json { ignoreUnknownKeys = true }
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
     private val baseUrl = "$bUrl/models"
+
+    companion object {
+        private const val HTTP_OK = 200
+        private const val PREVIEW_LENGTH = 100
+    }
 
     /**
      * Generates content based on the provided input JSON using a specified model.
@@ -61,13 +67,9 @@ class Gemini(
      * Creates a new cached content entry in the system.
      *
      * @param inputJson The [CachedContent] object to be created.
-     * @param model The model identifier, defaulting to "gemini-1.5-flash-001".
      * @return The created [CachedContent] object as returned by the server.
      */
-    fun createCachedContent(
-        inputJson: CachedContent,
-        model: String = "gemini-1.5-flash",
-    ): CachedContent {
+    fun createCachedContent(inputJson: CachedContent): CachedContent {
         val urlString = "$bUrl/cachedContents?key=$apiKey"
         return json.decodeFromString<CachedContent>(
             getContent(urlString, json.encodeToString<CachedContent>(inputJson)),
@@ -204,7 +206,7 @@ class Gemini(
     fun getContent(
         urlStr: String,
         inputJson: String? = null,
-    ): String {
+    ): String =
         try {
             logger.info { inputJson }
             val url = URL(urlStr)
@@ -216,25 +218,25 @@ class Gemini(
                 OutputStreamWriter(conn.outputStream).use { writer -> writer.write(inputJson) }
             }
             val resCode = conn.responseCode
-            if (resCode != 200) {
+            if (resCode != HTTP_OK) {
                 logger.error { "Error: ${conn.responseCode}" }
                 conn.errorStream.bufferedReader().use { reader ->
                     logger.error { "Error Message: ${reader.readText()}" }
                 }
-                return "{}"
-            }
-            logger.info { "GenerateContentResponse Code: $resCode" }
-            conn.inputStream.bufferedReader().use { reader ->
-                val txt = reader.readText()
-                logger.debug { "Content length: ${txt.length}" }
-                logger.debug { "Content preview: ${txt.take(100)}" } // Log only the first 100 characters
-                return txt
+                "{}"
+            } else {
+                logger.info { "GenerateContentResponse Code: $resCode" }
+                conn.inputStream.bufferedReader().use { reader ->
+                    val txt = reader.readText()
+                    logger.debug { "Content length: ${txt.length}" }
+                    logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
+                    txt
+                }
             }
         } catch (e: IOException) {
             logger.error { e.stackTrace.contentToString() }
-            return ""
+            ""
         }
-    }
 
     /**
      * Sends a DELETE request to the specified URL to delete content.
@@ -247,7 +249,7 @@ class Gemini(
             val conn = httpConnectionProvider.getConnection(url)
             conn.requestMethod = "DELETE"
             val resCode = conn.responseCode
-            if (resCode != 200) {
+            if (resCode != HTTP_OK) {
                 logger.error { "Error: $resCode" }
                 conn.errorStream.bufferedReader().use { reader ->
                     logger.error { "Error Message: ${reader.readText()}" }
