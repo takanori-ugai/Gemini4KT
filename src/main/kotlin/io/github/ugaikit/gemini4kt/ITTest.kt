@@ -1,4 +1,5 @@
 @file:Suppress("TooManyFunctions")
+
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.json.JsonPrimitive
@@ -27,7 +28,12 @@ private fun testContentGeneration(gemini: Gemini) {
             }
         }
     val response = gemini.generateContent(inputJson, model = FLASH_MODEL)
-    println(response.candidates[0].content.parts[0].text!!.replace("\n\n", "\n"))
+    println(
+        response.candidates[0]
+            .content.parts[0]
+            .text!!
+            .replace("\n\n", "\n"),
+    )
 
     println("--- testCountTokens ---")
     val inputJson2 =
@@ -88,7 +94,12 @@ private fun testModelsAndContent(gemini: Gemini) {
         )
 
     val response = gemini.generateContent(inputWithImage, PRO_MODEL)
-    println(response.candidates[0].content.parts[0].text!!.replace("\n\n", "\n"))
+    println(
+        response.candidates[0]
+            .content.parts[0]
+            .text!!
+            .replace("\n\n", "\n"),
+    )
 }
 
 private fun testCachedContent(gemini: Gemini) {
@@ -113,8 +124,8 @@ private fun testCachedContent(gemini: Gemini) {
     println("Cached content deleted.")
 }
 
-private fun findMoviesFunction(): FunctionDeclaration {
-    return functionDeclaration {
+private fun findMoviesFunction(): FunctionDeclaration =
+    functionDeclaration {
         name = "find_movies"
         description = "find movie titles currently playing in theaters " +
             "based on any description, genre, title words, etc."
@@ -131,10 +142,9 @@ private fun findMoviesFunction(): FunctionDeclaration {
             required("description")
         }
     }
-}
 
-private fun findTheatersFunction(): FunctionDeclaration {
-    return functionDeclaration {
+private fun findTheatersFunction(): FunctionDeclaration =
+    functionDeclaration {
         name = "find_theaters"
         description = "find theaters based on location and optionally movie title " +
             "which is currently playing in theaters"
@@ -151,10 +161,9 @@ private fun findTheatersFunction(): FunctionDeclaration {
             required("location")
         }
     }
-}
 
-private fun getShowtimesFunction(): FunctionDeclaration {
-    return FunctionDeclaration(
+private fun getShowtimesFunction(): FunctionDeclaration =
+    FunctionDeclaration(
         name = "get_showtimes",
         description = "Find the start times for movies playing in a specific theater",
         parameters =
@@ -186,10 +195,9 @@ private fun getShowtimesFunction(): FunctionDeclaration {
                 required = listOf("location", "movie", "theater", "date"),
             ),
     )
-}
 
-private fun defineFunctionTools(): List<Tool> {
-    return listOf(
+private fun defineFunctionTools(): List<Tool> =
+    listOf(
         Tool(
             functionDeclarations =
                 listOf(
@@ -199,7 +207,6 @@ private fun defineFunctionTools(): List<Tool> {
                 ),
         ),
     )
-}
 
 private fun testFunctionCallingFirstTurn(
     gemini: Gemini,
@@ -222,7 +229,12 @@ private fun testFunctionCallingFirstTurn(
             tools = tools,
         )
 
-    println(gemini.generateContent(exFunction, PRO_MODEL).candidates[0].content.parts[0])
+    println(
+        gemini
+            .generateContent(exFunction, PRO_MODEL)
+            .candidates[0]
+            .content.parts[0],
+    )
 }
 
 private fun testFunctionCallingSecondTurn(
@@ -281,7 +293,12 @@ private fun testFunctionCallingSecondTurn(
             tools = tools,
         )
 
-    println(gemini.generateContent(exFunction2, PRO_MODEL).candidates[0].content.parts[0])
+    println(
+        gemini
+            .generateContent(exFunction2, PRO_MODEL)
+            .candidates[0]
+            .content.parts[0],
+    )
 }
 
 private fun testPartBuilder() {

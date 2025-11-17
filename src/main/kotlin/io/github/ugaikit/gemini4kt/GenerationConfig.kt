@@ -66,6 +66,4 @@ class GenerationConfigBuilder {
         )
 }
 
-fun generationConfig(
-    init: GenerationConfigBuilder.() -> Unit,
-): GenerationConfig = GenerationConfigBuilder().apply(init).build()
+fun generationConfig(init: GenerationConfigBuilder.() -> Unit): GenerationConfig = GenerationConfigBuilder().apply(init).build()

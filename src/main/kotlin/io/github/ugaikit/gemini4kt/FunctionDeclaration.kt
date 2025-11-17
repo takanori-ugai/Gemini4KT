@@ -38,6 +38,4 @@ class FunctionDeclarationBuilder {
         )
 }
 
-fun functionDeclaration(
-    init: FunctionDeclarationBuilder.() -> Unit,
-): FunctionDeclaration = FunctionDeclarationBuilder().apply(init).build()
+fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit): FunctionDeclaration = FunctionDeclarationBuilder().apply(init).build()

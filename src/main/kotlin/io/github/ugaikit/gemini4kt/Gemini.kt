@@ -69,9 +69,7 @@ class Gemini(
      * @param inputJson The [CachedContent] object to be created.
      * @return The created [CachedContent] object as returned by the server.
      */
-    fun createCachedContent(
-        inputJson: CachedContent,
-    ): CachedContent {
+    fun createCachedContent(inputJson: CachedContent): CachedContent {
         val urlString = "$bUrl/cachedContents?key=$apiKey"
         return json.decodeFromString<CachedContent>(
             getContent(urlString, json.encodeToString<CachedContent>(inputJson)),
@@ -208,8 +206,8 @@ class Gemini(
     fun getContent(
         urlStr: String,
         inputJson: String? = null,
-    ): String {
-        return try {
+    ): String =
+        try {
             logger.info { inputJson }
             val url = URL(urlStr)
             val conn = httpConnectionProvider.getConnection(url)
@@ -239,7 +237,6 @@ class Gemini(
             logger.error { e.stackTrace.contentToString() }
             ""
         }
-    }
 
     /**
      * Sends a DELETE request to the specified URL to delete content.

@@ -43,11 +43,9 @@ class PartBuilder {
 
     fun text(init: () -> String?) = apply { text = init() }
 
-    fun inlineData(init: InlineDataBuilder.() -> Unit) =
-        apply { inlineData = InlineDataBuilder().apply(init).build() }
+    fun inlineData(init: InlineDataBuilder.() -> Unit) = apply { inlineData = InlineDataBuilder().apply(init).build() }
 
-    fun functionCall(init: FunctionCallBuilder.() -> Unit) =
-        apply { functionCall = FunctionCallBuilder().apply(init).build() }
+    fun functionCall(init: FunctionCallBuilder.() -> Unit) = apply { functionCall = FunctionCallBuilder().apply(init).build() }
 
     fun functionResponse(init: () -> FunctionResponse?) = apply { functionResponse = init() }
 

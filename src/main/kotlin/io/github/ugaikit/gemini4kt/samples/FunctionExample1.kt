@@ -9,11 +9,12 @@ import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
 import java.util.Properties
 
-private fun findMoviesFunction(): FunctionDeclaration {
-    return FunctionDeclaration(
+private fun findMoviesFunction(): FunctionDeclaration =
+    FunctionDeclaration(
         name = "find_movies",
-        description = "find movie titles currently playing in theaters " +
-            "based on any description, genre, title words, etc.",
+        description =
+            "find movie titles currently playing in theaters " +
+                "based on any description, genre, title words, etc.",
         parameters =
             Schema(
                 type = "object",
@@ -22,8 +23,9 @@ private fun findMoviesFunction(): FunctionDeclaration {
                         "location" to
                             Schema(
                                 type = "string",
-                                description = "The city and state, e.g. San Francisco, CA " +
-                                    "or a zip code e.g. 95616",
+                                description =
+                                    "The city and state, e.g. San Francisco, CA " +
+                                        "or a zip code e.g. 95616",
                             ),
                         "description" to
                             Schema(
@@ -34,13 +36,13 @@ private fun findMoviesFunction(): FunctionDeclaration {
                 required = listOf("description"),
             ),
     )
-}
 
-private fun findTheatersFunction(): FunctionDeclaration {
-    return FunctionDeclaration(
+private fun findTheatersFunction(): FunctionDeclaration =
+    FunctionDeclaration(
         name = "find_theaters",
-        description = "find theaters based on location and optionally movie title " +
-            "which is currently playing in theaters",
+        description =
+            "find theaters based on location and optionally movie title " +
+                "which is currently playing in theaters",
         parameters =
             Schema(
                 type = "object",
@@ -49,8 +51,9 @@ private fun findTheatersFunction(): FunctionDeclaration {
                         "location" to
                             Schema(
                                 type = "string",
-                                description = "The city and state, e.g. San Francisco, CA " +
-                                    "or a zip code e.g. 95616",
+                                description =
+                                    "The city and state, e.g. San Francisco, CA " +
+                                        "or a zip code e.g. 95616",
                             ),
                         "movie" to
                             Schema(
@@ -61,10 +64,9 @@ private fun findTheatersFunction(): FunctionDeclaration {
                 required = listOf("location"),
             ),
     )
-}
 
-private fun getShowtimesFunction(): FunctionDeclaration {
-    return FunctionDeclaration(
+private fun getShowtimesFunction(): FunctionDeclaration =
+    FunctionDeclaration(
         name = "get_showtimes",
         description = "Find the start times for movies playing in a specific theater",
         parameters =
@@ -75,8 +77,9 @@ private fun getShowtimesFunction(): FunctionDeclaration {
                         "location" to
                             Schema(
                                 type = "string",
-                                description = "The city and state, e.g. San Francisco, CA " +
-                                    "or a zip code e.g. 95616",
+                                description =
+                                    "The city and state, e.g. San Francisco, CA " +
+                                        "or a zip code e.g. 95616",
                             ),
                         "movie" to
                             Schema(
@@ -97,11 +100,8 @@ private fun getShowtimesFunction(): FunctionDeclaration {
                 required = listOf("location", "movie", "theater", "date"),
             ),
     )
-}
 
-private fun getFunctionDeclarations(): List<FunctionDeclaration> {
-    return listOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
-}
+private fun getFunctionDeclarations(): List<FunctionDeclaration> = listOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
 
 fun main() {
     val path = Gemini::class.java.getResourceAsStream("/prop.properties")

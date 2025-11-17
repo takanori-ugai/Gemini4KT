@@ -31,6 +31,4 @@ class FunctionCallingConfigBuilder {
     fun build() = FunctionCallingConfig(mode, allowedFunctionNames)
 }
 
-fun functionCallingConfig(
-    init: FunctionCallingConfigBuilder.() -> Unit,
-): FunctionCallingConfig = FunctionCallingConfigBuilder().apply(init).build()
+fun functionCallingConfig(init: FunctionCallingConfigBuilder.() -> Unit): FunctionCallingConfig = FunctionCallingConfigBuilder().apply(init).build()

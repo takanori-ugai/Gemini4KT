@@ -86,6 +86,4 @@ class GenerateContentRequestBuilder {
         )
 }
 
-fun generateContentRequest(
-    init: GenerateContentRequestBuilder.() -> Unit,
-): GenerateContentRequest = GenerateContentRequestBuilder().apply(init).build()
+fun generateContentRequest(init: GenerateContentRequestBuilder.() -> Unit): GenerateContentRequest = GenerateContentRequestBuilder().apply(init).build()
