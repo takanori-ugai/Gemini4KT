@@ -19,4 +19,6 @@ class RetrievalConfigBuilder {
         )
 }
 
-fun retrievalConfig(init: RetrievalConfigBuilder.() -> Unit): RetrievalConfig = RetrievalConfigBuilder().apply(init).build()
+fun retrievalConfig(
+    init: RetrievalConfigBuilder.() -> Unit,
+): RetrievalConfig = RetrievalConfigBuilder().apply(init).build()

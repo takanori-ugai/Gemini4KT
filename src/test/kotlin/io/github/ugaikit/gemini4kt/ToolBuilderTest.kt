@@ -18,12 +18,14 @@ class ToolBuilderTest {
             tool {
                 functionDeclaration {
                     name = "testFunction"
-                    description = "find movie titles currently playing in theaters based on any description, genre, title words, etc."
+                    description = "find movie titles currently playing in theaters" +
+                        " based on any description, genre, title words, etc."
                     parameters {
                         type = "object"
                         property("location") {
                             type = "string"
-                            description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
+                            description = "The city and state, e.g. San Francisco, CA" +
+                                " or a zip code e.g. 95616"
                         }
                         property("description") {
                             type = "string"
@@ -44,12 +46,14 @@ class ToolBuilderTest {
             tool {
                 functionDeclaration {
                     name = "functionOne"
-                    description = "find movie titles currently playing in theaters based on any description, genre, title words, etc."
+                    description = "find movie titles currently playing in theaters" +
+                        " based on any description, genre, title words, etc."
                     parameters {
                         type = "object"
                         property("location") {
                             type = "string"
-                            description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
+                            description = "The city and state, e.g. San Francisco, CA" +
+                                " or a zip code e.g. 95616"
                         }
                         property("description") {
                             type = "string"
@@ -67,7 +71,8 @@ class ToolBuilderTest {
                         type = "object"
                         property("location") {
                             type = "string"
-                            description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
+                            description = "The city and state, e.g. San Francisco, CA" +
+                                " or a zip code e.g. 95616"
                         }
                         property("description") {
                             type = "string"

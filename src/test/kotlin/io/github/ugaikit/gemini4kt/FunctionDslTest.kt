@@ -5,12 +5,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 @GeminiFunction(description = "A test function")
+@Suppress("EmptyFunctionBlock", "UnusedParameter")
 fun testFunction(
     @GeminiParameter(description = "A string parameter") str: String,
     @GeminiParameter(description = "An integer parameter") int: Int,
 ) {
 }
 
+@Suppress("EmptyFunctionBlock", "UnusedParameter")
 fun functionWithoutAnnotation(
     str: String,
     int: Int,

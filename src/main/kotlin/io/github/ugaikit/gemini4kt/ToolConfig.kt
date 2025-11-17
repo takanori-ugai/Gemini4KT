@@ -25,7 +25,7 @@ class ToolConfigBuilder {
 
     fun build() =
         ToolConfig(
-            functionCallingConfig = functionCallingConfig ?: throw IllegalStateException("FunctionCallingConfig must be initialized"),
+            functionCallingConfig = functionCallingConfig ?: error("FunctionCallingConfig must be initialized"),
             retrievalConfig = retrievalConfig,
         )
 }

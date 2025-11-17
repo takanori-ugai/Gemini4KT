@@ -37,4 +37,6 @@ class AttributionSourceIdBuilder {
     fun build() = AttributionSourceId(groundingPassage, semanticRetrieverChunk)
 }
 
-fun attributionSourceId(init: AttributionSourceIdBuilder.() -> Unit): AttributionSourceId = AttributionSourceIdBuilder().apply(init).build()
+fun attributionSourceId(
+    init: AttributionSourceIdBuilder.() -> Unit,
+): AttributionSourceId = AttributionSourceIdBuilder().apply(init).build()

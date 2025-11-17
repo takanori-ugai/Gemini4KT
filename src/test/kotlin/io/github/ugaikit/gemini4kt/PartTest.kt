@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 
 class PartTest {
     private val json = Json { ignoreUnknownKeys = true }
+    private val image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
 
     @Test
     fun `serialization with text`() {
@@ -24,7 +25,7 @@ class PartTest {
                 inlineData =
                     InlineData(
                         mimeType = "image/png",
-                        data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+                        data = image,
                     ),
             )
         val expectedJson =
@@ -32,7 +33,7 @@ class PartTest {
             {
               "inline_data": {
                 "mime_type": "image/png",
-                "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+                "data": "$image"
               }
             }
             """.trimIndent()

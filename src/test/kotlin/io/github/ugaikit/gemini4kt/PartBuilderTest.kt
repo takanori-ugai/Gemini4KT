@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class PartBuilderTest {
+    private val image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+
     @Test
     fun `build with text`() {
         val part =
@@ -27,7 +29,7 @@ class PartBuilderTest {
             part {
                 inlineData {
                     mimeType { "image/png" }
-                    data { "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" }
+                    data { image }
                 }
             }
         assertNull(part.text)

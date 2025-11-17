@@ -32,4 +32,6 @@ class GroundingAttributionBuilder {
     fun build() = GroundingAttribution(sourceId, content)
 }
 
-fun groundingAttribution(init: GroundingAttributionBuilder.() -> Unit): GroundingAttribution = GroundingAttributionBuilder().apply(init).build()
+fun groundingAttribution(
+    init: GroundingAttributionBuilder.() -> Unit,
+): GroundingAttribution = GroundingAttributionBuilder().apply(init).build()

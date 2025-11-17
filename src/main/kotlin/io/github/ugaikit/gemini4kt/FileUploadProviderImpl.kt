@@ -11,6 +11,8 @@ import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
+private const val BUFFER_SIZE = 4096
+
 @Serializable
 data class FileWrapper(
     val file: GeminiFile,
@@ -49,20 +51,6 @@ class FileUploadProviderImpl(
             connection.addRequestProperty("Content-Type", "application/json")
             connection.doOutput = true
 
-            val fileWrapper =
-                FileWrapper(
-                    GeminiFile(
-                        displayName = displayName,
-                        name = "",
-                        uri = "",
-                        mimeType = "",
-                        createTime = "",
-                        updateTime = "",
-                        expirationTime = "",
-                        sha256Hash = "",
-                        sizeBytes = 0,
-                    ),
-                )
             val requestBody = """{ "file" : { "displayName" : "$displayName" }}"""
 
             connection.outputStream.write(requestBody.toByteArray())
@@ -92,7 +80,7 @@ class FileUploadProviderImpl(
 
             val outputStream: OutputStream = connection.outputStream
             val inputStream: InputStream = file.inputStream()
-            val buffer = ByteArray(4096)
+            val buffer = ByteArray(BUFFER_SIZE)
             var bytesRead: Int
             while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                 outputStream.write(buffer, 0, bytesRead)

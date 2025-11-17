@@ -1,6 +1,6 @@
+@file:Suppress("TooManyFunctions")
 package io.github.ugaikit.gemini4kt
 
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -10,13 +10,14 @@ import kotlinx.serialization.json.putJsonObject
 import java.io.File
 import java.util.Base64
 
-val embedModel = "text-embedding-004"
+private const val REPEAT_COUNT = 10000
+private const val EMBED_MODEL = "text-embedding-004"
+private const val FLASH_MODEL = "gemini-1.5-flash-001"
+private const val PRO_MODEL = "gemini-1.5-pro-001"
 
-fun main() {
-    val apiKey = System.getenv("GEMINI_API_KEY")
-    val gemini = Gemini(apiKey)
+private fun testContentGeneration(gemini: Gemini) {
+    println("--- testGenerateContent ---")
     val text = "Write a story about a magic backpack."
-
     val inputJson =
         generateContentRequest {
             content { part { text { text } } }
@@ -25,47 +26,44 @@ fun main() {
                 threshold = Threshold.BLOCK_ONLY_HIGH
             }
         }
-    println(
-        gemini
-            .generateContent(
-                inputJson,
-                model = "gemini-2.0-flash-exp",
-            ).candidates[0]
-            .content.parts[0]
-            .text!!
-            .replace("\n\n", "\n"),
-    )
+    val response = gemini.generateContent(inputJson, model = FLASH_MODEL)
+    println(response.candidates[0].content.parts[0].text!!.replace("\n\n", "\n"))
 
+    println("--- testCountTokens ---")
     val inputJson2 =
         CountTokensRequest(
             contents = listOf(Content(parts = listOf(Part(text)))),
         )
     println(gemini.countTokens(inputJson2))
 
+    println("--- testEmbedContent ---")
     val embedRequest =
         EmbedContentRequest(
             content = Content(parts = listOf(Part(text))),
-            model = "models/$embedModel",
+            model = "models/$EMBED_MODEL",
         )
-    println(gemini.embedContent(embedRequest, model = embedModel))
+    println(gemini.embedContent(embedRequest, model = EMBED_MODEL))
 
+    println("--- testBatchEmbedContent ---")
     val batchEmbedRequest =
         BatchEmbedRequest(
             requests =
                 listOf(
                     EmbedContentRequest(
                         content = Content(parts = listOf(Part(text))),
-                        model = "models/text-embedding-004",
+                        model = "models/$EMBED_MODEL",
                     ),
                 ),
         )
-    println(gemini.batchEmbedContents(batchEmbedRequest, model = embedModel))
+    println(gemini.batchEmbedContents(batchEmbedRequest, model = EMBED_MODEL))
+}
 
+private fun testModelsAndContent(gemini: Gemini) {
+    println("--- testGetModels ---")
     println(gemini.getModels())
 
+    println("--- testGenerateContentWithImage ---")
     val path = Gemini::class.java.getResource("/scones.jpg")
-    val imagePath = "scones.jpg"
-    val imageFile = File(imagePath)
     val image = File(path.toURI())
     val base64Image = Base64.getEncoder().encodeToString(image.readBytes())
 
@@ -89,100 +87,125 @@ fun main() {
                 ),
         )
 
-    println(
-        gemini
-            .generateContent(
-                inputWithImage,
-                "gemini-2.0-flash-exp",
-            ).candidates[0]
-            .content.parts[0]
-            .text!!
-            .replace("\n\n", "\n"),
-    )
+    val response = gemini.generateContent(inputWithImage, PRO_MODEL)
+    println(response.candidates[0].content.parts[0].text!!.replace("\n\n", "\n"))
+}
 
-    val str = "This is a pen".repeat(10000)
+private fun testCachedContent(gemini: Gemini) {
+    println("--- testCachedContent ---")
+    val str = "This is a pen".repeat(REPEAT_COUNT)
+    val systemInstruction =
+        Content(
+            parts = listOf(Part(text = "Hello, world!")),
+            role = "system",
+        )
     val cachedContent =
         CachedContent(
             contents = listOf(Content(parts = listOf(Part(text = str)), role = "user")),
             model = "models/gemini-1.5-flash-002",
-            systemInstruction = Content(parts = listOf(Part(text = "Hello, world!")), role = "system"),
+            systemInstruction = systemInstruction,
         )
     val cache = gemini.createCachedContent(cachedContent)
     println(cache)
     println(gemini.listCachedContent())
     println(gemini.getCachedContent(cache.name!!))
-    println(gemini.deleteCachedContent(cache.name!!))
+    gemini.deleteCachedContent(cache.name!!)
+    println("Cached content deleted.")
+}
 
-    val findMoviesFunction =
-        functionDeclaration {
-            name = "find_movies"
-            description = "find movie titles currently playing in theaters based on any description, genre, title words, etc."
-            parameters {
-                type = "object"
-                property("location") {
-                    type = "string"
-                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
-                }
-                property("description") {
-                    type = "string"
-                    description = "Any kind of description including category or genre"
-                }
-                required("description")
+private fun findMoviesFunction(): FunctionDeclaration {
+    return functionDeclaration {
+        name = "find_movies"
+        description = "find movie titles currently playing in theaters " +
+            "based on any description, genre, title words, etc."
+        parameters {
+            type = "object"
+            property("location") {
+                type = "string"
+                description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
             }
-        }
-
-    val findTheatersFunction =
-        functionDeclaration {
-            name = "find_theaters"
-            description = "find theaters based on location and optionally movie title which is currently playing in theaters"
-            parameters {
-                type = "object"
-                property("location") {
-                    type = "string"
-                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
-                }
-                property("movie") {
-                    type = "string"
-                    description = "Any movie title"
-                }
-                required("location")
+            property("description") {
+                type = "string"
+                description = "Any kind of description including category or genre"
             }
+            required("description")
         }
+    }
+}
 
-    val getShowtimesFunction =
-        FunctionDeclaration(
-            name = "get_showtimes",
-            description = "Find the start times for movies playing in a specific theater",
-            parameters =
-                Schema(
-                    type = "object",
-                    properties =
-                        mapOf(
-                            "location" to
-                                Schema(
-                                    type = "string",
-                                    description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616",
-                                ),
-                            "movie" to
-                                Schema(
-                                    type = "string",
-                                    description = "Any movie title",
-                                ),
-                            "theater" to
-                                Schema(
-                                    type = "string",
-                                    description = "Name of the theater",
-                                ),
-                            "date" to
-                                Schema(
-                                    type = "string",
-                                    description = "Date for requested showtime",
-                                ),
-                        ),
-                    required = listOf("location", "movie", "theater", "date"),
+private fun findTheatersFunction(): FunctionDeclaration {
+    return functionDeclaration {
+        name = "find_theaters"
+        description = "find theaters based on location and optionally movie title " +
+            "which is currently playing in theaters"
+        parameters {
+            type = "object"
+            property("location") {
+                type = "string"
+                description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616"
+            }
+            property("movie") {
+                type = "string"
+                description = "Any movie title"
+            }
+            required("location")
+        }
+    }
+}
+
+private fun getShowtimesFunction(): FunctionDeclaration {
+    return FunctionDeclaration(
+        name = "get_showtimes",
+        description = "Find the start times for movies playing in a specific theater",
+        parameters =
+            Schema(
+                type = "object",
+                properties =
+                    mapOf(
+                        "location" to
+                            Schema(
+                                type = "string",
+                                description = "The city and state, e.g. San Francisco, CA or a zip code e.g. 95616",
+                            ),
+                        "movie" to
+                            Schema(
+                                type = "string",
+                                description = "Any movie title",
+                            ),
+                        "theater" to
+                            Schema(
+                                type = "string",
+                                description = "Name of the theater",
+                            ),
+                        "date" to
+                            Schema(
+                                type = "string",
+                                description = "Date for requested showtime",
+                            ),
+                    ),
+                required = listOf("location", "movie", "theater", "date"),
+            ),
+    )
+}
+
+private fun defineFunctionTools(): List<Tool> {
+    return listOf(
+        Tool(
+            functionDeclarations =
+                listOf(
+                    findMoviesFunction(),
+                    findTheatersFunction(),
+                    getShowtimesFunction(),
                 ),
-        )
+        ),
+    )
+}
 
+private fun testFunctionCallingFirstTurn(
+    gemini: Gemini,
+    tools: List<Tool>,
+) {
+    println("--- testFunctionCallingFirstTurn ---")
     val exFunction =
         GenerateContentRequest(
             contents =
@@ -196,28 +219,17 @@ fun main() {
                         }
                     },
                 ),
-            tools =
-                listOf(
-                    Tool(
-                        functionDeclarations =
-                            listOf(
-                                findMoviesFunction,
-                                findTheatersFunction,
-                                getShowtimesFunction,
-                            ),
-                    ),
-                ),
+            tools = tools,
         )
 
-    println(
-        gemini
-            .generateContent(
-                exFunction,
-                "gemini-2.0-flash-exp",
-            ).candidates[0]
-            .content.parts[0],
-    )
+    println(gemini.generateContent(exFunction, PRO_MODEL).candidates[0].content.parts[0])
+}
 
+private fun testFunctionCallingSecondTurn(
+    gemini: Gemini,
+    tools: List<Tool>,
+) {
+    println("--- testFunctionCallingSecondTurn ---")
     val content =
         buildJsonObject {
             put("name", "the_theater")
@@ -266,19 +278,14 @@ fun main() {
                         }
                     },
                 ),
-            tools =
-                listOf(
-                    Tool(
-                        functionDeclarations =
-                            listOf(
-                                findMoviesFunction,
-                                findTheatersFunction,
-                                getShowtimesFunction,
-                            ),
-                    ),
-                ),
+            tools = tools,
         )
 
+    println(gemini.generateContent(exFunction2, PRO_MODEL).candidates[0].content.parts[0])
+}
+
+private fun testPartBuilder() {
+    println("--- testPartBuilder ---")
     val examplePart =
         part {
             text { "This is an example text." }
@@ -288,15 +295,23 @@ fun main() {
             }
         }
     println(examplePart)
+}
 
-    println(
-        gemini
-            .generateContent(
-                exFunction2,
-                "gemini-2.0-flash-exp",
-            ).candidates[0]
-            .content.parts[0],
-    )
+fun main() {
+    val apiKey = System.getenv("GEMINI_API_KEY")
+    if (apiKey.isNullOrEmpty()) {
+        println("API key not found. Please set the GEMINI_API_KEY environment variable.")
+        return
+    }
+    val gemini = Gemini(apiKey)
+    val tools = defineFunctionTools()
+
+    testContentGeneration(gemini)
+    testModelsAndContent(gemini)
+    testCachedContent(gemini)
+    testFunctionCallingFirstTurn(gemini, tools)
+    testFunctionCallingSecondTurn(gemini, tools)
+    testPartBuilder()
 }
 
 class ITTest
