@@ -13,7 +13,7 @@ plugins {
     id("com.gradleup.shadow") version "9.2.2"
     id("com.github.jk1.dependency-license-report") version "3.0.1"
     id("com.github.spotbugs") version "6.4.5"
-    id("com.diffplug.spotless") version "8.0.0"
+    id("com.diffplug.spotless") version "8.1.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     jacoco
     id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
