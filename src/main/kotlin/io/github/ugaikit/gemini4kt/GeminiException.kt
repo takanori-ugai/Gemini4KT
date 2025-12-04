@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
  * @property error The details of the error returned by the API.
  */
 class GeminiException(
-    val error: GeminiError
+    val error: GeminiError,
 ) : RuntimeException(error.message)
 
 /**
@@ -17,7 +17,7 @@ class GeminiException(
  */
 @Serializable
 data class GeminiErrorResponse(
-    val error: GeminiError
+    val error: GeminiError,
 )
 
 /**
@@ -33,7 +33,7 @@ data class GeminiError(
     val code: Int,
     val message: String,
     val status: String,
-    val details: List<GeminiErrorDetail>? = null
+    val details: List<GeminiErrorDetail>? = null,
 )
 
 /**
@@ -48,13 +48,13 @@ data class GeminiErrorDetail(
     val metadata: Map<String, String>? = null,
     val retryDelay: String? = null,
     val links: List<GeminiErrorLink>? = null,
-    val violations: List<GeminiErrorViolation>? = null
+    val violations: List<GeminiErrorViolation>? = null,
 )
 
 @Serializable
 data class GeminiErrorLink(
     val description: String? = null,
-    val url: String? = null
+    val url: String? = null,
 )
 
 @Serializable
@@ -62,5 +62,5 @@ data class GeminiErrorViolation(
     val quotaMetric: String? = null,
     val quotaId: String? = null,
     val quotaDimensions: Map<String, String>? = null,
-    val description: String? = null
+    val description: String? = null,
 )
