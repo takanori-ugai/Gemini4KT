@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -220,8 +221,21 @@ class Gemini(
             val resCode = conn.responseCode
             if (resCode != HTTP_OK) {
                 logger.error { "Error: ${conn.responseCode}" }
-                conn.errorStream.bufferedReader().use { reader ->
-                    logger.error { "Error Message: ${reader.readText()}" }
+                val errorMsg =
+                    conn.errorStream.bufferedReader().use { reader ->
+                        val text = reader.readText()
+                        logger.error { "Error Message: $text" }
+                        text
+                    }
+                try {
+                    val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
+                    throw GeminiException(errorResponse.error)
+                } catch (e: GeminiException) {
+                    throw e
+                } catch (e: SerializationException) {
+                    logger.error { "Failed to parse error message: ${e.message}" }
+                } catch (e: IllegalArgumentException) {
+                    logger.error { "Failed to parse error message: ${e.message}" }
                 }
                 "{}"
             } else {
