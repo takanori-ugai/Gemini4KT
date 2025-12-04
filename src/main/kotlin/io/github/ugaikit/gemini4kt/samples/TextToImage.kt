@@ -1,6 +1,11 @@
 package io.github.ugaikit.gemini4kt.samples
 
-import io.github.ugaikit.gemini4kt.*
+import io.github.ugaikit.gemini4kt.Gemini
+import io.github.ugaikit.gemini4kt.GeminiException
+import io.github.ugaikit.gemini4kt.Modality
+import io.github.ugaikit.gemini4kt.generateContentRequest
+import kotlinx.serialization.SerializationException
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Base64
@@ -55,8 +60,11 @@ fun main() {
     val sample = TextToImage(gemini)
     try {
         sample.generateImage()
-    } catch (e: Exception) {
-        println("Error running TextToImage sample: ${e.message}")
-        e.printStackTrace()
+    } catch (e: GeminiException) {
+        println("Gemini Error running TextToImage sample: ${e.message}")
+    } catch (e: IOException) {
+        println("IO Error running TextToImage sample: ${e.message}")
+    } catch (e: SerializationException) {
+        println("Serialization Error running TextToImage sample: ${e.message}")
     }
 }
