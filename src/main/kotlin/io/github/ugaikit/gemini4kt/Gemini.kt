@@ -220,10 +220,9 @@ class Gemini(
             val resCode = conn.responseCode
             if (resCode != HTTP_OK) {
                 logger.error { "Error: ${conn.responseCode}" }
-                conn.errorStream.bufferedReader().use { reader ->
-                    logger.error { "Error Message: ${reader.readText()}" }
-                }
-                "{}"
+                val errorMsg = conn.errorStream.bufferedReader().use { reader -> reader.readText() }
+                logger.error { "Error Message: $errorMsg" }
+                throw GeminiException(errorMsg)
             } else {
                 logger.info { "GenerateContentResponse Code: $resCode" }
                 conn.inputStream.bufferedReader().use { reader ->
@@ -251,9 +250,9 @@ class Gemini(
             val resCode = conn.responseCode
             if (resCode != HTTP_OK) {
                 logger.error { "Error: $resCode" }
-                conn.errorStream.bufferedReader().use { reader ->
-                    logger.error { "Error Message: ${reader.readText()}" }
-                }
+                val errorMsg = conn.errorStream.bufferedReader().use { reader -> reader.readText() }
+                logger.error { "Error Message: $errorMsg" }
+                throw GeminiException(errorMsg)
             }
             logger.info { "GenerateContentResponse Code: $resCode" }
         } catch (e: IOException) {

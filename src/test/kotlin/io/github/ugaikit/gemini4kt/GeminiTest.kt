@@ -9,6 +9,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
@@ -71,9 +72,9 @@ class GeminiTest {
         every { conn.responseCode } returns 400
         every { conn.errorStream } returns ByteArrayInputStream("Error".toByteArray())
 
-        val result = gemini.getContent("http://localhost")
-
-        assertEquals("{}", result)
+        assertThrows(GeminiException::class.java) {
+            gemini.getContent("http://localhost")
+        }
     }
 
     @Test
@@ -101,7 +102,9 @@ class GeminiTest {
         every { conn.responseCode } returns 400
         every { conn.errorStream } returns ByteArrayInputStream("Error".toByteArray())
 
-        gemini.deleteContent("http://localhost")
+        assertThrows(GeminiException::class.java) {
+            gemini.deleteContent("http://localhost")
+        }
 
         verify { conn.requestMethod = "DELETE" }
     }

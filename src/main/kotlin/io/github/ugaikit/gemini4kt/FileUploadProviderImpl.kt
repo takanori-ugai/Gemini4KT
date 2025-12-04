@@ -56,7 +56,8 @@ class FileUploadProviderImpl(
             connection.outputStream.write(requestBody.toByteArray())
 
             if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                throw IOException("Failed to get upload URL: ${connection.responseCode} ${connection.responseMessage}")
+                val errorMsg = connection.errorStream.bufferedReader().use { reader -> reader.readText() }
+                throw GeminiException(errorMsg)
             }
 
             connection.headerFields["X-Goog-Upload-URL"]?.get(0)
@@ -90,7 +91,8 @@ class FileUploadProviderImpl(
             outputStream.close()
 
             if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                throw IOException("Failed to upload file: ${connection.responseCode} ${connection.responseMessage}")
+                val errorMsg = connection.errorStream.bufferedReader().use { reader -> reader.readText() }
+                throw GeminiException(errorMsg)
             }
 
             val response = connection.inputStream.bufferedReader().use { it.readText() }
