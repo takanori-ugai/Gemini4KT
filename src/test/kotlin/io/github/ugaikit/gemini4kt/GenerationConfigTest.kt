@@ -12,8 +12,8 @@ class GenerationConfigTest {
     @Test
     fun `test GenerationConfig serialization with responseModalities`() {
         val config = generationConfig {
-            responseModality("TEXT")
-            responseModality("IMAGE")
+            responseModality(Modality.TEXT)
+            responseModality(Modality.IMAGE)
         }
 
         val jsonString = json.encodeToString(config)

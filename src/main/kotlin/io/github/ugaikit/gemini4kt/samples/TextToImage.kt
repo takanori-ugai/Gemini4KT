@@ -17,8 +17,8 @@ class TextToImage(private val gemini: Gemini) {
                 }
             }
             generationConfig {
-                responseModality("TEXT")
-                responseModality("IMAGE")
+                responseModality(Modality.TEXT)
+                responseModality(Modality.IMAGE)
             }
         }
 
