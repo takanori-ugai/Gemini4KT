@@ -31,8 +31,8 @@ class PartTest {
         val expectedJson =
             """
             {
-              "inline_data": {
-                "mime_type": "image/png",
+              "inlineData": {
+                "mimeType": "image/png",
                 "data": "$image"
               }
             }
