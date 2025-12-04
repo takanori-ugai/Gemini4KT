@@ -6,23 +6,24 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class SpeechConfigTest {
-
     private val json = Json { prettyPrint = true }
 
     @Test
     fun `test single voice config serialization`() {
-        val config = generationConfig {
-            responseModality(Modality.AUDIO)
-            speechConfig {
-                voiceConfig {
-                    prebuiltVoiceConfig {
-                        voiceName { "Kore" }
+        val config =
+            generationConfig {
+                responseModality(Modality.AUDIO)
+                speechConfig {
+                    voiceConfig {
+                        prebuiltVoiceConfig {
+                            voiceName { "Kore" }
+                        }
                     }
                 }
             }
-        }
 
-        val expectedJson = """
+        val expectedJson =
+            """
             {
                 "response_modalities": [
                     "AUDIO"
@@ -35,7 +36,7 @@ class SpeechConfigTest {
                     }
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // We only care about the fields we set. The actual JSON might contain nulls if we didn't use `encodeDefaults = false` which is default.
         // Wait, standard Json configuration in this project likely omits nulls.
@@ -66,31 +67,33 @@ class SpeechConfigTest {
 
     @Test
     fun `test multi speaker config serialization`() {
-        val config = generationConfig {
-            responseModality(Modality.AUDIO)
-            speechConfig {
-                multiSpeakerVoiceConfig {
-                    speakerVoiceConfig {
-                        speaker { "Joe" }
-                        voiceConfig {
-                            prebuiltVoiceConfig {
-                                voiceName { "Kore" }
+        val config =
+            generationConfig {
+                responseModality(Modality.AUDIO)
+                speechConfig {
+                    multiSpeakerVoiceConfig {
+                        speakerVoiceConfig {
+                            speaker { "Joe" }
+                            voiceConfig {
+                                prebuiltVoiceConfig {
+                                    voiceName { "Kore" }
+                                }
                             }
                         }
-                    }
-                    speakerVoiceConfig {
-                        speaker { "Jane" }
-                        voiceConfig {
-                            prebuiltVoiceConfig {
-                                voiceName { "Puck" }
+                        speakerVoiceConfig {
+                            speaker { "Jane" }
+                            voiceConfig {
+                                prebuiltVoiceConfig {
+                                    voiceName { "Puck" }
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        val expectedJson = """
+        val expectedJson =
+            """
             {
                 "response_modalities": [
                     "AUDIO"
@@ -118,7 +121,7 @@ class SpeechConfigTest {
                     }
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val parsedActual = json.parseToJsonElement(json.encodeToString(config))
         val parsedExpected = json.parseToJsonElement(expectedJson)
