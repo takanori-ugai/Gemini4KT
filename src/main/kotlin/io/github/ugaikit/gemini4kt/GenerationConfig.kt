@@ -42,6 +42,7 @@ data class GenerationConfig(
     val responseModalities: List<Modality>? = null,
     val thinkingConfig: ThinkingConfig? = null,
     val imageConfig: ImageConfig? = null,
+    val speechConfig: SpeechConfig? = null,
 )
 
 class GenerationConfigBuilder {
@@ -54,6 +55,7 @@ class GenerationConfigBuilder {
     private val responseModalities: MutableList<Modality> = mutableListOf()
     var thinkingConfig: ThinkingConfig? = null
     var imageConfig: ImageConfig? = null
+    var speechConfig: SpeechConfig? = null
 
     fun stopSequence(sequence: String) {
         stopSequences.add(sequence)
@@ -67,9 +69,13 @@ class GenerationConfigBuilder {
         imageConfig = ImageConfigBuilder().apply(init).build()
     }
 
+    fun speechConfig(init: SpeechConfigBuilder.() -> Unit) {
+        speechConfig = SpeechConfigBuilder().apply(init).build()
+    }
+
     fun build() =
         GenerationConfig(
-            stopSequences = stopSequences,
+            stopSequences = if (stopSequences.isEmpty()) null else stopSequences,
             temperature = temperature,
             maxOutputTokens = maxOutputTokens,
             topP = topP,
@@ -78,6 +84,7 @@ class GenerationConfigBuilder {
             responseModalities = if (responseModalities.isEmpty()) null else responseModalities,
             thinkingConfig = thinkingConfig,
             imageConfig = imageConfig,
+            speechConfig = speechConfig,
         )
 }
 
