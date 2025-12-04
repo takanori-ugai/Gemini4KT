@@ -220,8 +220,18 @@ class Gemini(
             val resCode = conn.responseCode
             if (resCode != HTTP_OK) {
                 logger.error { "Error: ${conn.responseCode}" }
-                conn.errorStream.bufferedReader().use { reader ->
-                    logger.error { "Error Message: ${reader.readText()}" }
+                val errorMsg =
+                    conn.errorStream.bufferedReader().use { reader ->
+                        val text = reader.readText()
+                        logger.error { "Error Message: $text" }
+                        text
+                    }
+                try {
+                    val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
+                    throw GeminiException(errorResponse.error)
+                } catch (e: Exception) {
+                    if (e is GeminiException) throw e
+                    logger.error { "Failed to parse error message: ${e.message}" }
                 }
                 "{}"
             } else {
