@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.util.Base64
+import java.util.Properties
 import javax.sound.sampled.AudioFileFormat
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
@@ -70,7 +71,13 @@ fun main() {
 
     // Hypothetical usage if we had the client setup for "gemini-2.5-flash-preview-tts"
 
-    val apiKey = System.getenv("GEMINI_API_KEY")
+    val apiKey =
+        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+            Properties()
+                .apply {
+                    load(inputStream)
+                }.getProperty("apiKey")
+        }
     if (apiKey != null) {
         val gemini = Gemini(apiKey)
         try {
@@ -79,7 +86,7 @@ fun main() {
                     model = "gemini-2.5-flash-preview-tts",
                     inputJson =
                         GenerateContentRequest(
-                            contents = listOf(Content(parts = listOf(Part(text = "Say cheerfully: Have a wonderful day!")))),
+                            contents = listOf(Content(role = "user",parts = listOf(Part(text = "Say cheerfully: Have a wonderful day!")))),
                             generationConfig = config1,
                         ),
                 )

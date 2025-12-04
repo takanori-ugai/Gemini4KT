@@ -12,7 +12,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class InlineData(
-    @SerialName("mime_type")
     val mimeType: String,
     val data: String,
 )
