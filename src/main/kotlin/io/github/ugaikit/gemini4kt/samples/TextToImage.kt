@@ -4,6 +4,7 @@ import io.github.ugaikit.gemini4kt.*
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Base64
+import java.util.Properties
 
 class TextToImage(
     private val gemini: Gemini,
@@ -29,7 +30,7 @@ class TextToImage(
 
         // Note: The model name "gemini-2.5-flash-image" is used in the example.
         // Ensure this model is available to your API key.
-        val response = gemini.generateContent(request, "gemini-2.5-flash-image")
+        val response = gemini.generateContent(request, "gemini-2.0-flash-exp")
 
         for (candidate in response.candidates) {
             for (part in candidate.content.parts) {
@@ -50,7 +51,13 @@ class TextToImage(
 }
 
 fun main() {
-    val apiKey = System.getenv("GEMINI_API_KEY") ?: "YOUR_API_KEY"
+    val apiKey =
+        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+            Properties()
+                .apply {
+                    load(inputStream)
+                }.getProperty("apiKey")
+        }
     val gemini = Gemini(apiKey)
     val sample = TextToImage(gemini)
     try {
