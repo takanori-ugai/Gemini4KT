@@ -1,29 +1,31 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.*
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Base64
 
-class TextToImage(private val gemini: Gemini) {
+class TextToImage(
+    private val gemini: Gemini,
+) {
     fun generateImage() {
         val prompt = "Create a picture of a nano banana dish in a fancy restaurant with a Gemini theme"
 
-        val request = generateContentRequest {
-            content {
-                part {
-                    text { prompt }
+        val request =
+            generateContentRequest {
+                content {
+                    part {
+                        text { prompt }
+                    }
+                }
+                generationConfig {
+                    responseModality(Modality.TEXT)
+                    responseModality(Modality.IMAGE)
+                    imageConfig {
+                        aspectRatio { "16:9" }
+                    }
                 }
             }
-            generationConfig {
-                responseModality(Modality.TEXT)
-                responseModality(Modality.IMAGE)
-                imageConfig {
-                    aspectRatio { "16:9" }
-                }
-            }
-        }
 
         // Note: The model name "gemini-2.5-flash-image" is used in the example.
         // Ensure this model is available to your API key.

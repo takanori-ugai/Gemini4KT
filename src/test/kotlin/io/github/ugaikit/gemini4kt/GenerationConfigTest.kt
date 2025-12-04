@@ -2,19 +2,18 @@ package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class GenerationConfigTest {
-
     private val json = Json { prettyPrint = true }
 
     @Test
     fun `test GenerationConfig serialization with responseModalities`() {
-        val config = generationConfig {
-            responseModality(Modality.TEXT)
-            responseModality(Modality.IMAGE)
-        }
+        val config =
+            generationConfig {
+                responseModality(Modality.TEXT)
+                responseModality(Modality.IMAGE)
+            }
 
         val jsonString = json.encodeToString(config)
 
@@ -26,9 +25,10 @@ class GenerationConfigTest {
 
     @Test
     fun `test GenerationConfig serialization without responseModalities`() {
-        val config = generationConfig {
-            temperature = 0.5
-        }
+        val config =
+            generationConfig {
+                temperature = 0.5
+            }
 
         val jsonString = json.encodeToString(config)
 
@@ -38,12 +38,13 @@ class GenerationConfigTest {
 
     @Test
     fun `test GenerationConfig serialization with imageConfig`() {
-        val config = generationConfig {
-            imageConfig {
-                aspectRatio { "16:9" }
-                imageSize { "2K" }
+        val config =
+            generationConfig {
+                imageConfig {
+                    aspectRatio { "16:9" }
+                    imageSize { "2K" }
+                }
             }
-        }
 
         val jsonString = json.encodeToString(config)
 
