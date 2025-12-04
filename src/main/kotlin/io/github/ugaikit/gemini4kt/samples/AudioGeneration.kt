@@ -86,7 +86,7 @@ fun main() {
                     model = "gemini-2.5-flash-preview-tts",
                     inputJson =
                         GenerateContentRequest(
-                            contents = listOf(Content(role = "user",parts = listOf(Part(text = "Say cheerfully: Have a wonderful day!")))),
+                            contents = listOf(Content(role = "user", parts = listOf(Part(text = "Say cheerfully: Have a wonderful day!")))),
                             generationConfig = config1,
                         ),
                 )

@@ -1,6 +1,5 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
