@@ -35,4 +35,20 @@ class GenerationConfigTest {
         // We verify that the field is NOT present (as it is null)
         assert(!jsonString.contains("\"response_modalities\":"))
     }
+
+    @Test
+    fun `test GenerationConfig serialization with imageConfig`() {
+        val config = generationConfig {
+            imageConfig {
+                aspectRatio { "16:9" }
+                imageSize { "2K" }
+            }
+        }
+
+        val jsonString = json.encodeToString(config)
+
+        assert(jsonString.contains("\"imageConfig\":"))
+        assert(jsonString.contains("\"aspectRatio\": \"16:9\""))
+        assert(jsonString.contains("\"imageSize\": \"2K\""))
+    }
 }

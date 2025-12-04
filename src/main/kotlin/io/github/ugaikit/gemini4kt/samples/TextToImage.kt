@@ -19,6 +19,9 @@ class TextToImage(private val gemini: Gemini) {
             generationConfig {
                 responseModality(Modality.TEXT)
                 responseModality(Modality.IMAGE)
+                imageConfig {
+                    aspectRatio { "16:9" }
+                }
             }
         }
 

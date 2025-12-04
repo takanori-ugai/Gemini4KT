@@ -41,6 +41,7 @@ data class GenerationConfig(
     @SerialName("response_modalities")
     val responseModalities: List<Modality>? = null,
     val thinkingConfig: ThinkingConfig? = null,
+    val imageConfig: ImageConfig? = null,
 )
 
 class GenerationConfigBuilder {
@@ -52,6 +53,7 @@ class GenerationConfigBuilder {
     var responseMimeType: String? = null
     private val responseModalities: MutableList<Modality> = mutableListOf()
     var thinkingConfig: ThinkingConfig? = null
+    var imageConfig: ImageConfig? = null
 
     fun stopSequence(sequence: String) {
         stopSequences.add(sequence)
@@ -59,6 +61,10 @@ class GenerationConfigBuilder {
 
     fun responseModality(modality: Modality) {
         responseModalities.add(modality)
+    }
+
+    fun imageConfig(init: ImageConfigBuilder.() -> Unit) {
+        imageConfig = ImageConfigBuilder().apply(init).build()
     }
 
     fun build() =
@@ -71,6 +77,7 @@ class GenerationConfigBuilder {
             responseMimeType = responseMimeType,
             responseModalities = if (responseModalities.isEmpty()) null else responseModalities,
             thinkingConfig = thinkingConfig,
+            imageConfig = imageConfig,
         )
 }
 
