@@ -55,7 +55,13 @@ class GenerateContentRequestBuilderTest {
 
         assertEquals(1, request.contents.size)
         assertEquals("user", request.contents[0].role)
-        assertEquals("Hello", request.contents[0].parts[0].text)
+        assertEquals(
+            "Hello",
+            request.contents[0]
+                .parts
+                ?.get(0)
+                ?.text,
+        )
         assertEquals(1, request.tools.size)
         assertEquals(
             "get_weather",
