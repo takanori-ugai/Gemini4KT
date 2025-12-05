@@ -142,7 +142,7 @@ class GeminiTest {
                 tools =
                     listOf(
                         Tool(
-                            googleSearch = mapOf(),
+                            googleSearch = GoogleSearch(),
                         ),
                     ),
             )

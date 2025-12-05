@@ -2,6 +2,7 @@ package io.github.ugaikit.gemini4kt
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class ToolBuilderTest {
     /**
@@ -108,8 +109,8 @@ class ToolBuilderTest {
     fun `test ToolBuilder with googleSearch`() {
         val tool =
             tool {
-                googleSearch = mapOf("query" to "Kotlin")
+                googleSearch()
             }
-        assertEquals("Kotlin", tool.googleSearch?.get("query"))
+        assertNotNull(tool.googleSearch)
     }
 }
