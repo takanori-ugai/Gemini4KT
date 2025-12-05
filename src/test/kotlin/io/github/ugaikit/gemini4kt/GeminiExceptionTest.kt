@@ -8,16 +8,16 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class GeminiExceptionTest {
-
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
     fun `test GeminiException initialization`() {
-        val error = GeminiError(
-            code = 400,
-            message = "Bad Request",
-            status = "INVALID_ARGUMENT"
-        )
+        val error =
+            GeminiError(
+                code = 400,
+                message = "Bad Request",
+                status = "INVALID_ARGUMENT",
+            )
         val exception = GeminiException(error)
 
         assertEquals("Bad Request", exception.message)
@@ -26,7 +26,8 @@ class GeminiExceptionTest {
 
     @Test
     fun `test GeminiErrorResponse deserialization`() {
-        val jsonString = """
+        val jsonString =
+            """
             {
               "error": {
                 "code": 400,
@@ -44,7 +45,7 @@ class GeminiExceptionTest {
                 ]
               }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val response = json.decodeFromString<GeminiErrorResponse>(jsonString)
 
@@ -63,17 +64,19 @@ class GeminiExceptionTest {
 
     @Test
     fun `test GeminiError serialization`() {
-        val error = GeminiError(
-            code = 404,
-            message = "Not Found",
-            status = "NOT_FOUND",
-            details = listOf(
-                GeminiErrorDetail(
-                    type = "type.googleapis.com/google.rpc.ResourceInfo",
-                    reason = "RESOURCE_NOT_FOUND"
-                )
+        val error =
+            GeminiError(
+                code = 404,
+                message = "Not Found",
+                status = "NOT_FOUND",
+                details =
+                    listOf(
+                        GeminiErrorDetail(
+                            type = "type.googleapis.com/google.rpc.ResourceInfo",
+                            reason = "RESOURCE_NOT_FOUND",
+                        ),
+                    ),
             )
-        )
 
         val jsonString = json.encodeToString(error)
         val decodedError = json.decodeFromString<GeminiError>(jsonString)
@@ -83,47 +86,56 @@ class GeminiExceptionTest {
 
     @Test
     fun `test GeminiErrorDetail with multiple fields`() {
-        val detail = GeminiErrorDetail(
-            type = "type.googleapis.com/google.rpc.QuotaFailure",
-            violations = listOf(
-                GeminiErrorViolation(
-                    description = "Quota exceeded",
-                    quotaMetric = "requests",
-                    quotaDimensions = mapOf("region" to "us-central1")
-                )
-            ),
-            retryDelay = "10s",
-            links = listOf(
-                GeminiErrorLink(
-                    description = "Google Cloud Console",
-                    url = "https://console.cloud.google.com"
-                )
+        val detail =
+            GeminiErrorDetail(
+                type = "type.googleapis.com/google.rpc.QuotaFailure",
+                violations =
+                    listOf(
+                        GeminiErrorViolation(
+                            description = "Quota exceeded",
+                            quotaMetric = "requests",
+                            quotaDimensions = mapOf("region" to "us-central1"),
+                        ),
+                    ),
+                retryDelay = "10s",
+                links =
+                    listOf(
+                        GeminiErrorLink(
+                            description = "Google Cloud Console",
+                            url = "https://console.cloud.google.com",
+                        ),
+                    ),
             )
-        )
 
         val jsonString = json.encodeToString(detail)
         val decodedDetail = json.decodeFromString<GeminiErrorDetail>(jsonString)
 
         assertEquals(detail, decodedDetail)
         assertEquals("requests", decodedDetail.violations?.get(0)?.quotaMetric)
-        assertEquals("us-central1", decodedDetail.violations?.get(0)?.quotaDimensions?.get("region"))
+        assertEquals(
+            "us-central1",
+            decodedDetail.violations
+                ?.get(0)
+                ?.quotaDimensions
+                ?.get("region"),
+        )
         assertEquals("https://console.cloud.google.com", decodedDetail.links?.get(0)?.url)
     }
 
     @Test
     fun `test GeminiErrorDetail empty`() {
-         val detail = GeminiErrorDetail()
-         assertNull(detail.type)
-         assertNull(detail.reason)
-         assertNull(detail.domain)
-         assertNull(detail.metadata)
-         assertNull(detail.retryDelay)
-         assertNull(detail.links)
-         assertNull(detail.violations)
+        val detail = GeminiErrorDetail()
+        assertNull(detail.type)
+        assertNull(detail.reason)
+        assertNull(detail.domain)
+        assertNull(detail.metadata)
+        assertNull(detail.retryDelay)
+        assertNull(detail.links)
+        assertNull(detail.violations)
 
-         val jsonString = json.encodeToString(detail)
-         // Should be valid JSON, likely just "{}" or similar depending on settings
-         val decodedDetail = json.decodeFromString<GeminiErrorDetail>(jsonString)
-         assertEquals(detail, decodedDetail)
+        val jsonString = json.encodeToString(detail)
+        // Should be valid JSON, likely just "{}" or similar depending on settings
+        val decodedDetail = json.decodeFromString<GeminiErrorDetail>(jsonString)
+        assertEquals(detail, decodedDetail)
     }
 }
