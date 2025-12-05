@@ -10,6 +10,7 @@ data class UsageMetadata(
     val promptTokensDetails: List<ModalityTokenCount>? = null,
     val toolUsePromptTokenCount: Int? = null,
     val toolUsePromptTokensDetails: List<ModalityTokenCount>? = null,
+    val thoughtsTokenCount: Int? = null,
 )
 
 @Serializable
