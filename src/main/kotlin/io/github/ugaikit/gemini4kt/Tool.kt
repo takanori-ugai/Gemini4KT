@@ -12,6 +12,7 @@ import kotlinx.serialization.Serializable
  * @property googleSearch A [GoogleSearch] object representing a google search tool.
  * @property codeExecution A [CodeExecution] object representing a code execution tool.
  * @property urlContext A [UrlContext] object representing a url context tool.
+ * @property fileSearch A [FileSearchTool] object representing a file search tool.
  */
 @Serializable
 data class Tool(
@@ -22,6 +23,8 @@ data class Tool(
     val codeExecution: CodeExecution? = null,
     @SerialName("url_context")
     val urlContext: UrlContext? = null,
+    @SerialName("file_search")
+    val fileSearch: FileSearchTool? = null,
 )
 
 class ToolBuilder {
@@ -29,6 +32,7 @@ class ToolBuilder {
     private var googleSearch: GoogleSearch? = null
     private var codeExecution: CodeExecution? = null
     private var urlContext: UrlContext? = null
+    private var fileSearch: FileSearchTool? = null
 
     fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit) {
         functionDeclarations.add(FunctionDeclarationBuilder().apply(init).build())
@@ -46,12 +50,36 @@ class ToolBuilder {
         this.urlContext = UrlContext()
     }
 
+    fun fileSearch(init: FileSearchToolBuilder.() -> Unit) {
+        this.fileSearch = FileSearchToolBuilder().apply(init).build()
+    }
+
     fun build() =
         Tool(
             functionDeclarations = functionDeclarations,
             googleSearch = googleSearch,
             codeExecution = codeExecution,
             urlContext = urlContext,
+            fileSearch = fileSearch,
+        )
+}
+
+class FileSearchToolBuilder {
+    private var fileSearchStoreNames: MutableList<String> = mutableListOf()
+    private var metadataFilter: String? = null
+
+    fun fileSearchStoreName(name: String) {
+        fileSearchStoreNames.add(name)
+    }
+
+    fun metadataFilter(filter: String) {
+        this.metadataFilter = filter
+    }
+
+    fun build() =
+        FileSearchTool(
+            fileSearchStoreNames = fileSearchStoreNames,
+            metadataFilter = metadataFilter,
         )
 }
 
