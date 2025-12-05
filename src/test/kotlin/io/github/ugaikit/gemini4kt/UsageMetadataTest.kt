@@ -10,25 +10,34 @@ class UsageMetadataTest {
 
     @Test
     fun `test serialization`() {
-        val usageMetadata = UsageMetadata(
-            promptTokenCount = 31,
-            candidatesTokenCount = 323,
-            totalTokenCount = 1182,
-            promptTokensDetails = listOf(
-                ModalityTokenCount(Modality.TEXT, 31)
-            ),
-            toolUsePromptTokenCount = 712,
-            toolUsePromptTokensDetails = listOf(
-                ModalityTokenCount(Modality.TEXT, 712)
+        val usageMetadata =
+            UsageMetadata(
+                promptTokenCount = 31,
+                candidatesTokenCount = 323,
+                totalTokenCount = 1182,
+                promptTokensDetails =
+                    listOf(
+                        ModalityTokenCount(Modality.TEXT, 31),
+                    ),
+                toolUsePromptTokenCount = 712,
+                toolUsePromptTokensDetails =
+                    listOf(
+                        ModalityTokenCount(Modality.TEXT, 712),
+                    ),
             )
-        )
-        val expectedJson = """{"promptTokenCount":31,"candidatesTokenCount":323,"totalTokenCount":1182,"promptTokensDetails":[{"modality":"TEXT","tokenCount":31}],"toolUsePromptTokenCount":712,"toolUsePromptTokensDetails":[{"modality":"TEXT","tokenCount":712}]}"""
+        val expectedJson =
+            """
+            {"promptTokenCount":31,"candidatesTokenCount":323,"totalTokenCount":1182,
+            "promptTokensDetails":[{"modality":"TEXT","tokenCount":31}],"toolUsePromptTokenCount":712,
+            "toolUsePromptTokensDetails":[{"modality":"TEXT","tokenCount":712}]}
+            """.replace("\n", "").replace(" ", "")
         assertEquals(expectedJson, json.encodeToString(usageMetadata))
     }
 
     @Test
     fun `test deserialization`() {
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "promptTokenCount": 31,
                 "candidatesTokenCount": 323,
@@ -47,7 +56,7 @@ class UsageMetadataTest {
                   }
                 ]
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val usageMetadata = json.decodeFromString<UsageMetadata>(jsonString)
 
@@ -65,11 +74,12 @@ class UsageMetadataTest {
 
     @Test
     fun `test deserialization with missing fields`() {
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "totalTokenCount": 1182
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val usageMetadata = json.decodeFromString<UsageMetadata>(jsonString)
 
