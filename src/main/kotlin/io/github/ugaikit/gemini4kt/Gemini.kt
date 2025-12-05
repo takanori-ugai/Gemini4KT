@@ -244,6 +244,7 @@ class Gemini(
                     val txt = reader.readText()
                     logger.debug { "Content length: ${txt.length}" }
                     logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
+                    logger.debug { txt }
                     txt
                 }
             }
