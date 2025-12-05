@@ -7,16 +7,18 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class UrlContextTest {
-    private val json = Json {
-        encodeDefaults = true
-        ignoreUnknownKeys = true
-    }
+    private val json =
+        Json {
+            encodeDefaults = true
+            ignoreUnknownKeys = true
+        }
 
     @Test
     fun `test Tool serialization with urlContext`() {
-        val tool = tool {
-            urlContext()
-        }
+        val tool =
+            tool {
+                urlContext()
+            }
         assertNotNull(tool.urlContext)
         val jsonString = json.encodeToString(tool)
         // Verify that url_context is present and is an empty object
@@ -25,7 +27,8 @@ class UrlContextTest {
 
     @Test
     fun `test Candidate deserialization with urlContextMetadata`() {
-        val jsonString = """
+        val jsonString =
+            """
             {
                 "content": {
                     "parts": [{"text": "response text"}],
@@ -46,7 +49,7 @@ class UrlContextTest {
                     ]
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val candidate = json.decodeFromString<Candidate>(jsonString)
 

@@ -1,6 +1,5 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -10,7 +9,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class UrlContextMetadata(
-    @SerialName("url_metadata")
     val urlMetadata: List<UrlMetadata> = emptyList(),
 )
 
@@ -22,8 +20,6 @@ data class UrlContextMetadata(
  */
 @Serializable
 data class UrlMetadata(
-    @SerialName("retrieved_url")
     val retrievedUrl: String,
-    @SerialName("url_retrieval_status")
     val urlRetrievalStatus: String,
 )

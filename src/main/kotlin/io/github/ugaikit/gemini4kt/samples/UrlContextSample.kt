@@ -12,7 +12,10 @@ fun main() {
     val apiKey = prop.getProperty("apiKey")
     val gemini = Gemini(apiKey)
 
-    val text = "Compare the ingredients and cooking times from the recipes at https://www.foodnetwork.com/recipes/ina-garten/perfect-roast-chicken-recipe-1940592 and https://www.allrecipes.com/recipe/21151/simple-whole-roast-chicken/"
+    val text =
+        "Compare the ingredients and cooking times from the recipes" +
+            " at https://www.foodnetwork.com/recipes/ina-garten/perfect-roast-chicken-recipe-1940592 " +
+            "and https://www.allrecipes.com/recipe/70679/simple-whole-roasted-chicken/"
 
     val inputJson =
         GenerateContentRequest(
