@@ -36,15 +36,15 @@ class UrlContextTest {
                 },
                 "finishReason": "STOP",
                 "index": 0,
-                "url_context_metadata": {
-                    "url_metadata": [
+                "urlContextMetadata": {
+                    "urlMetadata": [
                         {
-                            "retrieved_url": "https://example.com/recipe1",
-                            "url_retrieval_status": "URL_RETRIEVAL_STATUS_SUCCESS"
+                            "retrievedUrl": "https://example.com/recipe1",
+                            "urlRetrievalStatus": "URL_RETRIEVAL_STATUS_SUCCESS"
                         },
                         {
-                            "retrieved_url": "https://example.com/recipe2",
-                            "url_retrieval_status": "URL_RETRIEVAL_STATUS_SUCCESS"
+                            "retrievedUrl": "https://example.com/recipe2",
+                            "urlRetrievalStatus": "URL_RETRIEVAL_STATUS_SUCCESS"
                         }
                     ]
                 }
