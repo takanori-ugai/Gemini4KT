@@ -17,13 +17,13 @@ import java.util.Properties
 
 fun main() =
     runBlocking {
-        val prop = Properties()
-        val propFile = File("src/main/resources/prop.properties")
-        if (propFile.exists()) {
-            prop.load(propFile.inputStream())
-        }
-        val apiKey = prop.getProperty("gemini_api_key") ?: System.getenv("GEMINI_API_KEY")
-
+        val apiKey =
+            Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                Properties()
+                    .apply {
+                        load(inputStream)
+                    }.getProperty("apiKey")
+            }
         if (apiKey == null) {
             println("API key not found.")
             return@runBlocking
