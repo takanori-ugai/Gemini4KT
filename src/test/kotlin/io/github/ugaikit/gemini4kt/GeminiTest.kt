@@ -50,6 +50,7 @@ class GeminiTest {
 
         assertEquals(response, result)
         verify { conn.requestMethod = "POST" }
+        verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
     }
 
     @Test
@@ -63,6 +64,7 @@ class GeminiTest {
 
         assertEquals(response, result)
         verify { conn.requestMethod = "GET" }
+        verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
     }
 
     @Test
@@ -93,6 +95,7 @@ class GeminiTest {
         gemini.deleteContent("http://localhost")
 
         verify { conn.requestMethod = "DELETE" }
+        verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
     }
 
     @Test
@@ -127,7 +130,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "$baseUrl/models/gemini-pro:generateContent?key=$apiKey",
+                "$baseUrl/models/gemini-pro:generateContent",
                 Json.encodeToString(request),
             )
         }
@@ -154,7 +157,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "$baseUrl/models/gemini-pro:generateContent?key=$apiKey",
+                "$baseUrl/models/gemini-pro:generateContent",
                 Json.encodeToString(request),
             )
         }
@@ -190,7 +193,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "$baseUrl/models/gemini-pro:generateContent?key=$apiKey",
+                "$baseUrl/models/gemini-pro:generateContent",
                 Json.encodeToString(request),
             )
         }
@@ -208,7 +211,7 @@ class GeminiTest {
         assertEquals("cachedContent-123", response.name)
         verify {
             geminiSpy.getContent(
-                "$baseUrl/cachedContents?key=$apiKey",
+                "$baseUrl/cachedContents",
                 Json.encodeToString(request),
             )
         }
@@ -225,7 +228,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "$baseUrl/cachedContents?pageSize=1000&key=$apiKey",
+                "$baseUrl/cachedContents?pageSize=1000",
                 null,
             )
         }
@@ -243,7 +246,7 @@ class GeminiTest {
         assertEquals(name, response.name)
         verify {
             geminiSpy.getContent(
-                "$baseUrl/cachedContent-123?key=$apiKey",
+                "$baseUrl/cachedContent-123",
                 null,
             )
         }
@@ -259,7 +262,7 @@ class GeminiTest {
 
         verify {
             geminiSpy.deleteContent(
-                "$baseUrl/cachedContent-123?key=$apiKey",
+                "$baseUrl/cachedContent-123",
             )
         }
     }
@@ -276,7 +279,7 @@ class GeminiTest {
         assertEquals(10, response.totalTokens)
         verify {
             geminiSpy.getContent(
-                "$baseUrl/models/gemini-2.0-flash-lite:countTokens?key=$apiKey",
+                "$baseUrl/models/gemini-2.0-flash-lite:countTokens",
                 Json.encodeToString(request),
             )
         }
@@ -294,7 +297,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "$baseUrl/models/embedding-001:batchEmbedContents?key=$apiKey",
+                "$baseUrl/models/embedding-001:batchEmbedContents",
                 Json.encodeToString(request),
             )
         }
@@ -312,7 +315,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "$baseUrl/models/embedding-001:embedContent?key=$apiKey",
+                "$baseUrl/models/embedding-001:embedContent",
                 Json.encodeToString(request),
             )
         }
@@ -329,7 +332,7 @@ class GeminiTest {
         assertNotNull(response)
         verify {
             geminiSpy.getContent(
-                "$baseUrl/models?key=$apiKey",
+                "$baseUrl/models",
                 null,
             )
         }
