@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
  * details of the functions declared by this tool.
  * @property googleSearch A [GoogleSearch] object representing a google search tool.
  * @property codeExecution A [CodeExecution] object representing a code execution tool.
+ * @property urlContext A [UrlContext] object representing a url context tool.
  */
 @Serializable
 data class Tool(
@@ -19,12 +20,15 @@ data class Tool(
     val googleSearch: GoogleSearch? = null,
     @SerialName("code_execution")
     val codeExecution: CodeExecution? = null,
+    @SerialName("url_context")
+    val urlContext: UrlContext? = null,
 )
 
 class ToolBuilder {
     private val functionDeclarations: MutableList<FunctionDeclaration> = mutableListOf()
     private var googleSearch: GoogleSearch? = null
     private var codeExecution: CodeExecution? = null
+    private var urlContext: UrlContext? = null
 
     fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit) {
         functionDeclarations.add(FunctionDeclarationBuilder().apply(init).build())
@@ -38,11 +42,16 @@ class ToolBuilder {
         this.codeExecution = CodeExecution()
     }
 
+    fun urlContext() {
+        this.urlContext = UrlContext()
+    }
+
     fun build() =
         Tool(
             functionDeclarations = functionDeclarations,
             googleSearch = googleSearch,
             codeExecution = codeExecution,
+            urlContext = urlContext,
         )
 }
 

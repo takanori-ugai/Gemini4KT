@@ -24,6 +24,7 @@ data class Candidate(
     val logprobsResult: LogprobsResult? = null,
     val groundingAttributions: List<GroundingAttribution> = emptyList(),
     val groundingMetadata: GroundingMetadata? = null,
+    val urlContextMetadata: UrlContextMetadata? = null,
 )
 
 class CandidateBuilder {
@@ -37,6 +38,7 @@ class CandidateBuilder {
     var logprobsResult: LogprobsResult? = null
     private var groundingAttributions: MutableList<GroundingAttribution> = mutableListOf()
     var groundingMetadata: GroundingMetadata? = null
+    var urlContextMetadata: UrlContextMetadata? = null
 
     fun content(init: ContentBuilder.() -> Unit) {
         content = ContentBuilder().apply(init).build()
@@ -64,6 +66,7 @@ class CandidateBuilder {
             logprobsResult,
             groundingAttributions,
             groundingMetadata,
+            urlContextMetadata,
         )
 }
 
