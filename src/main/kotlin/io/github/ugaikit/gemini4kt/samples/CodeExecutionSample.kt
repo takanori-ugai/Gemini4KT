@@ -29,7 +29,7 @@ fun main() {
         )
 
     println(response)
-    response.candidates[0].content.parts.forEach { part ->
+    response.candidates[0].content.parts!!.forEach { part ->
         if (part.text != null) {
             println("Text: ${part.text}")
         }

@@ -18,4 +18,7 @@ import kotlinx.serialization.Serializable
 data class GenerateContentResponse(
     val candidates: List<Candidate>,
     val promptFeedback: PromptFeedback? = null,
+    val usageMetadata: UsageMetadata? = null,
+    val modelVersion: String = "",
+    val responseId: String = "",
 )
