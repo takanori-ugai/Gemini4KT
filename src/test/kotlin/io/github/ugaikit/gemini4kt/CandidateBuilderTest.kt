@@ -84,6 +84,32 @@ class CandidateBuilderTest {
         assertNull(candidate.avgLogprobs)
         assertNull(candidate.logprobsResult)
         assertEquals(0, candidate.groundingAttributions.size)
+        assertNull(candidate.urlContextMetadata)
+    }
+
+    @Test
+    fun `build with urlContextMetadata`() {
+        val candidate =
+            candidate {
+                content {
+                    part { text { "This is a test." } }
+                }
+                finishReason = "STOP"
+                urlContextMetadata =
+                    UrlContextMetadata(
+                        urlMetadata =
+                            listOf(
+                                UrlMetadata(
+                                    retrievedUrl = "http://example.com",
+                                    urlRetrievalStatus = "SUCCESS",
+                                ),
+                            ),
+                    )
+            }
+
+        assertNotNull(candidate.urlContextMetadata)
+        assertEquals(1, candidate.urlContextMetadata!!.urlMetadata.size)
+        assertEquals("http://example.com", candidate.urlContextMetadata!!.urlMetadata[0].retrievedUrl)
     }
 
     @Test
