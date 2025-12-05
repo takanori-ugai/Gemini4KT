@@ -4,5 +4,16 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UsageMetadata(
+    val promptTokenCount: Int? = null,
+    val candidatesTokenCount: Int? = null,
     val totalTokenCount: Int,
+    val promptTokensDetails: List<ModalityTokenCount>? = null,
+    val toolUsePromptTokenCount: Int? = null,
+    val toolUsePromptTokensDetails: List<ModalityTokenCount>? = null,
+)
+
+@Serializable
+data class ModalityTokenCount(
+    val modality: Modality,
+    val tokenCount: Int,
 )
