@@ -1,6 +1,5 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -27,9 +26,7 @@ data class Part(
     val functionCall: FunctionCall? = null,
     val functionResponse: FunctionResponse? = null,
     val fileData: FileData? = null,
-    @SerialName("executable_code")
     val executableCode: ExecutableCode? = null,
-    @SerialName("code_execution_result")
     val codeExecutionResult: CodeExecutionResult? = null,
 )
 

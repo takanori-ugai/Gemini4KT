@@ -10,11 +10,12 @@ import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import java.io.File
 import java.util.Base64
+import java.util.Properties
 
 private const val REPEAT_COUNT = 10000
 private const val EMBED_MODEL = "text-embedding-004"
-private const val FLASH_MODEL = "gemini-1.5-flash-001"
-private const val PRO_MODEL = "gemini-1.5-pro-001"
+private const val FLASH_MODEL = "gemini-2.5-flash-lite"
+private const val PRO_MODEL = "gemini-2.5-pro"
 
 private fun testContentGeneration(gemini: Gemini) {
     println("--- testGenerateContent ---")
@@ -113,7 +114,7 @@ private fun testCachedContent(gemini: Gemini) {
     val cachedContent =
         CachedContent(
             contents = listOf(Content(parts = listOf(Part(text = str)), role = "user")),
-            model = "models/gemini-1.5-flash-002",
+            model = "models/gemini-2.5-flash-lite",
             systemInstruction = systemInstruction,
         )
     val cache = gemini.createCachedContent(cachedContent)
@@ -315,7 +316,16 @@ private fun testPartBuilder() {
 }
 
 fun main() {
-    val apiKey = System.getenv("GEMINI_API_KEY")
+    var apiKey = System.getenv("GEMINI_API_KEY")
+    if (apiKey == null) {
+        apiKey =
+            Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                Properties()
+                    .apply {
+                        load(inputStream)
+                    }.getProperty("apiKey")
+            }
+    }
     if (apiKey.isNullOrEmpty()) {
         println("API key not found. Please set the GEMINI_API_KEY environment variable.")
         return
@@ -325,7 +335,7 @@ fun main() {
 
     testContentGeneration(gemini)
     testModelsAndContent(gemini)
-    testCachedContent(gemini)
+//    testCachedContent(gemini)
     testFunctionCallingFirstTurn(gemini, tools)
     testFunctionCallingSecondTurn(gemini, tools)
     testPartBuilder()

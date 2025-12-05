@@ -33,7 +33,8 @@ fun main() {
         )
     println(
         response.candidates[0]
-            .content.parts[0]
+            .content.parts!!
+            .get(0)
             .text,
     )
 

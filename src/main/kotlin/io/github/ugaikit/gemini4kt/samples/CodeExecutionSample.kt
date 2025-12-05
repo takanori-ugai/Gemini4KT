@@ -28,6 +28,7 @@ fun main() {
             model = "gemini-2.5-flash",
         )
 
+    println(response)
     response.candidates[0].content.parts.forEach { part ->
         if (part.text != null) {
             println("Text: ${part.text}")
