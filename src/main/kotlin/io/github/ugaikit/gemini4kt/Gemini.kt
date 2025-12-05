@@ -58,7 +58,7 @@ class Gemini(
         inputJson: GenerateContentRequest,
         model: String = "gemini-pro",
     ): GenerateContentResponse {
-        val urlString = "$baseUrl/$model:generateContent?key=$apiKey"
+        val urlString = "$baseUrl/$model:generateContent"
         return json.decodeFromString<GenerateContentResponse>(
             getContent(urlString, json.encodeToString<GenerateContentRequest>(inputJson)),
         )
@@ -71,7 +71,7 @@ class Gemini(
      * @return The created [CachedContent] object as returned by the server.
      */
     fun createCachedContent(inputJson: CachedContent): CachedContent {
-        val urlString = "$bUrl/cachedContents?key=$apiKey"
+        val urlString = "$bUrl/cachedContents"
         return json.decodeFromString<CachedContent>(
             getContent(urlString, json.encodeToString<CachedContent>(inputJson)),
         )
@@ -91,7 +91,7 @@ class Gemini(
     ): CachedContentList {
         val urlString =
             buildString {
-                append("$bUrl/cachedContents?pageSize=$pageSize&key=$apiKey")
+                append("$bUrl/cachedContents?pageSize=$pageSize")
                 if (pageToken != null) append("&pageToken=$pageToken")
             }
         return json.decodeFromString<CachedContentList>(
@@ -107,7 +107,7 @@ class Gemini(
      * given name.
      */
     fun getCachedContent(name: String): CachedContent {
-        val urlString = "$bUrl/$name?key=$apiKey"
+        val urlString = "$bUrl/$name"
         return json.decodeFromString<CachedContent>(
             getContent(urlString),
         )
@@ -119,7 +119,7 @@ class Gemini(
      * @param name The unique name identifier of the cached content to be deleted.
      */
     fun deleteCachedContent(name: String) {
-        val urlString = "$bUrl/$name?key=$apiKey"
+        val urlString = "$bUrl/$name"
         deleteContent(urlString)
     }
 
@@ -134,7 +134,7 @@ class Gemini(
         inputJson: CountTokensRequest,
         model: String = "gemini-2.0-flash-lite",
     ): TotalTokens {
-        val urlString = "$baseUrl/$model:countTokens?key=$apiKey"
+        val urlString = "$baseUrl/$model:countTokens"
         println(inputJson)
         return json.decodeFromString<TotalTokens>(
             getContent(urlString, json.encodeToString<CountTokensRequest>(inputJson)),
@@ -151,7 +151,7 @@ class Gemini(
         inputJson: BatchEmbedRequest,
         model: String = "embedding-001",
     ): BatchEmbedResponse {
-        val urlString = "$baseUrl/$model:batchEmbedContents?key=$apiKey"
+        val urlString = "$baseUrl/$model:batchEmbedContents"
         return json.decodeFromString<BatchEmbedResponse>(
             getContent(urlString, json.encodeToString<BatchEmbedRequest>(inputJson)),
         )
@@ -167,7 +167,7 @@ class Gemini(
         inputJson: EmbedContentRequest,
         model: String = "embedding-001",
     ): EmbedResponse {
-        val urlString = "$baseUrl/$model:embedContent?key=$apiKey"
+        val urlString = "$baseUrl/$model:embedContent"
         return json.decodeFromString<EmbedResponse>(
             getContent(urlString, json.encodeToString<EmbedContentRequest>(inputJson)),
         )
@@ -179,7 +179,7 @@ class Gemini(
      * @return The collection of models as a [ModelCollection] object.
      */
     fun getModels(): ModelCollection {
-        val urlString = "$baseUrl?key=$apiKey"
+        val urlString = "$baseUrl"
         return json.decodeFromString<ModelCollection>(getContent(urlString))
     }
 
@@ -213,6 +213,7 @@ class Gemini(
             val url = URL(urlStr)
             val conn = httpConnectionProvider.getConnection(url)
             conn.requestMethod = if (inputJson == null) "GET" else "POST"
+            conn.setRequestProperty("x-goog-api-key", apiKey)
             conn.setRequestProperty("Content-Type", "application/json")
             if (inputJson != null) {
                 conn.doOutput = true
@@ -263,6 +264,7 @@ class Gemini(
             val url = URL(urlStr)
             val conn = httpConnectionProvider.getConnection(url)
             conn.requestMethod = "DELETE"
+            conn.setRequestProperty("x-goog-api-key", apiKey)
             val resCode = conn.responseCode
             if (resCode != HTTP_OK) {
                 logger.error { "Error: $resCode" }

@@ -41,9 +41,10 @@ class FileUploadProviderImpl(
         fileSize: Long,
     ): String =
         withContext(Dispatchers.IO) {
-            val url = URL("$baseUrl/upload/v1beta/files?key=$apiKey")
+            val url = URL("$baseUrl/upload/v1beta/files")
             val connection = httpConnectionProvider.getConnection(url)
             connection.requestMethod = "POST"
+            connection.addRequestProperty("x-goog-api-key", apiKey)
             connection.addRequestProperty("X-Goog-Upload-Protocol", "resumable")
             connection.addRequestProperty("X-Goog-Upload-Command", "start")
             connection.addRequestProperty("X-Goog-Upload-Header-Content-Length", fileSize.toString())
