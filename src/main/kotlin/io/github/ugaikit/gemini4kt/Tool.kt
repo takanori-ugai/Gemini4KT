@@ -10,17 +10,21 @@ import kotlinx.serialization.Serializable
  * @property functionDeclarations A [FunctionDeclaration] object containing the
  * details of the functions declared by this tool.
  * @property googleSearch A [GoogleSearch] object representing a google search tool.
+ * @property codeExecution A [CodeExecution] object representing a code execution tool.
  */
 @Serializable
 data class Tool(
     val functionDeclarations: List<FunctionDeclaration>? = null,
     @SerialName("google_search")
     val googleSearch: GoogleSearch? = null,
+    @SerialName("code_execution")
+    val codeExecution: CodeExecution? = null,
 )
 
 class ToolBuilder {
     private val functionDeclarations: MutableList<FunctionDeclaration> = mutableListOf()
     private var googleSearch: GoogleSearch? = null
+    private var codeExecution: CodeExecution? = null
 
     fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit) {
         functionDeclarations.add(FunctionDeclarationBuilder().apply(init).build())
@@ -30,10 +34,15 @@ class ToolBuilder {
         this.googleSearch = GoogleSearch()
     }
 
+    fun codeExecution() {
+        this.codeExecution = CodeExecution()
+    }
+
     fun build() =
         Tool(
             functionDeclarations = functionDeclarations,
             googleSearch = googleSearch,
+            codeExecution = codeExecution,
         )
 }
 
