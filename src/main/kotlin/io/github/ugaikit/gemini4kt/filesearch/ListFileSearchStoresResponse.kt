@@ -11,5 +11,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ListFileSearchStoresResponse(
     val fileSearchStores: List<FileSearchStore>? = null,
-    val nextPageToken: String? = null
+    val nextPageToken: String? = null,
 )

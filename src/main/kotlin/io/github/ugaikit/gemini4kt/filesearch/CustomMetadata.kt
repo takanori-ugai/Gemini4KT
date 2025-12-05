@@ -11,5 +11,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CustomMetadata(
     val key: String,
-    val stringValue: String? = null
+    val stringValue: String? = null,
 )

@@ -23,5 +23,5 @@ data class FileSearchStore(
     val activeDocumentsCount: String? = null,
     val pendingDocumentsCount: String? = null,
     val failedDocumentsCount: String? = null,
-    val sizeBytes: String? = null
+    val sizeBytes: String? = null,
 )

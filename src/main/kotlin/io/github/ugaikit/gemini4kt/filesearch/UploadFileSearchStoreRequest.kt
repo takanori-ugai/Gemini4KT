@@ -15,5 +15,5 @@ data class UploadFileSearchStoreRequest(
     val displayName: String? = null,
     val customMetadata: List<CustomMetadata>? = null,
     val chunkingConfig: ChunkingConfig? = null,
-    val mimeType: String? = null
+    val mimeType: String? = null,
 )

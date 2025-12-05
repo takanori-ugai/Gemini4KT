@@ -14,7 +14,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class FileSearchTest {
-
     private lateinit var fileSearch: FileSearch
     private lateinit var mockConnection: HttpURLConnection
     private lateinit var mockConnectionProvider: HttpConnectionProvider
@@ -60,10 +59,11 @@ class FileSearchTest {
 
     @Test
     fun `test listFileSearchStores`() {
-        val expectedResponse = ListFileSearchStoresResponse(
-            fileSearchStores = listOf(FileSearchStore(name = "fileSearchStores/123")),
-            nextPageToken = "token"
-        )
+        val expectedResponse =
+            ListFileSearchStoresResponse(
+                fileSearchStores = listOf(FileSearchStore(name = "fileSearchStores/123")),
+                nextPageToken = "token",
+            )
         val responseString = json.encodeToString(expectedResponse)
 
         every { mockConnection.responseCode } returns 200

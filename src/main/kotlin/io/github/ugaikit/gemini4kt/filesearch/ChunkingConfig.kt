@@ -11,5 +11,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ChunkingConfig(
     val chunkSize: Int? = null,
-    val chunkOverlap: Int? = null
+    val chunkOverlap: Int? = null,
 )

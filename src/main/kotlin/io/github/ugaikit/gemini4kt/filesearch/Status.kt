@@ -14,5 +14,5 @@ import kotlinx.serialization.json.JsonObject
 data class Status(
     val code: Int? = null,
     val message: String? = null,
-    val details: List<JsonObject>? = null
+    val details: List<JsonObject>? = null,
 )

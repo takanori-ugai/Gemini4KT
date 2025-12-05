@@ -13,5 +13,5 @@ import kotlinx.serialization.Serializable
 data class ImportFileRequest(
     val fileName: String,
     val customMetadata: List<CustomMetadata>? = null,
-    val chunkingConfig: ChunkingConfig? = null
+    val chunkingConfig: ChunkingConfig? = null,
 )

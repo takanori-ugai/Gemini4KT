@@ -18,5 +18,5 @@ data class Operation(
     val metadata: JsonObject? = null,
     val done: Boolean? = null,
     val error: Status? = null,
-    val response: JsonObject? = null
+    val response: JsonObject? = null,
 )
