@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Content(
-    val parts: List<Part>,
+    val parts: List<Part>? = null,
     val role: String? = null,
 )
 

@@ -62,9 +62,9 @@ fun main() {
 
         println("Generating content from file...")
         try {
-            val response = gemini.generateContent(request, model = "gemini-2.0-flash")
+            val response = gemini.generateContent(request, model = "gemini-2.5-flash-lite")
             response.candidates.forEach { candidate ->
-                candidate.content.parts.forEach { part ->
+                candidate.content.parts!!.forEach { part ->
                     println(part.text)
                 }
             }

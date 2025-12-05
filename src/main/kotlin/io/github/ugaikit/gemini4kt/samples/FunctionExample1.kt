@@ -104,9 +104,13 @@ private fun getShowtimesFunction(): FunctionDeclaration =
 private fun getFunctionDeclarations(): List<FunctionDeclaration> = listOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
 
 fun main() {
-    val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-    val prop = Properties().also { it.load(path) }
-    val apiKey = prop.getProperty("apiKey")
+    val apiKey =
+        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+            Properties()
+                .apply {
+                    load(inputStream)
+                }.getProperty("apiKey")
+        }
     val gemini = Gemini(apiKey)
 
     val exFunction =
@@ -133,9 +137,10 @@ fun main() {
         gemini
             .generateContent(
                 exFunction,
-                "gemini-2.0-flash-exp",
+                "gemini-2.5-flash-lite",
             ).candidates[0]
-            .content.parts[0],
+            .content.parts!!
+            .get(0),
     )
 }
 

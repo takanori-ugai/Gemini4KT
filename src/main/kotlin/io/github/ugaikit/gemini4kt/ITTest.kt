@@ -30,7 +30,8 @@ private fun testContentGeneration(gemini: Gemini) {
     val response = gemini.generateContent(inputJson, model = FLASH_MODEL)
     println(
         response.candidates[0]
-            .content.parts[0]
+            .content.parts
+            ?.get(0)!!
             .text!!
             .replace("\n\n", "\n"),
     )
@@ -96,7 +97,8 @@ private fun testModelsAndContent(gemini: Gemini) {
     val response = gemini.generateContent(inputWithImage, PRO_MODEL)
     println(
         response.candidates[0]
-            .content.parts[0]
+            .content.parts!!
+            .get(0)!!
             .text!!
             .replace("\n\n", "\n"),
     )
@@ -233,7 +235,8 @@ private fun testFunctionCallingFirstTurn(
         gemini
             .generateContent(exFunction, PRO_MODEL)
             .candidates[0]
-            .content.parts[0],
+            .content.parts!!
+            .get(0),
     )
 }
 
@@ -297,7 +300,8 @@ private fun testFunctionCallingSecondTurn(
         gemini
             .generateContent(exFunction2, PRO_MODEL)
             .candidates[0]
-            .content.parts[0],
+            .content.parts!!
+            .get(0),
     )
 }
 

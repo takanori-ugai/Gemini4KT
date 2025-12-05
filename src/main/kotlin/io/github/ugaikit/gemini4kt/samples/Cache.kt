@@ -24,7 +24,7 @@ fun main() {
     val cachedContent =
         CachedContent(
             contents = listOf(Content(listOf(Part(text = str)), "user")),
-            model = "models/gemini-1.5-flash",
+            model = "models/gemini-2.5-flash-lite",
             systemInstruction = Content(listOf(Part(text = "Hello, world!")), "system"),
         )
     val cache = gemini.createCachedContent(cachedContent)
@@ -51,9 +51,10 @@ fun main() {
         gemini
             .generateContent(
                 inputJson,
-                model = "gemini-1.5-flash",
+                model = "gemini-2.5-flash-lite",
             ).candidates[0]
-            .content.parts[0]
+            .content.parts!!
+            .get(0)
             .text!!
             .replace("\n\n", "\n"),
     )

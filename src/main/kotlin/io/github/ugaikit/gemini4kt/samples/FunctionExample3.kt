@@ -13,6 +13,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import java.util.Properties
 
 @GeminiFunction(description = "add two numbers")
 fun add(
@@ -21,7 +22,13 @@ fun add(
 ): Int = a + b
 
 fun main() {
-    val apiKey = System.getenv("GEMINI_API_KEY")
+    val apiKey =
+        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+            Properties()
+                .apply {
+                    load(inputStream)
+                }.getProperty("apiKey")
+        }
     val gemini = Gemini(apiKey)
 
     val addFunction = buildFunctionDeclaration(::add)
@@ -32,9 +39,12 @@ fun main() {
     val userPrompt = "What is 123 plus 456?"
     val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
     val firstRequest = GenerateContentRequest(contents = listOf(initialContent), tools = tools)
-    val firstResponse = gemini.generateContent(firstRequest, "gemini-1.5-flash")
+    val firstResponse = gemini.generateContent(firstRequest, "gemini-2.5-flash-lite")
 
-    val modelResponsePart = firstResponse.candidates[0].content.parts[0]
+    val modelResponsePart =
+        firstResponse.candidates[0]
+            .content.parts!!
+            .get(0)
     val functionCall = modelResponsePart.functionCall
     println("Model requested function call: $functionCall")
 
@@ -69,7 +79,7 @@ fun main() {
             )
 
         val secondRequest = GenerateContentRequest(contents = conversationHistory, tools = tools)
-        val secondResponse = gemini.generateContent(secondRequest, "gemini-1.5-flash")
-        println("Final response: ${secondResponse.candidates[0].content.parts[0].text}")
+        val secondResponse = gemini.generateContent(secondRequest, "gemini-2.5-flash-lite")
+        println("Final response: ${secondResponse.candidates[0].content.parts!!.get(0).text}")
     }
 }

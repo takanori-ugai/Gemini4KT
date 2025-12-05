@@ -12,6 +12,7 @@ import io.github.ugaikit.gemini4kt.Tool
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import java.util.Properties
 
 /**
  * A sample function that finds the weather in a given location.
@@ -28,7 +29,7 @@ private fun getFunctionCall(
 ): GenerateContentResponse {
     val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
     val firstRequest = GenerateContentRequest(contents = listOf(initialContent), tools = tools)
-    return gemini.generateContent(firstRequest, "gemini-1.5-flash")
+    return gemini.generateContent(firstRequest, "gemini-2.5-flash-lite")
 }
 
 private fun sendFunctionResult(
@@ -64,13 +65,19 @@ private fun sendFunctionResult(
             )
 
         val secondRequest = GenerateContentRequest(contents = conversationHistory, tools = tools)
-        val secondResponse = gemini.generateContent(secondRequest, "gemini-1.5-flash")
-        println("Final response: ${secondResponse.candidates[0].content.parts[0].text}")
+        val secondResponse = gemini.generateContent(secondRequest, "gemini-2.5-flash-lite")
+        println("Final response: ${secondResponse.candidates[0].content.parts!!.get(0).text}")
     }
 }
 
 fun main() {
-    val apiKey = System.getenv("GEMINI_API_KEY")
+    val apiKey =
+        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+            Properties()
+                .apply {
+                    load(inputStream)
+                }.getProperty("apiKey")
+        }
     val gemini = Gemini(apiKey)
 
     val findWeatherFunction =
@@ -98,7 +105,10 @@ fun main() {
     val userPrompt = "What's the weather like in Boston?"
     val firstResponse = getFunctionCall(gemini, tools, userPrompt)
 
-    val modelResponsePart = firstResponse.candidates[0].content.parts[0]
+    val modelResponsePart =
+        firstResponse.candidates[0]
+            .content.parts!!
+            .get(0)
     val functionCall = modelResponsePart.functionCall
     println("Model requested function call: $functionCall")
 

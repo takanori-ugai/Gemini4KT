@@ -40,9 +40,10 @@ fun main() {
         gemini
             .generateContent(
                 inputJson,
-                model = "gemini-2.5-flash-lite-preview-06-17",
+                model = "gemini-2.5-flash-lite",
             ).candidates[0]
-            .content.parts[0]
+            .content.parts!!
+            .get(0)
             .text!!
             .replace("\n\n", "\n"),
     )

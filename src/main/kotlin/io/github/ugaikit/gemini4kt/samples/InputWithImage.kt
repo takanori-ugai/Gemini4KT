@@ -41,9 +41,10 @@ fun main() {
         gemini
             .generateContent(
                 inputWithImage,
-                "gemini-2.0-flash-exp",
+                "gemini-2.5-flash-lite",
             ).candidates[0]
-            .content.parts[0]
+            .content.parts!!
+            .get(0)
             .text!!
             .replace("\n\n", "\n"),
     )

@@ -38,7 +38,7 @@ class TextToImage(
         val response = gemini.generateContent(request, "gemini-2.0-flash-exp")
 
         for (candidate in response.candidates) {
-            for (part in candidate.content.parts) {
+            for (part in candidate.content.parts!!) {
                 if (part.text != null) {
                     println("Text response: ${part.text}")
                 }
