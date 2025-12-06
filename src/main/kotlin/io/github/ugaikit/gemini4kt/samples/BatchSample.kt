@@ -65,17 +65,36 @@ fun main() {
 
     try {
         println("Creating batch job...")
-        val batchJob = batchClient.createBatch("gemini-1.5-flash", createBatchRequest)
-        println("Batch Job Created: ${batchJob.name}")
-        println("State: ${batchJob.metadata?.state}")
+        val createdBatchJob = batchClient.createBatch("gemini-1.5-flash", createBatchRequest)
+        println("Batch Job Created: ${createdBatchJob.name}")
+        println("Initial State: ${createdBatchJob.metadata?.state}")
 
-        // Check status
-        println("Checking status...")
-        val status = batchClient.getBatch(batchJob.name)
-        println("Current State: ${status.metadata?.state}")
+        var batchJob = createdBatchJob
+        var state = batchJob.metadata?.state
+
+        println("Waiting for job completion...")
+        while (state != "JOB_STATE_SUCCEEDED" && state != "JOB_STATE_FAILED" && state != "JOB_STATE_CANCELLED") {
+            Thread.sleep(10000) // Wait for 10 seconds
+            batchJob = batchClient.getBatch(batchJob.name)
+            state = batchJob.metadata?.state
+            println("Current State: $state")
+        }
+
+        if (state == "JOB_STATE_SUCCEEDED") {
+            println("Job succeeded!")
+            batchJob.response?.inlinedResponses?.forEachIndexed { index, response ->
+                println("\nResponse $index:")
+                println(response.response)
+            }
+            if (batchJob.response?.responsesFile != null) {
+                println("Results available in file: ${batchJob.response?.responsesFile}")
+            }
+        } else {
+            println("Job failed or cancelled. Error: ${batchJob.error}")
+        }
 
         // List batches
-        println("Listing recent batches...")
+        println("\nListing recent batches...")
         val batchesList = batchClient.listBatches(pageSize = 5)
         batchesList.batches.forEach {
             println("- ${it.name} (${it.metadata?.state})")
