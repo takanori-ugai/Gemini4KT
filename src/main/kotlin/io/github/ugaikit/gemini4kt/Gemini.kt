@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.ugaikit.gemini4kt.live.GeminiLive
+import io.github.ugaikit.gemini4kt.live.LiveConnectConfig
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -196,6 +198,18 @@ class Gemini(
         mimeType: String,
         displayName: String,
     ): GeminiFile = fileUploadProvider.upload(file, mimeType, displayName)
+
+    /**
+     * Creates a client for the Live API.
+     *
+     * @param model The model to be used for the live session.
+     * @param config Optional configuration for the live session.
+     * @return A [GeminiLive] client instance.
+     */
+    fun getLiveClient(
+        model: String,
+        config: LiveConnectConfig? = null,
+    ): GeminiLive = GeminiLive(apiKey, model, config, json)
 
     /**
      * Performs a POST request to the specified URL string with the given input JSON payload.
