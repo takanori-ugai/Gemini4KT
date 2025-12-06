@@ -52,46 +52,6 @@ class GeminiLive(
 
         val latch = CountDownLatch(1)
 
-        val listener =
-            object : WebSocket.Listener {
-                override fun onOpen(webSocket: WebSocket) {
-                    logger.info { "WebSocket connection opened" }
-                    latch.countDown()
-                    super.onOpen(webSocket)
-                }
-
-                override fun onText(
-                    webSocket: WebSocket,
-                    data: CharSequence,
-                    last: Boolean,
-                ): CompletionStage<*> {
-                    logger.debug { "Received text message: $data" }
-                    // Accumulate if !last? The API sends JSON objects, usually they fit in one frame or are handled by the client.
-                    // For simplicity, assuming full messages. If partial, we need a buffer.
-                    // But HttpClient handles fragmentation usually for us if we use onText with complete charsequence?
-                    // Wait, onText documentation says: "The data is valid only until the completion stage returned by this method is completed."
-                    // And "The last parameter indicates if this is the last part of the message."
-                    // So if last is false, we need to buffer.
-
-                    // Simplified for now: assuming message fits or relying on higher level abstractions if available.
-                    // But Java 11 WebSocket Listener delivers parts. We should handle it properly.
-
-                    processMessage(data.toString())
-                    return super.onText(webSocket, data, last)
-                }
-
-                // We need a buffer for partial messages
-                val buffer = StringBuilder()
-
-                fun processMessage(part: String) {
-                    // This is a naive implementation assuming we can just append.
-                    // In reality onText might be called multiple times.
-                    // We should check 'last'.
-                    // But since I can't change the listener signature easily in this inline object without state,
-                    // let's assume I need a proper class or closure state.
-                }
-            }
-
         // Better implementation of Listener
         val robustListener =
             object : WebSocket.Listener {
@@ -168,13 +128,29 @@ class GeminiLive(
 
         // Send Setup Message
         val setupMessage =
-            setup ?: BidiGenerateContentSetup(
-                model = "models/$model", // Ensure model format
-                generationConfig = config?.generationConfig,
-                systemInstruction = config?.systemInstruction,
-                tools = config?.tools,
-                // Map other config fields if present
-            )
+            setup ?: run {
+                val generationConfig =
+                    if (config?.generationConfig != null) {
+                        config.generationConfig.copy(
+                            responseModalities = config.responseModalities ?: config.generationConfig.responseModalities,
+                            speechConfig = config.speechConfig ?: config.generationConfig.speechConfig,
+                        )
+                    } else if (config?.responseModalities != null || config?.speechConfig != null) {
+                        io.github.ugaikit.gemini4kt.GenerationConfig(
+                            responseModalities = config?.responseModalities,
+                            speechConfig = config?.speechConfig,
+                        )
+                    } else {
+                        null
+                    }
+
+                BidiGenerateContentSetup(
+                    model = "models/$model", // Ensure model format
+                    generationConfig = generationConfig,
+                    systemInstruction = config?.systemInstruction,
+                    tools = config?.tools,
+                )
+            }
 
         val clientMessage = BidiGenerateContentClientMessage(setup = setupMessage)
         val jsonMessage = json.encodeToString(clientMessage)
