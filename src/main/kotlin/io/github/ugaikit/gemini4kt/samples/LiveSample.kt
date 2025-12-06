@@ -64,6 +64,7 @@ fun runSample() =
                     if (msg.serverContent?.turnComplete == true) {
                         throw kotlinx.coroutines.CancellationException("Turn complete")
                     }
+                    println(msg)
                     msg.serverContent?.modelTurn?.parts?.forEach { part ->
                         part.inlineData?.let {
                             if (it.mimeType.startsWith("audio")) {
