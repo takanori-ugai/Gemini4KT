@@ -35,7 +35,24 @@ class Batch(
     /**
      * Creates a batch job for content generation.
      *
-     * @param model The model to use for the batch job.
+     * @param request The creation request payload. The `model` should be specified within `BatchConfig`.
+     * @return The created [BatchJob] (Operation).
+     */
+    fun createBatch(
+        request: CreateBatchRequest,
+    ): BatchJob {
+        // Use the 'batches' resource endpoint for creating a batch job.
+        val urlString = "$bUrl/batches"
+        return json.decodeFromString<BatchJob>(
+            getContent(urlString, json.encodeToString(request)),
+        )
+    }
+
+    /**
+     * Helper method to create a batch job specifying the model explicitly.
+     * It modifies the request to include the model in the config.
+     *
+     * @param model The model to use for the batch job (e.g., "models/gemini-1.5-flash").
      * @param request The creation request payload.
      * @return The created [BatchJob] (Operation).
      */
@@ -43,10 +60,9 @@ class Batch(
         model: String,
         request: CreateBatchRequest,
     ): BatchJob {
-        val urlString = "$baseUrl/$model:batchGenerateContent"
-        return json.decodeFromString<BatchJob>(
-            getContent(urlString, json.encodeToString(request)),
-        )
+        val updatedBatchConfig = request.batch.copy(model = model)
+        val updatedRequest = request.copy(batch = updatedBatchConfig)
+        return createBatch(updatedRequest)
     }
 
     /**
@@ -93,6 +109,11 @@ class Batch(
         model: String,
         request: CreateBatchRequest,
     ): BatchJob {
+        // For embeddings, it seems we might still use `asyncBatchEmbedContent` on the model endpoint
+        // OR the unified batches endpoint. Given the previous confusion, I'll stick to what was plausibly documented
+        // or attempt to use the same unified structure if possible.
+        // However, the reviewer mentioned `models/{model}:asyncBatchEmbedContent` is likely correct for embeddings
+        // if `batchEmbedContents` was sync.
         val urlString = "$baseUrl/$model:asyncBatchEmbedContent"
         return json.decodeFromString<BatchJob>(
             getContent(urlString, json.encodeToString(request)),

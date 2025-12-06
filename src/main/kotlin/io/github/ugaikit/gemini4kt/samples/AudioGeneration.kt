@@ -2,7 +2,6 @@ package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.Gemini
-import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Modality
 import io.github.ugaikit.gemini4kt.Part
@@ -104,12 +103,8 @@ fun main() {
                 val audioBytes = Base64.getDecoder().decode(base64Audio)
                 savePcmToWav(audioBytes, "output.wav", 24000.0f, 1)
             }
-        } catch (e: GeminiException) {
-            println("Gemini API Error: ${e.message}")
-        } catch (e: IOException) {
-            println("IO Error: ${e.message}")
-        } catch (e: IllegalArgumentException) {
-            println("Input Error: ${e.message}")
+        } catch (e: Exception) {
+            println("Failed to generate audio: ${e.message}")
         }
     } else {
         println("GEMINI_API_KEY not found. Skipping API call.")
