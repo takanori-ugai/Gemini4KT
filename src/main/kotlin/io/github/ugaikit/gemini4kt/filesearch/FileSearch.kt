@@ -1,7 +1,12 @@
 package io.github.ugaikit.gemini4kt.filesearch
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.ugaikit.gemini4kt.*
+import io.github.ugaikit.gemini4kt.DefaultHttpConnectionProvider
+import io.github.ugaikit.gemini4kt.FileUploadProvider
+import io.github.ugaikit.gemini4kt.FileUploadProviderImpl
+import io.github.ugaikit.gemini4kt.GeminiErrorResponse
+import io.github.ugaikit.gemini4kt.GeminiException
+import io.github.ugaikit.gemini4kt.HttpConnectionProvider
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
