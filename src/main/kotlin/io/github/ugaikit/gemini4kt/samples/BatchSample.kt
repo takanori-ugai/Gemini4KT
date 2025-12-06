@@ -2,6 +2,7 @@ package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.Gemini
+import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.batch.Batch
@@ -12,6 +13,7 @@ import io.github.ugaikit.gemini4kt.batch.BatchRequestInput
 import io.github.ugaikit.gemini4kt.batch.CreateBatchRequest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
+import java.io.IOException
 import java.util.Properties
 
 fun main() {
@@ -99,8 +101,11 @@ fun main() {
         batchesList.batches.forEach {
             println("- ${it.name} (${it.metadata?.state})")
         }
-    } catch (e: Exception) {
-        println("Error: ${e.message}")
-        e.printStackTrace()
+    } catch (e: GeminiException) {
+        println("Gemini API Error: ${e.message}")
+    } catch (e: IOException) {
+        println("IO Error: ${e.message}")
+    } catch (e: InterruptedException) {
+        println("Interrupted: ${e.message}")
     }
 }
