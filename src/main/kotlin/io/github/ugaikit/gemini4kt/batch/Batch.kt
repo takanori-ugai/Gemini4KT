@@ -1,16 +1,13 @@
-package io.github.ugaikit.gemini4kt.filesearch
+package io.github.ugaikit.gemini4kt.batch
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.ugaikit.gemini4kt.DefaultHttpConnectionProvider
-import io.github.ugaikit.gemini4kt.FileUploadProvider
-import io.github.ugaikit.gemini4kt.FileUploadProviderImpl
 import io.github.ugaikit.gemini4kt.GeminiErrorResponse
 import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.HttpConnectionProvider
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.File
 import java.io.IOException
 import java.io.OutputStreamWriter
 import java.net.URL
@@ -18,17 +15,17 @@ import java.net.URL
 private val logger = KotlinLogging.logger {}
 
 /**
- * Client for interacting with the Google File Search API.
+ * Client for interacting with the Gemini Batch API.
  *
  * @property apiKey The API key used for authenticating requests.
  */
-class FileSearch(
+class Batch(
     private val apiKey: String,
     private val httpConnectionProvider: HttpConnectionProvider = DefaultHttpConnectionProvider(),
-    private val fileUploadProvider: FileUploadProvider = FileUploadProviderImpl(apiKey),
 ) {
     private val json = Json { ignoreUnknownKeys = true }
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
+    private val baseUrl = "$bUrl/models"
 
     companion object {
         private const val HTTP_OK = 200
@@ -36,122 +33,96 @@ class FileSearch(
     }
 
     /**
-     * Creates a new FileSearchStore.
+     * Creates a batch job for content generation.
      *
-     * @param inputJson The request payload for creating a FileSearchStore.
-     * @return The created [FileSearchStore] object.
+     * @param model The model to use for the batch job.
+     * @param request The creation request payload.
+     * @return The created [BatchJob] (Operation).
      */
-    fun createFileSearchStore(inputJson: FileSearchStore): FileSearchStore {
-        val urlString = "$bUrl/fileSearchStores"
-        return json.decodeFromString<FileSearchStore>(
-            getContent(urlString, json.encodeToString(inputJson)),
+    fun createBatch(
+        model: String,
+        request: CreateBatchRequest,
+    ): BatchJob {
+        val urlString = "$baseUrl/$model:batchGenerateContent"
+        return json.decodeFromString<BatchJob>(
+            getContent(urlString, json.encodeToString(request)),
         )
     }
 
     /**
-     * Gets information about a specific FileSearchStore.
+     * Gets the status of a batch job (Operation).
      *
-     * @param name The name of the FileSearchStore.
-     * @return The [FileSearchStore] object.
+     * @param name The resource name of the batch job operation (e.g., "batches/123456").
+     * @return The [BatchJob] with current status.
      */
-    fun getFileSearchStore(name: String): FileSearchStore {
+    fun getBatch(name: String): BatchJob {
         val urlString = "$bUrl/$name"
-        return json.decodeFromString<FileSearchStore>(
+        return json.decodeFromString<BatchJob>(
             getContent(urlString),
         )
     }
 
     /**
-     * Lists all FileSearchStores owned by the user.
+     * Cancels a batch job.
      *
-     * @param pageSize The maximum number of FileSearchStores to return.
-     * @param pageToken A page token, received from a previous fileSearchStores.list call.
-     * @return A [ListFileSearchStoresResponse] containing the list of FileSearchStores.
+     * @param name The resource name of the batch job to cancel.
      */
-    fun listFileSearchStores(
+    fun cancelBatch(name: String) {
+        val urlString = "$bUrl/$name:cancel"
+        getContent(urlString, "{}") // POST with empty body
+    }
+
+    /**
+     * Deletes a batch job.
+     *
+     * @param name The resource name of the batch job to delete.
+     */
+    fun deleteBatch(name: String) {
+        val urlString = "$bUrl/$name"
+        deleteContent(urlString)
+    }
+
+    /**
+     * Creates a batch job for creating embeddings.
+     *
+     * @param model The model to use for the batch job.
+     * @param request The creation request payload.
+     * @return The created [BatchJob] (Operation).
+     */
+    fun createBatchEmbeddings(
+        model: String,
+        request: CreateBatchRequest,
+    ): BatchJob {
+        val urlString = "$baseUrl/$model:asyncBatchEmbedContent"
+        return json.decodeFromString<BatchJob>(
+            getContent(urlString, json.encodeToString(request)),
+        )
+    }
+
+    /**
+     * Lists batch jobs.
+     *
+     * @param pageSize The maximum number of batch jobs to return.
+     * @param pageToken A page token, received from a previous list call.
+     * @return A list of [BatchJob]s.
+     */
+    fun listBatches(
         pageSize: Int? = null,
         pageToken: String? = null,
-    ): ListFileSearchStoresResponse {
+    ): ListBatchesResponse {
         val urlString =
             buildString {
-                append("$bUrl/fileSearchStores")
+                append("$bUrl/batches")
                 val params = mutableListOf<String>()
                 if (pageSize != null) params.add("pageSize=$pageSize")
                 if (pageToken != null) params.add("pageToken=$pageToken")
                 if (params.isNotEmpty()) append("?${params.joinToString("&")}")
             }
-        return json.decodeFromString<ListFileSearchStoresResponse>(
+        return json.decodeFromString<ListBatchesResponse>(
             getContent(urlString),
         )
     }
 
-    /**
-     * Deletes a FileSearchStore.
-     *
-     * @param name The name of the FileSearchStore.
-     * @param force If set to true, any Documents and objects related to this FileSearchStore will also be deleted.
-     */
-    fun deleteFileSearchStore(
-        name: String,
-        force: Boolean = false,
-    ) {
-        val urlString = "$bUrl/$name" + if (force) "?force=true" else ""
-        deleteContent(urlString)
-    }
-
-    /**
-     * Imports a File from File Service to a FileSearchStore.
-     *
-     * @param fileSearchStoreName The name of the FileSearchStore.
-     * @param inputJson The request payload for importing a file.
-     * @return The [Operation] object.
-     */
-    fun importFileToFileSearchStore(
-        fileSearchStoreName: String,
-        inputJson: ImportFileRequest,
-    ): Operation {
-        val urlString = "$bUrl/$fileSearchStoreName:importFile"
-        return json.decodeFromString<Operation>(
-            getContent(urlString, json.encodeToString(inputJson)),
-        )
-    }
-
-    /**
-     * Uploads a file to a FileSearchStore.
-     *
-     * @param fileSearchStoreName The name of the FileSearchStore.
-     * @param file The file to upload.
-     * @param mimeType The MIME type of the file.
-     * @param uploadRequest The request payload for uploading a file.
-     * @return The [Operation] object.
-     */
-    suspend fun uploadToFileSearchStore(
-        fileSearchStoreName: String,
-        file: File,
-        mimeType: String,
-        uploadRequest: UploadFileSearchStoreRequest,
-    ): Operation = fileUploadProvider.uploadToFileSearchStore(fileSearchStoreName, file, mimeType, uploadRequest)
-
-    /**
-     * Gets the latest state of a long-running operation.
-     *
-     * @param name The name of the operation resource.
-     * @return The [Operation] object.
-     */
-    fun getFileSearchStoreOperation(name: String): Operation {
-        val urlString = "$bUrl/$name"
-        return json.decodeFromString<Operation>(
-            getContent(urlString),
-        )
-    }
-
-    /**
-     * Performs a POST request to the specified URL string with the given input JSON payload.
-     *
-     * @param urlStr The URL to which the POST request is made.
-     * @param inputJson The JSON payload for the request.
-     * @return The response body as a String.
-     */
     private fun getContent(
         urlStr: String,
         inputJson: String? = null,
@@ -202,11 +173,6 @@ class FileSearch(
             ""
         }
 
-    /**
-     * Sends a DELETE request to the specified URL to delete content.
-     *
-     * @param urlStr The URL string where the DELETE request is sent.
-     */
     private fun deleteContent(urlStr: String) {
         try {
             val url = URL(urlStr)
