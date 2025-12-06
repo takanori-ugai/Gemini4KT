@@ -67,7 +67,7 @@ fun main() {
 
     try {
         println("Creating batch job...")
-        val createdBatchJob = batchClient.createBatch("gemini-1.5-flash", createBatchRequest)
+        val createdBatchJob = batchClient.createBatch("gemini-2.0-flash", createBatchRequest)
         println("Batch Job Created: ${createdBatchJob.name}")
         println("Initial State: ${createdBatchJob.metadata?.state}")
 

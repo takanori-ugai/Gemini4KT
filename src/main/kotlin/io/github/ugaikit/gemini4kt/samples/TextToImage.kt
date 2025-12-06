@@ -35,7 +35,7 @@ class TextToImage(
 
         // Note: The model name "gemini-2.5-flash-image" is used in the example.
         // Ensure this model is available to your API key.
-        val response = gemini.generateContent(request, "gemini-2.0-flash-exp")
+        val response = gemini.generateContent(request, "gemini-2.0-flash-exp-image-generation")
 
         for (candidate in response.candidates) {
             for (part in candidate.content.parts!!) {
