@@ -37,7 +37,7 @@ class Batch(
      *
      * @param model The model to use for the batch job.
      * @param request The creation request payload.
-     * @return The created [BatchJob].
+     * @return The created [BatchJob] (Operation).
      */
     fun createBatch(
         model: String,
@@ -50,9 +50,9 @@ class Batch(
     }
 
     /**
-     * Gets the status of a batch job.
+     * Gets the status of a batch job (Operation).
      *
-     * @param name The resource name of the batch job (e.g., "batches/123456").
+     * @param name The resource name of the batch job operation (e.g., "batches/123456").
      * @return The [BatchJob] with current status.
      */
     fun getBatch(name: String): BatchJob {
@@ -85,23 +85,15 @@ class Batch(
     /**
      * Creates a batch job for creating embeddings.
      *
-     * Note: This assumes the endpoint follows the pattern ...:batchEmbedContents.
-     * If the API differs, this might need adjustment.
-     *
      * @param model The model to use for the batch job.
      * @param request The creation request payload.
-     * @return The created [BatchJob].
+     * @return The created [BatchJob] (Operation).
      */
     fun createBatchEmbeddings(
         model: String,
         request: CreateBatchRequest,
     ): BatchJob {
-        // Based on pattern, assuming batchEmbedContents is overloaded or used for async
-        // However, since sync uses BatchEmbedRequest and async uses CreateBatchRequest structure,
-        // it might be distinguishable by the server or endpoint.
-        // Given documentation ambiguity, we try to follow the batchGenerateContent pattern.
-        // If this fails, user might need to use batchGenerateContent with embedding model if applicable.
-        val urlString = "$baseUrl/$model:batchEmbedContents"
+        val urlString = "$baseUrl/$model:asyncBatchEmbedContent"
         return json.decodeFromString<BatchJob>(
             getContent(urlString, json.encodeToString(request)),
         )
@@ -112,7 +104,7 @@ class Batch(
      *
      * @param pageSize The maximum number of batch jobs to return.
      * @param pageToken A page token, received from a previous list call.
-     * @return A list of [BatchJob]s (wrapped in a response object if paginated, but here simplified or we need a list response class).
+     * @return A list of [BatchJob]s.
      */
     fun listBatches(
         pageSize: Int? = null,

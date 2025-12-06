@@ -1,6 +1,9 @@
 package io.github.ugaikit.gemini4kt.batch
 
-import io.github.ugaikit.gemini4kt.*
+import io.github.ugaikit.gemini4kt.Content
+import io.github.ugaikit.gemini4kt.GenerateContentRequest
+import io.github.ugaikit.gemini4kt.HttpConnectionProvider
+import io.github.ugaikit.gemini4kt.Part
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -18,44 +21,55 @@ class BatchClientTest {
     @Test
     fun `createBatch sends correct request and parses response`() {
         val mockConnection = mockk<HttpURLConnection>(relaxed = true)
-        val mockProvider = object : HttpConnectionProvider {
-            override fun getConnection(url: URL): HttpURLConnection = mockConnection
-        }
+        val mockProvider =
+            object : HttpConnectionProvider {
+                override fun getConnection(url: URL): HttpURLConnection = mockConnection
+            }
 
         val batchClient = Batch("api-key", mockProvider)
 
-        val expectedResponse = """
+        val expectedResponse =
+            """
             {
               "name": "batches/123456",
-              "state": "JOB_STATE_PENDING",
-              "create_time": "2024-01-01T00:00:00Z"
+              "metadata": {
+                  "state": "JOB_STATE_PENDING",
+                  "create_time": "2024-01-01T00:00:00Z"
+              },
+              "done": false
             }
-        """.trimIndent()
+            """.trimIndent()
 
         every { mockConnection.inputStream } returns ByteArrayInputStream(expectedResponse.toByteArray())
         every { mockConnection.responseCode } returns 200
 
-        val generateContentRequest = GenerateContentRequest(
-            contents = listOf(Content(parts = listOf(Part(text = "test"))))
-        )
-        val createBatchRequest = CreateBatchRequest(
-            batch = BatchConfig(
-                inputConfig = BatchInputConfig(
-                    requests = BatchRequestInput(
-                        requests = listOf(
-                            BatchItemRequest(
-                                request = json.encodeToJsonElement(generateContentRequest)
-                            )
-                        )
-                    )
-                )
+        val generateContentRequest =
+            GenerateContentRequest(
+                contents = listOf(Content(parts = listOf(Part(text = "test")))),
             )
-        )
+        val createBatchRequest =
+            CreateBatchRequest(
+                batch =
+                    BatchConfig(
+                        inputConfig =
+                            BatchInputConfig(
+                                requests =
+                                    BatchRequestInput(
+                                        requests =
+                                            listOf(
+                                                BatchItemRequest(
+                                                    request = json.encodeToJsonElement(generateContentRequest),
+                                                ),
+                                            ),
+                                    ),
+                            ),
+                    ),
+            )
 
         val result = batchClient.createBatch("gemini-pro", createBatchRequest)
 
         assertEquals("batches/123456", result.name)
-        assertEquals("JOB_STATE_PENDING", result.state)
+        assertEquals("JOB_STATE_PENDING", result.metadata?.state)
 
         verify { mockConnection.requestMethod = "POST" }
         verify { mockConnection.setRequestProperty("x-goog-api-key", "api-key") }
@@ -64,20 +78,25 @@ class BatchClientTest {
     @Test
     fun `getBatch parses response correctly`() {
         val mockConnection = mockk<HttpURLConnection>(relaxed = true)
-        val mockProvider = object : HttpConnectionProvider {
-            override fun getConnection(url: URL): HttpURLConnection = mockConnection
-        }
+        val mockProvider =
+            object : HttpConnectionProvider {
+                override fun getConnection(url: URL): HttpURLConnection = mockConnection
+            }
         val batchClient = Batch("api-key", mockProvider)
 
-        val expectedResponse = """
+        val expectedResponse =
+            """
             {
               "name": "batches/123456",
-              "state": "JOB_STATE_SUCCEEDED",
-              "dest": {
+              "metadata": {
+                  "state": "JOB_STATE_SUCCEEDED"
+              },
+              "done": true,
+              "response": {
                   "inlined_responses": []
               }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         every { mockConnection.inputStream } returns ByteArrayInputStream(expectedResponse.toByteArray())
         every { mockConnection.responseCode } returns 200
@@ -85,8 +104,8 @@ class BatchClientTest {
         val result = batchClient.getBatch("batches/123456")
 
         assertEquals("batches/123456", result.name)
-        assertEquals("JOB_STATE_SUCCEEDED", result.state)
-        assertEquals(emptyList<BatchInlineResponse>(), result.dest?.inlinedResponses)
+        assertEquals("JOB_STATE_SUCCEEDED", result.metadata?.state)
+        assertEquals(emptyList<BatchInlineResponse>(), result.response?.inlinedResponses)
 
         verify { mockConnection.requestMethod = "GET" }
     }
