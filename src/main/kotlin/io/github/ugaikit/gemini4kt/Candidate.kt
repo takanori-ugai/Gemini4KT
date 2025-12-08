@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Candidate(
     val content: Content,
-    val finishReason: String,
+    val finishReason: String? = null,
     val index: Int? = null,
     val safetyRatings: List<SafetyRating>? = null,
     val citationMetadata: CitationMetadata? = null,
@@ -29,7 +29,7 @@ data class Candidate(
 
 class CandidateBuilder {
     lateinit var content: Content
-    lateinit var finishReason: String
+    var finishReason: String? = null
     var index: Int = 0
     private var safetyRatings: MutableList<SafetyRating> = mutableListOf()
     var citationMetadata: CitationMetadata? = null
