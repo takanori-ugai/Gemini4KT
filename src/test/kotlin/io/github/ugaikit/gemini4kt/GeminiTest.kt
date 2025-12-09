@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -37,6 +38,36 @@ class GeminiTest {
                 fileUploadProvider = fileUploadProvider,
             )
     }
+
+    @Test
+    fun `streamGenerateContent yields responses on success`() =
+        runBlocking {
+            val request = GenerateContentRequest(contents = emptyList())
+            val responseJson1 = """{"candidates": [{"content": {"parts": [{"text": "Hello"}]}}]}"""
+            val responseJson2 = """{"candidates": [{"content": {"parts": [{"text": " World"}]}}]}"""
+            val sseStream =
+                """
+                data: $responseJson1
+
+                data: $responseJson2
+                """.trimIndent()
+
+            every { httpConnectionProvider.getConnection(any()) } returns conn
+            every { conn.responseCode } returns 200
+            every { conn.inputStream } returns ByteArrayInputStream(sseStream.toByteArray())
+            every { conn.outputStream } returns ByteArrayOutputStream()
+
+            val flow = gemini.streamGenerateContent(request)
+            val results = flow.toList()
+
+            assertEquals(2, results.size)
+            // Check content of first response (simplified check)
+            assertNotNull(results[0].candidates)
+            assertNotNull(results[1].candidates)
+
+            verify { conn.requestMethod = "POST" }
+            verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
+        }
 
     @Test
     fun `getContent with inputJson returns content on success`() {

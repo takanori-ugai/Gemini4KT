@@ -3,6 +3,8 @@ package io.github.ugaikit.gemini4kt
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.ugaikit.gemini4kt.live.GeminiLive
 import io.github.ugaikit.gemini4kt.live.LiveConnectConfig
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -65,6 +67,68 @@ class Gemini(
             getContent(urlString, json.encodeToString<GenerateContentRequest>(inputJson)),
         )
     }
+
+    /**
+     * Generates content stream based on the provided input JSON using a specified model.
+     *
+     * @param inputJson The request payload for content generation.
+     * @param model The model to be used for content generation. Defaults to "gemini-pro".
+     * @return The response from the Gemini API as a [Flow] of [GenerateContentResponse] object.
+     */
+    fun streamGenerateContent(
+        inputJson: GenerateContentRequest,
+        model: String = "gemini-pro",
+    ): Flow<GenerateContentResponse> =
+        flow {
+            val urlString = "$baseUrl/$model:streamGenerateContent?alt=sse"
+            val url = URL(urlString)
+            val conn = httpConnectionProvider.getConnection(url)
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("x-goog-api-key", apiKey)
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.doOutput = true
+
+            OutputStreamWriter(conn.outputStream).use { writer ->
+                writer.write(json.encodeToString<GenerateContentRequest>(inputJson))
+            }
+
+            val resCode = conn.responseCode
+            if (resCode != HTTP_OK) {
+                logger.error { "Error: ${conn.responseCode}" }
+                val errorMsg =
+                    conn.errorStream.bufferedReader().use { reader ->
+                        val text = reader.readText()
+                        logger.error { "Error Message: $text" }
+                        text
+                    }
+                try {
+                    val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
+                    throw GeminiException(errorResponse.error)
+                } catch (e: GeminiException) {
+                    throw e
+                } catch (e: SerializationException) {
+                    logger.error { "Failed to parse error message: ${e.message}" }
+                } catch (e: IllegalArgumentException) {
+                    logger.error { "Failed to parse error message: ${e.message}" }
+                }
+            } else {
+                conn.inputStream.bufferedReader().use { reader ->
+                    var line = reader.readLine()
+                    while (line != null) {
+                        if (line.startsWith("data: ")) {
+                            val jsonStr = line.substring(6)
+                            try {
+                                val response = json.decodeFromString<GenerateContentResponse>(jsonStr)
+                                emit(response)
+                            } catch (e: SerializationException) {
+                                logger.error { "Failed to parse stream response: ${e.message}" }
+                            }
+                        }
+                        line = reader.readLine()
+                    }
+                }
+            }
+        }
 
     /**
      * Creates a new cached content entry in the system.
