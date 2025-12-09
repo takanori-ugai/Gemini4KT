@@ -143,9 +143,7 @@ class CandidateBuilderTest {
 
         assertThrows<UninitializedPropertyAccessException> {
             candidate {
-                content {
-                    part { text { "This is a test." } }
-                }
+                index = 1
             }
         }
     }
