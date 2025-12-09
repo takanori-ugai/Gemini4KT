@@ -75,21 +75,18 @@ fun main() {
         var state = batchJob.metadata?.state
 
         println("Waiting for job completion...")
-        while (state != "JOB_STATE_SUCCEEDED" && state != "JOB_STATE_FAILED" && state != "JOB_STATE_CANCELLED") {
+        while (state != "BATCH_STATE_SUCCEEDED" && state != "BATCH_STATE_FAILED" && state != "BATCH_STATE_CANCELLED") {
             Thread.sleep(10000) // Wait for 10 seconds
             batchJob = batchClient.getBatch(batchJob.name)
             state = batchJob.metadata?.state
             println("Current State: $state")
         }
 
-        if (state == "JOB_STATE_SUCCEEDED") {
+        if (state == "BATCH_STATE_SUCCEEDED") {
             println("Job succeeded!")
-            batchJob.response?.inlinedResponses?.forEachIndexed { index, response ->
+            batchJob.response?.inlinedResponses?.inlinedResponses?.forEachIndexed { index, response ->
                 println("\nResponse $index:")
                 println(response.response)
-            }
-            if (batchJob.response?.responsesFile != null) {
-                println("Results available in file: ${batchJob.response?.responsesFile}")
             }
         } else {
             println("Job failed or cancelled. Error: ${batchJob.error}")
@@ -98,7 +95,7 @@ fun main() {
         // List batches
         println("\nListing recent batches...")
         val batchesList = batchClient.listBatches(pageSize = 5)
-        batchesList.batches.forEach {
+        batchesList.operations!!.forEach {
             println("- ${it.name} (${it.metadata?.state})")
         }
     } catch (e: GeminiException) {

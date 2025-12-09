@@ -10,6 +10,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class ListBatchesResponse(
-    val batches: List<BatchJob>,
+    val operations: List<BatchJob>? = null,
     val nextPageToken: String? = null,
 )
