@@ -120,7 +120,7 @@ class Gemini(
                             try {
                                 val response = json.decodeFromString<GenerateContentResponse>(jsonStr)
                                 emit(response)
-                            } catch (e: Exception) {
+                            } catch (e: SerializationException) {
                                 logger.error { "Failed to parse stream response: ${e.message}" }
                             }
                         }

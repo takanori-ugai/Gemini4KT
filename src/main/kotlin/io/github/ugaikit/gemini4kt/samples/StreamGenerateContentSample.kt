@@ -25,12 +25,12 @@ fun main() =
         val flow =
             gemini.streamGenerateContent(
                 inputJson,
-                model = "gemini-1.5-flash",
+                model = "gemini-2.5-flash",
             )
         flow.collect { response ->
-            response.candidates.forEach { candidate ->
-                candidate.content.parts?.forEach { part ->
-                    print(part.text)
+            response.candidates.forEachIndexed { index0, candidate ->
+                candidate.content.parts?.forEachIndexed { index, part ->
+                    println("$index0::: $index: ${part.text}")
                 }
             }
         }
