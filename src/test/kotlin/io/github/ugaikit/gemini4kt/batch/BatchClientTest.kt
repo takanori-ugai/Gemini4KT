@@ -34,7 +34,7 @@ class BatchClientTest {
               "name": "batches/123456",
               "metadata": {
                   "state": "JOB_STATE_PENDING",
-                  "create_time": "2024-01-01T00:00:00Z"
+                  "createTime": "2024-01-01T00:00:00Z"
               },
               "done": false
             }
@@ -93,7 +93,9 @@ class BatchClientTest {
               },
               "done": true,
               "response": {
-                  "inlined_responses": []
+                  "inlinedResponses": {
+                      "inlinedResponses": []
+                  }
               }
             }
             """.trimIndent()
@@ -105,7 +107,7 @@ class BatchClientTest {
 
         assertEquals("batches/123456", result.name)
         assertEquals("JOB_STATE_SUCCEEDED", result.metadata?.state)
-        assertEquals(emptyList<BatchInlineResponse>(), result.response?.inlinedResponses)
+        assertEquals(emptyList<BatchInlineResponse>(), result.response?.inlinedResponses?.inlinedResponses)
 
         verify { mockConnection.requestMethod = "GET" }
     }

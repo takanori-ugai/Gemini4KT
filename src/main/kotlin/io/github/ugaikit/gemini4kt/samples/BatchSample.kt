@@ -6,13 +6,7 @@ import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.batch.Batch
-import io.github.ugaikit.gemini4kt.batch.BatchConfig
-import io.github.ugaikit.gemini4kt.batch.BatchInputConfig
-import io.github.ugaikit.gemini4kt.batch.BatchItemRequest
-import io.github.ugaikit.gemini4kt.batch.BatchRequestInput
-import io.github.ugaikit.gemini4kt.batch.CreateBatchRequest
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToJsonElement
+import io.github.ugaikit.gemini4kt.batch.createBatchRequest
 import java.io.IOException
 import java.util.Properties
 
@@ -26,9 +20,8 @@ fun main() {
 
     // Initialize Batch client
     val batchClient = Batch(apiKey)
-    val json = Json { ignoreUnknownKeys = true }
 
-    // Prepare a standard GenerateContentRequest
+    // Prepare standard GenerateContentRequests
     val request1 =
         GenerateContentRequest(
             contents = listOf(Content(parts = listOf(Part(text = "Tell me a haiku about coding.")))),
@@ -39,31 +32,29 @@ fun main() {
             contents = listOf(Content(parts = listOf(Part(text = "Tell me a haiku about coffee.")))),
         )
 
-    // Wrap in BatchItemRequest
-    val batchItems =
-        listOf(
-            BatchItemRequest(
-                request = json.encodeToJsonElement(request1),
-                metadata = mapOf("key" to "haiku-coding"),
-            ),
-            BatchItemRequest(
-                request = json.encodeToJsonElement(request2),
-                metadata = mapOf("key" to "haiku-coffee"),
-            ),
-        )
-
-    // Create CreateBatchRequest
+    // Create CreateBatchRequest using the DSL
     val createBatchRequest =
-        CreateBatchRequest(
-            batch =
-                BatchConfig(
-                    displayName = "My First Batch Job",
-                    inputConfig =
-                        BatchInputConfig(
-                            requests = BatchRequestInput(requests = batchItems),
-                        ),
-                ),
-        )
+        createBatchRequest {
+            batch {
+                displayName = "My First Batch Job"
+                inputConfig {
+                    requests {
+                        request {
+                            request(request1)
+                            metadata {
+                                key = "haiku-coding"
+                            }
+                        }
+                        request {
+                            request(request2)
+                            metadata {
+                                key = "haiku-coffee"
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
     try {
         println("Creating batch job...")
@@ -86,6 +77,7 @@ fun main() {
             println("Job succeeded!")
             batchJob.response?.inlinedResponses?.inlinedResponses?.forEachIndexed { index, response ->
                 println("\nResponse $index:")
+                println("Metadata Key: ${response.metadata?.key}")
                 println(response.response)
             }
         } else {
@@ -95,7 +87,7 @@ fun main() {
         // List batches
         println("\nListing recent batches...")
         val batchesList = batchClient.listBatches(pageSize = 5)
-        batchesList.operations!!.forEach {
+        batchesList.operations?.forEach {
             println("- ${it.name} (${it.metadata?.state})")
         }
     } catch (e: GeminiException) {

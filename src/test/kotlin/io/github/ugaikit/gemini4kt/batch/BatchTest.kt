@@ -4,7 +4,6 @@ import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -23,30 +22,22 @@ class BatchTest {
                     ),
             )
 
-        val batchItemRequest =
-            BatchItemRequest(
-                request = json.encodeToJsonElement(generateContentRequest),
-                metadata = mapOf("key" to "request-1"),
-            )
-
-        val batchRequestInput =
-            BatchRequestInput(
-                requests = listOf(batchItemRequest),
-            )
-
-        val batchConfig =
-            BatchConfig(
-                displayName = "test-batch",
-                inputConfig =
-                    BatchInputConfig(
-                        requests = batchRequestInput,
-                    ),
-            )
-
         val createBatchRequest =
-            CreateBatchRequest(
-                batch = batchConfig,
-            )
+            createBatchRequest {
+                batch {
+                    displayName = "test-batch"
+                    inputConfig {
+                        requests {
+                            request {
+                                request(generateContentRequest)
+                                metadata {
+                                    key = "request-1"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
         val serialized = json.encodeToString(CreateBatchRequest.serializer(), createBatchRequest)
         println(serialized)
