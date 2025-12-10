@@ -35,7 +35,16 @@ class BatchDataClassesTest {
         val deserialized = json.decodeFromString<BatchInlineResponse>(jsonString)
 
         assertEquals("request-1", deserialized.metadata?.key)
-        assertEquals("Response Text", deserialized.response?.candidates?.first()?.content?.parts?.first()?.text)
+        assertEquals(
+            "Response Text",
+            deserialized.response
+                ?.candidates
+                ?.first()
+                ?.content
+                ?.parts
+                ?.first()
+                ?.text,
+        )
     }
 
     @Test
@@ -68,10 +77,11 @@ class BatchDataClassesTest {
                 metadata =
                     BatchJobMetadata(
                         state = "SUCCEEDED",
-                        batchStats = BatchStats(
-                            requestCount = 10,
-                            successfulRequestCount = 9
-                        ),
+                        batchStats =
+                            BatchStats(
+                                requestCount = 10,
+                                successfulRequestCount = 9,
+                            ),
                         createTime = "2023-10-26T12:00:00Z",
                     ),
                 done = true,

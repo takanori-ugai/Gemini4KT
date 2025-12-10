@@ -5,10 +5,7 @@ import io.github.ugaikit.gemini4kt.HttpConnectionProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -46,11 +43,12 @@ class BatchTest {
                     ),
             )
         val responseJson = """{"name": "batches/123", "done": false}"""
+        val outputStream = ByteArrayOutputStream()
 
         every { httpConnectionProvider.getConnection(any()) } returns conn
         every { conn.responseCode } returns 200
         every { conn.inputStream } returns ByteArrayInputStream(responseJson.toByteArray())
-        every { conn.outputStream } returns ByteArrayOutputStream()
+        every { conn.outputStream } returns outputStream
 
         val result = batch.createBatch(model, request)
 
@@ -59,10 +57,10 @@ class BatchTest {
 
         verify { conn.requestMethod = "POST" }
         verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
-        // Verify URL implicitly by checking that getConnection was called (mockk verifies args)
-        // Since we can't easily verify the URL passed to getConnection with 'every' setup on 'any()',
-        // we trust the 'getContent' logic which we can't mock directly.
-        // But we can verify the behavior.
+
+        val requestBody = outputStream.toString()
+        // Simple verification that important parts of request are present in body
+        assert(requestBody.contains("gs://bucket/file"))
     }
 
     @Test
@@ -126,11 +124,12 @@ class BatchTest {
                     ),
             )
         val responseJson = """{"name": "batches/456", "done": false}"""
+        val outputStream = ByteArrayOutputStream()
 
         every { httpConnectionProvider.getConnection(any()) } returns conn
         every { conn.responseCode } returns 200
         every { conn.inputStream } returns ByteArrayInputStream(responseJson.toByteArray())
-        every { conn.outputStream } returns ByteArrayOutputStream()
+        every { conn.outputStream } returns outputStream
 
         val result = batch.createBatchEmbeddings(model, request)
 
@@ -139,6 +138,9 @@ class BatchTest {
 
         verify { conn.requestMethod = "POST" }
         verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
+
+        val requestBody = outputStream.toString()
+        assert(requestBody.contains("gs://bucket/file"))
     }
 
     @Test
