@@ -2,12 +2,16 @@ package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.EmbedContentRequest
+import io.github.ugaikit.gemini4kt.EmbedResponse
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
+import io.github.ugaikit.gemini4kt.GenerateContentResponse
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.batch.Batch
 import io.github.ugaikit.gemini4kt.batch.createBatchRequest
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.util.Properties
 
@@ -76,9 +80,22 @@ fun main() {
 
         if (state == "BATCH_STATE_SUCCEEDED") {
             println("Job succeeded!")
+            val json = Json { ignoreUnknownKeys = true }
             batchJob.response?.inlinedResponses?.inlinedResponses?.forEachIndexed { index, response ->
                 println("\nResponse $index:")
                 println("Metadata Key: ${response.metadata?.key}")
+                val embedResponse =
+                    json.decodeFromJsonElement(
+                        GenerateContentResponse.serializer(),
+                        response.response!!,
+                    )
+                println(
+                    embedResponse.candidates
+                        .first()
+                        .content.parts!!
+                        .first()
+                        .text,
+                )
                 println(response.response)
             }
         } else {
@@ -96,12 +113,12 @@ fun main() {
         println("\n--- Testing createBatchEmbeddings ---")
         val embeddingRequest1 =
             EmbedContentRequest(
-                model = "models/text-embedding-004",
+                model = "models/gemini-embedding-001",
                 content = Content(parts = listOf(Part(text = "Hello world"))),
             )
         val embeddingRequest2 =
             EmbedContentRequest(
-                model = "models/text-embedding-004",
+                model = "models/gemini-embedding-001",
                 content = Content(parts = listOf(Part(text = "Batch embeddings are cool"))),
             )
 
@@ -127,7 +144,7 @@ fun main() {
         println("Creating batch embeddings job...")
         val createdEmbeddingsJob =
             batchClient.createBatchEmbeddings(
-                "text-embedding-004",
+                "gemini-embedding-001",
                 createBatchEmbeddingsRequest,
             )
         println("Batch Embeddings Job Created: ${createdEmbeddingsJob.name}")
@@ -146,7 +163,11 @@ fun main() {
 
         if (embeddingsState == "BATCH_STATE_SUCCEEDED") {
             println("Embeddings Job succeeded!")
-            val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            val json =
+                Json {
+                    ignoreUnknownKeys = true
+                    prettyPrint = true
+                }
             embeddingsJob.response?.inlinedResponses?.inlinedResponses?.forEachIndexed { index, response ->
                 println("\nEmbedding Response $index:")
                 println("Metadata Key: ${response.metadata?.key}")
@@ -154,13 +175,12 @@ fun main() {
                     try {
                         val embedResponse =
                             json.decodeFromJsonElement(
-                                io.github.ugaikit.gemini4kt.EmbedResponse
-                                    .serializer(),
+                                EmbedResponse.serializer(),
                                 it,
                             )
                         println("Embedding Length: ${embedResponse.embedding.values.size}")
                         println("First 5 values: ${embedResponse.embedding.values.take(5)}")
-                    } catch (e: Exception) {
+                    } catch (e: SerializationException) {
                         println("Failed to parse embedding response: ${e.message}")
                         println("Raw response: $it")
                     }
