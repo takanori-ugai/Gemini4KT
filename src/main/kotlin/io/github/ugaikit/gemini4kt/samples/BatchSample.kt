@@ -132,6 +132,43 @@ fun main() {
             )
         println("Batch Embeddings Job Created: ${createdEmbeddingsJob.name}")
         println("Initial State: ${createdEmbeddingsJob.metadata?.state}")
+
+        var embeddingsJob = createdEmbeddingsJob
+        var embeddingsState = embeddingsJob.metadata?.state
+
+        println("Waiting for embeddings job completion...")
+        while (embeddingsState != "BATCH_STATE_SUCCEEDED" && embeddingsState != "BATCH_STATE_FAILED" && embeddingsState != "BATCH_STATE_CANCELLED") {
+            Thread.sleep(10000) // Wait for 10 seconds
+            embeddingsJob = batchClient.getBatch(embeddingsJob.name)
+            embeddingsState = embeddingsJob.metadata?.state
+            println("Current State: $embeddingsState")
+        }
+
+        if (embeddingsState == "BATCH_STATE_SUCCEEDED") {
+            println("Embeddings Job succeeded!")
+            val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            embeddingsJob.response?.inlinedResponses?.inlinedResponses?.forEachIndexed { index, response ->
+                println("\nEmbedding Response $index:")
+                println("Metadata Key: ${response.metadata?.key}")
+                response.response?.let {
+                    try {
+                        val embedResponse =
+                            json.decodeFromJsonElement(
+                                io.github.ugaikit.gemini4kt.EmbedResponse
+                                    .serializer(),
+                                it,
+                            )
+                        println("Embedding Length: ${embedResponse.embedding.values.size}")
+                        println("First 5 values: ${embedResponse.embedding.values.take(5)}")
+                    } catch (e: Exception) {
+                        println("Failed to parse embedding response: ${e.message}")
+                        println("Raw response: $it")
+                    }
+                }
+            }
+        } else {
+            println("Embeddings Job failed or cancelled. Error: ${embeddingsJob.error}")
+        }
     } catch (e: GeminiException) {
         println("Gemini API Error: ${e.message}")
     } catch (e: IOException) {
