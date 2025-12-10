@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Content
+import io.github.ugaikit.gemini4kt.EmbedContentRequest
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
@@ -21,6 +22,12 @@ fun main() {
     // Initialize Batch client
     val batchClient = Batch(apiKey)
 
+    runBatchGenerateContentSample(batchClient)
+    runBatchEmbeddingsSample(batchClient)
+}
+
+fun runBatchGenerateContentSample(batchClient: Batch) {
+    println("=== Batch Generate Content Sample ===")
     // Prepare standard GenerateContentRequests
     val request1 =
         GenerateContentRequest(
@@ -89,6 +96,86 @@ fun main() {
         val batchesList = batchClient.listBatches(pageSize = 5)
         batchesList.operations?.forEach {
             println("- ${it.name} (${it.metadata?.state})")
+        }
+    } catch (e: GeminiException) {
+        println("Gemini API Error: ${e.message}")
+    } catch (e: IOException) {
+        println("IO Error: ${e.message}")
+    } catch (e: InterruptedException) {
+        println("Interrupted: ${e.message}")
+    }
+}
+
+fun runBatchEmbeddingsSample(batchClient: Batch) {
+    println("\n=== Batch Embeddings Sample ===")
+    val model = "text-embedding-004"
+
+    // Prepare EmbedContentRequests
+    // Note: The model inside EmbedContentRequest is required but might be overridden or ignored by the batch model parameter
+    // depending on the API behavior, but standard EmbedContentRequest requires it.
+    val request1 =
+        EmbedContentRequest(
+            model = "models/$model",
+            content = Content(parts = listOf(Part(text = "What is the meaning of life?"))),
+        )
+
+    val request2 =
+        EmbedContentRequest(
+            model = "models/$model",
+            content = Content(parts = listOf(Part(text = "How to make a cup of coffee?"))),
+        )
+
+    // Create CreateBatchRequest using the DSL
+    val createBatchRequest =
+        createBatchRequest {
+            batch {
+                displayName = "My Embedding Batch Job"
+                inputConfig {
+                    requests {
+                        request {
+                            request(request1)
+                            metadata {
+                                key = "embedding-life"
+                            }
+                        }
+                        request {
+                            request(request2)
+                            metadata {
+                                key = "embedding-coffee"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    try {
+        println("Creating batch embeddings job...")
+        val createdBatchJob = batchClient.createBatchEmbeddings(model, createBatchRequest)
+        println("Batch Job Created: ${createdBatchJob.name}")
+        println("Initial State: ${createdBatchJob.metadata?.state}")
+
+        var batchJob = createdBatchJob
+        var state = batchJob.metadata?.state
+
+        println("Waiting for job completion...")
+        while (state != "BATCH_STATE_SUCCEEDED" && state != "BATCH_STATE_FAILED" && state != "BATCH_STATE_CANCELLED") {
+            Thread.sleep(10000) // Wait for 10 seconds
+            batchJob = batchClient.getBatch(batchJob.name)
+            state = batchJob.metadata?.state
+            println("Current State: $state")
+        }
+
+        if (state == "BATCH_STATE_SUCCEEDED") {
+            println("Job succeeded!")
+            batchJob.response?.inlinedResponses?.inlinedResponses?.forEachIndexed { index, response ->
+                println("\nResponse $index:")
+                println("Metadata Key: ${response.metadata?.key}")
+                println(response.response)
+                // Note: You can use Json.decodeFromJsonElement<EmbedResponse>(response.response!!) to get typed object
+            }
+        } else {
+            println("Job failed or cancelled. Error: ${batchJob.error}")
         }
     } catch (e: GeminiException) {
         println("Gemini API Error: ${e.message}")
