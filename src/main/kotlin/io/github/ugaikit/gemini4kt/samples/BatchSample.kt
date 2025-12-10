@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Content
+import io.github.ugaikit.gemini4kt.EmbedContentRequest
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
@@ -90,6 +91,47 @@ fun main() {
         batchesList.operations?.forEach {
             println("- ${it.name} (${it.metadata?.state})")
         }
+
+        // Test createBatchEmbeddings
+        println("\n--- Testing createBatchEmbeddings ---")
+        val embeddingRequest1 =
+            EmbedContentRequest(
+                model = "models/text-embedding-004",
+                content = Content(parts = listOf(Part(text = "Hello world"))),
+            )
+        val embeddingRequest2 =
+            EmbedContentRequest(
+                model = "models/text-embedding-004",
+                content = Content(parts = listOf(Part(text = "Batch embeddings are cool"))),
+            )
+
+        val createBatchEmbeddingsRequest =
+            createBatchRequest {
+                batch {
+                    displayName = "Batch Embeddings Job"
+                    inputConfig {
+                        requests {
+                            request {
+                                request(embeddingRequest1)
+                                metadata { key = "embedding-1" }
+                            }
+                            request {
+                                request(embeddingRequest2)
+                                metadata { key = "embedding-2" }
+                            }
+                        }
+                    }
+                }
+            }
+
+        println("Creating batch embeddings job...")
+        val createdEmbeddingsJob =
+            batchClient.createBatchEmbeddings(
+                "text-embedding-004",
+                createBatchEmbeddingsRequest,
+            )
+        println("Batch Embeddings Job Created: ${createdEmbeddingsJob.name}")
+        println("Initial State: ${createdEmbeddingsJob.metadata?.state}")
     } catch (e: GeminiException) {
         println("Gemini API Error: ${e.message}")
     } catch (e: IOException) {
