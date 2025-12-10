@@ -141,23 +141,21 @@ class Batch(
             val resCode = conn.responseCode
             if (resCode != HTTP_OK) {
                 logger.error { "Error: ${conn.responseCode}" }
-                val errorMsg =
-                    conn.errorStream.bufferedReader().use { reader ->
-                        val text = reader.readText()
-                        logger.error { "Error Message: $text" }
-                        text
+                val errorMsg = conn.errorStream?.bufferedReader()?.use { it.readText() }
+                if (errorMsg != null) {
+                    logger.error { "Error Message: $errorMsg" }
+                    try {
+                        val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
+                        throw GeminiException(errorResponse.error)
+                    } catch (e: GeminiException) {
+                        throw e
+                    } catch (e: SerializationException) {
+                        logger.error { "Failed to parse error message: ${e.message}" }
+                    } catch (e: IllegalArgumentException) {
+                        logger.error { "Failed to parse error message: ${e.message}" }
                     }
-                try {
-                    val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
-                    throw GeminiException(errorResponse.error)
-                } catch (e: GeminiException) {
-                    throw e
-                } catch (e: SerializationException) {
-                    logger.error { "Failed to parse error message: ${e.message}" }
-                } catch (e: IllegalArgumentException) {
-                    logger.error { "Failed to parse error message: ${e.message}" }
                 }
-                "{}"
+                "{ \"name\" : \"Error\" }"
             } else {
                 logger.info { "GenerateContentResponse Code: $resCode" }
                 conn.inputStream.bufferedReader().use { reader ->
@@ -182,7 +180,7 @@ class Batch(
             val resCode = conn.responseCode
             if (resCode != HTTP_OK) {
                 logger.error { "Error: $resCode" }
-                conn.errorStream.bufferedReader().use { reader ->
+                conn.errorStream?.bufferedReader()?.use { reader ->
                     logger.error { "Error Message: ${reader.readText()}" }
                 }
             }

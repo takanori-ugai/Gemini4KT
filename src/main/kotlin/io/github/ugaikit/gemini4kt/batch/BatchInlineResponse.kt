@@ -1,6 +1,5 @@
 package io.github.ugaikit.gemini4kt.batch
 
-import io.github.ugaikit.gemini4kt.GenerateContentResponse
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -14,7 +13,7 @@ import kotlinx.serialization.json.JsonElement
  */
 @Serializable
 data class BatchInlineResponse(
-    val response: GenerateContentResponse? = null,
+    val response: JsonElement? = null,
     val error: JsonElement? = null,
     val metadata: ResponseMetadata? = null,
 )

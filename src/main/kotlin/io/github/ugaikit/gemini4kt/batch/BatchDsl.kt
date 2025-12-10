@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt.batch
 
+import io.github.ugaikit.gemini4kt.EmbedContentRequest
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -87,6 +88,13 @@ class BatchItemRequestBuilder {
 
     fun request(
         request: GenerateContentRequest,
+        json: Json = Json,
+    ) {
+        this.request = json.encodeToJsonElement(request)
+    }
+
+    fun request(
+        request: EmbedContentRequest,
         json: Json = Json,
     ) {
         this.request = json.encodeToJsonElement(request)

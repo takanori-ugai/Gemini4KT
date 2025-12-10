@@ -6,6 +6,7 @@ import io.github.ugaikit.gemini4kt.GenerateContentResponse
 import io.github.ugaikit.gemini4kt.Part
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -27,7 +28,7 @@ class BatchDataClassesTest {
             )
         val batchInlineResponse =
             BatchInlineResponse(
-                response = response,
+                response = json.encodeToJsonElement(response),
                 metadata = ResponseMetadata(key = "request-1"),
             )
 
@@ -35,10 +36,12 @@ class BatchDataClassesTest {
         val deserialized = json.decodeFromString<BatchInlineResponse>(jsonString)
 
         assertEquals("request-1", deserialized.metadata?.key)
+
+        val deserializedResponse = json.decodeFromJsonElement(GenerateContentResponse.serializer(), deserialized.response!!)
         assertEquals(
             "Response Text",
-            deserialized.response
-                ?.candidates
+            deserializedResponse
+                .candidates
                 ?.first()
                 ?.content
                 ?.parts
