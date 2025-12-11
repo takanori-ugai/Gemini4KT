@@ -62,6 +62,7 @@ kotlin {
             implementation("org.jetbrains.kotlin:kotlin-test")
             implementation("io.mockk:mockk:1.14.7")
             implementation("io.ktor:ktor-client-mock:3.0.3")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
         }
         val jvmMain by getting {
             dependencies {

@@ -106,46 +106,47 @@ private fun getFunctionDeclarations(): List<FunctionDeclaration> = listOf(findMo
 
 object FunctionExample1Sample {
     @JvmStatic
-    fun main(args: Array<String>) = runBlocking {
-        val apiKey =
-            Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-            Properties()
-                .apply {
-                    load(inputStream)
-                }.getProperty("apiKey")
-        }
-    val gemini = Gemini(apiKey)
+    fun main(args: Array<String>) =
+        runBlocking {
+            val apiKey =
+                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                    Properties()
+                        .apply {
+                            load(inputStream)
+                        }.getProperty("apiKey")
+                }
+            val gemini = Gemini(apiKey)
 
-    val exFunction =
-        GenerateContentRequest(
-            contents =
-                listOf(
-                    Content(
-                        role = "user",
-                        parts =
-                            listOf(
-                                Part(text = "Which theaters in Mountain View show Barbie movie?"),
+            val exFunction =
+                GenerateContentRequest(
+                    contents =
+                        listOf(
+                            Content(
+                                role = "user",
+                                parts =
+                                    listOf(
+                                        Part(text = "Which theaters in Mountain View show Barbie movie?"),
+                                    ),
                             ),
-                    ),
-                ),
-            tools =
-                listOf(
-                    Tool(
-                        functionDeclarations = getFunctionDeclarations(),
-                    ),
-                ),
-        )
+                        ),
+                    tools =
+                        listOf(
+                            Tool(
+                                functionDeclarations = getFunctionDeclarations(),
+                            ),
+                        ),
+                )
 
-    println(
-        gemini
-            .generateContent(
-                exFunction,
-                "gemini-2.5-flash-lite",
-            ).candidates[0]
-            .content.parts!!
-            .get(0),
-    )
-    }
+            println(
+                gemini
+                    .generateContent(
+                        exFunction,
+                        "gemini-2.5-flash-lite",
+                    ).candidates[0]
+                    .content.parts!!
+                    .get(0),
+            )
+        }
 }
 
 class FunctionExample1

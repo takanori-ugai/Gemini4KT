@@ -59,24 +59,24 @@ class TextToImage(
 object TextToImageSample {
     @JvmStatic
     fun main(args: Array<String>) =
-    runBlocking {
-        val apiKey =
-            Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-                Properties()
-                    .apply {
-                        load(inputStream)
-                    }.getProperty("apiKey")
+        runBlocking {
+            val apiKey =
+                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                    Properties()
+                        .apply {
+                            load(inputStream)
+                        }.getProperty("apiKey")
+                }
+            val gemini = Gemini(apiKey)
+            val sample = TextToImage(gemini)
+            try {
+                sample.generateImage()
+            } catch (e: GeminiException) {
+                println("Gemini Error running TextToImage sample: ${e.message}")
+            } catch (e: IOException) {
+                println("IO Error running TextToImage sample: ${e.message}")
+            } catch (e: SerializationException) {
+                println("Serialization Error running TextToImage sample: ${e.message}")
             }
-        val gemini = Gemini(apiKey)
-        val sample = TextToImage(gemini)
-        try {
-            sample.generateImage()
-        } catch (e: GeminiException) {
-            println("Gemini Error running TextToImage sample: ${e.message}")
-        } catch (e: IOException) {
-            println("IO Error running TextToImage sample: ${e.message}")
-        } catch (e: SerializationException) {
-            println("Serialization Error running TextToImage sample: ${e.message}")
         }
-    }
 }

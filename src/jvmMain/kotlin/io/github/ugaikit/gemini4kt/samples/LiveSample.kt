@@ -17,9 +17,9 @@ import javax.sound.sampled.AudioSystem
 object LiveSample {
     @JvmStatic
     fun main(args: Array<String>) =
-    runBlocking {
-        runSample()
-    }
+        runBlocking {
+            runSample()
+        }
 }
 
 // Helper to move accumulatedAudio out

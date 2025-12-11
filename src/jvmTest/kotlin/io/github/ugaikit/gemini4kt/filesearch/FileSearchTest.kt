@@ -4,9 +4,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
-import io.ktor.client.engine.mock.respondOK
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestData
+import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -23,7 +23,7 @@ class FileSearchTest {
     private val json = Json { ignoreUnknownKeys = true }
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
 
-    private fun createFileSearch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponse): FileSearch {
+    private fun createFileSearch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): FileSearch {
         val client =
             HttpClient(MockEngine) {
                 engine {
@@ -105,7 +105,7 @@ class FileSearchTest {
                 createFileSearch { request ->
                     assertEquals(HttpMethod.Delete, request.method)
                     assertEquals("$bUrl/$storeName?force=true", request.url.toString())
-                    respondOK()
+                    respond(content = "", status = HttpStatusCode.OK)
                 }
 
             fileSearch.deleteFileSearchStore(storeName, force = true)

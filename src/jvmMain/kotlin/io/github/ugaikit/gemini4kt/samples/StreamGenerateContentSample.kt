@@ -11,30 +11,30 @@ import java.util.Properties
 object StreamGenerateContentSample {
     @JvmStatic
     fun main(args: Array<String>) =
-    runBlocking {
-        val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-        val prop =
-            Properties().also {
-                if (path != null) it.load(path)
-            }
-        val apiKey = System.getenv("GEMINI_API_KEY") ?: prop.getProperty("apiKey")
-        val gemini = Gemini(apiKey)
-        val text = "Write a story about a magic backpack."
-        val inputJson =
-            GenerateContentRequest(
-                listOf(Content(listOf(Part(text)))),
-            )
-        val flow =
-            gemini.streamGenerateContent(
-                inputJson,
-                model = "gemini-2.5-flash",
-            )
-        flow.collect { response ->
-            response.candidates.forEachIndexed { index0, candidate ->
-                candidate.content.parts?.forEachIndexed { index, part ->
-                    println("$index0::: $index: ${part.text}")
+        runBlocking {
+            val path = Gemini::class.java.getResourceAsStream("/prop.properties")
+            val prop =
+                Properties().also {
+                    if (path != null) it.load(path)
+                }
+            val apiKey = System.getenv("GEMINI_API_KEY") ?: prop.getProperty("apiKey")
+            val gemini = Gemini(apiKey)
+            val text = "Write a story about a magic backpack."
+            val inputJson =
+                GenerateContentRequest(
+                    listOf(Content(listOf(Part(text)))),
+                )
+            val flow =
+                gemini.streamGenerateContent(
+                    inputJson,
+                    model = "gemini-2.5-flash",
+                )
+            flow.collect { response ->
+                response.candidates.forEachIndexed { index0, candidate ->
+                    candidate.content.parts?.forEachIndexed { index, part ->
+                        println("$index0::: $index: ${part.text}")
+                    }
                 }
             }
         }
-    }
 }
