@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Gemini
+import kotlinx.coroutines.runBlocking
 import java.util.Properties
 
 /**
@@ -10,9 +11,11 @@ import java.util.Properties
  * Gemini client with it. It then retrieves and prints the list of models
  * available through the Gemini client.
  */
-suspend fun main() {
-    // Load the API key from the properties file
-    val apiKey =
+object ModelsSample {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        // Load the API key from the properties file
+        val apiKey =
         Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
             Properties()
                 .apply {
@@ -25,6 +28,7 @@ suspend fun main() {
 
     // Retrieve and print each model
     gemini.getModels().models.forEach(::println)
+    }
 }
 
 /**

@@ -7,6 +7,7 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
+import kotlinx.coroutines.runBlocking
 import java.util.Properties
 
 private fun findMoviesFunction(): FunctionDeclaration =
@@ -103,9 +104,11 @@ private fun getShowtimesFunction(): FunctionDeclaration =
 
 private fun getFunctionDeclarations(): List<FunctionDeclaration> = listOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
 
-suspend fun main() {
-    val apiKey =
-        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+object FunctionExample1Sample {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        val apiKey =
+            Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
             Properties()
                 .apply {
                     load(inputStream)
@@ -142,6 +145,7 @@ suspend fun main() {
             .content.parts!!
             .get(0),
     )
+    }
 }
 
 class FunctionExample1

@@ -9,11 +9,14 @@ import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.SafetySetting
 import io.github.ugaikit.gemini4kt.ThinkingConfig
 import io.github.ugaikit.gemini4kt.Threshold
+import kotlinx.coroutines.runBlocking
 import java.util.Properties
 
-suspend fun main() {
-    val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-    val prop =
+object Samples1Sample {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        val path = Gemini::class.java.getResourceAsStream("/prop.properties")
+        val prop =
         Properties().also {
             it.load(path)
         }
@@ -47,6 +50,7 @@ suspend fun main() {
             .text!!
             .replace("\n\n", "\n"),
     )
+    }
 }
 
 class Samples1

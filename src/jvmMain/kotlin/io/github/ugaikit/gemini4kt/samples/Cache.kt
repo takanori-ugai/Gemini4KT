@@ -8,13 +8,16 @@ import io.github.ugaikit.gemini4kt.HarmCategory
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.SafetySetting
 import io.github.ugaikit.gemini4kt.Threshold
+import kotlinx.coroutines.runBlocking
 import java.util.Properties
 
 private const val REPEAT_COUNT = 10000
 
-suspend fun main() {
-    val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-    val prop =
+object CacheSample {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        val path = Gemini::class.java.getResourceAsStream("/prop.properties")
+        val prop =
         Properties().also {
             it.load(path)
         }
@@ -60,6 +63,7 @@ suspend fun main() {
     )
 
     gemini.deleteCachedContent(cache.name!!)
+    }
 }
 
 class Cache

@@ -15,8 +15,9 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.Properties
 
-suspend fun main() =
-    runBlocking {
+object FileSearchSample {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
         val apiKey =
             Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
                 Properties()
@@ -76,6 +77,7 @@ suspend fun main() =
             fileSearch.deleteFileSearchStore(store.name!!, force = true)
         }
     }
+}
 
 private suspend fun uploadFileToStore(
     fileSearch: FileSearch,

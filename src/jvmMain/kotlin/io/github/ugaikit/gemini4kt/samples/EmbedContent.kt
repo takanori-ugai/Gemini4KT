@@ -5,11 +5,14 @@ import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.EmbedContentRequest
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.Part
+import kotlinx.coroutines.runBlocking
 import java.util.Properties
 
-suspend fun main() {
-    val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-    val prop =
+object EmbedContentSample {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        val path = Gemini::class.java.getResourceAsStream("/prop.properties")
+        val prop =
         Properties().also {
             it.load(path)
         }
@@ -32,6 +35,7 @@ suspend fun main() {
             ),
         )
     println(gemini.batchEmbedContents(batchEmbedRequest, model = "text-embedding-004"))
+    }
 }
 
 class EmbedContent

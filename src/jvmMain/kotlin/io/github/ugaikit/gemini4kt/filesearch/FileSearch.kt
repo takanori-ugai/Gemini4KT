@@ -6,12 +6,18 @@ import io.github.ugaikit.gemini4kt.FileUploadProviderImpl
 import io.github.ugaikit.gemini4kt.GeminiErrorResponse
 import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.createHttpClient
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -214,9 +220,10 @@ class FileSearch(
      */
     private suspend fun deleteContent(urlStr: String) {
         try {
-            val response = httpClient.delete(urlStr) {
-                header("x-goog-api-key", apiKey)
-            }
+            val response =
+                httpClient.delete(urlStr) {
+                    header("x-goog-api-key", apiKey)
+                }
             if (response.status != HttpStatusCode.OK) {
                 logger.error { "Error: ${response.status}" }
                 val msg = response.bodyAsText()

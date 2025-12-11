@@ -5,13 +5,16 @@ import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.InlineData
 import io.github.ugaikit.gemini4kt.Part
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.Base64
 import java.util.Properties
 
-suspend fun main() {
-    val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-    val prop =
+object InputWithImageSample {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        val path = Gemini::class.java.getResourceAsStream("/prop.properties")
+        val prop =
         Properties().also {
             it.load(path)
         }
@@ -48,6 +51,7 @@ suspend fun main() {
             .text!!
             .replace("\n\n", "\n"),
     )
+    }
 }
 
 class InputWithImage

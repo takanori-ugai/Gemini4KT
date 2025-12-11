@@ -3,13 +3,20 @@ package io.github.ugaikit.gemini4kt
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.ugaikit.gemini4kt.live.GeminiLive
 import io.github.ugaikit.gemini4kt.live.LiveConnectConfig
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.utils.io.*
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.SerializationException
@@ -82,26 +89,27 @@ class Gemini(
         flow {
             val urlString = "$baseUrl/$model:streamGenerateContent?alt=sse"
             try {
-                val response = httpClient.post(urlString) {
-                    header("x-goog-api-key", apiKey)
-                    contentType(ContentType.Application.Json)
-                    setBody(json.encodeToString<GenerateContentRequest>(inputJson))
-                }
+                val response =
+                    httpClient.post(urlString) {
+                        header("x-goog-api-key", apiKey)
+                        contentType(ContentType.Application.Json)
+                        setBody(json.encodeToString<GenerateContentRequest>(inputJson))
+                    }
 
                 if (response.status != HttpStatusCode.OK) {
-                        logger.error { "Error: ${response.status}" }
-                        val errorMsg = response.bodyAsText()
-                        logger.error { "Error Message: $errorMsg" }
-                        try {
-                            val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
-                            throw GeminiException(errorResponse.error)
-                        } catch (e: GeminiException) {
-                            throw e
-                        } catch (e: SerializationException) {
-                            logger.error { "Failed to parse error message: ${e.message}" }
-                        } catch (e: IllegalArgumentException) {
-                            logger.error { "Failed to parse error message: ${e.message}" }
-                        }
+                    logger.error { "Error: ${response.status}" }
+                    val errorMsg = response.bodyAsText()
+                    logger.error { "Error Message: $errorMsg" }
+                    try {
+                        val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
+                        throw GeminiException(errorResponse.error)
+                    } catch (e: GeminiException) {
+                        throw e
+                    } catch (e: SerializationException) {
+                        logger.error { "Failed to parse error message: ${e.message}" }
+                    } catch (e: IllegalArgumentException) {
+                        logger.error { "Failed to parse error message: ${e.message}" }
+                    }
                 } else {
                     val channel = response.bodyAsChannel()
                     while (!channel.isClosedForRead) {
@@ -321,9 +329,10 @@ class Gemini(
         } catch (e: IOException) {
             logger.error { e.stackTrace.contentToString() }
             ""
-        } catch (e: ClientRequestException) { // Catch Ktor specific exceptions if needed
-             logger.error { "Client Request Exception: ${e.message}" }
-             throw e
+        } catch (e: ClientRequestException) {
+            // Catch Ktor specific exceptions if needed
+            logger.error { "Client Request Exception: ${e.message}" }
+            throw e
         }
 
     /**
@@ -333,9 +342,10 @@ class Gemini(
      */
     suspend fun deleteContent(urlStr: String) {
         try {
-            val response = httpClient.delete(urlStr) {
-                header("x-goog-api-key", apiKey)
-            }
+            val response =
+                httpClient.delete(urlStr) {
+                    header("x-goog-api-key", apiKey)
+                }
             if (response.status != HttpStatusCode.OK) {
                 logger.error { "Error: ${response.status}" }
                 val msg = response.bodyAsText()
