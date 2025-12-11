@@ -1,12 +1,11 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.gitlab.arturbosch.detekt.Detekt
-import net.thebugmc.gradle.sonatypepublisher.PublishingType.USER_MANAGED
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("jvm") version "2.2.21"
+    kotlin("multiplatform") version "2.2.21"
     kotlin("plugin.serialization") version "2.2.21"
-    application
     id("org.jetbrains.dokka") version "2.1.0"
     id("org.jetbrains.dokka-javadoc") version "2.1.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
@@ -16,7 +15,8 @@ plugins {
     id("com.diffplug.spotless") version "8.1.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     jacoco
-    id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
+    // id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
+    `maven-publish`
 }
 
 group = "io.github.ugaikit"
@@ -26,119 +26,73 @@ repositories {
     mavenCentral()
 }
 
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
+kotlin {
+    jvm {
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.JVM_11)
+                }
+            }
+        }
+        testRuns.named("test") {
+            executionTask.configure {
+                useJUnitPlatform()
+            }
+        }
+        @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
+        mainRun {
+            mainClass.set("io.github.ugaikit.gemini4kt.ITTestKt")
+        }
+    }
 
-centralPortal {
-//    version = "0.2.0"
-    username = project.property("sonataUID") as String
-    password = project.property("sonataPWD") as String
-    publishingType = USER_MANAGED
-    pom {
-        name = "gemini4kt"
-        description = "A lightweight Kotlin library for the Gemini API."
-        url = "https://github.com/takanori-ugai/Gemini4KT"
-        properties =
-            mapOf(
-                "myProp" to "value",
-                "prop.with.dots" to "anotherValue",
-            )
-        licenses {
-            license {
-                name = "The Apache License, Version 2.0"
-                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            }
+    sourceSets {
+        commonMain.dependencies {
+            implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+            implementation("io.github.oshai:kotlin-logging:7.0.13")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
         }
-        developers {
-            developer {
-                id = "takanori-ugai"
-                name = "Takanori Ugai"
-                email = "ugai@fujitsu.com"
-            }
+        commonTest.dependencies {
+            implementation("org.jetbrains.kotlin:kotlin-test")
+            implementation("io.mockk:mockk:1.14.7")
         }
-        scm {
-            connection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
-            developerConnection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
-            url = "https://github.com/takanori-ugai/Gemini4KT"
+        val jvmMain by getting {
+            dependencies {
+                runtimeOnly("ch.qos.logback:logback-classic:1.5.21")
+            }
         }
     }
 }
 
-dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.13")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-    runtimeOnly("ch.qos.logback:logback-classic:1.5.21")
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("io.mockk:mockk:1.14.7")
-}
-
-application {
-    mainClass.set("io.github.ugaikit.gemini4kt.ITTestKt")
-}
-
+// Tasks configuration
 tasks {
     "wrapper"(Wrapper::class) {
         distributionType = Wrapper.DistributionType.ALL
     }
 
-    withType<Jar> {
-        manifest {
-            attributes(mapOf("Main-Class" to application.mainClass))
+    val jacocoTestReport =
+        register<JacocoReport>("jacocoTestReport") {
+            reports {
+                xml.required.set(true)
+                csv.required.set(true)
+                // html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
+            }
+            dependsOn("jvmTest")
+            // sourceSets(kotlin.sourceSets.jvmMain) // might need adjustment
+            classDirectories.setFrom(files(layout.buildDirectory.dir("classes/kotlin/jvm/main")))
+            sourceDirectories.setFrom(files("src/jvmMain/kotlin", "src/commonMain/kotlin"))
+            executionData.setFrom(layout.buildDirectory.file("jacoco/jvmTest.exec"))
         }
-    }
 
-    compileKotlin {
-        compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
-        doLast { println("Finished compiling Kotlin source code") }
-    }
-
-    compileTestKotlin {
-        compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
-        doLast { println("Finished compiling Kotlin Test source code") }
-    }
-
-    compileJava {
-        options.encoding = "UTF-8"
-        options.compilerArgs.addAll(listOf("-Xlint:deprecation"))
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
-    }
-
-    compileTestJava {
-        options.encoding = "UTF-8"
-        options.compilerArgs.addAll(listOf("-Xlint:deprecation"))
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
-    }
-
-    jacocoTestReport {
-        reports {
-            xml.required.set(true)
-            csv.required.set(true)
-            dependsOn(test)
-//            html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
-        }
-    }
-
-//    withType<JacocoReport> {
-//        dependsOn("test")
-//        executionData(withType<Test>())
-//        classDirectories.setFrom(files(listOf("build/classes/kotlin/main")))
-//  sourceDirectories = files(listOf("src/main/java", "src/main/kotlin"))
-//        sourceDirectories.setFrom(files(listOf("src/main/java", "src/main/kotlin")))
-//    }
-
-    test {
+    // Configure JVM test task
+    named<Test>("jvmTest") {
         testLogging {
 //            exceptionFormat = TestExceptionFormat.FULL
             showStandardStreams = true
         }
         useJUnitPlatform()
-        finalizedBy(jacocoTestReport) // report is always generated after tests run
+        finalizedBy(jacocoTestReport)
     }
 
     withType<Detekt>().configureEach {
@@ -157,9 +111,9 @@ tasks {
         }
     }
 
-    shadowJar {
+    withType<ShadowJar> {
         manifest {
-            attributes["Main-Class"] = application.mainClass
+            attributes["Main-Class"] = "io.github.ugaikit.gemini4kt.ITTestKt"
         }
         minimize()
     }
@@ -216,8 +170,4 @@ spotless {
         googleJavaFormat("1.32.0") // has its own section below
         formatAnnotations() // fixes formatting of type annotations, see below
     }
-}
-
-kotlin {
-    jvmToolchain(11)
 }
