@@ -19,7 +19,7 @@ import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
 
-fun main() {
+suspend fun main() {
     // Example 1: Single voice
     val config1 =
         generationConfig {

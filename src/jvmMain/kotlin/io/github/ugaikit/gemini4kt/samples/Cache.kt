@@ -12,7 +12,7 @@ import java.util.Properties
 
 private const val REPEAT_COUNT = 10000
 
-fun main() {
+suspend fun main() {
     val path = Gemini::class.java.getResourceAsStream("/prop.properties")
     val prop =
         Properties().also {

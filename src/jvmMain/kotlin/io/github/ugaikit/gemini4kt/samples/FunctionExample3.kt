@@ -21,7 +21,7 @@ fun add(
     @GeminiParameter(description = "second number") b: Int,
 ): Int = a + b
 
-fun main() {
+suspend fun main() {
     val apiKey =
         Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
             Properties()

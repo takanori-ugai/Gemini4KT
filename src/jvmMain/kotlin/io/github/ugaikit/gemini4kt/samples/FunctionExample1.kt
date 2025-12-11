@@ -103,7 +103,7 @@ private fun getShowtimesFunction(): FunctionDeclaration =
 
 private fun getFunctionDeclarations(): List<FunctionDeclaration> = listOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
 
-fun main() {
+suspend fun main() {
     val apiKey =
         Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
             Properties()

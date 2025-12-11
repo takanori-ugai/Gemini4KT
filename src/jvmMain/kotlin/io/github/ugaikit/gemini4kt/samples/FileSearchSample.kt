@@ -15,7 +15,7 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.Properties
 
-fun main() =
+suspend fun main() =
     runBlocking {
         val apiKey =
             Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->

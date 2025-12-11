@@ -14,7 +14,7 @@ import java.util.Properties
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
 
-fun main() =
+suspend fun main() =
     runBlocking {
         runSample()
     }

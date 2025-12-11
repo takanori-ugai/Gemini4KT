@@ -10,7 +10,7 @@ import java.io.File
 import java.io.IOException
 import java.util.Properties
 
-fun main() {
+suspend fun main() {
     val path = Gemini::class.java.getResourceAsStream("/prop.properties")
     val prop =
         Properties().also {

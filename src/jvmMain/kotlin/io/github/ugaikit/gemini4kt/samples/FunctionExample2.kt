@@ -70,7 +70,7 @@ private fun sendFunctionResult(
     }
 }
 
-fun main() {
+fun main() = runBlocking {
     val apiKey =
         Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
             Properties()

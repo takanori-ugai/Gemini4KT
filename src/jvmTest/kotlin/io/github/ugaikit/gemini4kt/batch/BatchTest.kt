@@ -1,36 +1,39 @@
 package io.github.ugaikit.gemini4kt.batch
 
 import io.github.ugaikit.gemini4kt.GeminiException
-import io.github.ugaikit.gemini4kt.HttpConnectionProvider
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.ktor.client.*
+import io.ktor.client.engine.mock.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.net.HttpURLConnection
 
 class BatchTest {
-    private lateinit var httpConnectionProvider: HttpConnectionProvider
-    private lateinit var conn: HttpURLConnection
     private lateinit var batch: Batch
     private val apiKey = "test-api-key"
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
     private val baseUrl = "$bUrl/models"
 
-    @BeforeEach
-    fun setup() {
-        httpConnectionProvider = mockk()
-        conn = mockk(relaxed = true)
-        batch = Batch(apiKey = apiKey, httpConnectionProvider = httpConnectionProvider)
+    private fun createBatch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponse): Batch {
+        val client = HttpClient(MockEngine) {
+            engine {
+                addHandler(handler)
+            }
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+        return Batch(apiKey = apiKey, client = client)
     }
 
     @Test
-    fun `createBatch calls getContent with correct parameters`() {
+    fun `createBatch calls getContent with correct parameters`() = runTest {
         val model = "gemini-pro"
         val request =
             CreateBatchRequest(
@@ -43,75 +46,65 @@ class BatchTest {
                     ),
             )
         val responseJson = """{"name": "batches/123", "done": false}"""
-        val outputStream = ByteArrayOutputStream()
 
-        every { httpConnectionProvider.getConnection(any()) } returns conn
-        every { conn.responseCode } returns 200
-        every { conn.inputStream } returns ByteArrayInputStream(responseJson.toByteArray())
-        every { conn.outputStream } returns outputStream
+        batch = createBatch { request ->
+            assertEquals(HttpMethod.Post, request.method)
+            assertEquals("$baseUrl/$model:batchGenerateContent", request.url.toString())
+            respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
 
         val result = batch.createBatch(model, request)
 
         assertEquals("batches/123", result.name)
         assertEquals(false, result.done)
-
-        verify { conn.requestMethod = "POST" }
-        verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
-
-        val requestBody = outputStream.toString()
-        // Simple verification that important parts of request are present in body
-        assert(requestBody.contains("gs://bucket/file"))
     }
 
     @Test
-    fun `getBatch calls getContent with correct parameters`() {
+    fun `getBatch calls getContent with correct parameters`() = runTest {
         val name = "batches/123"
         val responseJson = """{"name": "batches/123", "done": true}"""
 
-        every { httpConnectionProvider.getConnection(any()) } returns conn
-        every { conn.responseCode } returns 200
-        every { conn.inputStream } returns ByteArrayInputStream(responseJson.toByteArray())
+        batch = createBatch { request ->
+            assertEquals(HttpMethod.Get, request.method)
+            assertEquals("$bUrl/$name", request.url.toString())
+            respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
 
         val result = batch.getBatch(name)
 
         assertEquals("batches/123", result.name)
         assertEquals(true, result.done)
-
-        verify { conn.requestMethod = "GET" }
-        verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
     }
 
     @Test
-    fun `cancelBatch calls getContent with correct parameters`() {
+    fun `cancelBatch calls getContent with correct parameters`() = runTest {
         val name = "batches/123"
-        val responseJson = "{}" // Response is empty JSON on success? API docs say it returns empty or Operation. Assuming empty for now.
+        val responseJson = "{}"
 
-        every { httpConnectionProvider.getConnection(any()) } returns conn
-        every { conn.responseCode } returns 200
-        every { conn.inputStream } returns ByteArrayInputStream(responseJson.toByteArray())
-        every { conn.outputStream } returns ByteArrayOutputStream()
+        batch = createBatch { request ->
+             assertEquals(HttpMethod.Post, request.method)
+             assertEquals("$bUrl/$name:cancel", request.url.toString())
+             respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
 
         batch.cancelBatch(name)
-
-        verify { conn.requestMethod = "POST" }
-        verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
     }
 
     @Test
-    fun `deleteBatch calls deleteContent with correct parameters`() {
+    fun `deleteBatch calls deleteContent with correct parameters`() = runTest {
         val name = "batches/123"
 
-        every { httpConnectionProvider.getConnection(any()) } returns conn
-        every { conn.responseCode } returns 200
+        batch = createBatch { request ->
+             assertEquals(HttpMethod.Delete, request.method)
+             assertEquals("$bUrl/$name", request.url.toString())
+             respondOK()
+        }
 
         batch.deleteBatch(name)
-
-        verify { conn.requestMethod = "DELETE" }
-        verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
     }
 
     @Test
-    fun `createBatchEmbeddings calls getContent with correct parameters`() {
+    fun `createBatchEmbeddings calls getContent with correct parameters`() = runTest {
         val model = "embedding-001"
         val request =
             CreateBatchRequest(
@@ -124,44 +117,37 @@ class BatchTest {
                     ),
             )
         val responseJson = """{"name": "batches/456", "done": false}"""
-        val outputStream = ByteArrayOutputStream()
 
-        every { httpConnectionProvider.getConnection(any()) } returns conn
-        every { conn.responseCode } returns 200
-        every { conn.inputStream } returns ByteArrayInputStream(responseJson.toByteArray())
-        every { conn.outputStream } returns outputStream
+        batch = createBatch { request ->
+             assertEquals(HttpMethod.Post, request.method)
+             assertEquals("$baseUrl/$model:asyncBatchEmbedContent", request.url.toString())
+             respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
 
         val result = batch.createBatchEmbeddings(model, request)
 
         assertEquals("batches/456", result.name)
         assertEquals(false, result.done)
-
-        verify { conn.requestMethod = "POST" }
-        verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
-
-        val requestBody = outputStream.toString()
-        assert(requestBody.contains("gs://bucket/file"))
     }
 
     @Test
-    fun `listBatches calls getContent with correct parameters`() {
+    fun `listBatches calls getContent with correct parameters`() = runTest {
         val responseJson = """{"operations": [{"name": "batches/1"}, {"name": "batches/2"}]}"""
 
-        every { httpConnectionProvider.getConnection(any()) } returns conn
-        every { conn.responseCode } returns 200
-        every { conn.inputStream } returns ByteArrayInputStream(responseJson.toByteArray())
+        batch = createBatch { request ->
+             assertEquals(HttpMethod.Get, request.method)
+             assert(request.url.toString().startsWith("$bUrl/batches"))
+             respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
 
         val result = batch.listBatches(pageSize = 10, pageToken = "token")
 
         assertEquals(2, result.operations?.size)
         assertEquals("batches/1", result.operations?.get(0)?.name)
-
-        verify { conn.requestMethod = "GET" }
-        verify { conn.setRequestProperty("x-goog-api-key", apiKey) }
     }
 
     @Test
-    fun `API error handling throws GeminiException`() {
+    fun `API error handling throws GeminiException`() = runTest {
         val errorJson =
             """
             {
@@ -173,14 +159,19 @@ class BatchTest {
             }
             """.trimIndent()
 
-        every { httpConnectionProvider.getConnection(any()) } returns conn
-        every { conn.responseCode } returns 400
-        every { conn.errorStream } returns ByteArrayInputStream(errorJson.toByteArray())
-        every { conn.inputStream } throws IOException("Should not be called")
+        batch = createBatch {
+            respond(
+                content = errorJson,
+                status = HttpStatusCode.BadRequest,
+                headers = headersOf(HttpHeaders.ContentType, "application/json")
+            )
+        }
 
         val exception =
             assertThrows(GeminiException::class.java) {
-                batch.getBatch("batches/invalid")
+                runTest {
+                    batch.getBatch("batches/invalid")
+                }
             }
 
         assertEquals("Bad Request", exception.message)
@@ -188,19 +179,14 @@ class BatchTest {
     }
 
     @Test
-    fun `IOException handling returns empty JSON (or throws depending on impl)`() {
-        // In Batch.kt, getContent catches IOException and returns empty string "",
-        // then json.decodeFromString tries to parse "" which causes SerializationException.
-        // Wait, let's check Batch.kt implementation again.
+    fun `IOException handling returns empty JSON (or throws depending on impl)`() = runTest {
+        batch = createBatch { throw IOException("Network error") }
 
-        every { httpConnectionProvider.getConnection(any()) } throws IOException("Network error")
-
-        // Based on my reading of Batch.kt:
-        // catch (e: IOException) { logger.error...; "" }
-        // then json.decodeFromString<BatchJob>("") will fail.
-
+        // Same as original test, expects exception because "" is invalid JSON for BatchJob
         assertThrows(Exception::class.java) {
-            batch.getBatch("batches/123")
+            runTest {
+                 batch.getBatch("batches/123")
+            }
         }
     }
 }

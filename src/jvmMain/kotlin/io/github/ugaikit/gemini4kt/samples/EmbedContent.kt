@@ -7,7 +7,7 @@ import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.Part
 import java.util.Properties
 
-fun main() {
+suspend fun main() {
     val path = Gemini::class.java.getResourceAsStream("/prop.properties")
     val prop =
         Properties().also {

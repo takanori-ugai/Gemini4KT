@@ -10,7 +10,7 @@ import java.util.Properties
  * Gemini client with it. It then retrieves and prints the list of models
  * available through the Gemini client.
  */
-fun main() {
+suspend fun main() {
     // Load the API key from the properties file
     val apiKey =
         Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->

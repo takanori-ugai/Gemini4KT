@@ -2,6 +2,7 @@
 
 package io.github.ugaikit.gemini4kt
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -17,7 +18,7 @@ private const val EMBED_MODEL = "text-embedding-004"
 private const val FLASH_MODEL = "gemini-2.5-flash-lite"
 private const val PRO_MODEL = "gemini-2.5-pro"
 
-private fun testContentGeneration(gemini: Gemini) {
+private suspend fun testContentGeneration(gemini: Gemini) {
     println("--- testGenerateContent ---")
     val text = "Write a story about a magic backpack."
     val inputJson =
@@ -66,7 +67,7 @@ private fun testContentGeneration(gemini: Gemini) {
     println(gemini.batchEmbedContents(batchEmbedRequest, model = EMBED_MODEL))
 }
 
-private fun testModelsAndContent(gemini: Gemini) {
+private suspend fun testModelsAndContent(gemini: Gemini) {
     println("--- testGetModels ---")
     println(gemini.getModels())
 
@@ -105,7 +106,7 @@ private fun testModelsAndContent(gemini: Gemini) {
     )
 }
 
-private fun testCachedContent(gemini: Gemini) {
+private suspend fun testCachedContent(gemini: Gemini) {
     println("--- testCachedContent ---")
     val str = "This is a pen".repeat(REPEAT_COUNT)
     val systemInstruction =
@@ -211,7 +212,7 @@ private fun defineFunctionTools(): List<Tool> =
         ),
     )
 
-private fun testFunctionCallingFirstTurn(
+private suspend fun testFunctionCallingFirstTurn(
     gemini: Gemini,
     tools: List<Tool>,
 ) {
@@ -241,7 +242,7 @@ private fun testFunctionCallingFirstTurn(
     )
 }
 
-private fun testFunctionCallingSecondTurn(
+private suspend fun testFunctionCallingSecondTurn(
     gemini: Gemini,
     tools: List<Tool>,
 ) {
@@ -319,7 +320,7 @@ private fun testPartBuilder() {
     println(examplePart)
 }
 
-fun main() {
+fun main() = runBlocking {
     var apiKey = System.getenv("GEMINI_API_KEY")
     if (apiKey == null) {
         apiKey =
@@ -332,7 +333,7 @@ fun main() {
     }
     if (apiKey.isNullOrEmpty()) {
         println("API key not found. Please set the GEMINI_API_KEY environment variable.")
-        return
+        return@runBlocking
     }
     val gemini = Gemini(apiKey)
     val tools = defineFunctionTools()

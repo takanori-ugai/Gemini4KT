@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import java.util.Properties
 
-fun main() =
+suspend fun main() =
     runBlocking {
         val path = Gemini::class.java.getResourceAsStream("/prop.properties")
         val prop =

@@ -11,7 +11,7 @@ import io.github.ugaikit.gemini4kt.ThinkingConfig
 import io.github.ugaikit.gemini4kt.Threshold
 import java.util.Properties
 
-fun main() {
+suspend fun main() {
     val path = Gemini::class.java.getResourceAsStream("/prop.properties")
     val prop =
         Properties().also {

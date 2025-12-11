@@ -1,7 +1,9 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Gemini
-import io.github.ugaikit.gemini4kt.GeminiException
+import kotlinx.coroutines.runBlocking
+import io.github.ugaikit.gemini4kt.Gemini
+import kotlinx.coroutines.runBlockingException
 import io.github.ugaikit.gemini4kt.Modality
 import io.github.ugaikit.gemini4kt.generateContentRequest
 import kotlinx.serialization.SerializationException
@@ -55,7 +57,7 @@ class TextToImage(
     }
 }
 
-fun main() {
+fun main() = runBlocking {
     val apiKey =
         Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
             Properties()

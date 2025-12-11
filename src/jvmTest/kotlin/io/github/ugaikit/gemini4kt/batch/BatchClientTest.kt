@@ -2,32 +2,36 @@ package io.github.ugaikit.gemini4kt.batch
 
 import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
-import io.github.ugaikit.gemini4kt.HttpConnectionProvider
 import io.github.ugaikit.gemini4kt.Part
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.ktor.client.*
+import io.ktor.client.engine.mock.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
-import java.net.HttpURLConnection
-import java.net.URL
 
 class BatchClientTest {
     private val json = Json { ignoreUnknownKeys = true }
 
-    @Test
-    fun `createBatch sends correct request and parses response`() {
-        val mockConnection = mockk<HttpURLConnection>(relaxed = true)
-        val mockProvider =
-            object : HttpConnectionProvider {
-                override fun getConnection(url: URL): HttpURLConnection = mockConnection
+    private fun createBatch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponse): Batch {
+        val client = HttpClient(MockEngine) {
+            engine {
+                addHandler(handler)
             }
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+        return Batch(apiKey = "api-key", client = client)
+    }
 
-        val batchClient = Batch("api-key", mockProvider)
-
+    @Test
+    fun `createBatch sends correct request and parses response`() = runTest {
         val expectedResponse =
             """
             {
@@ -40,8 +44,10 @@ class BatchClientTest {
             }
             """.trimIndent()
 
-        every { mockConnection.inputStream } returns ByteArrayInputStream(expectedResponse.toByteArray())
-        every { mockConnection.responseCode } returns 200
+        val batchClient = createBatch { request ->
+            assertEquals(HttpMethod.Post, request.method)
+            respond(expectedResponse, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
 
         val generateContentRequest =
             GenerateContentRequest(
@@ -70,20 +76,10 @@ class BatchClientTest {
 
         assertEquals("batches/123456", result.name)
         assertEquals("JOB_STATE_PENDING", result.metadata?.state)
-
-        verify { mockConnection.requestMethod = "POST" }
-        verify { mockConnection.setRequestProperty("x-goog-api-key", "api-key") }
     }
 
     @Test
-    fun `getBatch parses response correctly`() {
-        val mockConnection = mockk<HttpURLConnection>(relaxed = true)
-        val mockProvider =
-            object : HttpConnectionProvider {
-                override fun getConnection(url: URL): HttpURLConnection = mockConnection
-            }
-        val batchClient = Batch("api-key", mockProvider)
-
+    fun `getBatch parses response correctly`() = runTest {
         val expectedResponse =
             """
             {
@@ -100,15 +96,15 @@ class BatchClientTest {
             }
             """.trimIndent()
 
-        every { mockConnection.inputStream } returns ByteArrayInputStream(expectedResponse.toByteArray())
-        every { mockConnection.responseCode } returns 200
+        val batchClient = createBatch { request ->
+            assertEquals(HttpMethod.Get, request.method)
+            respond(expectedResponse, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
 
         val result = batchClient.getBatch("batches/123456")
 
         assertEquals("batches/123456", result.name)
         assertEquals("JOB_STATE_SUCCEEDED", result.metadata?.state)
         assertEquals(emptyList<BatchInlineResponse>(), result.response?.inlinedResponses?.inlinedResponses)
-
-        verify { mockConnection.requestMethod = "GET" }
     }
 }
