@@ -7,12 +7,15 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.batch.Batch
 import io.github.ugaikit.gemini4kt.batch.createBatchRequest
+import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.util.Properties
 
-suspend fun main() {
-    val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-    val prop =
+object BatchSample {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        val path = Gemini::class.java.getResourceAsStream("/prop.properties")
+        val prop =
         Properties().also {
             it.load(path)
         }
@@ -96,5 +99,6 @@ suspend fun main() {
         println("IO Error: ${e.message}")
     } catch (e: InterruptedException) {
         println("Interrupted: ${e.message}")
+    }
     }
 }

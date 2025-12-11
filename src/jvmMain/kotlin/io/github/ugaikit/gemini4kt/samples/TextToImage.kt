@@ -1,11 +1,10 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Gemini
-import kotlinx.coroutines.runBlocking
-import io.github.ugaikit.gemini4kt.Gemini
-import kotlinx.coroutines.runBlockingException
+import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.Modality
 import io.github.ugaikit.gemini4kt.generateContentRequest
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
 import java.io.IOException
 import java.nio.file.Files
@@ -16,7 +15,7 @@ import java.util.Properties
 class TextToImage(
     private val gemini: Gemini,
 ) {
-    fun generateImage() {
+    suspend fun generateImage() {
         val prompt = "Create a picture of a nano banana dish in a fancy restaurant with a Gemini theme"
 
         val request =
@@ -57,23 +56,27 @@ class TextToImage(
     }
 }
 
-fun main() = runBlocking {
-    val apiKey =
-        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-            Properties()
-                .apply {
-                    load(inputStream)
-                }.getProperty("apiKey")
+object TextToImageSample {
+    @JvmStatic
+    fun main(args: Array<String>) =
+    runBlocking {
+        val apiKey =
+            Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                Properties()
+                    .apply {
+                        load(inputStream)
+                    }.getProperty("apiKey")
+            }
+        val gemini = Gemini(apiKey)
+        val sample = TextToImage(gemini)
+        try {
+            sample.generateImage()
+        } catch (e: GeminiException) {
+            println("Gemini Error running TextToImage sample: ${e.message}")
+        } catch (e: IOException) {
+            println("IO Error running TextToImage sample: ${e.message}")
+        } catch (e: SerializationException) {
+            println("Serialization Error running TextToImage sample: ${e.message}")
         }
-    val gemini = Gemini(apiKey)
-    val sample = TextToImage(gemini)
-    try {
-        sample.generateImage()
-    } catch (e: GeminiException) {
-        println("Gemini Error running TextToImage sample: ${e.message}")
-    } catch (e: IOException) {
-        println("IO Error running TextToImage sample: ${e.message}")
-    } catch (e: SerializationException) {
-        println("Serialization Error running TextToImage sample: ${e.message}")
     }
 }

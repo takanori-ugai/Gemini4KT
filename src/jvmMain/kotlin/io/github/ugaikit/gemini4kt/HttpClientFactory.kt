@@ -1,14 +1,17 @@
 package io.github.ugaikit.gemini4kt
 
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.DEFAULT
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-fun createHttpClient(json: Json): HttpClient {
-    return HttpClient(CIO) {
+fun createHttpClient(json: Json): HttpClient =
+    HttpClient(CIO) {
         install(ContentNegotiation) {
             json(json)
         }
@@ -17,4 +20,3 @@ fun createHttpClient(json: Json): HttpClient {
             level = LogLevel.INFO
         }
     }
-}

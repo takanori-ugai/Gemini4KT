@@ -9,6 +9,7 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.Tool
 import io.github.ugaikit.gemini4kt.buildFunctionDeclaration
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
@@ -21,9 +22,11 @@ fun add(
     @GeminiParameter(description = "second number") b: Int,
 ): Int = a + b
 
-suspend fun main() {
-    val apiKey =
-        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+object FunctionExample3Sample {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        val apiKey =
+            Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
             Properties()
                 .apply {
                     load(inputStream)
@@ -81,5 +84,6 @@ suspend fun main() {
         val secondRequest = GenerateContentRequest(contents = conversationHistory, tools = tools)
         val secondResponse = gemini.generateContent(secondRequest, "gemini-2.5-flash-lite")
         println("Final response: ${secondResponse.candidates[0].content.parts!!.get(0).text}")
+    }
     }
 }

@@ -7,6 +7,7 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Modality
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.generationConfig
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayInputStream
@@ -19,9 +20,11 @@ import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
 
-suspend fun main() {
-    // Example 1: Single voice
-    val config1 =
+object AudioGenerationSample {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        // Example 1: Single voice
+        val config1 =
         generationConfig {
             responseModality(Modality.AUDIO)
             speechConfig {
@@ -111,8 +114,9 @@ suspend fun main() {
         } catch (e: IllegalArgumentException) {
             println("Input Error: ${e.message}")
         }
-    } else {
-        println("GEMINI_API_KEY not found. Skipping API call.")
+        } else {
+            println("GEMINI_API_KEY not found. Skipping API call.")
+        }
     }
 }
 

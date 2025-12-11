@@ -10,9 +10,11 @@ import java.io.File
 import java.io.IOException
 import java.util.Properties
 
-suspend fun main() {
-    val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-    val prop =
+object FileUploadSample {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        val path = Gemini::class.java.getResourceAsStream("/prop.properties")
+        val prop =
         Properties().also {
             it.load(path)
         }
@@ -72,5 +74,6 @@ suspend fun main() {
             println("An error occurred: ${e.message}")
             e.printStackTrace()
         }
+    }
     }
 }

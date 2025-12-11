@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import java.util.Properties
 
-suspend fun main() =
+object StreamGenerateContentSample {
+    @JvmStatic
+    fun main(args: Array<String>) =
     runBlocking {
         val path = Gemini::class.java.getResourceAsStream("/prop.properties")
         val prop =
@@ -35,3 +37,4 @@ suspend fun main() =
             }
         }
     }
+}

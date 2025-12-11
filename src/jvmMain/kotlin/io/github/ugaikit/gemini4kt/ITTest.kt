@@ -320,30 +320,31 @@ private fun testPartBuilder() {
     println(examplePart)
 }
 
-fun main() = runBlocking {
-    var apiKey = System.getenv("GEMINI_API_KEY")
-    if (apiKey == null) {
-        apiKey =
-            Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-                Properties()
-                    .apply {
-                        load(inputStream)
-                    }.getProperty("apiKey")
-            }
-    }
-    if (apiKey.isNullOrEmpty()) {
-        println("API key not found. Please set the GEMINI_API_KEY environment variable.")
-        return@runBlocking
-    }
-    val gemini = Gemini(apiKey)
-    val tools = defineFunctionTools()
+fun main() =
+    runBlocking {
+        var apiKey = System.getenv("GEMINI_API_KEY")
+        if (apiKey == null) {
+            apiKey =
+                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                    Properties()
+                        .apply {
+                            load(inputStream)
+                        }.getProperty("apiKey")
+                }
+        }
+        if (apiKey.isNullOrEmpty()) {
+            println("API key not found. Please set the GEMINI_API_KEY environment variable.")
+            return@runBlocking
+        }
+        val gemini = Gemini(apiKey)
+        val tools = defineFunctionTools()
 
-    testContentGeneration(gemini)
-    testModelsAndContent(gemini)
+        testContentGeneration(gemini)
+        testModelsAndContent(gemini)
 //    testCachedContent(gemini)
-    testFunctionCallingFirstTurn(gemini, tools)
-    testFunctionCallingSecondTurn(gemini, tools)
-    testPartBuilder()
-}
+        testFunctionCallingFirstTurn(gemini, tools)
+        testFunctionCallingSecondTurn(gemini, tools)
+        testPartBuilder()
+    }
 
 class ITTest

@@ -14,10 +14,13 @@ import java.util.Properties
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
 
-suspend fun main() =
+object LiveSample {
+    @JvmStatic
+    fun main(args: Array<String>) =
     runBlocking {
         runSample()
     }
+}
 
 // Helper to move accumulatedAudio out
 fun runSample() =

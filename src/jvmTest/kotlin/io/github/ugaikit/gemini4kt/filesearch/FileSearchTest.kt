@@ -1,11 +1,17 @@
 package io.github.ugaikit.gemini4kt.filesearch
 
-import io.ktor.client.*
-import io.ktor.client.engine.mock.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockRequestHandleScope
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.engine.mock.respondOK
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.HttpRequestData
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -18,116 +24,129 @@ class FileSearchTest {
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
 
     private fun createFileSearch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponse): FileSearch {
-        val client = HttpClient(MockEngine) {
-            engine {
-                addHandler(handler)
+        val client =
+            HttpClient(MockEngine) {
+                engine {
+                    addHandler(handler)
+                }
+                install(ContentNegotiation) {
+                    json(Json { ignoreUnknownKeys = true })
+                }
             }
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
-            }
-        }
         return FileSearch(apiKey = "test-api-key", client = client)
     }
 
     @Test
-    fun `test createFileSearchStore`() = runTest {
-        val request = FileSearchStore(displayName = "Test Store")
-        val expectedResponse = FileSearchStore(name = "fileSearchStores/123", displayName = "Test Store")
-        val responseString = json.encodeToString(expectedResponse)
+    fun `test createFileSearchStore`() =
+        runTest {
+            val request = FileSearchStore(displayName = "Test Store")
+            val expectedResponse = FileSearchStore(name = "fileSearchStores/123", displayName = "Test Store")
+            val responseString = json.encodeToString(expectedResponse)
 
-        fileSearch = createFileSearch { request ->
-            assertEquals(HttpMethod.Post, request.method)
-            assertEquals("$bUrl/fileSearchStores", request.url.toString())
-            respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Post, request.method)
+                    assertEquals("$bUrl/fileSearchStores", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val result = fileSearch.createFileSearchStore(request)
+
+            assertEquals(expectedResponse, result)
         }
-
-        val result = fileSearch.createFileSearchStore(request)
-
-        assertEquals(expectedResponse, result)
-    }
 
     @Test
-    fun `test getFileSearchStore`() = runTest {
-        val storeName = "fileSearchStores/123"
-        val expectedResponse = FileSearchStore(name = storeName, displayName = "Test Store")
-        val responseString = json.encodeToString(expectedResponse)
+    fun `test getFileSearchStore`() =
+        runTest {
+            val storeName = "fileSearchStores/123"
+            val expectedResponse = FileSearchStore(name = storeName, displayName = "Test Store")
+            val responseString = json.encodeToString(expectedResponse)
 
-        fileSearch = createFileSearch { request ->
-            assertEquals(HttpMethod.Get, request.method)
-            assertEquals("$bUrl/$storeName", request.url.toString())
-            respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Get, request.method)
+                    assertEquals("$bUrl/$storeName", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val result = fileSearch.getFileSearchStore(storeName)
+
+            assertEquals(expectedResponse, result)
         }
-
-        val result = fileSearch.getFileSearchStore(storeName)
-
-        assertEquals(expectedResponse, result)
-    }
 
     @Test
-    fun `test listFileSearchStores`() = runTest {
-        val expectedResponse =
-            ListFileSearchStoresResponse(
-                fileSearchStores = listOf(FileSearchStore(name = "fileSearchStores/123")),
-                nextPageToken = "token",
-            )
-        val responseString = json.encodeToString(expectedResponse)
+    fun `test listFileSearchStores`() =
+        runTest {
+            val expectedResponse =
+                ListFileSearchStoresResponse(
+                    fileSearchStores = listOf(FileSearchStore(name = "fileSearchStores/123")),
+                    nextPageToken = "token",
+                )
+            val responseString = json.encodeToString(expectedResponse)
 
-        fileSearch = createFileSearch { request ->
-            assertEquals(HttpMethod.Get, request.method)
-            assertEquals("$bUrl/fileSearchStores?pageSize=10", request.url.toString())
-            respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Get, request.method)
+                    assertEquals("$bUrl/fileSearchStores?pageSize=10", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val result = fileSearch.listFileSearchStores(pageSize = 10)
+
+            assertEquals(expectedResponse, result)
         }
-
-        val result = fileSearch.listFileSearchStores(pageSize = 10)
-
-        assertEquals(expectedResponse, result)
-    }
 
     @Test
-    fun `test deleteFileSearchStore`() = runTest {
-        val storeName = "fileSearchStores/123"
+    fun `test deleteFileSearchStore`() =
+        runTest {
+            val storeName = "fileSearchStores/123"
 
-        fileSearch = createFileSearch { request ->
-            assertEquals(HttpMethod.Delete, request.method)
-            assertEquals("$bUrl/$storeName?force=true", request.url.toString())
-            respondOK()
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Delete, request.method)
+                    assertEquals("$bUrl/$storeName?force=true", request.url.toString())
+                    respondOK()
+                }
+
+            fileSearch.deleteFileSearchStore(storeName, force = true)
         }
-
-        fileSearch.deleteFileSearchStore(storeName, force = true)
-    }
 
     @Test
-    fun `test importFileToFileSearchStore`() = runTest {
-        val storeName = "fileSearchStores/123"
-        val request = ImportFileRequest(fileName = "files/abc")
-        val expectedResponse = Operation(name = "operations/import-op", done = false)
-        val responseString = json.encodeToString(expectedResponse)
+    fun `test importFileToFileSearchStore`() =
+        runTest {
+            val storeName = "fileSearchStores/123"
+            val request = ImportFileRequest(fileName = "files/abc")
+            val expectedResponse = Operation(name = "operations/import-op", done = false)
+            val responseString = json.encodeToString(expectedResponse)
 
-        fileSearch = createFileSearch { request ->
-            assertEquals(HttpMethod.Post, request.method)
-            assertEquals("$bUrl/$storeName:importFile", request.url.toString())
-            respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Post, request.method)
+                    assertEquals("$bUrl/$storeName:importFile", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val result = fileSearch.importFileToFileSearchStore(storeName, request)
+
+            assertEquals(expectedResponse, result)
         }
-
-        val result = fileSearch.importFileToFileSearchStore(storeName, request)
-
-        assertEquals(expectedResponse, result)
-    }
 
     @Test
-    fun `test getFileSearchStoreOperation`() = runTest {
-        val opName = "operations/import-op"
-        val expectedResponse = Operation(name = opName, done = true)
-        val responseString = json.encodeToString(expectedResponse)
+    fun `test getFileSearchStoreOperation`() =
+        runTest {
+            val opName = "operations/import-op"
+            val expectedResponse = Operation(name = opName, done = true)
+            val responseString = json.encodeToString(expectedResponse)
 
-        fileSearch = createFileSearch { request ->
-            assertEquals(HttpMethod.Get, request.method)
-            assertEquals("$bUrl/$opName", request.url.toString())
-            respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Get, request.method)
+                    assertEquals("$bUrl/$opName", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val result = fileSearch.getFileSearchStoreOperation(opName)
+
+            assertEquals(expectedResponse, result)
         }
-
-        val result = fileSearch.getFileSearchStoreOperation(opName)
-
-        assertEquals(expectedResponse, result)
-    }
 }
