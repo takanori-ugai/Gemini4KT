@@ -4,14 +4,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("multiplatform") version "2.2.0"
-    kotlin("plugin.serialization") version "2.2.0"
+    kotlin("multiplatform") version "2.2.21"
+    kotlin("plugin.serialization") version "2.2.21"
     id("com.android.library") version "8.12.0"
     id("org.jetbrains.dokka") version "2.1.0"
     id("org.jetbrains.dokka-javadoc") version "2.1.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.0.1"
-    id("com.github.spotbugs") version "6.4.7"
+    id("com.github.spotbugs") version "6.4.8"
     id("com.diffplug.spotless") version "8.1.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     jacoco
