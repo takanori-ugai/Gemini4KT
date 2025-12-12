@@ -9,6 +9,7 @@ import io.github.ugaikit.gemini4kt.GenerateContentResponse
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -22,7 +23,7 @@ import java.util.Properties
  */
 fun findWeather(location: String): String = "The weather in $location is super sunny"
 
-private fun getFunctionCall(
+private suspend fun getFunctionCall(
     gemini: Gemini,
     tools: List<Tool>,
     userPrompt: String,
@@ -32,7 +33,7 @@ private fun getFunctionCall(
     return gemini.generateContent(firstRequest, "gemini-2.5-flash-lite")
 }
 
-private fun sendFunctionResult(
+private suspend fun sendFunctionResult(
     gemini: Gemini,
     tools: List<Tool>,
     initialContent: Content,
@@ -70,49 +71,53 @@ private fun sendFunctionResult(
     }
 }
 
-fun main() {
-    val apiKey =
-        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-            Properties()
-                .apply {
-                    load(inputStream)
-                }.getProperty("apiKey")
-        }
-    val gemini = Gemini(apiKey)
+object FunctionExample2Sample {
+    @JvmStatic
+    fun main(args: Array<String>) =
+        runBlocking {
+            val apiKey =
+                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                    Properties()
+                        .apply {
+                            load(inputStream)
+                        }.getProperty("apiKey")
+                }
+            val gemini = Gemini(apiKey)
 
-    val findWeatherFunction =
-        FunctionDeclaration(
-            name = "find_weather",
-            description = "find weather in a given location",
-            parameters =
-                Schema(
-                    type = "object",
-                    properties =
-                        mapOf(
-                            "location" to
-                                Schema(
-                                    type = "string",
-                                    description = "The city and state, e.g. San Francisco, CA",
+            val findWeatherFunction =
+                FunctionDeclaration(
+                    name = "find_weather",
+                    description = "find weather in a given location",
+                    parameters =
+                        Schema(
+                            type = "object",
+                            properties =
+                                mapOf(
+                                    "location" to
+                                        Schema(
+                                            type = "string",
+                                            description = "The city and state, e.g. San Francisco, CA",
+                                        ),
                                 ),
+                            required = listOf("location"),
                         ),
-                    required = listOf("location"),
-                ),
-        )
+                )
 
-    val tools = listOf(Tool(functionDeclarations = listOf(findWeatherFunction)))
+            val tools = listOf(Tool(functionDeclarations = listOf(findWeatherFunction)))
 
-    // Step 1: Send the user's prompt and function declarations to the model.
-    val userPrompt = "What's the weather like in Boston?"
-    val firstResponse = getFunctionCall(gemini, tools, userPrompt)
+            // Step 1: Send the user's prompt and function declarations to the model.
+            val userPrompt = "What's the weather like in Boston?"
+            val firstResponse = getFunctionCall(gemini, tools, userPrompt)
 
-    val modelResponsePart =
-        firstResponse.candidates[0]
-            .content.parts!!
-            .get(0)
-    val functionCall = modelResponsePart.functionCall
-    println("Model requested function call: $functionCall")
+            val modelResponsePart =
+                firstResponse.candidates[0]
+                    .content.parts!!
+                    .get(0)
+            val functionCall = modelResponsePart.functionCall
+            println("Model requested function call: $functionCall")
 
-    // Step 2: "Execute" the function and send the response back to the model.
-    val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
-    sendFunctionResult(gemini, tools, initialContent, modelResponsePart)
+            // Step 2: "Execute" the function and send the response back to the model.
+            val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
+            sendFunctionResult(gemini, tools, initialContent, modelResponsePart)
+        }
 }

@@ -7,6 +7,7 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
+import kotlinx.coroutines.runBlocking
 import java.util.Properties
 
 private fun findMoviesFunction(): FunctionDeclaration =
@@ -103,45 +104,49 @@ private fun getShowtimesFunction(): FunctionDeclaration =
 
 private fun getFunctionDeclarations(): List<FunctionDeclaration> = listOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
 
-fun main() {
-    val apiKey =
-        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-            Properties()
-                .apply {
-                    load(inputStream)
-                }.getProperty("apiKey")
-        }
-    val gemini = Gemini(apiKey)
+object FunctionExample1Sample {
+    @JvmStatic
+    fun main(args: Array<String>) =
+        runBlocking {
+            val apiKey =
+                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                    Properties()
+                        .apply {
+                            load(inputStream)
+                        }.getProperty("apiKey")
+                }
+            val gemini = Gemini(apiKey)
 
-    val exFunction =
-        GenerateContentRequest(
-            contents =
-                listOf(
-                    Content(
-                        role = "user",
-                        parts =
-                            listOf(
-                                Part(text = "Which theaters in Mountain View show Barbie movie?"),
+            val exFunction =
+                GenerateContentRequest(
+                    contents =
+                        listOf(
+                            Content(
+                                role = "user",
+                                parts =
+                                    listOf(
+                                        Part(text = "Which theaters in Mountain View show Barbie movie?"),
+                                    ),
                             ),
-                    ),
-                ),
-            tools =
-                listOf(
-                    Tool(
-                        functionDeclarations = getFunctionDeclarations(),
-                    ),
-                ),
-        )
+                        ),
+                    tools =
+                        listOf(
+                            Tool(
+                                functionDeclarations = getFunctionDeclarations(),
+                            ),
+                        ),
+                )
 
-    println(
-        gemini
-            .generateContent(
-                exFunction,
-                "gemini-2.5-flash-lite",
-            ).candidates[0]
-            .content.parts!!
-            .get(0),
-    )
+            println(
+                gemini
+                    .generateContent(
+                        exFunction,
+                        "gemini-2.5-flash-lite",
+                    ).candidates[0]
+                    .content.parts!!
+                    .get(0),
+            )
+        }
 }
 
 class FunctionExample1

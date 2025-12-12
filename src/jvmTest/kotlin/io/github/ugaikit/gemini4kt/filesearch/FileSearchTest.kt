@@ -1,119 +1,152 @@
 package io.github.ugaikit.gemini4kt.filesearch
 
-import io.github.ugaikit.gemini4kt.HttpConnectionProvider
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockRequestHandleScope
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.HttpRequestData
+import io.ktor.client.request.HttpResponseData
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
-import java.net.HttpURLConnection
-import java.net.URL
 
 class FileSearchTest {
     private lateinit var fileSearch: FileSearch
-    private lateinit var mockConnection: HttpURLConnection
-    private lateinit var mockConnectionProvider: HttpConnectionProvider
     private val json = Json { ignoreUnknownKeys = true }
+    private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
 
-    @BeforeEach
-    fun setup() {
-        mockConnection = mockk(relaxed = true)
-        mockConnectionProvider = mockk()
-        every { mockConnectionProvider.getConnection(any()) } returns mockConnection
-        fileSearch = FileSearch(apiKey = "test-api-key", httpConnectionProvider = mockConnectionProvider)
+    private fun createFileSearch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): FileSearch {
+        val client =
+            HttpClient(MockEngine) {
+                engine {
+                    addHandler(handler)
+                }
+                install(ContentNegotiation) {
+                    json(Json { ignoreUnknownKeys = true })
+                }
+            }
+        return FileSearch(apiKey = "test-api-key", client = client)
     }
 
     @Test
-    fun `test createFileSearchStore`() {
-        val request = FileSearchStore(displayName = "Test Store")
-        val expectedResponse = FileSearchStore(name = "fileSearchStores/123", displayName = "Test Store")
-        val responseString = json.encodeToString(expectedResponse)
+    fun `test createFileSearchStore`() =
+        runTest {
+            val request = FileSearchStore(displayName = "Test Store")
+            val expectedResponse = FileSearchStore(name = "fileSearchStores/123", displayName = "Test Store")
+            val responseString = json.encodeToString(expectedResponse)
 
-        every { mockConnection.responseCode } returns 200
-        every { mockConnection.inputStream } returns ByteArrayInputStream(responseString.toByteArray())
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Post, request.method)
+                    assertEquals("$bUrl/fileSearchStores", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
 
-        val result = fileSearch.createFileSearchStore(request)
+            val result = fileSearch.createFileSearchStore(request)
 
-        assertEquals(expectedResponse, result)
-        verify { mockConnectionProvider.getConnection(URL("https://generativelanguage.googleapis.com/v1beta/fileSearchStores")) }
-    }
-
-    @Test
-    fun `test getFileSearchStore`() {
-        val storeName = "fileSearchStores/123"
-        val expectedResponse = FileSearchStore(name = storeName, displayName = "Test Store")
-        val responseString = json.encodeToString(expectedResponse)
-
-        every { mockConnection.responseCode } returns 200
-        every { mockConnection.inputStream } returns ByteArrayInputStream(responseString.toByteArray())
-
-        val result = fileSearch.getFileSearchStore(storeName)
-
-        assertEquals(expectedResponse, result)
-        verify { mockConnectionProvider.getConnection(URL("https://generativelanguage.googleapis.com/v1beta/$storeName")) }
-    }
+            assertEquals(expectedResponse, result)
+        }
 
     @Test
-    fun `test listFileSearchStores`() {
-        val expectedResponse =
-            ListFileSearchStoresResponse(
-                fileSearchStores = listOf(FileSearchStore(name = "fileSearchStores/123")),
-                nextPageToken = "token",
-            )
-        val responseString = json.encodeToString(expectedResponse)
+    fun `test getFileSearchStore`() =
+        runTest {
+            val storeName = "fileSearchStores/123"
+            val expectedResponse = FileSearchStore(name = storeName, displayName = "Test Store")
+            val responseString = json.encodeToString(expectedResponse)
 
-        every { mockConnection.responseCode } returns 200
-        every { mockConnection.inputStream } returns ByteArrayInputStream(responseString.toByteArray())
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Get, request.method)
+                    assertEquals("$bUrl/$storeName", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
 
-        val result = fileSearch.listFileSearchStores(pageSize = 10)
+            val result = fileSearch.getFileSearchStore(storeName)
 
-        assertEquals(expectedResponse, result)
-        verify { mockConnectionProvider.getConnection(URL("https://generativelanguage.googleapis.com/v1beta/fileSearchStores?pageSize=10")) }
-    }
-
-    @Test
-    fun `test deleteFileSearchStore`() {
-        val storeName = "fileSearchStores/123"
-        every { mockConnection.responseCode } returns 200
-
-        fileSearch.deleteFileSearchStore(storeName, force = true)
-
-        verify { mockConnectionProvider.getConnection(URL("https://generativelanguage.googleapis.com/v1beta/$storeName?force=true")) }
-        verify { mockConnection.requestMethod = "DELETE" }
-    }
+            assertEquals(expectedResponse, result)
+        }
 
     @Test
-    fun `test importFileToFileSearchStore`() {
-        val storeName = "fileSearchStores/123"
-        val request = ImportFileRequest(fileName = "files/abc")
-        val expectedResponse = Operation(name = "operations/import-op", done = false)
-        val responseString = json.encodeToString(expectedResponse)
+    fun `test listFileSearchStores`() =
+        runTest {
+            val expectedResponse =
+                ListFileSearchStoresResponse(
+                    fileSearchStores = listOf(FileSearchStore(name = "fileSearchStores/123")),
+                    nextPageToken = "token",
+                )
+            val responseString = json.encodeToString(expectedResponse)
 
-        every { mockConnection.responseCode } returns 200
-        every { mockConnection.inputStream } returns ByteArrayInputStream(responseString.toByteArray())
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Get, request.method)
+                    assertEquals("$bUrl/fileSearchStores?pageSize=10", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
 
-        val result = fileSearch.importFileToFileSearchStore(storeName, request)
+            val result = fileSearch.listFileSearchStores(pageSize = 10)
 
-        assertEquals(expectedResponse, result)
-        verify { mockConnectionProvider.getConnection(URL("https://generativelanguage.googleapis.com/v1beta/$storeName:importFile")) }
-    }
+            assertEquals(expectedResponse, result)
+        }
 
     @Test
-    fun `test getFileSearchStoreOperation`() {
-        val opName = "operations/import-op"
-        val expectedResponse = Operation(name = opName, done = true)
-        val responseString = json.encodeToString(expectedResponse)
+    fun `test deleteFileSearchStore`() =
+        runTest {
+            val storeName = "fileSearchStores/123"
 
-        every { mockConnection.responseCode } returns 200
-        every { mockConnection.inputStream } returns ByteArrayInputStream(responseString.toByteArray())
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Delete, request.method)
+                    assertEquals("$bUrl/$storeName?force=true", request.url.toString())
+                    respond(content = "", status = HttpStatusCode.OK)
+                }
 
-        val result = fileSearch.getFileSearchStoreOperation(opName)
+            fileSearch.deleteFileSearchStore(storeName, force = true)
+        }
 
-        assertEquals(expectedResponse, result)
-        verify { mockConnectionProvider.getConnection(URL("https://generativelanguage.googleapis.com/v1beta/$opName")) }
-    }
+    @Test
+    fun `test importFileToFileSearchStore`() =
+        runTest {
+            val storeName = "fileSearchStores/123"
+            val request = ImportFileRequest(fileName = "files/abc")
+            val expectedResponse = Operation(name = "operations/import-op", done = false)
+            val responseString = json.encodeToString(expectedResponse)
+
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Post, request.method)
+                    assertEquals("$bUrl/$storeName:importFile", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val result = fileSearch.importFileToFileSearchStore(storeName, request)
+
+            assertEquals(expectedResponse, result)
+        }
+
+    @Test
+    fun `test getFileSearchStoreOperation`() =
+        runTest {
+            val opName = "operations/import-op"
+            val expectedResponse = Operation(name = opName, done = true)
+            val responseString = json.encodeToString(expectedResponse)
+
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Get, request.method)
+                    assertEquals("$bUrl/$opName", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val result = fileSearch.getFileSearchStoreOperation(opName)
+
+            assertEquals(expectedResponse, result)
+        }
 }

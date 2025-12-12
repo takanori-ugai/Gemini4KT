@@ -7,6 +7,7 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Modality
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.generationConfig
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayInputStream
@@ -19,101 +20,105 @@ import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
 
-fun main() {
-    // Example 1: Single voice
-    val config1 =
-        generationConfig {
-            responseModality(Modality.AUDIO)
-            speechConfig {
-                voiceConfig {
-                    prebuiltVoiceConfig {
-                        voiceName { "Kore" }
-                    }
-                }
-            }
-        }
-
-    println("Config 1 JSON:")
-    val json = Json { prettyPrint = true }
-    println(json.encodeToString(config1))
-
-    // Example 2: Multi-speaker
-    val config2 =
-        generationConfig {
-            responseModality(Modality.AUDIO)
-            speechConfig {
-                multiSpeakerVoiceConfig {
-                    speakerVoiceConfig {
-                        speaker { "Joe" }
+object AudioGenerationSample {
+    @JvmStatic
+    fun main(args: Array<String>) =
+        runBlocking {
+            // Example 1: Single voice
+            val config1 =
+                generationConfig {
+                    responseModality(Modality.AUDIO)
+                    speechConfig {
                         voiceConfig {
                             prebuiltVoiceConfig {
                                 voiceName { "Kore" }
                             }
                         }
                     }
-                    speakerVoiceConfig {
-                        speaker { "Jane" }
-                        voiceConfig {
-                            prebuiltVoiceConfig {
-                                voiceName { "Puck" }
+                }
+
+            println("Config 1 JSON:")
+            val json = Json { prettyPrint = true }
+            println(json.encodeToString(config1))
+
+            // Example 2: Multi-speaker
+            val config2 =
+                generationConfig {
+                    responseModality(Modality.AUDIO)
+                    speechConfig {
+                        multiSpeakerVoiceConfig {
+                            speakerVoiceConfig {
+                                speaker { "Joe" }
+                                voiceConfig {
+                                    prebuiltVoiceConfig {
+                                        voiceName { "Kore" }
+                                    }
+                                }
+                            }
+                            speakerVoiceConfig {
+                                speaker { "Jane" }
+                                voiceConfig {
+                                    prebuiltVoiceConfig {
+                                        voiceName { "Puck" }
+                                    }
+                                }
                             }
                         }
                     }
                 }
+
+            println("\nConfig 2 JSON:")
+            println(json.encodeToString(config2))
+
+            // Note: To actually run this, we would need to call the API.
+            // Since I'm in a sandbox without the proper API key/environment for this specific model,
+            // I am demonstrating the configuration construction.
+
+            // Hypothetical usage if we had the client setup for "gemini-2.5-flash-preview-tts"
+
+            val apiKey =
+                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                    Properties()
+                        .apply {
+                            load(inputStream)
+                        }.getProperty("apiKey")
+                }
+            if (apiKey != null) {
+                val gemini = Gemini(apiKey)
+                try {
+                    val response =
+                        gemini.generateContent(
+                            model = "gemini-2.5-flash-preview-tts",
+                            inputJson =
+                                GenerateContentRequest(
+                                    contents = listOf(Content(role = "user", parts = listOf(Part(text = "Say cheerfully: Have a wonderful day!")))),
+                                    generationConfig = config1,
+                                ),
+                        )
+
+                    val base64Audio =
+                        response.candidates
+                            ?.get(0)
+                            ?.content
+                            ?.parts
+                            ?.get(0)
+                            ?.inlineData
+                            ?.data
+                    if (base64Audio != null) {
+                        val audioBytes = Base64.getDecoder().decode(base64Audio)
+                        savePcmToWav(audioBytes, "output.wav", 24000.0f, 1)
+                    }
+                } catch (e: GeminiException) {
+                    println("Gemini API Error: ${e.message}")
+                } catch (e: IOException) {
+                    println("IO Error: ${e.message}")
+                } catch (e: IllegalArgumentException) {
+                    println("Input Error: ${e.message}")
+                }
+            } else {
+                println("GEMINI_API_KEY not found. Skipping API call.")
             }
         }
-
-    println("\nConfig 2 JSON:")
-    println(json.encodeToString(config2))
-
-    // Note: To actually run this, we would need to call the API.
-    // Since I'm in a sandbox without the proper API key/environment for this specific model,
-    // I am demonstrating the configuration construction.
-
-    // Hypothetical usage if we had the client setup for "gemini-2.5-flash-preview-tts"
-
-    val apiKey =
-        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-            Properties()
-                .apply {
-                    load(inputStream)
-                }.getProperty("apiKey")
-        }
-    if (apiKey != null) {
-        val gemini = Gemini(apiKey)
-        try {
-            val response =
-                gemini.generateContent(
-                    model = "gemini-2.5-flash-preview-tts",
-                    inputJson =
-                        GenerateContentRequest(
-                            contents = listOf(Content(role = "user", parts = listOf(Part(text = "Say cheerfully: Have a wonderful day!")))),
-                            generationConfig = config1,
-                        ),
-                )
-
-            val base64Audio =
-                response.candidates
-                    ?.get(0)
-                    ?.content
-                    ?.parts
-                    ?.get(0)
-                    ?.inlineData
-                    ?.data
-            if (base64Audio != null) {
-                val audioBytes = Base64.getDecoder().decode(base64Audio)
-                savePcmToWav(audioBytes, "output.wav", 24000.0f, 1)
-            }
-        } catch (e: GeminiException) {
-            println("Gemini API Error: ${e.message}")
-        } catch (e: IOException) {
-            println("IO Error: ${e.message}")
-        } catch (e: IllegalArgumentException) {
-            println("Input Error: ${e.message}")
-        }
-    } else {
-        println("GEMINI_API_KEY not found. Skipping API call.")
-    }
 }
 
 /**
