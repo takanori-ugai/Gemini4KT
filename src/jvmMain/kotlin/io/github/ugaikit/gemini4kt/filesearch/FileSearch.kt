@@ -1,19 +1,20 @@
 package io.github.ugaikit.gemini4kt.filesearch
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.ugaikit.gemini4kt.DefaultHttpConnectionProvider
 import io.github.ugaikit.gemini4kt.FileUploadProvider
 import io.github.ugaikit.gemini4kt.FileUploadProviderImpl
 import io.github.ugaikit.gemini4kt.GeminiErrorResponse
 import io.github.ugaikit.gemini4kt.GeminiException
-import io.github.ugaikit.gemini4kt.HttpConnectionProvider
+import io.github.ugaikit.gemini4kt.createHttpClient
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.IOException
-import java.io.OutputStreamWriter
-import java.net.URL
 
 private val logger = KotlinLogging.logger {}
 
@@ -24,14 +25,13 @@ private val logger = KotlinLogging.logger {}
  */
 class FileSearch(
     private val apiKey: String,
-    private val httpConnectionProvider: HttpConnectionProvider = DefaultHttpConnectionProvider(),
+    private val client: HttpClient = createHttpClient(Json { ignoreUnknownKeys = true }),
     private val fileUploadProvider: FileUploadProvider = FileUploadProviderImpl(apiKey),
 ) {
     private val json = Json { ignoreUnknownKeys = true }
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
 
     companion object {
-        private const val HTTP_OK = 200
         private const val PREVIEW_LENGTH = 100
     }
 
@@ -41,7 +41,7 @@ class FileSearch(
      * @param inputJson The request payload for creating a FileSearchStore.
      * @return The created [FileSearchStore] object.
      */
-    fun createFileSearchStore(inputJson: FileSearchStore): FileSearchStore {
+    suspend fun createFileSearchStore(inputJson: FileSearchStore): FileSearchStore {
         val urlString = "$bUrl/fileSearchStores"
         return json.decodeFromString<FileSearchStore>(
             getContent(urlString, json.encodeToString(inputJson)),
@@ -54,7 +54,7 @@ class FileSearch(
      * @param name The name of the FileSearchStore.
      * @return The [FileSearchStore] object.
      */
-    fun getFileSearchStore(name: String): FileSearchStore {
+    suspend fun getFileSearchStore(name: String): FileSearchStore {
         val urlString = "$bUrl/$name"
         return json.decodeFromString<FileSearchStore>(
             getContent(urlString),
@@ -68,7 +68,7 @@ class FileSearch(
      * @param pageToken A page token, received from a previous fileSearchStores.list call.
      * @return A [ListFileSearchStoresResponse] containing the list of FileSearchStores.
      */
-    fun listFileSearchStores(
+    suspend fun listFileSearchStores(
         pageSize: Int? = null,
         pageToken: String? = null,
     ): ListFileSearchStoresResponse {
@@ -91,7 +91,7 @@ class FileSearch(
      * @param name The name of the FileSearchStore.
      * @param force If set to true, any Documents and objects related to this FileSearchStore will also be deleted.
      */
-    fun deleteFileSearchStore(
+    suspend fun deleteFileSearchStore(
         name: String,
         force: Boolean = false,
     ) {
@@ -106,7 +106,7 @@ class FileSearch(
      * @param inputJson The request payload for importing a file.
      * @return The [Operation] object.
      */
-    fun importFileToFileSearchStore(
+    suspend fun importFileToFileSearchStore(
         fileSearchStoreName: String,
         inputJson: ImportFileRequest,
     ): Operation {
@@ -138,7 +138,7 @@ class FileSearch(
      * @param name The name of the operation resource.
      * @return The [Operation] object.
      */
-    fun getFileSearchStoreOperation(name: String): Operation {
+    suspend fun getFileSearchStoreOperation(name: String): Operation {
         val urlString = "$bUrl/$name"
         return json.decodeFromString<Operation>(
             getContent(urlString),
@@ -146,36 +146,35 @@ class FileSearch(
     }
 
     /**
-     * Performs a POST request to the specified URL string with the given input JSON payload.
+     * Performs a POST or GET request to the specified URL string with the given input JSON payload.
      *
-     * @param urlStr The URL to which the POST request is made.
-     * @param inputJson The JSON payload for the request.
+     * @param urlStr The URL to which the request is made.
+     * @param inputJson The JSON payload for the request (optional).
      * @return The response body as a String.
      */
-    private fun getContent(
+    private suspend fun getContent(
         urlStr: String,
         inputJson: String? = null,
     ): String =
         try {
             logger.info { inputJson }
-            val url = URL(urlStr)
-            val conn = httpConnectionProvider.getConnection(url)
-            conn.requestMethod = if (inputJson == null) "GET" else "POST"
-            conn.setRequestProperty("x-goog-api-key", apiKey)
-            conn.setRequestProperty("Content-Type", "application/json")
-            if (inputJson != null) {
-                conn.doOutput = true
-                OutputStreamWriter(conn.outputStream).use { writer -> writer.write(inputJson) }
-            }
-            val resCode = conn.responseCode
-            if (resCode != HTTP_OK) {
-                logger.error { "Error: ${conn.responseCode}" }
-                val errorMsg =
-                    conn.errorStream.bufferedReader().use { reader ->
-                        val text = reader.readText()
-                        logger.error { "Error Message: $text" }
-                        text
+            val response =
+                if (inputJson != null) {
+                    client.post(urlStr) {
+                        header("x-goog-api-key", apiKey)
+                        contentType(ContentType.Application.Json)
+                        setBody(inputJson)
                     }
+                } else {
+                    client.get(urlStr) {
+                        header("x-goog-api-key", apiKey)
+                    }
+                }
+
+            if (response.status != HttpStatusCode.OK) {
+                logger.error { "Error: ${response.status}" }
+                val errorMsg = response.bodyAsText()
+                logger.error { "Error Message: $errorMsg" }
                 try {
                     val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
                     throw GeminiException(errorResponse.error)
@@ -188,18 +187,19 @@ class FileSearch(
                 }
                 "{}"
             } else {
-                logger.info { "GenerateContentResponse Code: $resCode" }
-                conn.inputStream.bufferedReader().use { reader ->
-                    val txt = reader.readText()
-                    logger.debug { "Content length: ${txt.length}" }
-                    logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
-                    logger.debug { txt }
-                    txt
-                }
+                logger.info { "GenerateContentResponse Code: ${response.status}" }
+                val txt = response.bodyAsText()
+                logger.debug { "Content length: ${txt.length}" }
+                logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
+                logger.debug { txt }
+                txt
             }
         } catch (e: IOException) {
-            logger.error { e.stackTrace.contentToString() }
+            logger.error { e.stackTraceToString() }
             ""
+        } catch (e: Exception) {
+            logger.error { e.stackTraceToString() }
+            throw e
         }
 
     /**
@@ -207,22 +207,22 @@ class FileSearch(
      *
      * @param urlStr The URL string where the DELETE request is sent.
      */
-    private fun deleteContent(urlStr: String) {
+    private suspend fun deleteContent(urlStr: String) {
         try {
-            val url = URL(urlStr)
-            val conn = httpConnectionProvider.getConnection(url)
-            conn.requestMethod = "DELETE"
-            conn.setRequestProperty("x-goog-api-key", apiKey)
-            val resCode = conn.responseCode
-            if (resCode != HTTP_OK) {
-                logger.error { "Error: $resCode" }
-                conn.errorStream.bufferedReader().use { reader ->
-                    logger.error { "Error Message: ${reader.readText()}" }
+            val response =
+                client.delete(urlStr) {
+                    header("x-goog-api-key", apiKey)
                 }
+            if (response.status != HttpStatusCode.OK) {
+                logger.error { "Error: ${response.status}" }
+                val errorMsg = response.bodyAsText()
+                logger.error { "Error Message: $errorMsg" }
             }
-            logger.info { "GenerateContentResponse Code: $resCode" }
+            logger.info { "GenerateContentResponse Code: ${response.status}" }
         } catch (e: IOException) {
-            logger.error { e.stackTrace.contentToString() }
+            logger.error { e.stackTraceToString() }
+        } catch (e: Exception) {
+            logger.error { e.stackTraceToString() }
         }
     }
 }

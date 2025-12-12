@@ -15,7 +15,7 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.Properties
 
-fun main() =
+fun main() {
     runBlocking {
         val apiKey =
             Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
@@ -76,6 +76,7 @@ fun main() =
             fileSearch.deleteFileSearchStore(store.name!!, force = true)
         }
     }
+}
 
 private suspend fun uploadFileToStore(
     fileSearch: FileSearch,

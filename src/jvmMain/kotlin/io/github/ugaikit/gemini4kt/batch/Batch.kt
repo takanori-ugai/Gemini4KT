@@ -1,16 +1,17 @@
 package io.github.ugaikit.gemini4kt.batch
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.ugaikit.gemini4kt.DefaultHttpConnectionProvider
 import io.github.ugaikit.gemini4kt.GeminiErrorResponse
 import io.github.ugaikit.gemini4kt.GeminiException
-import io.github.ugaikit.gemini4kt.HttpConnectionProvider
+import io.github.ugaikit.gemini4kt.createHttpClient
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.IOException
-import java.io.OutputStreamWriter
-import java.net.URL
 
 private val logger = KotlinLogging.logger {}
 
@@ -21,14 +22,13 @@ private val logger = KotlinLogging.logger {}
  */
 class Batch(
     private val apiKey: String,
-    private val httpConnectionProvider: HttpConnectionProvider = DefaultHttpConnectionProvider(),
+    private val client: HttpClient = createHttpClient(Json { ignoreUnknownKeys = true }),
 ) {
     private val json = Json { ignoreUnknownKeys = true }
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
     private val baseUrl = "$bUrl/models"
 
     companion object {
-        private const val HTTP_OK = 200
         private const val PREVIEW_LENGTH = 100
     }
 
@@ -39,7 +39,7 @@ class Batch(
      * @param request The creation request payload.
      * @return The created [BatchJob] (Operation).
      */
-    fun createBatch(
+    suspend fun createBatch(
         model: String,
         request: CreateBatchRequest,
     ): BatchJob {
@@ -55,7 +55,7 @@ class Batch(
      * @param name The resource name of the batch job operation (e.g., "batches/123456").
      * @return The [BatchJob] with current status.
      */
-    fun getBatch(name: String): BatchJob {
+    suspend fun getBatch(name: String): BatchJob {
         val urlString = "$bUrl/$name"
         return json.decodeFromString<BatchJob>(
             getContent(urlString),
@@ -67,7 +67,7 @@ class Batch(
      *
      * @param name The resource name of the batch job to cancel.
      */
-    fun cancelBatch(name: String) {
+    suspend fun cancelBatch(name: String) {
         val urlString = "$bUrl/$name:cancel"
         getContent(urlString, "{}") // POST with empty body
     }
@@ -77,7 +77,7 @@ class Batch(
      *
      * @param name The resource name of the batch job to delete.
      */
-    fun deleteBatch(name: String) {
+    suspend fun deleteBatch(name: String) {
         val urlString = "$bUrl/$name"
         deleteContent(urlString)
     }
@@ -89,7 +89,7 @@ class Batch(
      * @param request The creation request payload.
      * @return The created [BatchJob] (Operation).
      */
-    fun createBatchEmbeddings(
+    suspend fun createBatchEmbeddings(
         model: String,
         request: CreateBatchRequest,
     ): BatchJob {
@@ -106,7 +106,7 @@ class Batch(
      * @param pageToken A page token, received from a previous list call.
      * @return A list of [BatchJob]s.
      */
-    fun listBatches(
+    suspend fun listBatches(
         pageSize: Int? = null,
         pageToken: String? = null,
     ): ListBatchesResponse {
@@ -123,30 +123,29 @@ class Batch(
         )
     }
 
-    private fun getContent(
+    private suspend fun getContent(
         urlStr: String,
         inputJson: String? = null,
     ): String =
         try {
             logger.info { inputJson }
-            val url = URL(urlStr)
-            val conn = httpConnectionProvider.getConnection(url)
-            conn.requestMethod = if (inputJson == null) "GET" else "POST"
-            conn.setRequestProperty("x-goog-api-key", apiKey)
-            conn.setRequestProperty("Content-Type", "application/json")
-            if (inputJson != null) {
-                conn.doOutput = true
-                OutputStreamWriter(conn.outputStream).use { writer -> writer.write(inputJson) }
-            }
-            val resCode = conn.responseCode
-            if (resCode != HTTP_OK) {
-                logger.error { "Error: ${conn.responseCode}" }
-                val errorMsg =
-                    conn.errorStream.bufferedReader().use { reader ->
-                        val text = reader.readText()
-                        logger.error { "Error Message: $text" }
-                        text
+            val response =
+                if (inputJson != null) {
+                    client.post(urlStr) {
+                        header("x-goog-api-key", apiKey)
+                        contentType(ContentType.Application.Json)
+                        setBody(inputJson)
                     }
+                } else {
+                    client.get(urlStr) {
+                        header("x-goog-api-key", apiKey)
+                    }
+                }
+
+            if (response.status != HttpStatusCode.OK) {
+                logger.error { "Error: ${response.status}" }
+                val errorMsg = response.bodyAsText()
+                logger.error { "Error Message: $errorMsg" }
                 try {
                     val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
                     throw GeminiException(errorResponse.error)
@@ -159,36 +158,37 @@ class Batch(
                 }
                 "{}"
             } else {
-                logger.info { "GenerateContentResponse Code: $resCode" }
-                conn.inputStream.bufferedReader().use { reader ->
-                    val txt = reader.readText()
-                    logger.debug { "Content length: ${txt.length}" }
-                    logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
-                    logger.debug { txt }
-                    txt
-                }
+                logger.info { "GenerateContentResponse Code: ${response.status}" }
+                val txt = response.bodyAsText()
+                logger.debug { "Content length: ${txt.length}" }
+                logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
+                logger.debug { txt }
+                txt
             }
         } catch (e: IOException) {
-            logger.error { e.stackTrace.contentToString() }
+            logger.error { e.stackTraceToString() }
             ""
+        } catch (e: Exception) {
+            logger.error { e.stackTraceToString() }
+            throw e
         }
 
-    private fun deleteContent(urlStr: String) {
+    private suspend fun deleteContent(urlStr: String) {
         try {
-            val url = URL(urlStr)
-            val conn = httpConnectionProvider.getConnection(url)
-            conn.requestMethod = "DELETE"
-            conn.setRequestProperty("x-goog-api-key", apiKey)
-            val resCode = conn.responseCode
-            if (resCode != HTTP_OK) {
-                logger.error { "Error: $resCode" }
-                conn.errorStream.bufferedReader().use { reader ->
-                    logger.error { "Error Message: ${reader.readText()}" }
+            val response =
+                client.delete(urlStr) {
+                    header("x-goog-api-key", apiKey)
                 }
+            if (response.status != HttpStatusCode.OK) {
+                logger.error { "Error: ${response.status}" }
+                val errorMsg = response.bodyAsText()
+                logger.error { "Error Message: $errorMsg" }
             }
-            logger.info { "GenerateContentResponse Code: $resCode" }
+            logger.info { "GenerateContentResponse Code: ${response.status}" }
         } catch (e: IOException) {
-            logger.error { e.stackTrace.contentToString() }
+            logger.error { e.stackTraceToString() }
+        } catch (e: Exception) {
+            logger.error { e.stackTraceToString() }
         }
     }
 }

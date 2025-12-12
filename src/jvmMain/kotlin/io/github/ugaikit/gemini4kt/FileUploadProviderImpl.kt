@@ -2,6 +2,11 @@ package io.github.ugaikit.gemini4kt
 
 import io.github.ugaikit.gemini4kt.filesearch.Operation
 import io.github.ugaikit.gemini4kt.filesearch.UploadFileSearchStoreRequest
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -9,10 +14,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.HttpURLConnection
-import java.net.URL
 
 private const val BUFFER_SIZE = 4096
 
@@ -23,7 +24,7 @@ data class FileWrapper(
 
 class FileUploadProviderImpl(
     private val apiKey: String,
-    private val httpConnectionProvider: HttpConnectionProvider = DefaultHttpConnectionProvider(),
+    private val client: HttpClient = createHttpClient(Json { ignoreUnknownKeys = true }),
     private val json: Json = Json { ignoreUnknownKeys = true },
 ) : FileUploadProvider {
     override suspend fun upload(
@@ -53,30 +54,26 @@ class FileUploadProviderImpl(
         mimeType: String,
         displayName: String,
         fileSize: Long,
-    ): String =
-        withContext(Dispatchers.IO) {
-            val url = URL("$baseUrl/upload/v1beta/files")
-            val connection = httpConnectionProvider.getConnection(url)
-            connection.requestMethod = "POST"
-            connection.addRequestProperty("x-goog-api-key", apiKey)
-            connection.addRequestProperty("X-Goog-Upload-Protocol", "resumable")
-            connection.addRequestProperty("X-Goog-Upload-Command", "start")
-            connection.addRequestProperty("X-Goog-Upload-Header-Content-Length", fileSize.toString())
-            connection.addRequestProperty("X-Goog-Upload-Header-Content-Type", mimeType)
-            connection.addRequestProperty("Content-Type", "application/json")
-            connection.doOutput = true
-
-            val requestBody = """{ "file" : { "displayName" : "$displayName" }}"""
-
-            connection.outputStream.write(requestBody.toByteArray())
-
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                throw IOException("Failed to get upload URL: ${connection.responseCode} ${connection.responseMessage}")
+    ): String {
+        val requestBody = """{ "file" : { "displayName" : "$displayName" }}"""
+        val response =
+            client.post("$baseUrl/upload/v1beta/files") {
+                header("x-goog-api-key", apiKey)
+                header("X-Goog-Upload-Protocol", "resumable")
+                header("X-Goog-Upload-Command", "start")
+                header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
+                header("X-Goog-Upload-Header-Content-Type", mimeType)
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
             }
 
-            connection.headerFields["X-Goog-Upload-URL"]?.get(0)
-                ?: throw IOException("Upload URL not found in response headers")
+        if (response.status != HttpStatusCode.OK) {
+            throw IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
         }
+
+        return response.headers["X-Goog-Upload-URL"]
+            ?: throw IOException("Upload URL not found in response headers")
+    }
 
     private suspend fun getFileSearchStoreUploadUrl(
         baseUrl: String,
@@ -85,30 +82,26 @@ class FileUploadProviderImpl(
         mimeType: String,
         fileSize: Long,
         uploadRequest: UploadFileSearchStoreRequest,
-    ): String =
-        withContext(Dispatchers.IO) {
-            val url = URL("$baseUrl/upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore")
-            val connection = httpConnectionProvider.getConnection(url)
-            connection.requestMethod = "POST"
-            connection.addRequestProperty("x-goog-api-key", apiKey)
-            connection.addRequestProperty("X-Goog-Upload-Protocol", "resumable")
-            connection.addRequestProperty("X-Goog-Upload-Command", "start")
-            connection.addRequestProperty("X-Goog-Upload-Header-Content-Length", fileSize.toString())
-            connection.addRequestProperty("X-Goog-Upload-Header-Content-Type", mimeType)
-            connection.addRequestProperty("Content-Type", "application/json")
-            connection.doOutput = true
-
-            val requestBody = json.encodeToString(uploadRequest)
-
-            connection.outputStream.write(requestBody.toByteArray())
-
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                throw IOException("Failed to get upload URL: ${connection.responseCode} ${connection.responseMessage}")
+    ): String {
+        val requestBody = json.encodeToString(uploadRequest)
+        val response =
+            client.post("$baseUrl/upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore") {
+                header("x-goog-api-key", apiKey)
+                header("X-Goog-Upload-Protocol", "resumable")
+                header("X-Goog-Upload-Command", "start")
+                header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
+                header("X-Goog-Upload-Header-Content-Type", mimeType)
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
             }
 
-            connection.headerFields["X-Goog-Upload-URL"]?.get(0)
-                ?: throw IOException("Upload URL not found in response headers")
+        if (response.status != HttpStatusCode.OK) {
+            throw IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
         }
+
+        return response.headers["X-Goog-Upload-URL"]
+            ?: throw IOException("Upload URL not found in response headers")
+    }
 
     private suspend fun uploadFile(
         uploadUrl: String,
@@ -116,32 +109,21 @@ class FileUploadProviderImpl(
         mimeType: String,
     ): GeminiFile =
         withContext(Dispatchers.IO) {
-            val url = URL(uploadUrl)
-            val connection = httpConnectionProvider.getConnection(url)
-            connection.requestMethod = "POST"
-            connection.addRequestProperty("Content-Length", file.length().toString())
-            connection.addRequestProperty("X-Goog-Upload-Offset", "0")
-            connection.addRequestProperty("X-Goog-Upload-Command", "upload, finalize")
-            connection.addRequestProperty("Content-Type", mimeType)
-            connection.doOutput = true
+            val response =
+                client.post(uploadUrl) {
+                    header("Content-Length", file.length().toString())
+                    header("X-Goog-Upload-Offset", "0")
+                    header("X-Goog-Upload-Command", "upload, finalize")
+                    header("Content-Type", mimeType)
+                    setBody(file.readBytes())
+                }
 
-            val outputStream: OutputStream = connection.outputStream
-            val inputStream: InputStream = file.inputStream()
-            val buffer = ByteArray(BUFFER_SIZE)
-            var bytesRead: Int
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                outputStream.write(buffer, 0, bytesRead)
-            }
-            outputStream.flush()
-            inputStream.close()
-            outputStream.close()
-
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                throw IOException("Failed to upload file: ${connection.responseCode} ${connection.responseMessage}")
+            if (response.status != HttpStatusCode.OK) {
+                throw IOException("Failed to upload file: ${response.status} ${response.bodyAsText()}")
             }
 
-            val response = connection.inputStream.bufferedReader().use { it.readText() }
-            json.decodeFromString<FileWrapper>(response).file
+            val responseBody = response.bodyAsText()
+            json.decodeFromString<FileWrapper>(responseBody).file
         }
 
     private suspend fun uploadFileToSearchStore(
@@ -150,31 +132,20 @@ class FileUploadProviderImpl(
         mimeType: String,
     ): Operation =
         withContext(Dispatchers.IO) {
-            val url = URL(uploadUrl)
-            val connection = httpConnectionProvider.getConnection(url)
-            connection.requestMethod = "POST"
-            connection.addRequestProperty("Content-Length", file.length().toString())
-            connection.addRequestProperty("X-Goog-Upload-Offset", "0")
-            connection.addRequestProperty("X-Goog-Upload-Command", "upload, finalize")
-            connection.addRequestProperty("Content-Type", mimeType)
-            connection.doOutput = true
+            val response =
+                client.post(uploadUrl) {
+                    header("Content-Length", file.length().toString())
+                    header("X-Goog-Upload-Offset", "0")
+                    header("X-Goog-Upload-Command", "upload, finalize")
+                    header("Content-Type", mimeType)
+                    setBody(file.readBytes())
+                }
 
-            val outputStream: OutputStream = connection.outputStream
-            val inputStream: InputStream = file.inputStream()
-            val buffer = ByteArray(BUFFER_SIZE)
-            var bytesRead: Int
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                outputStream.write(buffer, 0, bytesRead)
-            }
-            outputStream.flush()
-            inputStream.close()
-            outputStream.close()
-
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                throw IOException("Failed to upload file: ${connection.responseCode} ${connection.responseMessage}")
+            if (response.status != HttpStatusCode.OK) {
+                throw IOException("Failed to upload file: ${response.status} ${response.bodyAsText()}")
             }
 
-            val response = connection.inputStream.bufferedReader().use { it.readText() }
-            json.decodeFromString<Operation>(response)
+            val responseBody = response.bodyAsText()
+            json.decodeFromString<Operation>(responseBody)
         }
 }
