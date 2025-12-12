@@ -1,10 +1,10 @@
 package io.github.ugaikit.gemini4kt
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.UninitializedPropertyAccessException
 
 class CandidateBuilderTest {
@@ -135,13 +135,13 @@ class CandidateBuilderTest {
 
     @Test
     fun `build without required properties throws exception`() {
-        assertThrows<UninitializedPropertyAccessException> {
+        assertFailsWith<UninitializedPropertyAccessException> {
             candidate {
                 finishReason = "STOP"
             }
         }
 
-        assertThrows<UninitializedPropertyAccessException> {
+        assertFailsWith<UninitializedPropertyAccessException> {
             candidate {
                 index = 1
             }

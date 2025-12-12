@@ -1,7 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class FileDataBuilderTest {
     @Test

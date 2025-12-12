@@ -2,7 +2,7 @@ package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 class GenerationConfigTest {
     private val json = Json { prettyPrint = true }

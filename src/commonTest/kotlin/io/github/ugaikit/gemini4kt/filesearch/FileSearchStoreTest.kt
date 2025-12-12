@@ -3,8 +3,8 @@ package io.github.ugaikit.gemini4kt.filesearch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class FileSearchStoreTest {
     private val json = Json { ignoreUnknownKeys = true }
