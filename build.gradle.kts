@@ -80,6 +80,7 @@ kotlin {
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.3")
                 implementation("io.ktor:ktor-client-logging:3.0.3")
                 implementation("io.ktor:ktor-client-websockets:3.0.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.2")
             }
         }
         val jvmCommonMain by creating {

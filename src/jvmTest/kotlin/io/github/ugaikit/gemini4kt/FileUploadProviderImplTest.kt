@@ -13,6 +13,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.files.Path
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -82,7 +83,7 @@ class FileUploadProviderImplTest {
                     }
                 }
 
-            val result = fileUploadProvider.upload(file, mimeType, displayName)
+            val result = fileUploadProvider.upload(Path(file.path), mimeType, displayName)
 
             assertEquals("files/test-file", result.name)
             file.delete()

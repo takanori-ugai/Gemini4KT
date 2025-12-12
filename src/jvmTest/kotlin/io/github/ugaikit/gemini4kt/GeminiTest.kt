@@ -17,6 +17,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.files.Path
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -332,15 +333,20 @@ class GeminiTest {
             gemini = createGemini { respond(content = "", status = HttpStatusCode.OK) }
 
             val file = File("test.txt")
+            val path = Path(file.path)
             val mimeType = "text/plain"
             val displayName = "Test File"
             val expectedFile = mockk<GeminiFile>()
 
-            coEvery { fileUploadProvider.upload(file, mimeType, displayName) } returns expectedFile
+            coEvery { fileUploadProvider.upload(path, mimeType, displayName) } returns expectedFile
 
-            val result = gemini.uploadFile(file, mimeType, displayName)
+            // Call with Path because uploadFile extension taking File calls this one,
+            // but here we are testing Gemini class directly which uses Path.
+            // If we want to test extension, we need to import it.
+            // But let's test the member function.
+            val result = gemini.uploadFile(path, mimeType, displayName)
 
             assertEquals(expectedFile, result)
-            coVerify { fileUploadProvider.upload(file, mimeType, displayName) }
+            coVerify { fileUploadProvider.upload(path, mimeType, displayName) }
         }
 }
