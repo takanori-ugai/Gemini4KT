@@ -50,7 +50,9 @@ kotlin {
     }
     @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs {
-        nodejs()
+	binaries.executable()
+	browser {}
+        nodejs {}
     }
     androidTarget {
         publishLibraryVariants("release")
@@ -61,6 +63,10 @@ kotlin {
                 }
             }
         }
+    }
+    js {
+	binaries.executable()
+	nodejs {}
     }
 
     mingwX64 {
@@ -140,6 +146,9 @@ kotlin {
 
         val mingwX64Main by getting
         val mingwX64Test by getting
+
+        val jsMain by getting
+        val jsTest by getting
     }
 }
 
