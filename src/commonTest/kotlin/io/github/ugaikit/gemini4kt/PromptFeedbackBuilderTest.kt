@@ -1,7 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlin.test.assertEquals
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class PromptFeedbackBuilderTest {
     @Test

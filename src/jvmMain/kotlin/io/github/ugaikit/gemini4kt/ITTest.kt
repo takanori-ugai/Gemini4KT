@@ -16,7 +16,7 @@ import java.util.Properties
 private const val REPEAT_COUNT = 10000
 private const val EMBED_MODEL = "text-embedding-004"
 private const val FLASH_MODEL = "gemini-2.5-flash-lite"
-private const val PRO_MODEL = "gemini-2.5-pro"
+private const val PRO_MODEL = "gemini-2.5-flash-lite"
 
 private suspend fun testContentGeneration(gemini: Gemini) {
     println("--- testGenerateContent ---")

@@ -3,8 +3,8 @@ package io.github.ugaikit.gemini4kt
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlin.test.assertEquals
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class PartTest {
     private val json = Json { ignoreUnknownKeys = true }

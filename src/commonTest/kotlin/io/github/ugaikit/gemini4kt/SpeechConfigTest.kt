@@ -2,8 +2,8 @@ package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.test.assertEquals
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class SpeechConfigTest {
     private val json = Json { prettyPrint = true }

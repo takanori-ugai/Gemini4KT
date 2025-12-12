@@ -63,6 +63,11 @@ kotlin {
         }
     }
 
+    mingwX64 {
+        binaries {
+            executable() // Generates an .exe file
+        }
+    }
     iosX64()
     iosArm64()
     iosSimulatorArm64()
@@ -132,6 +137,12 @@ kotlin {
                 implementation("io.ktor:ktor-client-darwin:3.0.3")
             }
         }
+
+        val mingwX64Main by getting {
+            dependsOn(commonMain)
+        }
+
+        val mingwX64Test by getting
     }
 }
 

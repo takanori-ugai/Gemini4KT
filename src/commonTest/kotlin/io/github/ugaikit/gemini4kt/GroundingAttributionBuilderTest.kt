@@ -1,9 +1,9 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlin.test.assertNotNull
+import kotlin.UninitializedPropertyAccessException
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
-import kotlin.UninitializedPropertyAccessException
+import kotlin.test.assertNotNull
 
 class GroundingAttributionBuilderTest {
     @Test

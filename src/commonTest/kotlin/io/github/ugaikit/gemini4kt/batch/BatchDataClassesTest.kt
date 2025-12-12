@@ -6,10 +6,10 @@ import io.github.ugaikit.gemini4kt.GenerateContentResponse
 import io.github.ugaikit.gemini4kt.Part
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.test.Test
 
 class BatchDataClassesTest {
     private val json = Json { ignoreUnknownKeys = true }
