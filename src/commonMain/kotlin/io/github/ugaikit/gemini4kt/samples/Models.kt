@@ -16,6 +16,5 @@ object Models {
 
         // Retrieve and print each model
         println(gemini.getModels().models)
-
     }
 }

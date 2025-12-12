@@ -1,12 +1,10 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Gemini
-import io.github.ugaikit.gemini4kt.InlineData
 import io.github.ugaikit.gemini4kt.Modality
 import io.github.ugaikit.gemini4kt.content
 import io.github.ugaikit.gemini4kt.getLiveClient
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentRealtimeInput
-import io.github.ugaikit.gemini4kt.live.BidiGenerateContentServerMessage
 import io.github.ugaikit.gemini4kt.live.Blob
 import io.github.ugaikit.gemini4kt.live.LiveConnectConfig
 import kotlinx.coroutines.flow.collect

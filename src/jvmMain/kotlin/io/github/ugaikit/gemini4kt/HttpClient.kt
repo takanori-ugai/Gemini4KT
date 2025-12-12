@@ -7,8 +7,8 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-actual fun createHttpClient(json: Json): HttpClient {
-    return HttpClient(CIO) {
+actual fun createHttpClient(json: Json): HttpClient =
+    HttpClient(CIO) {
         install(ContentNegotiation) {
             json(json)
         }
@@ -16,4 +16,3 @@ actual fun createHttpClient(json: Json): HttpClient {
             requestTimeoutMillis = 60000
         }
     }
-}

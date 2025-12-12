@@ -1,7 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
-import java.io.File
 import kotlinx.io.files.Path
+import java.io.File
 
 /**
  * Uploads a file to the Gemini API.

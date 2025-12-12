@@ -22,7 +22,6 @@ import kotlinx.io.files.Path
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.File
 import java.io.IOException
 
 private val logger = KotlinLogging.logger {}
