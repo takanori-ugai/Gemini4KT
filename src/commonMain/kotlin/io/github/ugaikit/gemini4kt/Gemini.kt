@@ -1,8 +1,6 @@
 package io.github.ugaikit.gemini4kt
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.ugaikit.gemini4kt.live.GeminiLive
-import io.github.ugaikit.gemini4kt.live.LiveConnectConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.delete
@@ -19,6 +17,7 @@ import io.ktor.http.contentType
 import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.io.files.Path
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -36,15 +35,16 @@ private val logger = KotlinLogging.logger {}
  */
 @Suppress("TooManyFunctions")
 class Gemini(
-    private val apiKey: String,
+    internal val apiKey: String,
     private val client: HttpClient? = null,
+    private val fileUploadProvider: FileUploadProvider? = null,
 ) {
     /**
      * JSON configuration setup to ignore unknown keys during deserialization.
      */
-    private val json = Json { ignoreUnknownKeys = true }
+    internal val json = Json { ignoreUnknownKeys = true }
     private val httpClient = client ?: createHttpClient(json)
-    private val fileUploadProvider: FileUploadProvider = FileUploadProviderImpl(apiKey, httpClient, json)
+    private val provider: FileUploadProvider = fileUploadProvider ?: FileUploadProviderImpl(apiKey, httpClient, json)
 
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
     private val baseUrl = "$bUrl/models"
@@ -255,22 +255,10 @@ class Gemini(
      * @return The uploaded file as a [File] object.
      */
     suspend fun uploadFile(
-        file: PlatformFile,
+        file: Path,
         mimeType: String,
         displayName: String,
-    ): GeminiFile = fileUploadProvider.upload(file, mimeType, displayName)
-
-    /**
-     * Creates a client for the Live API.
-     *
-     * @param model The model to be used for the live session.
-     * @param config Optional configuration for the live session.
-     * @return A [GeminiLive] client instance.
-     */
-    fun getLiveClient(
-        model: String,
-        config: LiveConnectConfig? = null,
-    ): GeminiLive = GeminiLive(apiKey, model, config, json)
+    ): GeminiFile = provider.upload(file, mimeType, displayName)
 
     /**
      * Performs a POST request to the specified URL string with the given input JSON payload.

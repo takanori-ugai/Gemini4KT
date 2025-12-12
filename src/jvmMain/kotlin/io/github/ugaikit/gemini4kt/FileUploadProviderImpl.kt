@@ -13,6 +13,7 @@ import io.ktor.http.contentType
 import io.ktor.util.cio.readChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.io.files.Path
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -31,25 +32,27 @@ actual class FileUploadProviderImpl actual constructor(
 ) : FileUploadProvider {
     private val httpClient = client ?: createHttpClient(json)
 
-    actual override suspend fun upload(
-        file: PlatformFile,
+    override suspend fun upload(
+        file: Path,
         mimeType: String,
         displayName: String,
     ): GeminiFile {
+        val javaFile = File(file.toString())
         val baseUrl = "https://generativelanguage.googleapis.com"
-        val uploadUrl = getUploadUrl(baseUrl, apiKey, mimeType, displayName, file.length())
-        return uploadFile(uploadUrl, file, mimeType)
+        val uploadUrl = getUploadUrl(baseUrl, apiKey, mimeType, displayName, javaFile.length())
+        return uploadFile(uploadUrl, javaFile, mimeType)
     }
 
-    actual override suspend fun uploadToFileSearchStore(
+    override suspend fun uploadToFileSearchStore(
         fileSearchStoreName: String,
-        file: PlatformFile,
+        file: Path,
         mimeType: String,
         uploadRequest: UploadFileSearchStoreRequest,
     ): Operation {
+        val javaFile = File(file.toString())
         val baseUrl = "https://generativelanguage.googleapis.com"
-        val uploadUrl = getFileSearchStoreUploadUrl(baseUrl, apiKey, fileSearchStoreName, mimeType, file.length(), uploadRequest)
-        return uploadFileToSearchStore(uploadUrl, file, mimeType)
+        val uploadUrl = getFileSearchStoreUploadUrl(baseUrl, apiKey, fileSearchStoreName, mimeType, javaFile.length(), uploadRequest)
+        return uploadFileToSearchStore(uploadUrl, javaFile, mimeType)
     }
 
     private suspend fun getUploadUrl(

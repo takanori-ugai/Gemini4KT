@@ -5,6 +5,7 @@ import io.github.ugaikit.gemini4kt.FileData
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
+import io.github.ugaikit.gemini4kt.uploadFile
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.IOException

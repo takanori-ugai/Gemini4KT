@@ -18,10 +18,10 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlinx.io.files.Path
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.File
 import java.io.IOException
 
 private val logger = KotlinLogging.logger {}
@@ -137,7 +137,7 @@ class FileSearch(
      */
     suspend fun uploadToFileSearchStore(
         fileSearchStoreName: String,
-        file: File,
+        file: Path,
         mimeType: String,
         uploadRequest: UploadFileSearchStoreRequest,
     ): Operation = fileUploadProvider.uploadToFileSearchStore(fileSearchStoreName, file, mimeType, uploadRequest)

@@ -12,6 +12,7 @@ import io.github.ugaikit.gemini4kt.filesearch.WhiteSpaceConfig
 import io.github.ugaikit.gemini4kt.tool
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.io.files.Path
 import java.io.File
 import java.util.Properties
 
@@ -92,7 +93,7 @@ private suspend fun uploadFileToStore(
     var operation =
         fileSearch.uploadToFileSearchStore(
             fileSearchStoreName = storeName,
-            file = file,
+            file = Path(file.path),
             mimeType = "text/plain",
             uploadRequest =
                 UploadFileSearchStoreRequest(
