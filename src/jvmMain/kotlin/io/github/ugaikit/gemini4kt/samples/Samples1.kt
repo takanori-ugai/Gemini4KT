@@ -12,7 +12,7 @@ import io.github.ugaikit.gemini4kt.Threshold
 import kotlinx.coroutines.runBlocking
 import java.util.Properties
 
-object Samples1Sample {
+object Samples1 {
     @JvmStatic
     fun main(args: Array<String>) =
         runBlocking {
@@ -53,5 +53,3 @@ object Samples1Sample {
             )
         }
 }
-
-class Samples1

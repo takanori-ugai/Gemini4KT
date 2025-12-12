@@ -2,6 +2,7 @@ package io.github.ugaikit.gemini4kt
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
@@ -18,5 +19,8 @@ fun createHttpClient(json: Json): HttpClient =
         install(Logging) {
             logger = Logger.DEFAULT
             level = LogLevel.INFO
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 30000
         }
     }

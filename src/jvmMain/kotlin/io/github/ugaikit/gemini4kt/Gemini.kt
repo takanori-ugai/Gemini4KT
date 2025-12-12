@@ -323,7 +323,7 @@ class Gemini(
                 val txt = response.bodyAsText()
                 logger.debug { "Content length: ${txt.length}" }
                 logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
-                logger.debug { txt }
+                logger.trace { "Content : $txt" }
                 txt
             }
         } catch (e: IOException) {

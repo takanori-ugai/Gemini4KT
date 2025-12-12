@@ -45,10 +45,13 @@ kotlin {
             mainClass.set("io.github.ugaikit.gemini4kt.ITTestKt")
         }
     }
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+    }
 
     sourceSets {
         commonMain.dependencies {
-            implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
             implementation("io.github.oshai:kotlin-logging:7.0.13")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
@@ -60,14 +63,24 @@ kotlin {
         }
         commonTest.dependencies {
             implementation("org.jetbrains.kotlin:kotlin-test")
-            implementation("io.mockk:mockk:1.14.7")
             implementation("io.ktor:ktor-client-mock:3.0.3")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
         }
         val jvmMain by getting {
             dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
                 runtimeOnly("ch.qos.logback:logback-classic:1.5.21")
                 implementation("io.ktor:ktor-client-cio:3.0.3")
+            }
+        }
+        val jvmTest by getting {
+            dependencies {
+                implementation("io.mockk:mockk:1.14.7")
+            }
+        }
+        val wasmJsMain by getting {
+            dependencies {
+                // implementation("io.ktor:ktor-client-core:3.0.3") // Already in commonMain
             }
         }
     }
@@ -100,6 +113,7 @@ tasks {
             showStandardStreams = true
         }
         useJUnitPlatform()
+        jvmArgs("-XX:+EnableDynamicAgentLoading")
         finalizedBy(jacocoTestReport)
     }
 
