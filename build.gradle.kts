@@ -1,15 +1,15 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.gitlab.arturbosch.detekt.Detekt
+import org.gradle.api.JavaVersion
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("multiplatform") version "2.2.21"
-    kotlin("plugin.serialization") version "2.2.21"
+    kotlin("multiplatform") version "2.1.0"
+    kotlin("plugin.serialization") version "2.1.0"
+    id("com.android.library") version "8.12.0"
     id("org.jetbrains.dokka") version "2.1.0"
     id("org.jetbrains.dokka-javadoc") version "2.1.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    id("com.gradleup.shadow") version "9.3.0"
     id("com.github.jk1.dependency-license-report") version "3.0.1"
     id("com.github.spotbugs") version "6.4.7"
     id("com.diffplug.spotless") version "8.1.0"
@@ -23,10 +23,13 @@ group = "io.github.ugaikit"
 version = "0.7.0"
 
 repositories {
+    google()
     mavenCentral()
 }
 
 kotlin {
+    applyDefaultHierarchyTemplate()
+
     jvm {
         compilations.all {
             compileTaskProvider.configure {
@@ -49,38 +52,83 @@ kotlin {
     wasmJs {
         browser()
     }
+    androidTarget {
+        publishLibraryVariants("release")
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.JVM_11)
+                }
+            }
+        }
+    }
+
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
+    linuxX64()
 
     sourceSets {
-        commonMain.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-            implementation("io.github.oshai:kotlin-logging:7.0.13")
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-            implementation("io.ktor:ktor-client-core:3.0.3")
-            implementation("io.ktor:ktor-client-content-negotiation:3.0.3")
-            implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.3")
-            implementation("io.ktor:ktor-client-logging:3.0.3")
-            implementation("io.ktor:ktor-client-websockets:3.0.3")
+        val commonMain by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+                implementation("io.github.oshai:kotlin-logging:7.0.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
+                implementation("io.ktor:ktor-client-core:3.0.3")
+                implementation("io.ktor:ktor-client-content-negotiation:3.0.3")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.3")
+                implementation("io.ktor:ktor-client-logging:3.0.3")
+                implementation("io.ktor:ktor-client-websockets:3.0.3")
+            }
         }
-        commonTest.dependencies {
-            implementation("org.jetbrains.kotlin:kotlin-test")
-            implementation("io.ktor:ktor-client-mock:3.0.3")
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+        val jvmCommonMain by creating {
+            dependsOn(commonMain)
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-reflect:2.1.0")
+            }
+        }
+        val nativeMain by getting
+        val commonTest by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-test")
+                implementation("io.ktor:ktor-client-mock:3.0.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.1")
+            }
         }
         val jvmMain by getting {
+            dependsOn(jvmCommonMain)
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
-                runtimeOnly("ch.qos.logback:logback-classic:1.5.21")
+                runtimeOnly("ch.qos.logback:logback-classic:1.5.16")
                 implementation("io.ktor:ktor-client-cio:3.0.3")
             }
         }
         val jvmTest by getting {
             dependencies {
-                implementation("io.mockk:mockk:1.14.7")
+                implementation("io.mockk:mockk:1.13.16")
             }
         }
         val wasmJsMain by getting {
             dependencies {
                 // implementation("io.ktor:ktor-client-core:3.0.3") // Already in commonMain
+            }
+        }
+        val androidMain by getting {
+            dependsOn(jvmCommonMain)
+            dependencies {
+                implementation("io.ktor:ktor-client-android:3.0.3")
+            }
+        }
+        val linuxX64Main by getting {
+            // dependsOn(nativeMain) // Already depends on nativeMain via default hierarchy
+            dependencies {
+                implementation("io.ktor:ktor-client-cio:3.0.3")
+            }
+        }
+        val iosMain by getting {
+            // dependsOn(nativeMain) // Already depends on nativeMain via default hierarchy
+            dependencies {
+                implementation("io.ktor:ktor-client-darwin:3.0.3")
             }
         }
     }
@@ -102,7 +150,7 @@ tasks {
             dependsOn("jvmTest")
             // sourceSets(kotlin.sourceSets.jvmMain) // might need adjustment
             classDirectories.setFrom(files(layout.buildDirectory.dir("classes/kotlin/jvm/main")))
-            sourceDirectories.setFrom(files("src/jvmMain/kotlin", "src/commonMain/kotlin"))
+            sourceDirectories.setFrom(files("src/jvmMain/kotlin", "src/jvmCommonMain/kotlin", "src/commonMain/kotlin"))
             executionData.setFrom(layout.buildDirectory.file("jacoco/jvmTest.exec"))
         }
 
@@ -131,13 +179,6 @@ tasks {
             // with Github Code Scanning
             sarif.required.set(true)
         }
-    }
-
-    withType<ShadowJar> {
-        manifest {
-            attributes["Main-Class"] = "io.github.ugaikit.gemini4kt.ITTestKt"
-        }
-        minimize()
     }
 }
 
@@ -191,5 +232,17 @@ spotless {
         // Choose one of these formatters.
         googleJavaFormat("1.32.0") // has its own section below
         formatAnnotations() // fixes formatting of type annotations, see below
+    }
+}
+
+android {
+    namespace = "io.github.ugaikit.gemini4kt"
+    compileSdk = 34
+    defaultConfig {
+        minSdk = 21
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
