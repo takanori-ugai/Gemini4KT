@@ -13,22 +13,23 @@ import java.util.Properties
  */
 object ModelsSample {
     @JvmStatic
-    fun main(args: Array<String>) = runBlocking {
-        // Load the API key from the properties file
-        val apiKey =
-        Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-            Properties()
-                .apply {
-                    load(inputStream)
-                }.getProperty("apiKey")
+    fun main(args: Array<String>) =
+        runBlocking {
+            // Load the API key from the properties file
+            val apiKey =
+                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                    Properties()
+                        .apply {
+                            load(inputStream)
+                        }.getProperty("apiKey")
+                }
+
+            // Initialize the Gemini client with the API key
+            val gemini = Gemini(apiKey)
+
+            // Retrieve and print each model
+            gemini.getModels().models.forEach(::println)
         }
-
-    // Initialize the Gemini client with the API key
-    val gemini = Gemini(apiKey)
-
-    // Retrieve and print each model
-    gemini.getModels().models.forEach(::println)
-    }
 }
 
 /**

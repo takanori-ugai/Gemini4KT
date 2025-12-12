@@ -4,9 +4,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
-import io.ktor.client.engine.mock.respondOK
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestData
+import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -35,7 +35,7 @@ class GeminiTest {
         fileUploadProvider = mockk()
     }
 
-    private fun createGemini(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponse): Gemini {
+    private fun createGemini(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): Gemini {
         val client =
             HttpClient(MockEngine) {
                 engine {
@@ -165,7 +165,7 @@ class GeminiTest {
             gemini =
                 createGemini { request ->
                     assertEquals(HttpMethod.Delete, request.method)
-                    respondOK()
+                    respond(content = "", status = HttpStatusCode.OK)
                 }
 
             gemini.deleteContent("http://localhost")
@@ -257,7 +257,7 @@ class GeminiTest {
                 createGemini { request ->
                     assertEquals("$baseUrl/$name", request.url.toString())
                     assertEquals(HttpMethod.Delete, request.method)
-                    respondOK()
+                    respond(content = "", status = HttpStatusCode.OK)
                 }
 
             gemini.deleteCachedContent(name)
@@ -329,7 +329,7 @@ class GeminiTest {
     @Test
     fun `uploadFile calls fileUploadProvider with correct parameters`() =
         runTest {
-            gemini = createGemini { respondOK() }
+            gemini = createGemini { respond(content = "", status = HttpStatusCode.OK) }
 
             val file = File("test.txt")
             val mimeType = "text/plain"

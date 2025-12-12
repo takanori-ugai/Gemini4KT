@@ -12,46 +12,47 @@ import java.util.Properties
 
 object InputWithImageSample {
     @JvmStatic
-    fun main(args: Array<String>) = runBlocking {
-        val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-        val prop =
-        Properties().also {
-            it.load(path)
-        }
-    val apiKey = prop.getProperty("apiKey")
-    val gemini = Gemini(apiKey)
-    val image = File(Gemini::class.java.getResource("/scones.jpg").toURI())
-    val base64Image = Base64.getEncoder().encodeToString(image.readBytes())
+    fun main(args: Array<String>) =
+        runBlocking {
+            val path = Gemini::class.java.getResourceAsStream("/prop.properties")
+            val prop =
+                Properties().also {
+                    it.load(path)
+                }
+            val apiKey = prop.getProperty("apiKey")
+            val gemini = Gemini(apiKey)
+            val image = File(Gemini::class.java.getResource("/scones.jpg").toURI())
+            val base64Image = Base64.getEncoder().encodeToString(image.readBytes())
 
-    val inputWithImage =
-        GenerateContentRequest(
-            listOf(
-                Content(
+            val inputWithImage =
+                GenerateContentRequest(
                     listOf(
-                        Part(text = "What is this picture?"),
-                        Part(
-                            inlineData =
-                                InlineData(
-                                    mimeType = "image/jpeg",
-                                    data = base64Image,
+                        Content(
+                            listOf(
+                                Part(text = "What is this picture?"),
+                                Part(
+                                    inlineData =
+                                        InlineData(
+                                            mimeType = "image/jpeg",
+                                            data = base64Image,
+                                        ),
                                 ),
+                            ),
                         ),
                     ),
-                ),
-            ),
-        )
-    println(
-        gemini
-            .generateContent(
-                inputWithImage,
-                "gemini-2.5-flash-lite",
-            ).candidates[0]
-            .content.parts!!
-            .get(0)
-            .text!!
-            .replace("\n\n", "\n"),
-    )
-    }
+                )
+            println(
+                gemini
+                    .generateContent(
+                        inputWithImage,
+                        "gemini-2.5-flash-lite",
+                    ).candidates[0]
+                    .content.parts!!
+                    .get(0)
+                    .text!!
+                    .replace("\n\n", "\n"),
+            )
+        }
 }
 
 class InputWithImage

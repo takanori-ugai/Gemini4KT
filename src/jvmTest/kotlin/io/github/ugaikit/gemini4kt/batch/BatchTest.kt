@@ -5,9 +5,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
-import io.ktor.client.engine.mock.respondOK
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestData
+import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -16,7 +16,6 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.io.IOException
 
@@ -26,7 +25,7 @@ class BatchTest {
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
     private val baseUrl = "$bUrl/models"
 
-    private fun createBatch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponse): Batch {
+    private fun createBatch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): Batch {
         val client =
             HttpClient(MockEngine) {
                 engine {
@@ -112,7 +111,7 @@ class BatchTest {
                 createBatch { request ->
                     assertEquals(HttpMethod.Delete, request.method)
                     assertEquals("$bUrl/$name", request.url.toString())
-                    respondOK()
+                    respond(content = "", status = HttpStatusCode.OK)
                 }
 
             batch.deleteBatch(name)
@@ -188,15 +187,13 @@ class BatchTest {
                     )
                 }
 
-            val exception =
-                assertThrows(GeminiException::class.java) {
-                    runTest {
-                        batch.getBatch("batches/invalid")
-                    }
-                }
-
-            assertEquals("Bad Request", exception.message)
-            assertEquals(400, exception.error.code)
+            try {
+                batch.getBatch("batches/invalid")
+                throw AssertionError("Expected GeminiException was not thrown")
+            } catch (e: GeminiException) {
+                assertEquals("Bad Request", e.message)
+                assertEquals(400, e.error.code)
+            }
         }
 
     @Test
@@ -205,10 +202,11 @@ class BatchTest {
             batch = createBatch { throw IOException("Network error") }
 
             // Same as original test, expects exception because "" is invalid JSON for BatchJob
-            assertThrows(Exception::class.java) {
-                runTest {
-                    batch.getBatch("batches/123")
-                }
+            try {
+                batch.getBatch("batches/123")
+                throw AssertionError("Expected Exception was not thrown")
+            } catch (e: Exception) {
+                // Expected
             }
         }
 }

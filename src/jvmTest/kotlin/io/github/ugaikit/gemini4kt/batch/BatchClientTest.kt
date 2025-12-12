@@ -9,6 +9,7 @@ import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestData
+import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -23,7 +24,7 @@ import org.junit.jupiter.api.Test
 class BatchClientTest {
     private val json = Json { ignoreUnknownKeys = true }
 
-    private fun createBatch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponse): Batch {
+    private fun createBatch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): Batch {
         val client =
             HttpClient(MockEngine) {
                 engine {
