@@ -15,6 +15,8 @@ object Models {
         val gemini = Gemini(getApiKey())
 
         // Retrieve and print each model
-        println(gemini.getModels().models)
+        gemini.getModels().models.forEach {
+            println(it)
+        }
     }
 }
