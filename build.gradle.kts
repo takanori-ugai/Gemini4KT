@@ -6,7 +6,6 @@ import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 plugins {
     kotlin("multiplatform") version "2.2.21"
     kotlin("plugin.serialization") version "2.2.21"
-    id("com.android.library") version "8.12.0"
     id("org.jetbrains.dokka") version "2.1.0"
     id("org.jetbrains.dokka-javadoc") version "2.1.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
@@ -50,17 +49,7 @@ kotlin {
     }
     @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs {
-        browser()
-    }
-    androidTarget {
-        publishLibraryVariants("release")
-        compilations.all {
-            compileTaskProvider.configure {
-                compilerOptions {
-                    jvmTarget.set(JvmTarget.JVM_11)
-                }
-            }
-        }
+        nodejs()
     }
 
     iosX64()
@@ -112,12 +101,6 @@ kotlin {
         val wasmJsMain by getting {
             dependencies {
                 // implementation("io.ktor:ktor-client-core:3.0.3") // Already in commonMain
-            }
-        }
-        val androidMain by getting {
-            dependsOn(jvmCommonMain)
-            dependencies {
-                implementation("io.ktor:ktor-client-android:3.0.3")
             }
         }
         val linuxX64Main by getting {
@@ -233,17 +216,5 @@ spotless {
         // Choose one of these formatters.
         googleJavaFormat("1.32.0") // has its own section below
         formatAnnotations() // fixes formatting of type annotations, see below
-    }
-}
-
-android {
-    namespace = "io.github.ugaikit.gemini4kt"
-    compileSdk = 34
-    defaultConfig {
-        minSdk = 21
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
     }
 }
