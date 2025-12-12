@@ -15,67 +15,70 @@ import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.Properties
 
-fun main() =
-    runBlocking {
-        val apiKey =
-            Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-                Properties()
-                    .apply {
-                        load(inputStream)
-                    }.getProperty("apiKey")
+object FileSearchSample {
+    @JvmStatic
+    fun main(args: Array<String>) =
+        runBlocking {
+            val apiKey =
+                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                    Properties()
+                        .apply {
+                            load(inputStream)
+                        }.getProperty("apiKey")
+                }
+            if (apiKey == null) {
+                println("API key not found.")
+                return@runBlocking
             }
-        if (apiKey == null) {
-            println("API key not found.")
-            return@runBlocking
-        }
 
-        val fileSearch = FileSearch(apiKey)
-        val gemini = Gemini(apiKey)
+            val fileSearch = FileSearch(apiKey)
+            val gemini = Gemini(apiKey)
 
-        // 1. Create FileSearchStore
-        val store =
-            fileSearch.createFileSearchStore(
-                FileSearchStore(displayName = "your-fileSearchStore-name"),
-            )
-        println("Created FileSearchStore: ${store.name}")
-
-        try {
-            // 2. Upload file
-            uploadFileToStore(fileSearch, store.name!!)
-
-            // 3. Generate Content
-            val generateContentRequest =
-                GenerateContentRequest(
-                    contents = listOf(Content(parts = listOf(Part(text = "What does the fox do?")))),
-                    tools =
-                        listOf(
-                            tool {
-                                fileSearch {
-                                    fileSearchStoreName(store.name!!)
-                                }
-                            },
-                        ),
+            // 1. Create FileSearchStore
+            val store =
+                fileSearch.createFileSearchStore(
+                    FileSearchStore(displayName = "your-fileSearchStore-name"),
                 )
+            println("Created FileSearchStore: ${store.name}")
 
-            val response =
-                gemini.generateContent(
-                    model = "gemini-2.5-flash",
-                    inputJson = generateContentRequest,
+            try {
+                // 2. Upload file
+                uploadFileToStore(fileSearch, store.name!!)
+
+                // 3. Generate Content
+                val generateContentRequest =
+                    GenerateContentRequest(
+                        contents = listOf(Content(parts = listOf(Part(text = "What does the fox do?")))),
+                        tools =
+                            listOf(
+                                tool {
+                                    fileSearch {
+                                        fileSearchStoreName(store.name!!)
+                                    }
+                                },
+                            ),
+                    )
+
+                val response =
+                    gemini.generateContent(
+                        model = "gemini-2.5-flash",
+                        inputJson = generateContentRequest,
+                    )
+
+                println(
+                    response.candidates
+                        .firstOrNull()
+                        ?.content
+                        ?.parts
+                        ?.firstOrNull()
+                        ?.text,
                 )
-
-            println(
-                response.candidates
-                    .firstOrNull()
-                    ?.content
-                    ?.parts
-                    ?.firstOrNull()
-                    ?.text,
-            )
-        } finally {
-            // Clean up
-            fileSearch.deleteFileSearchStore(store.name!!, force = true)
+            } finally {
+                // Clean up
+                fileSearch.deleteFileSearchStore(store.name!!, force = true)
+            }
         }
-    }
+}
 
 private suspend fun uploadFileToStore(
     fileSearch: FileSearch,

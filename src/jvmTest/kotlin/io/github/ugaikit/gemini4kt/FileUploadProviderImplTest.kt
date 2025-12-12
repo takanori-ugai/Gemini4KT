@@ -1,32 +1,42 @@
 package io.github.ugaikit.gemini4kt
 
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockRequestHandleScope
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.HttpRequestData
+import io.ktor.client.request.HttpResponseData
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.net.HttpURLConnection
 
 class FileUploadProviderImplTest {
     private lateinit var fileUploadProvider: FileUploadProviderImpl
-    private lateinit var conn: HttpURLConnection
-    private lateinit var httpConnectionProvider: HttpConnectionProvider
 
-    @BeforeEach
-    fun setup() {
-        conn = mockk(relaxed = true)
-        httpConnectionProvider = mockk()
-        every { httpConnectionProvider.getConnection(any()) } returns conn
-        fileUploadProvider = FileUploadProviderImpl("test-api-key", httpConnectionProvider)
+    private fun createFileUploadProvider(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): FileUploadProviderImpl {
+        val client =
+            HttpClient(MockEngine) {
+                engine {
+                    addHandler(handler)
+                }
+                install(ContentNegotiation) {
+                    json(Json { ignoreUnknownKeys = true })
+                }
+            }
+        return FileUploadProviderImpl(apiKey = "test-api-key", client = client)
     }
 
     @Test
-    fun `upload returns file on success`() {
-        runBlocking {
+    fun `upload returns file on success`() =
+        runTest {
             val file = File.createTempFile("test", ".txt")
             file.writeText("test content")
             val mimeType = "text/plain"
@@ -49,15 +59,32 @@ class FileUploadProviderImplTest {
                 """.trimIndent()
             val uploadUrl = "https://example.com/upload"
 
-            every { conn.responseCode } returns 200
-            every { conn.headerFields } returns mapOf("X-Goog-Upload-URL" to listOf(uploadUrl))
-            every { conn.outputStream } returns ByteArrayOutputStream()
-            every { conn.inputStream } returns ByteArrayInputStream(response.toByteArray())
+            fileUploadProvider =
+                createFileUploadProvider { request ->
+                    if (request.url.toString().contains("upload/v1beta/files")) {
+                        // Initial request to get upload URL
+                        assertEquals(HttpMethod.Post, request.method)
+                        respond(
+                            content = "",
+                            status = HttpStatusCode.OK,
+                            headers = headersOf("X-Goog-Upload-URL", uploadUrl),
+                        )
+                    } else if (request.url.toString() == uploadUrl) {
+                        // Actual upload request
+                        assertEquals(HttpMethod.Post, request.method)
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                        )
+                    } else {
+                        error("Unexpected request: ${request.url}")
+                    }
+                }
 
             val result = fileUploadProvider.upload(file, mimeType, displayName)
 
             assertEquals("files/test-file", result.name)
             file.delete()
         }
-    }
 }
