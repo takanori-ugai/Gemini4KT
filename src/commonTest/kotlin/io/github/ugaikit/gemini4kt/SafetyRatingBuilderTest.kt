@@ -1,9 +1,9 @@
 package io.github.ugaikit.gemini4kt
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.UninitializedPropertyAccessException
 
 class SafetyRatingBuilderTest {
@@ -36,13 +36,13 @@ class SafetyRatingBuilderTest {
 
     @Test
     fun `build without required properties throws exception`() {
-        assertThrows<UninitializedPropertyAccessException> {
+        assertFailsWith<UninitializedPropertyAccessException> {
             safetyRating {
                 probability = HarmProbability.NEGLIGIBLE
             }
         }
 
-        assertThrows<UninitializedPropertyAccessException> {
+        assertFailsWith<UninitializedPropertyAccessException> {
             safetyRating {
                 category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
             }

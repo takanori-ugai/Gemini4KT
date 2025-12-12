@@ -1,8 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertNotNull
+import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.UninitializedPropertyAccessException
 
 class GroundingAttributionBuilderTest {
@@ -29,7 +29,7 @@ class GroundingAttributionBuilderTest {
 
     @Test
     fun `build without required properties throws exception`() {
-        assertThrows<UninitializedPropertyAccessException> {
+        assertFailsWith<UninitializedPropertyAccessException> {
             groundingAttribution {
                 content {
                     part { text { "Attribution content" } }
@@ -37,7 +37,7 @@ class GroundingAttributionBuilderTest {
             }
         }
 
-        assertThrows<UninitializedPropertyAccessException> {
+        assertFailsWith<UninitializedPropertyAccessException> {
             groundingAttribution {
                 sourceId {
                     groundingPassage {
