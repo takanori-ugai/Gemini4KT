@@ -1,6 +1,5 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlin.UninitializedPropertyAccessException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -36,13 +35,13 @@ class SafetyRatingBuilderTest {
 
     @Test
     fun `build without required properties throws exception`() {
-        assertFailsWith<UninitializedPropertyAccessException> {
+        assertFailsWith<RuntimeException> {
             safetyRating {
                 probability = HarmProbability.NEGLIGIBLE
             }
         }
 
-        assertFailsWith<UninitializedPropertyAccessException> {
+        assertFailsWith<RuntimeException> {
             safetyRating {
                 category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
             }

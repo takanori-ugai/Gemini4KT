@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class LiveTypesTest {
     private val json =
@@ -27,9 +28,9 @@ class LiveTypesTest {
         val jsonStr = json.encodeToString(setup)
         assertNotNull(jsonStr)
         // Check for key fields
-        assert(jsonStr.contains("models/gemini-2.0-flash-exp"))
-        assert(jsonStr.contains("generationConfig"))
-        assert(jsonStr.contains("systemInstruction"))
+        assertTrue(jsonStr.contains("models/gemini-2.0-flash-exp"))
+        assertTrue(jsonStr.contains("generationConfig"))
+        assertTrue(jsonStr.contains("systemInstruction"))
     }
 
     @Test
@@ -38,7 +39,7 @@ class LiveTypesTest {
         val msg = BidiGenerateContentClientMessage(setup = setup)
         val jsonStr = json.encodeToString(msg)
         assertNotNull(jsonStr)
-        assert(jsonStr.contains("setup"))
+        assertTrue(jsonStr.contains("setup"))
 
         val content =
             BidiGenerateContentClientContent(
@@ -47,8 +48,8 @@ class LiveTypesTest {
             )
         val msg2 = BidiGenerateContentClientMessage(clientContent = content)
         val jsonStr2 = json.encodeToString(msg2)
-        assert(jsonStr2.contains("clientContent"))
-        assert(jsonStr2.contains("turnComplete"))
+        assertTrue(jsonStr2.contains("clientContent"))
+        assertTrue(jsonStr2.contains("turnComplete"))
     }
 
     @Test
@@ -89,10 +90,10 @@ class LiveTypesTest {
         val msg = BidiGenerateContentClientMessage(realtimeInput = input)
         val jsonStr = json.encodeToString(msg)
 
-        assert(jsonStr.contains("realtimeInput"))
-        assert(jsonStr.contains("mediaChunks"))
-        assert(jsonStr.contains("base64encodeddata"))
-        assert(jsonStr.contains("text"))
-        assert(jsonStr.contains("Some text input"))
+        assertTrue(jsonStr.contains("realtimeInput"))
+        assertTrue(jsonStr.contains("mediaChunks"))
+        assertTrue(jsonStr.contains("base64encodeddata"))
+        assertTrue(jsonStr.contains("text"))
+        assertTrue(jsonStr.contains("Some text input"))
     }
 }

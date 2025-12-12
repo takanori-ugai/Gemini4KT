@@ -1,6 +1,5 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlin.UninitializedPropertyAccessException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -135,13 +134,13 @@ class CandidateBuilderTest {
 
     @Test
     fun `build without required properties throws exception`() {
-        assertFailsWith<UninitializedPropertyAccessException> {
+        assertFailsWith<RuntimeException> {
             candidate {
                 finishReason = "STOP"
             }
         }
 
-        assertFailsWith<UninitializedPropertyAccessException> {
+        assertFailsWith<RuntimeException> {
             candidate {
                 index = 1
             }

@@ -19,7 +19,7 @@ import io.ktor.http.contentType
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.IOException
+import kotlinx.io.IOException
 
 private val logger = KotlinLogging.logger {}
 
@@ -177,7 +177,7 @@ class Batch(
                 txt
             }
         } catch (e: IOException) {
-            logger.error { e.stackTrace.contentToString() }
+            logger.error { e.stackTraceToString() }
             ""
         } catch (e: ClientRequestException) {
             logger.error { "Client Request Exception: ${e.message}" }
@@ -197,7 +197,7 @@ class Batch(
             }
             logger.info { "GenerateContentResponse Code: ${response.status}" }
         } catch (e: IOException) {
-            logger.error { e.stackTrace.contentToString() }
+            logger.error { e.stackTraceToString() }
         }
     }
 }

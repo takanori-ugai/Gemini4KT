@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class UrlContextTest {
     private val json =
@@ -22,7 +23,7 @@ class UrlContextTest {
         assertNotNull(tool.urlContext)
         val jsonString = json.encodeToString(tool)
         // Verify that url_context is present and is an empty object
-        assert(jsonString.contains("\"url_context\":{}"))
+        assertTrue(jsonString.contains("\"url_context\":{}"))
     }
 
     @Test
