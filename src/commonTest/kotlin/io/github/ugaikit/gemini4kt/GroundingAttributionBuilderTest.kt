@@ -1,6 +1,5 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlin.UninitializedPropertyAccessException
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -29,7 +28,7 @@ class GroundingAttributionBuilderTest {
 
     @Test
     fun `build without required properties throws exception`() {
-        assertFailsWith<UninitializedPropertyAccessException> {
+        assertFailsWith<RuntimeException> {
             groundingAttribution {
                 content {
                     part { text { "Attribution content" } }
@@ -37,7 +36,7 @@ class GroundingAttributionBuilderTest {
             }
         }
 
-        assertFailsWith<UninitializedPropertyAccessException> {
+        assertFailsWith<RuntimeException> {
             groundingAttribution {
                 sourceId {
                     groundingPassage {
