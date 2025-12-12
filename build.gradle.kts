@@ -138,10 +138,7 @@ kotlin {
             }
         }
 
-        val mingwX64Main by getting {
-            dependsOn(commonMain)
-        }
-
+        val mingwX64Main by getting
         val mingwX64Test by getting
     }
 }
