@@ -57,16 +57,16 @@ class FunctionExample1 {
                                         description =
                                             "The city and state, e.g. San Francisco, CA " +
                                                 "or a zip code e.g. 95616",
+                                    ),
+                                "movie" to
+                                    Schema(
+                                        type = "string",
+                                        description = "Any movie title",
+                                    ),
                             ),
-                        "movie" to
-                            Schema(
-                                type = "string",
-                                description = "Any movie title",
-                            ),
+                        required = listOf("location"),
                     ),
-                required = listOf("location"),
-            ),
-    )
+            )
 
         private fun getShowtimesFunction(): FunctionDeclaration =
             FunctionDeclaration(
@@ -107,45 +107,46 @@ class FunctionExample1 {
         private fun getFunctionDeclarations(): List<FunctionDeclaration> = listOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
 
         @JvmStatic
-        fun main(args: Array<String>) = runBlocking {
-            val apiKey =
-                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-                    Properties()
-                        .apply {
-                            load(inputStream)
-                        }.getProperty("apiKey")
-                }
-            val gemini = Gemini(apiKey)
+        fun main(args: Array<String>) =
+            runBlocking {
+                val apiKey =
+                    Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                        Properties()
+                            .apply {
+                                load(inputStream)
+                            }.getProperty("apiKey")
+                    }
+                val gemini = Gemini(apiKey)
 
-            val exFunction =
-                GenerateContentRequest(
-                    contents =
-                        listOf(
-                            Content(
-                                role = "user",
-                                parts =
-                                    listOf(
-                                        Part(text = "Which theaters in Mountain View show Barbie movie?"),
-                                    ),
+                val exFunction =
+                    GenerateContentRequest(
+                        contents =
+                            listOf(
+                                Content(
+                                    role = "user",
+                                    parts =
+                                        listOf(
+                                            Part(text = "Which theaters in Mountain View show Barbie movie?"),
+                                        ),
+                                ),
                             ),
-                        ),
-                    tools =
-                        listOf(
-                            Tool(
-                                functionDeclarations = getFunctionDeclarations(),
+                        tools =
+                            listOf(
+                                Tool(
+                                    functionDeclarations = getFunctionDeclarations(),
+                                ),
                             ),
-                        ),
+                    )
+
+                println(
+                    gemini
+                        .generateContent(
+                            exFunction,
+                            "gemini-2.5-flash-lite",
+                        ).candidates[0]
+                        .content.parts!!
+                        .get(0),
                 )
-
-            println(
-                gemini
-                    .generateContent(
-                        exFunction,
-                        "gemini-2.5-flash-lite",
-                    ).candidates[0]
-                    .content.parts!!
-                    .get(0),
-            )
-        }
+            }
     }
 }

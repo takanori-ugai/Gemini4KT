@@ -3,6 +3,12 @@ package io.github.ugaikit.gemini4kt
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.ugaikit.gemini4kt.live.GeminiLive
 import io.github.ugaikit.gemini4kt.live.LiveConnectConfig
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.SerializationException
@@ -10,22 +16,11 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.IOException
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
 
 /**
  * A logger for logging messages. Uses KotlinLogging library for simplified logging.
  */
 private val logger = KotlinLogging.logger {}
-
-interface HttpConnectionProvider {
-    fun getConnection(url: URL): HttpURLConnection
-}
-
-internal class DefaultHttpConnectionProvider : HttpConnectionProvider {
-    override fun getConnection(url: URL): HttpURLConnection = url.openConnection() as HttpURLConnection
-}
 
 /**
  * Represents a client for interacting with the Gemini API, providing methods to extract content,
@@ -36,7 +31,7 @@ internal class DefaultHttpConnectionProvider : HttpConnectionProvider {
 @Suppress("TooManyFunctions")
 class Gemini(
     private val apiKey: String,
-    private val httpConnectionProvider: HttpConnectionProvider = DefaultHttpConnectionProvider(),
+    private val client: HttpClient = createHttpClient(Json { ignoreUnknownKeys = true }),
     private val fileUploadProvider: FileUploadProvider = FileUploadProviderImpl(apiKey),
 ) {
     /**
@@ -47,7 +42,6 @@ class Gemini(
     private val baseUrl = "$bUrl/models"
 
     companion object {
-        private const val HTTP_OK = 200
         private const val PREVIEW_LENGTH = 100
     }
 
@@ -58,7 +52,7 @@ class Gemini(
      * @param model The model to be used for content generation. Defaults to "gemini-pro".
      * @return The response from the Gemini API as a [GenerateContentResponse] object.
      */
-    fun generateContent(
+    suspend fun generateContent(
         inputJson: GenerateContentRequest,
         model: String = "gemini-pro",
     ): GenerateContentResponse {
@@ -81,52 +75,46 @@ class Gemini(
     ): Flow<GenerateContentResponse> =
         flow {
             val urlString = "$baseUrl/$model:streamGenerateContent?alt=sse"
-            val url = URL(urlString)
-            val conn = httpConnectionProvider.getConnection(url)
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("x-goog-api-key", apiKey)
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.doOutput = true
-
-            OutputStreamWriter(conn.outputStream).use { writer ->
-                writer.write(json.encodeToString<GenerateContentRequest>(inputJson))
-            }
-
-            val resCode = conn.responseCode
-            if (resCode != HTTP_OK) {
-                logger.error { "Error: ${conn.responseCode}" }
-                val errorMsg =
-                    conn.errorStream.bufferedReader().use { reader ->
-                        val text = reader.readText()
-                        logger.error { "Error Message: $text" }
-                        text
-                    }
-                try {
-                    val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
-                    throw GeminiException(errorResponse.error)
-                } catch (e: GeminiException) {
-                    throw e
-                } catch (e: SerializationException) {
-                    logger.error { "Failed to parse error message: ${e.message}" }
-                } catch (e: IllegalArgumentException) {
-                    logger.error { "Failed to parse error message: ${e.message}" }
-                }
-            } else {
-                conn.inputStream.bufferedReader().use { reader ->
-                    var line = reader.readLine()
-                    while (line != null) {
-                        if (line.startsWith("data: ")) {
-                            val jsonStr = line.substring(6)
+            try {
+                client
+                    .preparePost(urlString) {
+                        header("x-goog-api-key", apiKey)
+                        contentType(ContentType.Application.Json)
+                        setBody(json.encodeToString<GenerateContentRequest>(inputJson))
+                    }.execute { response ->
+                        if (response.status != HttpStatusCode.OK) {
+                            logger.error { "Error: ${response.status}" }
+                            val errorMsg = response.bodyAsText()
+                            logger.error { "Error Message: $errorMsg" }
                             try {
-                                val response = json.decodeFromString<GenerateContentResponse>(jsonStr)
-                                emit(response)
+                                val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
+                                throw GeminiException(errorResponse.error)
+                            } catch (e: GeminiException) {
+                                throw e
                             } catch (e: SerializationException) {
-                                logger.error { "Failed to parse stream response: ${e.message}" }
+                                logger.error { "Failed to parse error message: ${e.message}" }
+                            } catch (e: IllegalArgumentException) {
+                                logger.error { "Failed to parse error message: ${e.message}" }
+                            }
+                        } else {
+                            val channel = response.bodyAsChannel()
+                            while (!channel.isClosedForRead) {
+                                val line = channel.readUTF8Line()
+                                if (line != null && line.startsWith("data: ")) {
+                                    val jsonStr = line.substring(6)
+                                    try {
+                                        val contentResponse = json.decodeFromString<GenerateContentResponse>(jsonStr)
+                                        emit(contentResponse)
+                                    } catch (e: SerializationException) {
+                                        logger.error { "Failed to parse stream response: ${e.message}" }
+                                    }
+                                }
                             }
                         }
-                        line = reader.readLine()
                     }
-                }
+            } catch (e: Exception) {
+                logger.error { e.stackTraceToString() }
+                throw e
             }
         }
 
@@ -136,7 +124,7 @@ class Gemini(
      * @param inputJson The [CachedContent] object to be created.
      * @return The created [CachedContent] object as returned by the server.
      */
-    fun createCachedContent(inputJson: CachedContent): CachedContent {
+    suspend fun createCachedContent(inputJson: CachedContent): CachedContent {
         val urlString = "$bUrl/cachedContents"
         return json.decodeFromString<CachedContent>(
             getContent(urlString, json.encodeToString<CachedContent>(inputJson)),
@@ -151,7 +139,7 @@ class Gemini(
      * set of results.
      * @return A [CachedContentList] containing the list of cached content entries.
      */
-    fun listCachedContent(
+    suspend fun listCachedContent(
         pageSize: Int = 1000,
         pageToken: String? = null,
     ): CachedContentList {
@@ -172,7 +160,7 @@ class Gemini(
      * @return A [CachedContentList] containing the cached content matching the
      * given name.
      */
-    fun getCachedContent(name: String): CachedContent {
+    suspend fun getCachedContent(name: String): CachedContent {
         val urlString = "$bUrl/$name"
         return json.decodeFromString<CachedContent>(
             getContent(urlString),
@@ -184,7 +172,7 @@ class Gemini(
      *
      * @param name The unique name identifier of the cached content to be deleted.
      */
-    fun deleteCachedContent(name: String) {
+    suspend fun deleteCachedContent(name: String) {
         val urlString = "$bUrl/$name"
         deleteContent(urlString)
     }
@@ -196,7 +184,7 @@ class Gemini(
      * @param model The model to use for counting tokens, default is "gemini-2.0-flash-lite".
      * @return A [TotalTokens] object containing the total number of tokens.
      */
-    fun countTokens(
+    suspend fun countTokens(
         inputJson: CountTokensRequest,
         model: String = "gemini-2.0-flash-lite",
     ): TotalTokens {
@@ -213,7 +201,7 @@ class Gemini(
      * @param inputJson The batch embed request payload.
      * @return The batch embed response as a [BatchEmbedResponse] object.
      */
-    fun batchEmbedContents(
+    suspend fun batchEmbedContents(
         inputJson: BatchEmbedRequest,
         model: String = "embedding-001",
     ): BatchEmbedResponse {
@@ -229,7 +217,7 @@ class Gemini(
      * @param inputJson The embed request payload.
      * @return The embed response as an [EmbedResponse] object.
      */
-    fun embedContent(
+    suspend fun embedContent(
         inputJson: EmbedContentRequest,
         model: String = "embedding-001",
     ): EmbedResponse {
@@ -244,7 +232,7 @@ class Gemini(
      *
      * @return The collection of models as a [ModelCollection] object.
      */
-    fun getModels(): ModelCollection {
+    suspend fun getModels(): ModelCollection {
         val urlString = "$baseUrl"
         return json.decodeFromString<ModelCollection>(getContent(urlString))
     }
@@ -276,36 +264,35 @@ class Gemini(
     ): GeminiLive = GeminiLive(apiKey, model, config, json)
 
     /**
-     * Performs a POST request to the specified URL string with the given input JSON payload.
+     * Performs a POST or GET request to the specified URL string with the given input JSON payload.
      *
-     * @param urlStr The URL to which the POST request is made.
-     * @param inputJson The JSON payload for the request.
+     * @param urlStr The URL to which the request is made.
+     * @param inputJson The JSON payload for the request (optional).
      * @return The response body as a String.
      */
-    fun getContent(
+    suspend fun getContent(
         urlStr: String,
         inputJson: String? = null,
     ): String =
         try {
             logger.info { inputJson }
-            val url = URL(urlStr)
-            val conn = httpConnectionProvider.getConnection(url)
-            conn.requestMethod = if (inputJson == null) "GET" else "POST"
-            conn.setRequestProperty("x-goog-api-key", apiKey)
-            conn.setRequestProperty("Content-Type", "application/json")
-            if (inputJson != null) {
-                conn.doOutput = true
-                OutputStreamWriter(conn.outputStream).use { writer -> writer.write(inputJson) }
-            }
-            val resCode = conn.responseCode
-            if (resCode != HTTP_OK) {
-                logger.error { "Error: ${conn.responseCode}" }
-                val errorMsg =
-                    conn.errorStream.bufferedReader().use { reader ->
-                        val text = reader.readText()
-                        logger.error { "Error Message: $text" }
-                        text
+            val response =
+                if (inputJson != null) {
+                    client.post(urlStr) {
+                        header("x-goog-api-key", apiKey)
+                        contentType(ContentType.Application.Json)
+                        setBody(inputJson)
                     }
+                } else {
+                    client.get(urlStr) {
+                        header("x-goog-api-key", apiKey)
+                    }
+                }
+
+            if (response.status != HttpStatusCode.OK) {
+                logger.error { "Error: ${response.status}" }
+                val errorMsg = response.bodyAsText()
+                logger.error { "Error Message: $errorMsg" }
                 try {
                     val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
                     throw GeminiException(errorResponse.error)
@@ -318,18 +305,19 @@ class Gemini(
                 }
                 "{}"
             } else {
-                logger.info { "GenerateContentResponse Code: $resCode" }
-                conn.inputStream.bufferedReader().use { reader ->
-                    val txt = reader.readText()
-                    logger.debug { "Content length: ${txt.length}" }
-                    logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
-                    logger.debug { txt }
-                    txt
-                }
+                logger.info { "GenerateContentResponse Code: ${response.status}" }
+                val txt = response.bodyAsText()
+                logger.debug { "Content length: ${txt.length}" }
+                logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
+                logger.debug { txt }
+                txt
             }
         } catch (e: IOException) {
-            logger.error { e.stackTrace.contentToString() }
+            logger.error { e.stackTraceToString() }
             ""
+        } catch (e: Exception) {
+            logger.error { e.stackTraceToString() }
+            throw e
         }
 
     /**
@@ -337,22 +325,22 @@ class Gemini(
      *
      * @param urlStr The URL string where the DELETE request is sent.
      */
-    fun deleteContent(urlStr: String) {
+    suspend fun deleteContent(urlStr: String) {
         try {
-            val url = URL(urlStr)
-            val conn = httpConnectionProvider.getConnection(url)
-            conn.requestMethod = "DELETE"
-            conn.setRequestProperty("x-goog-api-key", apiKey)
-            val resCode = conn.responseCode
-            if (resCode != HTTP_OK) {
-                logger.error { "Error: $resCode" }
-                conn.errorStream.bufferedReader().use { reader ->
-                    logger.error { "Error Message: ${reader.readText()}" }
+            val response =
+                client.delete(urlStr) {
+                    header("x-goog-api-key", apiKey)
                 }
+            if (response.status != HttpStatusCode.OK) {
+                logger.error { "Error: ${response.status}" }
+                val errorMsg = response.bodyAsText()
+                logger.error { "Error Message: $errorMsg" }
             }
-            logger.info { "GenerateContentResponse Code: $resCode" }
+            logger.info { "GenerateContentResponse Code: ${response.status}" }
         } catch (e: IOException) {
-            logger.error { e.stackTrace.contentToString() }
+            logger.error { e.stackTraceToString() }
+        } catch (e: Exception) {
+            logger.error { e.stackTraceToString() }
         }
     }
 }

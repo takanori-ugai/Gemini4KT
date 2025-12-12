@@ -73,50 +73,51 @@ object FunctionExample2 {
     }
 
     @JvmStatic
-    fun main(args: Array<String>) = runBlocking {
-        val apiKey =
-            Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-                Properties()
-                    .apply {
-                        load(inputStream)
-                    }.getProperty("apiKey")
-            }
-        val gemini = Gemini(apiKey)
+    fun main(args: Array<String>) =
+        runBlocking {
+            val apiKey =
+                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
+                    Properties()
+                        .apply {
+                            load(inputStream)
+                        }.getProperty("apiKey")
+                }
+            val gemini = Gemini(apiKey)
 
-        val findWeatherFunction =
-            FunctionDeclaration(
-                name = "find_weather",
-                description = "find weather in a given location",
-                parameters =
-                    Schema(
-                        type = "object",
-                        properties =
-                            mapOf(
-                                "location" to
-                                    Schema(
-                                        type = "string",
-                                        description = "The city and state, e.g. San Francisco, CA",
-                                    ),
-                            ),
-                        required = listOf("location"),
-                    ),
-            )
+            val findWeatherFunction =
+                FunctionDeclaration(
+                    name = "find_weather",
+                    description = "find weather in a given location",
+                    parameters =
+                        Schema(
+                            type = "object",
+                            properties =
+                                mapOf(
+                                    "location" to
+                                        Schema(
+                                            type = "string",
+                                            description = "The city and state, e.g. San Francisco, CA",
+                                        ),
+                                ),
+                            required = listOf("location"),
+                        ),
+                )
 
-        val tools = listOf(Tool(functionDeclarations = listOf(findWeatherFunction)))
+            val tools = listOf(Tool(functionDeclarations = listOf(findWeatherFunction)))
 
-        // Step 1: Send the user's prompt and function declarations to the model.
-        val userPrompt = "What's the weather like in Boston?"
-        val firstResponse = getFunctionCall(gemini, tools, userPrompt)
+            // Step 1: Send the user's prompt and function declarations to the model.
+            val userPrompt = "What's the weather like in Boston?"
+            val firstResponse = getFunctionCall(gemini, tools, userPrompt)
 
-        val modelResponsePart =
-            firstResponse.candidates[0]
-                .content.parts!!
-                .get(0)
-        val functionCall = modelResponsePart.functionCall
-        println("Model requested function call: $functionCall")
+            val modelResponsePart =
+                firstResponse.candidates[0]
+                    .content.parts!!
+                    .get(0)
+            val functionCall = modelResponsePart.functionCall
+            println("Model requested function call: $functionCall")
 
-        // Step 2: "Execute" the function and send the response back to the model.
-        val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
-        sendFunctionResult(gemini, tools, initialContent, modelResponsePart)
-    }
+            // Step 2: "Execute" the function and send the response back to the model.
+            val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
+            sendFunctionResult(gemini, tools, initialContent, modelResponsePart)
+        }
 }

@@ -11,19 +11,19 @@ import java.io.IOException
 import java.util.Properties
 
 fun main() {
-    val path = Gemini::class.java.getResourceAsStream("/prop.properties")
-    val prop =
-        Properties().also {
-            it.load(path)
-        }
-    val apiKey = prop.getProperty("apiKey")
-    if (apiKey.isNullOrEmpty()) {
-        println("API key not found. Please set the GEMINI_API_KEY environment variable.")
-        return
-    }
-    val gemini = Gemini(apiKey = apiKey)
-
     runBlocking {
+        val path = Gemini::class.java.getResourceAsStream("/prop.properties")
+        val prop =
+            Properties().also {
+                it.load(path)
+            }
+        val apiKey = prop.getProperty("apiKey")
+        if (apiKey.isNullOrEmpty()) {
+            println("API key not found. Please set the GEMINI_API_KEY environment variable.")
+            return@runBlocking
+        }
+        val gemini = Gemini(apiKey = apiKey)
+
         // Use a file from the project's root directory for the sample.
         val imageFile = File("scones.jpg")
         if (!imageFile.exists()) {

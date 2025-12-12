@@ -1,22 +1,20 @@
 package io.github.ugaikit.gemini4kt.live
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.*
+import io.ktor.client.plugins.websocket.*
+import io.ktor.client.request.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.WebSocket
-import java.util.concurrent.CompletionStage
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 private val logger = KotlinLogging.logger {}
 
@@ -33,97 +31,45 @@ class GeminiLive(
             encodeDefaults = true
         },
 ) {
-    private val client = HttpClient.newHttpClient()
-    private var webSocket: WebSocket? = null
-    private val incomingMessages = Channel<BidiGenerateContentServerMessage>(Channel.UNLIMITED)
-    private val scope = CoroutineScope(Dispatchers.IO)
-    private var connectionJob: Job? = null
+    private val client =
+        HttpClient {
+            install(WebSockets)
+        }
 
     // Base URL for WebSocket connection.
-    // Note: The guide uses "ws" resource for WebSocket.
-    // wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent
     private val wsUrl = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
 
     /**
      * Connects to the Live API and sends the initial setup message.
      */
     suspend fun connect(setup: BidiGenerateContentSetup? = null): GeminiLiveSession {
-        val uri = URI("$wsUrl?key=$apiKey")
+        val session = client.webSocketSession(urlString = "$wsUrl?key=$apiKey")
 
-        val latch = CountDownLatch(1)
+        logger.info { "WebSocket connection opened" }
 
-        // Better implementation of Listener
-        val robustListener =
-            object : WebSocket.Listener {
-                val buffer = StringBuilder()
+        val incomingMessages = Channel<BidiGenerateContentServerMessage>(Channel.UNLIMITED)
+        val scope = CoroutineScope(Dispatchers.IO)
 
-                override fun onOpen(webSocket: WebSocket) {
-                    logger.info { "WebSocket connection opened" }
-                    latch.countDown()
-                    webSocket.request(1)
-                }
-
-                override fun onText(
-                    webSocket: WebSocket,
-                    data: CharSequence,
-                    last: Boolean,
-                ): CompletionStage<*> {
-                    buffer.append(data)
-                    if (last) {
-                        val fullMessage = buffer.toString()
-                        buffer.clear()
-                        logger.debug { "Received full message: $fullMessage" }
+        scope.launch {
+            try {
+                for (frame in session.incoming) {
+                    if (frame is Frame.Text) {
+                        val text = frame.readText()
+                        logger.debug { "Received message: $text" }
                         try {
-                            val message = json.decodeFromString<BidiGenerateContentServerMessage>(fullMessage)
-                            scope.launch {
-                                incomingMessages.send(message)
-                            }
+                            val message = json.decodeFromString<BidiGenerateContentServerMessage>(text)
+                            incomingMessages.send(message)
                         } catch (e: Exception) {
                             logger.error(e) { "Failed to parse message" }
                         }
                     }
-                    webSocket.request(1)
-                    return java.util.concurrent.CompletableFuture
-                        .completedFuture(null)
                 }
-
-                override fun onClose(
-                    webSocket: WebSocket,
-                    statusCode: Int,
-                    reason: String,
-                ): CompletionStage<*> {
-                    logger.info { "WebSocket closed: $statusCode $reason" }
-                    incomingMessages.close()
-                    return super.onClose(webSocket, statusCode, reason)
-                }
-
-                override fun onError(
-                    webSocket: WebSocket,
-                    error: Throwable,
-                ) {
-                    logger.error(error) { "WebSocket error" }
-                    incomingMessages.close(error)
-                    super.onError(webSocket, error)
-                }
+            } catch (e: Exception) {
+                logger.error(e) { "WebSocket error" }
+                incomingMessages.close(e)
+            } finally {
+                incomingMessages.close()
             }
-
-        webSocket =
-            client
-                .newWebSocketBuilder()
-                .buildAsync(uri, robustListener)
-                .join()
-
-        // Wait for connection
-        if (!latch.await(10, TimeUnit.SECONDS)) {
-            // Since we don't have a GeminiError object here, we'll create a generic one or just throw the exception with a message.
-            // The GeminiException constructor expects a GeminiError.
-            // But checking GeminiException.kt might reveal other constructors or we should mock one.
-            // Actually, let's look at GeminiException.kt.
-            // Assuming I can't look at it right now, I'll pass a dummy error or just RuntimeException if GeminiException is strict.
-            // But wait, the error said: Argument type mismatch: actual type is 'String', but 'GeminiError' was expected.
-            // So GeminiException(String) constructor does not exist.
-
-            throw RuntimeException("Timeout waiting for WebSocket connection")
         }
 
         // Send Setup Message
@@ -155,21 +101,22 @@ class GeminiLive(
         val clientMessage = BidiGenerateContentClientMessage(setup = setupMessage)
         val jsonMessage = json.encodeToString(clientMessage)
         logger.debug { "Sending setup message: $jsonMessage" }
-        webSocket?.sendText(jsonMessage, true)
+        session.send(Frame.Text(jsonMessage))
 
-        return GeminiLiveSession(webSocket!!, incomingMessages, json)
+        return GeminiLiveSession(session, incomingMessages, json, scope)
     }
 }
 
 class GeminiLiveSession(
-    private val webSocket: WebSocket,
+    private val session: DefaultClientWebSocketSession,
     private val incomingMessages: Channel<BidiGenerateContentServerMessage>,
     private val json: Json,
+    private val scope: CoroutineScope,
 ) {
     /**
      * Sends a client content message.
      */
-    fun sendClientContent(content: BidiGenerateContentClientContent) {
+    suspend fun sendClientContent(content: BidiGenerateContentClientContent) {
         val msg = BidiGenerateContentClientMessage(clientContent = content)
         send(msg)
     }
@@ -177,7 +124,7 @@ class GeminiLiveSession(
     /**
      * Sends a realtime input message.
      */
-    fun sendRealtimeInput(input: BidiGenerateContentRealtimeInput) {
+    suspend fun sendRealtimeInput(input: BidiGenerateContentRealtimeInput) {
         val msg = BidiGenerateContentClientMessage(realtimeInput = input)
         send(msg)
     }
@@ -185,31 +132,27 @@ class GeminiLiveSession(
     /**
      * Sends a tool response message.
      */
-    fun sendToolResponse(response: BidiGenerateContentToolResponse) {
+    suspend fun sendToolResponse(response: BidiGenerateContentToolResponse) {
         val msg = BidiGenerateContentClientMessage(toolResponse = response)
         send(msg)
     }
 
-    private fun send(msg: BidiGenerateContentClientMessage) {
+    private suspend fun send(msg: BidiGenerateContentClientMessage) {
         val txt = json.encodeToString(msg)
         logger.debug { "Sending message: $txt" }
-        webSocket.sendText(txt, true)
+        session.send(Frame.Text(txt))
     }
 
     /**
      * Receives messages from the server.
      */
-    fun receive(): Flow<BidiGenerateContentServerMessage> =
-        flow {
-            for (msg in incomingMessages) {
-                emit(msg)
-            }
-        }
+    fun receive(): Flow<BidiGenerateContentServerMessage> = incomingMessages.receiveAsFlow()
 
     /**
      * Closes the session.
      */
-    fun close() {
-        webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "Done")
+    suspend fun close() {
+        session.close(CloseReason(CloseReason.Codes.NORMAL, "Done"))
+        scope.cancel()
     }
 }

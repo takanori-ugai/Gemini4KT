@@ -20,10 +20,11 @@ import javax.sound.sampled.AudioSystem
 
 object LiveSample {
     @JvmStatic
-    fun main(args: Array<String>) =
+    fun main(args: Array<String>) {
         runBlocking {
             runSample()
         }
+    }
 
     // Helper to move accumulatedAudio out
     suspend fun runSample() {
