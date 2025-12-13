@@ -7,6 +7,4 @@ internal actual fun getApiKey(): String {
     return ""
 }
 
-internal actual fun getImage(): String {
-    return ""
-}
+internal actual fun getImage(): String = ""
