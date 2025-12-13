@@ -13,38 +13,41 @@ import kotlin.test.Test
 
 class InputWithImageTest {
     @Test
-    fun testRun() = runTest {
-        val mockResponse = """
-            {
-              "candidates": [
+    fun testRun() =
+        runTest {
+            val mockResponse =
+                """
                 {
-                  "content": {
-                    "parts": [
-                      {
-                        "text": "This is a test image."
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "This is a test image."
+                          }
+                        ]
                       }
-                    ]
-                  }
+                    }
+                  ]
                 }
-              ]
-            }
-        """.trimIndent()
+                """.trimIndent()
 
-        val mockEngine = MockEngine { request ->
-            respond(
-                content = ByteReadChannel(mockResponse),
-                status = HttpStatusCode.OK,
-                headers = headersOf(HttpHeaders.ContentType, "application/json")
+            val mockEngine =
+                MockEngine { request ->
+                    respond(
+                        content = ByteReadChannel(mockResponse),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val httpClient = HttpClient(mockEngine)
+            val gemini = Gemini("fake_api_key", client = httpClient)
+
+            InputWithImage.run(
+                args = emptyArray(),
+                gemini = gemini,
+                imageProvider = { "base64encodedimage" },
             )
         }
-
-        val httpClient = HttpClient(mockEngine)
-        val gemini = Gemini("fake_api_key", client = httpClient)
-
-        InputWithImage.run(
-            args = emptyArray(),
-            gemini = gemini,
-            imageProvider = { "base64encodedimage" }
-        )
-    }
 }

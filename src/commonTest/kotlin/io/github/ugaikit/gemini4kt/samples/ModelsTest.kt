@@ -13,37 +13,40 @@ import kotlin.test.Test
 
 class ModelsTest {
     @Test
-    fun testListModels() = runTest {
-        val mockResponse = """
-            {
-              "models": [
+    fun testListModels() =
+        runTest {
+            val mockResponse =
+                """
                 {
-                  "name": "models/gemini-pro",
-                  "version": "001",
-                  "displayName": "Gemini Pro",
-                  "description": "The best model for scaling across a wide range of tasks",
-                  "inputTokenLimit": 30720,
-                  "outputTokenLimit": 2048,
-                  "supportedGenerationMethods": ["generateContent", "countTokens"],
-                  "temperature": 0.9,
-                  "topP": 1.0,
-                  "topK": 1
+                  "models": [
+                    {
+                      "name": "models/gemini-pro",
+                      "version": "001",
+                      "displayName": "Gemini Pro",
+                      "description": "The best model for scaling across a wide range of tasks",
+                      "inputTokenLimit": 30720,
+                      "outputTokenLimit": 2048,
+                      "supportedGenerationMethods": ["generateContent", "countTokens"],
+                      "temperature": 0.9,
+                      "topP": 1.0,
+                      "topK": 1
+                    }
+                  ]
                 }
-              ]
-            }
-        """.trimIndent()
+                """.trimIndent()
 
-        val mockEngine = MockEngine { request ->
-            respond(
-                content = ByteReadChannel(mockResponse),
-                status = HttpStatusCode.OK,
-                headers = headersOf(HttpHeaders.ContentType, "application/json")
-            )
+            val mockEngine =
+                MockEngine { request ->
+                    respond(
+                        content = ByteReadChannel(mockResponse),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val httpClient = HttpClient(mockEngine)
+            val gemini = Gemini("fake_api_key", client = httpClient)
+
+            Models.listModels(gemini)
         }
-
-        val httpClient = HttpClient(mockEngine)
-        val gemini = Gemini("fake_api_key", client = httpClient)
-
-        Models.listModels(gemini)
-    }
 }
