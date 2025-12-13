@@ -6,3 +6,7 @@ internal actual fun getApiKey(): String {
     // In a real browser app, this might come from configuration or user input.
     return ""
 }
+
+internal actual fun getImage(): String {
+    return ""
+}

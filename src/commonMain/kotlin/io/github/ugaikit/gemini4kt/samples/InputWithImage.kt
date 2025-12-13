@@ -9,9 +9,12 @@ import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.getImage
 
 object InputWithImage {
-    suspend fun run(args: Array<String>) {
-        val base64Image = getImage()
-        val gemini = Gemini(getApiKey())
+    suspend fun run(
+        args: Array<String>,
+        gemini: Gemini = Gemini(getApiKey()),
+        imageProvider: () -> String = { getImage() },
+    ) {
+        val base64Image = imageProvider()
 
         val inputWithImage =
             GenerateContentRequest(
