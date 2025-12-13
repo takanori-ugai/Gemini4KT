@@ -10,10 +10,7 @@ import io.github.ugaikit.gemini4kt.getApiKey
  * manage or interact with a set of models in the context of the application.
  */
 object Models {
-    suspend fun listModels() {
-        // Initialize the Gemini client with the API key
-        val gemini = Gemini(getApiKey())
-
+    suspend fun listModels(gemini: Gemini = Gemini(getApiKey())) {
         // Retrieve and print each model
         gemini.getModels().models.forEach(::println)
     }

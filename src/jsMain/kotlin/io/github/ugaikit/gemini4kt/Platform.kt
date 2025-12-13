@@ -6,3 +6,7 @@ internal actual fun getApiKey(): String {
     // to match WasmJs implementation or simple default.
     return ""
 }
+
+internal actual fun getImage(): String {
+    return ""
+}
