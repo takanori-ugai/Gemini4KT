@@ -1,3 +1,4 @@
+import com.vanniktech.maven.publish.SonatypeHost
 import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
@@ -15,11 +16,11 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     jacoco
     // id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
-    `maven-publish`
+    id("com.vanniktech.maven.publish") version "0.30.0"
 }
 
 group = "io.github.ugaikit"
-version = "0.7.0"
+version = "0.8.0"
 
 repositories {
     google()
@@ -260,5 +261,41 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
+mavenPublishing {
+    // Maven Central に公開する場合の設定
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+
+    signAllPublications()
+
+    // ライブラリの座標設定
+    coordinates("io.github.ugaikit", "gemini4kt", "0.8.0")
+
+    // POM情報（Maven Centralには必須）
+    pom {
+        name = "gemini4kt"
+        description = "A lightweight Kotlin library for the Gemini API."
+        url = "https://github.com/takanori-ugai/Gemini4KT"
+        inceptionYear.set("2025")
+        licenses {
+            license {
+                name = "The Apache License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "takanori-ugai"
+                name = "Takanori Ugai"
+                email = "ugai@fujitsu.com"
+            }
+        }
+        scm {
+            connection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
+            developerConnection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
+            url = "https://github.com/takanori-ugai/Gemini4KT"
+        }
     }
 }
