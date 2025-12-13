@@ -1,5 +1,4 @@
 import io.gitlab.arturbosch.detekt.Detekt
-import org.gradle.api.JavaVersion
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
@@ -50,7 +49,7 @@ kotlin {
     }
     @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs {
-	binaries.executable()
+        binaries.executable()
         nodejs {}
     }
     androidTarget {
@@ -64,8 +63,8 @@ kotlin {
         }
     }
     js {
-	binaries.executable()
-	nodejs {}
+        binaries.executable()
+        nodejs {}
     }
 
     mingwX64 {

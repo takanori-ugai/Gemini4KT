@@ -33,7 +33,7 @@ class GeminiLive(
             ignoreUnknownKeys = true
             encodeDefaults = true
         },
-    private val client: HttpClient? = null
+    private val client: HttpClient? = null,
 ) {
     // Base URL for WebSocket connection.
     private val wsUrl = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
@@ -43,11 +43,12 @@ class GeminiLive(
      */
     suspend fun connect(setup: BidiGenerateContentSetup? = null): GeminiLiveSession {
         // Use provided client or create a new one.
-        val httpClient = client?.config {
-            install(WebSockets)
-        } ?: HttpClient {
-            install(WebSockets)
-        }
+        val httpClient =
+            client?.config {
+                install(WebSockets)
+            } ?: HttpClient {
+                install(WebSockets)
+            }
 
         val urlString = "$wsUrl?key=$apiKey"
 
@@ -62,50 +63,51 @@ class GeminiLive(
             val handshakeCompleted = CompletableDeferred<Unit>()
 
             // Launch a coroutine to listen for messages
-            val listenerJob = scope.launch {
-                try {
-                    for (frame in session.incoming) {
-                        if (frame is Frame.Text) {
-                            val text = frame.readText()
-                            logger.debug { "Received message: $text" }
-                            try {
-                                val message = json.decodeFromString<BidiGenerateContentServerMessage>(text)
+            val listenerJob =
+                scope.launch {
+                    try {
+                        for (frame in session.incoming) {
+                            if (frame is Frame.Text) {
+                                val text = frame.readText()
+                                logger.debug { "Received message: $text" }
+                                try {
+                                    val message = json.decodeFromString<BidiGenerateContentServerMessage>(text)
 
-                                // Check for handshake completion on the first relevant message
-                                if (!handshakeCompleted.isCompleted) {
-                                    if (message.setupComplete != null) {
-                                        handshakeCompleted.complete(Unit)
-                                    } else {
-                                        // If we receive something else before SetupComplete, it might be an error or unexpected behavior.
-                                        // We log it, but we don't complete the handshake yet unless it's a fatal error?
-                                        // If it's a serverContent, maybe we should just allow it?
-                                        // But per protocol, SetupComplete should be first.
-                                        // If we get an error (e.g. standard HTTP error wrapped in WS?), we might want to fail.
-                                        // BidiGenerateContentServerMessage has `serverContent`, `toolCall`, etc.
-                                        // We will just forward it.
-                                        logger.warn { "Received message before SetupComplete: $message" }
+                                    // Check for handshake completion on the first relevant message
+                                    if (!handshakeCompleted.isCompleted) {
+                                        if (message.setupComplete != null) {
+                                            handshakeCompleted.complete(Unit)
+                                        } else {
+                                            // If we receive something else before SetupComplete, it might be an error or unexpected behavior.
+                                            // We log it, but we don't complete the handshake yet unless it's a fatal error?
+                                            // If it's a serverContent, maybe we should just allow it?
+                                            // But per protocol, SetupComplete should be first.
+                                            // If we get an error (e.g. standard HTTP error wrapped in WS?), we might want to fail.
+                                            // BidiGenerateContentServerMessage has `serverContent`, `toolCall`, etc.
+                                            // We will just forward it.
+                                            logger.warn { "Received message before SetupComplete: $message" }
+                                        }
                                     }
-                                }
 
-                                incomingMessages.send(message)
-                            } catch (e: Exception) {
-                                logger.error(e) { "Failed to parse message" }
-                                if (!handshakeCompleted.isCompleted) {
-                                    handshakeCompleted.completeExceptionally(e)
+                                    incomingMessages.send(message)
+                                } catch (e: Exception) {
+                                    logger.error(e) { "Failed to parse message" }
+                                    if (!handshakeCompleted.isCompleted) {
+                                        handshakeCompleted.completeExceptionally(e)
+                                    }
                                 }
                             }
                         }
+                    } catch (e: Exception) {
+                        logger.error(e) { "WebSocket error" }
+                        incomingMessages.close(e)
+                        if (!handshakeCompleted.isCompleted) {
+                            handshakeCompleted.completeExceptionally(e)
+                        }
+                    } finally {
+                        incomingMessages.close()
                     }
-                } catch (e: Exception) {
-                    logger.error(e) { "WebSocket error" }
-                    incomingMessages.close(e)
-                    if (!handshakeCompleted.isCompleted) {
-                        handshakeCompleted.completeExceptionally(e)
-                    }
-                } finally {
-                    incomingMessages.close()
                 }
-            }
 
             // Send Setup Message
             val setupMessage =
@@ -159,7 +161,6 @@ class GeminiLive(
             }
 
             return GeminiLiveSession(session, incomingMessages, json, listenerJob)
-
         } catch (e: Exception) {
             session?.close()
             throw e
@@ -171,7 +172,7 @@ class GeminiLiveSession(
     private val session: DefaultClientWebSocketSession,
     private val incomingMessages: Channel<BidiGenerateContentServerMessage>,
     private val json: Json,
-    private val listenerJob: Job
+    private val listenerJob: Job,
 ) {
     /**
      * Sends a client content message.
