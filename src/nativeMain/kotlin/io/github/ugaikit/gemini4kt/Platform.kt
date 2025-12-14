@@ -22,3 +22,5 @@ actual fun createHttpClient(json: Json): HttpClient =
 
 @OptIn(ExperimentalForeignApi::class)
 internal actual fun getApiKey(): String = getenv("GEMINI_API_KEY")?.toKString() ?: ""
+
+internal actual fun getImage(): String = ""

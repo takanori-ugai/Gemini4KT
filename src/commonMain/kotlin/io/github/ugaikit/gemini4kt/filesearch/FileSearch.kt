@@ -2,7 +2,6 @@ package io.github.ugaikit.gemini4kt.filesearch
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.ugaikit.gemini4kt.FileUploadProvider
-import io.github.ugaikit.gemini4kt.FileUploadProviderImpl
 import io.github.ugaikit.gemini4kt.GeminiErrorResponse
 import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.createHttpClient
@@ -34,7 +33,7 @@ private val logger = KotlinLogging.logger {}
 class FileSearch(
     private val apiKey: String,
     private val client: HttpClient? = null,
-    private val fileUploadProvider: FileUploadProvider = FileUploadProviderImpl(apiKey),
+    private val fileUploadProvider: FileUploadProvider = FileUploadProvider(apiKey),
 ) {
     private val json = Json { ignoreUnknownKeys = true }
     private val httpClient = client ?: createHttpClient(json)

@@ -6,9 +6,9 @@ import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 plugins {
     kotlin("multiplatform") version "2.2.21"
     kotlin("plugin.serialization") version "2.2.21"
-    id("com.android.library") version "8.12.0"
     id("org.jetbrains.dokka") version "2.1.0"
-    id("org.jetbrains.dokka-javadoc") version "2.1.0"
+//    id("org.jetbrains.dokka-javadoc") version "2.1.0"
+    id("com.android.library") version "8.13.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.0.1"
     id("com.github.spotbugs") version "6.4.8"
@@ -29,6 +29,14 @@ repositories {
 
 kotlin {
     applyDefaultHierarchyTemplate()
+
+    targets.all {
+        compilations.all {
+            compilerOptions.configure {
+                freeCompilerArgs.add("-Xexpect-actual-classes")
+            }
+        }
+    }
 
     jvm {
         compilations.all {
@@ -53,6 +61,36 @@ kotlin {
         binaries.executable()
         nodejs {}
     }
+
+    js {
+        binaries.executable()
+        nodejs {}
+    }
+
+    linuxX64 {
+        binaries {
+            executable {
+                entryPoint = "io.github.ugaikit.gemini4kt.samples.main"
+            }
+        }
+    }
+    mingwX64 {
+        binaries {
+            executable {
+                entryPoint = "io.github.ugaikit.gemini4kt.samples.main"
+            }
+        }
+    }
+    iosX64 {
+        binaries {
+            executable {
+                entryPoint = "io.github.ugaikit.gemini4kt.samples.main"
+            }
+        }
+    }
+    iosArm64()
+    iosSimulatorArm64()
+
     androidTarget {
         publishLibraryVariants("release")
         compilations.all {
@@ -63,21 +101,6 @@ kotlin {
             }
         }
     }
-    js {
-        binaries.executable()
-        nodejs {}
-    }
-
-    mingwX64 {
-        binaries {
-            executable() // Generates an .exe file
-        }
-    }
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
-
-    linuxX64()
 
     sourceSets {
         val commonMain by getting {
@@ -99,7 +122,6 @@ kotlin {
                 implementation("org.jetbrains.kotlin:kotlin-reflect:2.1.0")
             }
         }
-        val nativeMain by getting
         val commonTest by getting {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
@@ -124,30 +146,30 @@ kotlin {
                 // implementation("io.ktor:ktor-client-core:3.0.3") // Already in commonMain
             }
         }
+
+        val jsMain by getting
+        val jsTest by getting
+        val iosMain by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-darwin:3.0.3")
+            }
+        }
+        val mingwX64Main by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-curl:3.0.3")
+            }
+        }
+        val linuxX64Main by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-curl:3.0.3")
+            }
+        }
         val androidMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
                 implementation("io.ktor:ktor-client-android:3.0.3")
             }
         }
-        val linuxX64Main by getting {
-            // dependsOn(nativeMain) // Already depends on nativeMain via default hierarchy
-            dependencies {
-                implementation("io.ktor:ktor-client-cio:3.0.3")
-            }
-        }
-        val iosMain by getting {
-            // dependsOn(nativeMain) // Already depends on nativeMain via default hierarchy
-            dependencies {
-                implementation("io.ktor:ktor-client-darwin:3.0.3")
-            }
-        }
-
-        val mingwX64Main by getting
-        val mingwX64Test by getting
-
-        val jsMain by getting
-        val jsTest by getting
     }
 }
 
@@ -252,18 +274,6 @@ spotless {
     }
 }
 
-android {
-    namespace = "io.github.ugaikit.gemini4kt"
-    compileSdk = 34
-    defaultConfig {
-        minSdk = 21
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-}
-
 mavenPublishing {
     // Maven Central に公開する場合の設定
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
@@ -297,5 +307,17 @@ mavenPublishing {
             developerConnection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
             url = "https://github.com/takanori-ugai/Gemini4KT"
         }
+    }
+}
+
+android {
+    namespace = "io.github.ugaikit.gemini4kt"
+    compileSdk = 34
+    defaultConfig {
+        minSdk = 21
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }

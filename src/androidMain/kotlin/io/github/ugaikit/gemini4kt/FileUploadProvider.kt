@@ -28,14 +28,14 @@ private data class FileWrapper(
     val file: GeminiFile,
 )
 
-actual class FileUploadProviderImpl actual constructor(
+actual class FileUploadProvider actual constructor(
     private val apiKey: String,
     private val client: HttpClient?,
     private val json: Json,
-) : FileUploadProvider {
+) {
     private val httpClient = client ?: createHttpClient(json)
 
-    override suspend fun upload(
+    actual suspend fun upload(
         file: Path,
         mimeType: String,
         displayName: String,
@@ -46,7 +46,7 @@ actual class FileUploadProviderImpl actual constructor(
         return uploadFile(uploadUrl, javaFile, mimeType)
     }
 
-    override suspend fun uploadToFileSearchStore(
+    actual suspend fun uploadToFileSearchStore(
         fileSearchStoreName: String,
         file: Path,
         mimeType: String,
