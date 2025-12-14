@@ -20,9 +20,9 @@ import org.junit.jupiter.api.Test
 import java.io.File
 
 class FileUploadProviderImplTest {
-    private lateinit var fileUploadProvider: FileUploadProviderImpl
+    private lateinit var fileUploadProvider: FileUploadProvider
 
-    private fun createFileUploadProvider(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): FileUploadProviderImpl {
+    private fun createFileUploadProvider(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): FileUploadProvider {
         val client =
             HttpClient(MockEngine) {
                 engine {
@@ -32,7 +32,7 @@ class FileUploadProviderImplTest {
                     json(Json { ignoreUnknownKeys = true })
                 }
             }
-        return FileUploadProviderImpl(apiKey = "test-api-key", client = client)
+        return FileUploadProvider(apiKey = "test-api-key", client = client)
     }
 
     @Test

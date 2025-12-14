@@ -44,7 +44,7 @@ class Gemini(
      */
     internal val json = Json { ignoreUnknownKeys = true }
     private val httpClient = client ?: createHttpClient(json)
-    private val provider: FileUploadProvider = fileUploadProvider ?: FileUploadProviderImpl(apiKey, httpClient, json)
+    private val provider: FileUploadProvider = fileUploadProvider ?: FileUploadProvider(apiKey, httpClient, json)
 
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
     private val baseUrl = "$bUrl/models"
