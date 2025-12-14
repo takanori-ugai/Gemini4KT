@@ -8,6 +8,7 @@ plugins {
     kotlin("plugin.serialization") version "2.2.21"
     id("org.jetbrains.dokka") version "2.1.0"
 //    id("org.jetbrains.dokka-javadoc") version "2.1.0"
+    id("com.android.library") version "8.13.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.0.1"
     id("com.github.spotbugs") version "6.4.8"
@@ -90,6 +91,17 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
+    androidTarget {
+        publishLibraryVariants("release")
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.JVM_11)
+                }
+            }
+        }
+    }
+
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -150,6 +162,12 @@ kotlin {
         val linuxX64Main by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-curl:3.0.3")
+            }
+        }
+        val androidMain by getting {
+            dependsOn(jvmCommonMain)
+            dependencies {
+                implementation("io.ktor:ktor-client-android:3.0.3")
             }
         }
     }
@@ -289,5 +307,17 @@ mavenPublishing {
             developerConnection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
             url = "https://github.com/takanori-ugai/Gemini4KT"
         }
+    }
+}
+
+android {
+    namespace = "io.github.ugaikit.gemini4kt"
+    compileSdk = 34
+    defaultConfig {
+        minSdk = 21
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
