@@ -67,6 +67,13 @@ kotlin {
     }
 
     linuxX64()
+    mingwX64 {
+        binaries {
+            executable {
+                entryPoint = "io.github.ugaikit.gemini4kt.samples.main"
+            }
+        }
+    }
 
     sourceSets {
         val commonMain by getting {
