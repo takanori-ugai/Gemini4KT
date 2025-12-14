@@ -1,6 +1,12 @@
 package io.github.ugaikit.gemini4kt.samples
 
-import io.github.ugaikit.gemini4kt.*
+import io.github.ugaikit.gemini4kt.Content
+import io.github.ugaikit.gemini4kt.GenerateContentRequest
+import io.github.ugaikit.gemini4kt.Gemini
+import io.github.ugaikit.gemini4kt.Modality
+import io.github.ugaikit.gemini4kt.Part
+import io.github.ugaikit.gemini4kt.generationConfig
+import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
