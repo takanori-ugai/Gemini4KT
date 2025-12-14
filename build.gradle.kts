@@ -108,11 +108,11 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
                 implementation("io.github.oshai:kotlin-logging:7.0.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
-                implementation("io.ktor:ktor-client-core:3.0.3")
-                implementation("io.ktor:ktor-client-content-negotiation:3.0.3")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.3")
-                implementation("io.ktor:ktor-client-logging:3.0.3")
-                implementation("io.ktor:ktor-client-websockets:3.0.3")
+                implementation("io.ktor:ktor-client-core:3.3.3")
+                implementation("io.ktor:ktor-client-content-negotiation:3.3.3")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:3.3.3")
+                implementation("io.ktor:ktor-client-logging:3.3.3")
+                implementation("io.ktor:ktor-client-websockets:3.3.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.2")
             }
         }
@@ -125,7 +125,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("io.ktor:ktor-client-mock:3.0.3")
+                implementation("io.ktor:ktor-client-mock:3.3.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.1")
             }
         }
@@ -133,7 +133,7 @@ kotlin {
             dependsOn(jvmCommonMain)
             dependencies {
                 runtimeOnly("ch.qos.logback:logback-classic:1.5.16")
-                implementation("io.ktor:ktor-client-cio:3.0.3")
+                implementation("io.ktor:ktor-client-cio:3.3.3")
             }
         }
         val jvmTest by getting {
@@ -151,23 +151,23 @@ kotlin {
         val jsTest by getting
         val iosMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-darwin:3.0.3")
+                implementation("io.ktor:ktor-client-darwin:3.3.3")
             }
         }
         val mingwX64Main by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-curl:3.0.3")
+                implementation("io.ktor:ktor-client-curl:3.3.3")
             }
         }
         val linuxX64Main by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-curl:3.0.3")
+                implementation("io.ktor:ktor-client-curl:3.3.3")
             }
         }
         val androidMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
-                implementation("io.ktor:ktor-client-android:3.0.3")
+                implementation("io.ktor:ktor-client-android:3.3.3")
             }
         }
     }
