@@ -66,7 +66,13 @@ kotlin {
         nodejs {}
     }
 
-    linuxX64()
+    linuxX64 {
+        binaries {
+            executable {
+                entryPoint = "io.github.ugaikit.gemini4kt.samples.main"
+            }
+        }
+    }
     mingwX64 {
         binaries {
             executable {
@@ -74,6 +80,15 @@ kotlin {
             }
         }
     }
+    iosX64 {
+        binaries {
+            executable {
+                entryPoint = "io.github.ugaikit.gemini4kt.samples.main"
+            }
+        }
+    }
+    iosArm64()
+    iosSimulatorArm64()
 
     sourceSets {
         val commonMain by getting {
@@ -122,11 +137,19 @@ kotlin {
 
         val jsMain by getting
         val jsTest by getting
-        val nativeMain by getting
-        val linuxX64Main by getting {
-            // dependsOn(nativeMain) // Already depends on nativeMain via default hierarchy
+        val iosMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-cio:3.0.3")
+                implementation("io.ktor:ktor-client-darwin:3.0.3")
+            }
+        }
+        val mingwX64Main by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-curl:3.0.3")
+            }
+        }
+        val linuxX64Main by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-curl:3.0.3")
             }
         }
     }
