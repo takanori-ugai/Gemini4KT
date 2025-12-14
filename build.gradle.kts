@@ -6,7 +6,7 @@ import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 plugins {
     kotlin("multiplatform") version "2.2.21"
     kotlin("plugin.serialization") version "2.2.21"
-//    id("org.jetbrains.dokka") version "2.1.0"
+    id("org.jetbrains.dokka") version "2.1.0"
 //    id("org.jetbrains.dokka-javadoc") version "2.1.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.0.1"
@@ -66,6 +66,8 @@ kotlin {
         nodejs {}
     }
 
+    linuxX64()
+
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -113,6 +115,13 @@ kotlin {
 
         val jsMain by getting
         val jsTest by getting
+        val nativeMain by getting
+        val linuxX64Main by getting {
+            // dependsOn(nativeMain) // Already depends on nativeMain via default hierarchy
+            dependencies {
+                implementation("io.ktor:ktor-client-cio:3.0.3")
+            }
+        }
     }
 }
 
@@ -164,7 +173,6 @@ tasks {
     }
 }
 
-/*
 dokka.dokkaSourceSets {
     configureEach {
         jdkVersion.set(11)
@@ -172,8 +180,6 @@ dokka.dokkaSourceSets {
         enableKotlinStdLibDocumentationLink.set(false)
     }
 }
-
- */
 
 ktlint {
     verbose.set(true)
