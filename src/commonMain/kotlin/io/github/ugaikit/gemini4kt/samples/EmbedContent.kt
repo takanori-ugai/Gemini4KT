@@ -8,15 +8,15 @@ import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.getApiKey
 
 object EmbedContent {
-    suspend fun run() {
-        val gemini = Gemini(getApiKey())
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val text = "Write a story about a magic backpack."
         val embedRequest =
             EmbedContentRequest(
                 content = Content(listOf(Part(text))),
                 model = "models/text-embedding-004",
             )
-        println(gemini.embedContent(embedRequest, model = "text-embedding-004"))
+        println(client.embedContent(embedRequest, model = "text-embedding-004"))
         val batchEmbedRequest =
             BatchEmbedRequest(
                 listOf(
@@ -26,6 +26,6 @@ object EmbedContent {
                     ),
                 ),
             )
-        println(gemini.batchEmbedContents(batchEmbedRequest, model = "text-embedding-004"))
+        println(client.batchEmbedContents(batchEmbedRequest, model = "text-embedding-004"))
     }
 }

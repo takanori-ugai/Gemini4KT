@@ -21,9 +21,12 @@ object LiveSampleRunner {
                     null
                 }
 
-            LiveSample.run(inputAudioBase64) { base64AudioChunk ->
-                accumulatedAudio.write(Base64.getDecoder().decode(base64AudioChunk))
-            }
+            LiveSample.run(
+                inputAudioBase64,
+                onAudioData = { base64AudioChunk ->
+                    accumulatedAudio.write(Base64.getDecoder().decode(base64AudioChunk))
+                },
+            )
 
             if (accumulatedAudio.size() > 0) {
                 savePcmToWav(accumulatedAudio.toByteArray(), "live_output.wav", 24000.0f, 1)
