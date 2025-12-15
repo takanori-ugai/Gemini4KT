@@ -351,6 +351,8 @@ class SamplesTest {
     @Test
     fun testFunctionExample3() =
         runTest {
+            if (!supportsReflection) return@runTest
+
             var callCount = 0
             val mockEngine =
                 MockEngine { _ ->
