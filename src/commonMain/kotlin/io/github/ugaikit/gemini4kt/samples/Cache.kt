@@ -8,11 +8,13 @@ import io.github.ugaikit.gemini4kt.HarmCategory
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.SafetySetting
 import io.github.ugaikit.gemini4kt.Threshold
+import io.github.ugaikit.gemini4kt.getApiKey
 
 private const val REPEAT_COUNT = 10000
 
 object Cache {
-    suspend fun run(gemini: Gemini) {
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val str = "This is a pen".repeat(REPEAT_COUNT)
         val cachedContent =
             CachedContent(
@@ -20,11 +22,11 @@ object Cache {
                 model = "models/gemini-2.5-flash-lite",
                 systemInstruction = Content(listOf(Part(text = "Hello, world!")), "system"),
             )
-        val cache = gemini.createCachedContent(cachedContent)
+        val cache = client.createCachedContent(cachedContent)
         println(cachedContent)
         println(cache)
-        println(gemini.listCachedContent())
-        println(gemini.getCachedContent(cache.name!!))
+        println(client.listCachedContent())
+        println(client.getCachedContent(cache.name!!))
         println("--------------------------------------------------------------")
 
         val text = "Summarize the sentences."
@@ -41,7 +43,7 @@ object Cache {
                 cachedContent = cache.name,
             )
         println(
-            gemini
+            client
                 .generateContent(
                     inputJson,
                     model = "gemini-2.5-flash-lite",
@@ -52,6 +54,6 @@ object Cache {
                 .replace("\n\n", "\n"),
         )
 
-        gemini.deleteCachedContent(cache.name!!)
+        client.deleteCachedContent(cache.name!!)
     }
 }

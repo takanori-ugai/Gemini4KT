@@ -6,11 +6,13 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Mode
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.functionCallingConfig
+import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.tool
 import io.github.ugaikit.gemini4kt.toolConfig
 
 object UrlContextSample {
-    suspend fun run(gemini: Gemini) {
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val tools =
             tool {
                 urlContext()
@@ -40,7 +42,7 @@ object UrlContextSample {
             )
 
         val response =
-            gemini.generateContent(
+            client.generateContent(
                 input,
             )
         println(
