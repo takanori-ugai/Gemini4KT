@@ -96,4 +96,36 @@ class LiveTypesTest {
         assertTrue(jsonStr.contains("text"))
         assertTrue(jsonStr.contains("Some text input"))
     }
+
+    @Test
+    fun `test BidiGenerateContentToolResponse serialization`() {
+        val toolResponse =
+            BidiGenerateContentToolResponse(
+                functionResponses = listOf(),
+            )
+        val msg = BidiGenerateContentClientMessage(toolResponse = toolResponse)
+        val jsonStr = json.encodeToString(msg)
+        assertTrue(jsonStr.contains("toolResponse"))
+        assertTrue(jsonStr.contains("functionResponses"))
+    }
+
+    @Test
+    fun `test BidiGenerateContentToolCall deserialization`() {
+        val jsonStr =
+            """
+            {
+                "toolCall": {
+                    "functionCalls": [
+                        { "name": "get_weather", "args": {"location": "London"} }
+                    ]
+                }
+            }
+            """.trimIndent()
+        val msg = json.decodeFromString<BidiGenerateContentServerMessage>(jsonStr)
+        assertNotNull(msg.toolCall)
+        val calls = msg.toolCall?.functionCalls
+        assertNotNull(calls)
+        assertEquals(1, calls.size)
+        assertEquals("get_weather", calls[0].name)
+    }
 }
