@@ -12,8 +12,8 @@ import io.github.ugaikit.gemini4kt.Threshold
 import io.github.ugaikit.gemini4kt.getApiKey
 
 object Samples1 {
-    suspend fun run() {
-        val gemini = Gemini(getApiKey())
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val text = "Write a story about a magic backpack."
         val inputJson =
             GenerateContentRequest(
@@ -32,7 +32,7 @@ object Samples1 {
                     ),
             )
         println(
-            gemini
+            client
                 .generateContent(
                     inputJson,
                     model = "gemini-2.5-flash-lite",

@@ -11,7 +11,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 object AudioGeneration {
-    suspend fun run(): String? {
+    suspend fun run(gemini: Gemini? = null): String? {
         // Example 1: Single voice
         val config1 =
             generationConfig {
@@ -58,34 +58,38 @@ object AudioGeneration {
         println("\nConfig 2 JSON:")
         println(json.encodeToString(config2))
 
-        val apiKey = getApiKey()
-        if (apiKey.isNotBlank()) {
-            val gemini = Gemini(apiKey)
-            try {
-                val response =
-                    gemini.generateContent(
-                        model = "gemini-2.5-flash-preview-tts",
-                        inputJson =
-                            GenerateContentRequest(
-                                contents = listOf(Content(role = "user", parts = listOf(Part(text = "Say cheerfully: Have a wonderful day!")))),
-                                generationConfig = config1,
-                            ),
-                    )
-
-                val base64Audio =
-                    response.candidates
-                        ?.get(0)
-                        ?.content
-                        ?.parts
-                        ?.get(0)
-                        ?.inlineData
-                        ?.data
-                return base64Audio
-            } catch (e: Exception) {
-                println("Error: ${e.message}")
+        val client =
+            gemini ?: run {
+                val apiKey = getApiKey()
+                if (apiKey.isNotBlank()) {
+                    Gemini(apiKey)
+                } else {
+                    println("GEMINI_API_KEY not found. Skipping API call.")
+                    return null
+                }
             }
-        } else {
-            println("GEMINI_API_KEY not found. Skipping API call.")
+        try {
+            val response =
+                client.generateContent(
+                    model = "gemini-2.5-flash-preview-tts",
+                    inputJson =
+                        GenerateContentRequest(
+                            contents = listOf(Content(role = "user", parts = listOf(Part(text = "Say cheerfully: Have a wonderful day!")))),
+                            generationConfig = config1,
+                        ),
+                )
+
+            val base64Audio =
+                response.candidates
+                    ?.get(0)
+                    ?.content
+                    ?.parts
+                    ?.get(0)
+                    ?.inlineData
+                    ?.data
+            return base64Audio
+        } catch (e: Exception) {
+            println("Error: ${e.message}")
         }
         return null
     }

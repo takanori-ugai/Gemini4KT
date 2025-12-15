@@ -10,8 +10,8 @@ import io.github.ugaikit.gemini4kt.Tool
 import io.github.ugaikit.gemini4kt.getApiKey
 
 object FunctionExample1 {
-    suspend fun run() {
-        val gemini = Gemini(getApiKey())
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
 
         val exFunction =
             GenerateContentRequest(
@@ -34,7 +34,7 @@ object FunctionExample1 {
             )
 
         println(
-            gemini
+            client
                 .generateContent(
                     exFunction,
                     "gemini-2.5-flash-lite",

@@ -9,13 +9,15 @@ import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.io.files.Path
 
 object FileUploadSample {
-    suspend fun run(imagePath: String) {
-        val apiKey = getApiKey()
-        val gemini = Gemini(apiKey = apiKey)
+    suspend fun run(
+        imagePath: String,
+        gemini: Gemini? = null,
+    ) {
+        val client = gemini ?: Gemini(getApiKey())
 
         println("Uploading file...")
         val uploadedFile =
-            gemini.uploadFile(
+            client.uploadFile(
                 file = Path(imagePath),
                 mimeType = "image/jpeg",
                 displayName = "Scones",
@@ -44,7 +46,7 @@ object FileUploadSample {
 
         println("Generating content from file...")
         try {
-            val response = gemini.generateContent(request, model = "gemini-2.5-flash-lite")
+            val response = client.generateContent(request, model = "gemini-2.5-flash-lite")
             response.candidates.forEach { candidate ->
                 candidate.content.parts?.forEach { part ->
                     println(part.text)

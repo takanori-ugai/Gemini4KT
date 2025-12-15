@@ -15,10 +15,14 @@ import kotlinx.coroutines.delay
 import kotlinx.io.files.Path
 
 object FileSearchSample {
-    suspend fun run(filePath: String) {
+    suspend fun run(
+        filePath: String,
+        geminiInstance: Gemini? = null,
+        fileSearchInstance: FileSearch? = null,
+    ) {
         val apiKey = getApiKey()
-        val fileSearch = FileSearch(apiKey)
-        val gemini = Gemini(apiKey)
+        val fileSearch = fileSearchInstance ?: FileSearch(apiKey)
+        val gemini = geminiInstance ?: Gemini(apiKey)
 
         // 1. Create FileSearchStore
         val store =

@@ -23,6 +23,7 @@ object LiveSample {
     suspend fun run(
         inputAudioBase64: String?,
         onAudioData: (String) -> Unit,
+        gemini: Gemini? = null,
     ) {
         val apiKey = getApiKey()
 
@@ -33,8 +34,8 @@ object LiveSample {
                 systemInstruction = content { part { text { "You are a helpful assistant and answer in a friendly tone." } } },
             )
 
-        val gemini = Gemini(apiKey)
-        val liveClient = gemini.getLiveClient(liveModel, config)
+        val client = gemini ?: Gemini(apiKey)
+        val liveClient = client.getLiveClient(liveModel, config)
 
         try {
             val session = liveClient.connect()

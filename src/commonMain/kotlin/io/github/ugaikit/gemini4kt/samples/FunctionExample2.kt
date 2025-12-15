@@ -23,8 +23,8 @@ object FunctionExample2 {
      */
     fun findWeather(location: String): String = "The weather in $location is super sunny"
 
-    suspend fun run() {
-        val gemini = Gemini(getApiKey())
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
 
         val findWeatherFunction =
             FunctionDeclaration(
@@ -49,7 +49,7 @@ object FunctionExample2 {
 
         // Step 1: Send the user's prompt and function declarations to the model.
         val userPrompt = "What's the weather like in Boston?"
-        val firstResponse = getFunctionCall(gemini, tools, userPrompt)
+        val firstResponse = getFunctionCall(client, tools, userPrompt)
 
         val modelResponsePart =
             firstResponse.candidates[0]
@@ -60,7 +60,7 @@ object FunctionExample2 {
 
         // Step 2: "Execute" the function and send the response back to the model.
         val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
-        sendFunctionResult(gemini, tools, initialContent, modelResponsePart)
+        sendFunctionResult(client, tools, initialContent, modelResponsePart)
     }
 
     private suspend fun getFunctionCall(
