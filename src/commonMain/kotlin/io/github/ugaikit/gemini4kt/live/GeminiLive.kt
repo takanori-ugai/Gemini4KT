@@ -6,6 +6,7 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.websocket.Frame
+import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import kotlinx.coroutines.CompletableDeferred
@@ -169,7 +170,7 @@ class GeminiLive(
 }
 
 class GeminiLiveSession(
-    private val session: DefaultClientWebSocketSession,
+    private val session: WebSocketSession,
     private val incomingMessages: Channel<BidiGenerateContentServerMessage>,
     private val json: Json,
     private val listenerJob: Job,
