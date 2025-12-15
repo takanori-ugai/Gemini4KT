@@ -8,9 +8,8 @@ import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.tool
 
 object CodeExecutionSample {
-    suspend fun run() {
-        val apiKey = getApiKey()
-        val gemini = Gemini(apiKey)
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val text = "What is the sum of the first 50 prime numbers? Generate and run code for the calculation, and make sure you get all 50."
         val inputJson =
             GenerateContentRequest(
@@ -23,7 +22,7 @@ object CodeExecutionSample {
                     ),
             )
         val response =
-            gemini.generateContent(
+            client.generateContent(
                 inputJson,
                 model = "gemini-2.5-flash",
             )

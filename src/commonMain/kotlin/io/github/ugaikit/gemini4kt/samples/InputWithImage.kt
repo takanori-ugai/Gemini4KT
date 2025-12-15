@@ -11,9 +11,10 @@ import io.github.ugaikit.gemini4kt.getImage
 object InputWithImage {
     suspend fun run(
         args: Array<String>,
-        gemini: Gemini = Gemini(getApiKey()),
+        gemini: Gemini? = null,
         imageProvider: () -> String = { getImage() },
     ) {
+        val client = gemini ?: Gemini(getApiKey())
         val base64Image = imageProvider()
 
         val inputWithImage =
@@ -34,7 +35,7 @@ object InputWithImage {
                 ),
             )
         println(
-            gemini
+            client
                 .generateContent(
                     inputWithImage,
                     "gemini-2.5-flash-lite",

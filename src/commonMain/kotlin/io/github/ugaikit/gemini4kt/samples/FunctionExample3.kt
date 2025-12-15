@@ -22,8 +22,8 @@ object FunctionExample3 {
         @GeminiParameter(description = "second number") b: Int,
     ): Int = a + b
 
-    suspend fun run() {
-        val gemini = Gemini(getApiKey())
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
 
         val addFunction = buildFunctionDeclaration(::add)
 
@@ -33,7 +33,7 @@ object FunctionExample3 {
         val userPrompt = "What is 123 plus 456?"
         val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
         val firstRequest = GenerateContentRequest(contents = listOf(initialContent), tools = tools)
-        val firstResponse = gemini.generateContent(firstRequest, "gemini-2.5-flash-lite")
+        val firstResponse = client.generateContent(firstRequest, "gemini-2.5-flash-lite")
 
         val modelResponsePart =
             firstResponse.candidates[0]
@@ -73,7 +73,7 @@ object FunctionExample3 {
                 )
 
             val secondRequest = GenerateContentRequest(contents = conversationHistory, tools = tools)
-            val secondResponse = gemini.generateContent(secondRequest, "gemini-2.5-flash-lite")
+            val secondResponse = client.generateContent(secondRequest, "gemini-2.5-flash-lite")
             println("Final response: ${secondResponse.candidates[0].content.parts!!.get(0).text}")
         }
     }

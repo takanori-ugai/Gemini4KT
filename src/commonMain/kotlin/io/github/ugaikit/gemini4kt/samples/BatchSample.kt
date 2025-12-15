@@ -9,15 +9,16 @@ import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.coroutines.delay
 
 object BatchSample {
-    suspend fun run() {
-        val apiKey = getApiKey()
-        if (apiKey.isBlank()) {
-            println("GEMINI_API_KEY not found.")
-            return
-        }
-
-        // Initialize Batch client
-        val batchClient = Batch(apiKey)
+    suspend fun run(batchClient: Batch? = null) {
+        val client =
+            batchClient ?: run {
+                val apiKey = getApiKey()
+                if (apiKey.isBlank()) {
+                    println("GEMINI_API_KEY not found.")
+                    return
+                }
+                Batch(apiKey)
+            }
 
         // Prepare standard GenerateContentRequests
         val request1 =
@@ -56,7 +57,7 @@ object BatchSample {
 
         try {
             println("Creating batch job...")
-            val createdBatchJob = batchClient.createBatch("gemini-2.0-flash", createBatchRequest)
+            val createdBatchJob = client.createBatch("gemini-2.0-flash", createBatchRequest)
             println("Batch Job Created: ${createdBatchJob.name}")
             println("Initial State: ${createdBatchJob.metadata?.state}")
 
@@ -66,7 +67,7 @@ object BatchSample {
             println("Waiting for job completion...")
             while (state != "BATCH_STATE_SUCCEEDED" && state != "BATCH_STATE_FAILED" && state != "BATCH_STATE_CANCELLED") {
                 delay(10000) // Wait for 10 seconds
-                batchJob = batchClient.getBatch(batchJob.name)
+                batchJob = client.getBatch(batchJob.name)
                 state = batchJob.metadata?.state
                 println("Current State: $state")
             }
@@ -84,7 +85,7 @@ object BatchSample {
 
             // List batches
             println("\nListing recent batches...")
-            val batchesList = batchClient.listBatches(pageSize = 5)
+            val batchesList = client.listBatches(pageSize = 5)
             batchesList.operations?.forEach {
                 println("- ${it.name} (${it.metadata?.state})")
             }
