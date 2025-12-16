@@ -8,13 +8,19 @@ import kotlin.js.Promise
 @OptIn(DelicateCoroutinesApi::class)
 @JsExport
 @JsName("GeminiClient") // How it will appear in JS
-class GeminiJsWrapper {
-    private val client = Gemini()
+class GeminiJsWrapper(apiKey: String) {
+    private val client = Gemini(apiKey)
 
     // Wrapper function: Returns Promise<String> instead of suspend String
     // This IS supported by @JsExport
     fun generateContentAsync(prompt: String): Promise<String> =
         GlobalScope.promise {
-            client.generateContent(prompt)
+            val request = GenerateContentRequest(
+                contents = listOf(
+                    Content(parts = listOf(Part(text = prompt)))
+                )
+            )
+            val response = client.generateContent(request)
+            response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: ""
         }
 }
