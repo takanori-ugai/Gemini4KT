@@ -63,7 +63,7 @@ class Gemini(
      */
     suspend fun generateContent(
         inputJson: GenerateContentRequest,
-        model: String = "gemini-pro",
+        model: String = "gemma-3-4b-it",
     ): GenerateContentResponse {
         val urlString = "$baseUrl/$model:generateContent"
         return json.decodeFromString<GenerateContentResponse>(

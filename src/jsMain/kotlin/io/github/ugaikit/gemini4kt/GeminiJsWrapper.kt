@@ -43,7 +43,10 @@ class GeminiJsWrapper(
         }
 
     @JsName("generateContent")
-    fun generateContent(input: dynamic): Promise<dynamic> =
+    fun generateContent(
+        input: dynamic,
+        model: String = "gemma-3-12b-it",
+    ): Promise<dynamic> =
         GlobalScope.promise {
             when (input) {
                 is String -> {
@@ -54,7 +57,7 @@ class GeminiJsWrapper(
                                     Content(parts = listOf(Part(text = input))),
                                 ),
                         )
-                    val response = client.generateContent(request)
+                    val response = client.generateContent(request, model)
                     response.candidates
                         .firstOrNull()
                         ?.content
@@ -63,14 +66,14 @@ class GeminiJsWrapper(
                         ?.text ?: ""
                 }
                 is GenerateContentRequest -> {
-                    val response = client.generateContent(input)
+                    val response = client.generateContent(input, model)
                     val responseJsonString = json.encodeToString(response)
                     JSON.parse(responseJsonString)
                 }
                 else -> {
                     val requestJsonString = JSON.stringify(input)
                     val generateContentRequest = json.decodeFromString<GenerateContentRequest>(requestJsonString)
-                    val response = client.generateContent(generateContentRequest)
+                    val response = client.generateContent(generateContentRequest, model)
                     val responseJsonString = json.encodeToString(response)
                     JSON.parse(responseJsonString)
                 }
