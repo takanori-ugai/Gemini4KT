@@ -94,15 +94,16 @@ actual class FileUploadProvider actual constructor(
         displayName: String,
         fileSize: Long,
     ): String {
-        val response = httpClient.post("$baseUrl/upload/v1beta/files") {
-            header("x-goog-api-key", apiKey)
-            header("X-Goog-Upload-Protocol", "resumable")
-            header("X-Goog-Upload-Command", "start")
-            header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
-            header("X-Goog-Upload-Header-Content-Type", mimeType)
-            contentType(ContentType.Application.Json)
-            setBody("""{ "file" : { "displayName" : "$displayName" }}""")
-        }
+        val response =
+            httpClient.post("$baseUrl/upload/v1beta/files") {
+                header("x-goog-api-key", apiKey)
+                header("X-Goog-Upload-Protocol", "resumable")
+                header("X-Goog-Upload-Command", "start")
+                header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
+                header("X-Goog-Upload-Header-Content-Type", mimeType)
+                contentType(ContentType.Application.Json)
+                setBody("""{ "file" : { "displayName" : "$displayName" }}""")
+            }
 
         if (response.status != HttpStatusCode.OK) {
             throw IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
@@ -120,15 +121,16 @@ actual class FileUploadProvider actual constructor(
         fileSize: Long,
         uploadRequest: UploadFileSearchStoreRequest,
     ): String {
-        val response = httpClient.post("$baseUrl/upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore") {
-            header("x-goog-api-key", apiKey)
-            header("X-Goog-Upload-Protocol", "resumable")
-            header("X-Goog-Upload-Command", "start")
-            header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
-            header("X-Goog-Upload-Header-Content-Type", mimeType)
-            contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(uploadRequest))
-        }
+        val response =
+            httpClient.post("$baseUrl/upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore") {
+                header("x-goog-api-key", apiKey)
+                header("X-Goog-Upload-Protocol", "resumable")
+                header("X-Goog-Upload-Command", "start")
+                header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
+                header("X-Goog-Upload-Header-Content-Type", mimeType)
+                contentType(ContentType.Application.Json)
+                setBody(json.encodeToString(uploadRequest))
+            }
 
         if (response.status != HttpStatusCode.OK) {
             throw IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
@@ -142,17 +144,18 @@ actual class FileUploadProvider actual constructor(
         uploadUrl: String,
         path: String,
         mimeType: String,
-        fileSize: Long
+        fileSize: Long,
     ): GeminiFile {
         val fileContent = readFile(path)
 
-        val response = httpClient.post(uploadUrl) {
-            header("Content-Length", fileSize.toString())
-            header("X-Goog-Upload-Offset", "0")
-            header("X-Goog-Upload-Command", "upload, finalize")
-            contentType(ContentType.parse(mimeType))
-            setBody(fileContent)
-        }
+        val response =
+            httpClient.post(uploadUrl) {
+                header("Content-Length", fileSize.toString())
+                header("X-Goog-Upload-Offset", "0")
+                header("X-Goog-Upload-Command", "upload, finalize")
+                contentType(ContentType.parse(mimeType))
+                setBody(fileContent)
+            }
 
         if (response.status != HttpStatusCode.OK) {
             throw IOException("Failed to upload file: ${response.status} ${response.bodyAsText()}")
@@ -166,17 +169,18 @@ actual class FileUploadProvider actual constructor(
         uploadUrl: String,
         path: String,
         mimeType: String,
-        fileSize: Long
+        fileSize: Long,
     ): Operation {
         val fileContent = readFile(path)
 
-        val response = httpClient.post(uploadUrl) {
-            header("Content-Length", fileSize.toString())
-            header("X-Goog-Upload-Offset", "0")
-            header("X-Goog-Upload-Command", "upload, finalize")
-            contentType(ContentType.parse(mimeType))
-            setBody(fileContent)
-        }
+        val response =
+            httpClient.post(uploadUrl) {
+                header("Content-Length", fileSize.toString())
+                header("X-Goog-Upload-Offset", "0")
+                header("X-Goog-Upload-Command", "upload, finalize")
+                contentType(ContentType.parse(mimeType))
+                setBody(fileContent)
+            }
 
         if (response.status != HttpStatusCode.OK) {
             throw IOException("Failed to upload file: ${response.status} ${response.bodyAsText()}")
