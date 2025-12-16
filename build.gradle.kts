@@ -171,6 +171,7 @@ kotlin {
                 implementation("io.ktor:ktor-client-android:3.3.3")
             }
         }
+        val androidUnitTest by getting
     }
 }
 

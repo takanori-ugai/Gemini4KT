@@ -10,26 +10,36 @@ import kotlin.js.Promise
 @OptIn(DelicateCoroutinesApi::class)
 @JsExport
 @JsName("GeminiClient") // How it will appear in JS
-class GeminiJsWrapper(apiKey: String) {
+class GeminiJsWrapper(
+    apiKey: String,
+) {
     private val client = Gemini(apiKey)
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-        explicitNulls = false
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+            explicitNulls = false
+        }
 
     // Wrapper function: Returns Promise<String> instead of suspend String
     // This IS supported by @JsExport
     fun generateContentAsync(prompt: String): Promise<String> =
         GlobalScope.promise {
-            val request = GenerateContentRequest(
-                contents = listOf(
-                    Content(parts = listOf(Part(text = prompt)))
+            val request =
+                GenerateContentRequest(
+                    contents =
+                        listOf(
+                            Content(parts = listOf(Part(text = prompt))),
+                        ),
                 )
-            )
             val response = client.generateContent(request)
-            response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: ""
+            response.candidates
+                .firstOrNull()
+                ?.content
+                ?.parts
+                ?.firstOrNull()
+                ?.text ?: ""
         }
 
     @JsName("generateContent")
@@ -37,13 +47,20 @@ class GeminiJsWrapper(apiKey: String) {
         GlobalScope.promise {
             when (input) {
                 is String -> {
-                    val request = GenerateContentRequest(
-                        contents = listOf(
-                            Content(parts = listOf(Part(text = input)))
+                    val request =
+                        GenerateContentRequest(
+                            contents =
+                                listOf(
+                                    Content(parts = listOf(Part(text = input))),
+                                ),
                         )
-                    )
                     val response = client.generateContent(request)
-                    response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: ""
+                    response.candidates
+                        .firstOrNull()
+                        ?.content
+                        ?.parts
+                        ?.firstOrNull()
+                        ?.text ?: ""
                 }
                 is GenerateContentRequest -> {
                     val response = client.generateContent(input)
