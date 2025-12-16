@@ -32,21 +32,31 @@ class GeminiJsWrapper(apiKey: String) {
             response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: ""
         }
 
-    @JsName("generateContentJson")
-    fun generateContent(request: dynamic): Promise<dynamic> =
-        GlobalScope.promise {
-            val requestJsonString = JSON.stringify(request)
-            val generateContentRequest = json.decodeFromString<GenerateContentRequest>(requestJsonString)
-            val response = client.generateContent(generateContentRequest)
-            val responseJsonString = json.encodeToString(response)
-            JSON.parse(responseJsonString)
-        }
-
     @JsName("generateContent")
-    fun generateContent(request: GenerateContentRequest): Promise<dynamic> =
+    fun generateContent(input: dynamic): Promise<dynamic> =
         GlobalScope.promise {
-            val response = client.generateContent(request)
-            val responseJsonString = json.encodeToString(response)
-            JSON.parse(responseJsonString)
+            when (input) {
+                is String -> {
+                    val request = GenerateContentRequest(
+                        contents = listOf(
+                            Content(parts = listOf(Part(text = input)))
+                        )
+                    )
+                    val response = client.generateContent(request)
+                    response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: ""
+                }
+                is GenerateContentRequest -> {
+                    val response = client.generateContent(input)
+                    val responseJsonString = json.encodeToString(response)
+                    JSON.parse(responseJsonString)
+                }
+                else -> {
+                    val requestJsonString = JSON.stringify(input)
+                    val generateContentRequest = json.decodeFromString<GenerateContentRequest>(requestJsonString)
+                    val response = client.generateContent(generateContentRequest)
+                    val responseJsonString = json.encodeToString(response)
+                    JSON.parse(responseJsonString)
+                }
+            }
         }
 }
