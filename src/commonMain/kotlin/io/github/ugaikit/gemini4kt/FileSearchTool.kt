@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
  * @property metadataFilter Optional. Metadata filter.
  */
 @Serializable
+@JsExport
 data class FileSearchTool(
     @SerialName("file_search_store_names")
     val fileSearchStoreNames: List<String>? = null,

@@ -26,6 +26,7 @@ package io.github.ugaikit.gemini4kt
  * @property HARM_CATEGORY_DANGEROUS_CONTENT Categorizes content that is dangerous,
  * promoting activities or behaviors that could lead to harm.
  */
+@JsExport
 enum class HarmCategory {
     HARM_CATEGORY_UNSPECIFIED,
     HARM_CATEGORY_DEROGATORY,

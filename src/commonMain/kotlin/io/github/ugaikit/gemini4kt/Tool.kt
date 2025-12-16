@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
  * @property fileSearch A [FileSearchTool] object representing a file search tool.
  */
 @Serializable
+@JsExport
 data class Tool(
     val functionDeclarations: List<FunctionDeclaration>? = null,
     @SerialName("google_search")

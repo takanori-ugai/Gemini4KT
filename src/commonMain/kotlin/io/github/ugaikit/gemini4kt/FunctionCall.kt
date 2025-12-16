@@ -14,6 +14,7 @@ import kotlinx.serialization.json.JsonElement
  * the order of the strings represents the order in which arguments are passed.
  */
 @Serializable
+@JsExport
 data class FunctionCall(
     val name: String,
     val args: Map<String, JsonElement>,

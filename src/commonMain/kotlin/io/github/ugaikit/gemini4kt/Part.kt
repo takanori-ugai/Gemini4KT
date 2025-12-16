@@ -20,6 +20,7 @@ import kotlinx.serialization.Serializable
  * @property codeExecutionResult Information about code execution result associated with this part, if any.
  */
 @Serializable
+@JsExport
 data class Part(
     val text: String? = null,
     val inlineData: InlineData? = null,

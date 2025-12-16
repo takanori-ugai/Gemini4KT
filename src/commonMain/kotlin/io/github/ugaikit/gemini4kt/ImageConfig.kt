@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
  * @property imageSize The size of the generated image (e.g., "2K").
  */
 @Serializable
+@JsExport
 data class ImageConfig(
     val aspectRatio: String? = null,
     val imageSize: String? = null,

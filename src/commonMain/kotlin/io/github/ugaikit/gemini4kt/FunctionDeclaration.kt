@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
  * construct valid calls to the function by adhering to this schema.
  */
 @Serializable
+@JsExport
 data class FunctionDeclaration(
     val name: String,
     val description: String,

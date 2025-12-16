@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
  * details of the functions declared by this tool.
  */
 @Serializable
+@JsExport
 data class ToolConfig(
     val functionCallingConfig: FunctionCallingConfig,
     val retrievalConfig: RetrievalConfig? = null,

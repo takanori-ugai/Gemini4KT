@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
  * It can be `null` if the role is not specified or not applicable.
  */
 @Serializable
+@JsExport
 data class Content(
     val parts: List<Part>? = null,
     val role: String? = null,

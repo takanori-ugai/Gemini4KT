@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt
 import kotlinx.serialization.Serializable
 
 @Serializable
+@JsExport
 data class ExecutableCode(
     val language: String,
     val code: String,
