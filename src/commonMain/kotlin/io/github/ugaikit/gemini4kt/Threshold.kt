@@ -19,6 +19,7 @@ package io.github.ugaikit.gemini4kt
  * been specified, which may default to the most permissive or restrictive setting depending
  * on context.
  */
+@JsExport
 enum class Threshold {
     BLOCK_NONE,
     BLOCK_ONLY_HIGH,

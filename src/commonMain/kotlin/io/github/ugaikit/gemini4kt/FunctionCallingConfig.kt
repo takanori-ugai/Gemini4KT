@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
  * control over the execution environment.
  */
 @Serializable
+@JsExport
 data class FunctionCallingConfig(
     val mode: Mode,
     val allowedFunctionNames: List<String>,

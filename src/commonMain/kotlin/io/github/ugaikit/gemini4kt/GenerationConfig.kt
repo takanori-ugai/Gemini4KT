@@ -30,6 +30,7 @@ import kotlinx.serialization.Serializable
  * accommodate different or default response formats.
  */
 @Serializable
+@JsExport
 data class GenerationConfig(
     val stopSequences: List<String>? = null,
     val temperature: Double? = null,

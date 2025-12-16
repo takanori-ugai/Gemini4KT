@@ -15,6 +15,7 @@ import kotlinx.serialization.json.JsonObject
  * formatted as strings for uniformity and ease of handling.
  */
 @Serializable
+@JsExport
 data class FunctionResponse(
     val name: String,
     val response: JsonObject,

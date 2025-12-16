@@ -23,6 +23,7 @@ import kotlinx.serialization.Serializable
  * "array". Defines the schema of elements within the array.
  */
 @Serializable
+@JsExport
 data class Schema(
     val type: String,
     val format: String? = null,

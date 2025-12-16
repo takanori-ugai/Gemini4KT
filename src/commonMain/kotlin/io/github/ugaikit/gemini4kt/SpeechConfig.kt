@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
  * @property multiSpeakerVoiceConfig The configuration for multiple speakers.
  */
 @Serializable
+@JsExport
 data class SpeechConfig(
     val voiceConfig: VoiceConfig? = null,
     val multiSpeakerVoiceConfig: MultiSpeakerVoiceConfig? = null,
@@ -20,6 +21,7 @@ data class SpeechConfig(
  * @property prebuiltVoiceConfig The configuration for a prebuilt voice.
  */
 @Serializable
+@JsExport
 data class VoiceConfig(
     val prebuiltVoiceConfig: PrebuiltVoiceConfig? = null,
 )
@@ -30,6 +32,7 @@ data class VoiceConfig(
  * @property voiceName The name of the prebuilt voice (e.g., "Kore", "Puck").
  */
 @Serializable
+@JsExport
 data class PrebuiltVoiceConfig(
     val voiceName: String? = null,
 )
@@ -40,6 +43,7 @@ data class PrebuiltVoiceConfig(
  * @property speakerVoiceConfigs A list of speaker voice configurations.
  */
 @Serializable
+@JsExport
 data class MultiSpeakerVoiceConfig(
     val speakerVoiceConfigs: List<SpeakerVoiceConfig>? = null,
 )
@@ -51,6 +55,7 @@ data class MultiSpeakerVoiceConfig(
  * @property voiceConfig The voice configuration for the speaker.
  */
 @Serializable
+@JsExport
 data class SpeakerVoiceConfig(
     val speaker: String? = null,
     val voiceConfig: VoiceConfig? = null,

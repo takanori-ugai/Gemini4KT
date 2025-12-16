@@ -13,6 +13,7 @@ package io.github.ugaikit.gemini4kt
  * @property NONE Specifies that no particular mode is to be applied, possibly
  * disabling the functionality or leaving it in a neutral state.
  */
+@JsExport
 enum class Mode {
     MODE_UNSPECIFIED,
     AUTO,

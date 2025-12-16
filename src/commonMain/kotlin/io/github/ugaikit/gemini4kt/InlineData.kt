@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
  * for binary content like images.
  */
 @Serializable
+@JsExport
 data class InlineData(
     val mimeType: String,
     val data: String,

@@ -5,6 +5,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 @Serializable
+@JsExport
 data class ThinkingConfig(
     @ExperimentalSerializationApi
     @EncodeDefault(EncodeDefault.Mode.ALWAYS)

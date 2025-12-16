@@ -30,6 +30,7 @@ import kotlinx.serialization.Serializable
  * for flexibility in cases where default configurations are sufficient.
  */
 @Serializable
+@JsExport
 data class GenerateContentRequest(
     val contents: List<Content>,
     val tools: List<Tool> = emptyList(),

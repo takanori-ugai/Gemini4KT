@@ -14,6 +14,7 @@ import kotlinx.serialization.Serializable
  *                     in the specified harm category should be considered actionable or concerning.
  */
 @Serializable
+@JsExport
 data class SafetySetting(
     val category: HarmCategory,
     val threshold: Threshold,

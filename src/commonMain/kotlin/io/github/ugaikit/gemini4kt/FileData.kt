@@ -14,6 +14,7 @@ import kotlinx.serialization.Serializable
  * providing a reference to the file's location.
  */
 @Serializable
+@JsExport
 data class FileData(
     val mimeType: String,
     val fileUri: String,

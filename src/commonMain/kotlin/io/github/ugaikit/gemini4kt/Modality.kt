@@ -8,6 +8,7 @@ package io.github.ugaikit.gemini4kt
  * @property IMAGE Indicates the model should return images.
  * @property AUDIO Indicates the model should return audio.
  */
+@JsExport
 enum class Modality {
     MODALITY_UNSPECIFIED,
     TEXT,
