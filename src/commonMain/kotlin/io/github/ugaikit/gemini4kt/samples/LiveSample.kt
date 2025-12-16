@@ -69,7 +69,7 @@ object LiveSample {
             }
 
             session.close()
-        } catch (e: Exception) {
+        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
             println("Error in LiveSample: ${e.message}")
             // e.printStackTrace() not available in common
         }
