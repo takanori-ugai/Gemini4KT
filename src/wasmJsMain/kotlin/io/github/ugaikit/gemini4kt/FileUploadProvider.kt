@@ -25,6 +25,7 @@ private data class FileWrapper(
 @kotlin.js.JsModule("fs")
 external object NodeFs {
     fun statSync(path: String): NodeStats
+
     fun readFileSync(path: String): Uint8Array
 }
 
@@ -34,6 +35,7 @@ external interface NodeStats : JsAny {
 
 external class Uint8Array : JsAny {
     val length: Int
+
     operator fun get(index: Int): Byte
 }
 
