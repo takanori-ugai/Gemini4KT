@@ -74,7 +74,7 @@ object AudioGeneration {
                     model = "gemini-2.5-flash-preview-tts",
                     inputJson =
                         GenerateContentRequest(
-                            contents = listOf(Content(role = "user", parts = listOf(Part(text = "Say cheerfully: Have a wonderful day!")))),
+                            contents = arrayOf(Content(role = "user", parts = arrayOf(Part(text = "Say cheerfully: Have a wonderful day!")))),
                             generationConfig = config1,
                         ),
                 )

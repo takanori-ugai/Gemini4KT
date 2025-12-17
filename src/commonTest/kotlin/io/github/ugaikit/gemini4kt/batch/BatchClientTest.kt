@@ -60,7 +60,7 @@ class BatchClientTest {
 
             val generateContentRequest =
                 GenerateContentRequest(
-                    contents = listOf(Content(parts = listOf(Part(text = "test")))),
+                    contents = arrayOf(Content(parts = arrayOf(Part(text = "test")))),
                 )
             val createBatchRequest =
                 CreateBatchRequest(

@@ -13,10 +13,10 @@ class GenerateContentRequestTest {
         val request =
             GenerateContentRequest(
                 contents =
-                    listOf(
+                    arrayOf(
                         Content(
                             role = "user",
-                            parts = listOf(Part(text = "Hello")),
+                            parts = arrayOf(Part(text = "Hello")),
                         ),
                     ),
             )
@@ -28,17 +28,17 @@ class GenerateContentRequestTest {
     private fun createFullRequest(): GenerateContentRequest =
         GenerateContentRequest(
             contents =
-                listOf(
+                arrayOf(
                     Content(
                         role = "user",
-                        parts = listOf(Part(text = "How does this work?")),
+                        parts = arrayOf(Part(text = "How does this work?")),
                     ),
                 ),
             tools =
-                listOf(
+                arrayOf(
                     Tool(
                         functionDeclarations =
-                            listOf(
+                            arrayOf(
                                 FunctionDeclaration(
                                     name = "get_weather",
                                     description = "Returns the weather for a city.",
@@ -63,11 +63,11 @@ class GenerateContentRequestTest {
                     functionCallingConfig =
                         FunctionCallingConfig(
                             mode = Mode.ANY,
-                            allowedFunctionNames = emptyList(),
+                            allowedFunctionNames = emptyArray(),
                         ),
                 ),
             safetySettings =
-                listOf(
+                arrayOf(
                     SafetySetting(
                         category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
                         threshold = Threshold.BLOCK_ONLY_HIGH,
@@ -76,7 +76,7 @@ class GenerateContentRequestTest {
             systemInstruction =
                 Content(
                     role = "system",
-                    parts = listOf(Part(text = "You are a helpful assistant.")),
+                    parts = arrayOf(Part(text = "You are a helpful assistant.")),
                 ),
             generationConfig =
                 GenerationConfig(
@@ -84,7 +84,7 @@ class GenerateContentRequestTest {
                     topK = 1,
                     topP = 1.0,
                     maxOutputTokens = 2048,
-                    stopSequences = listOf("."),
+                    stopSequences = arrayOf("."),
                 ),
             cachedContent = "cached-content-123",
         )

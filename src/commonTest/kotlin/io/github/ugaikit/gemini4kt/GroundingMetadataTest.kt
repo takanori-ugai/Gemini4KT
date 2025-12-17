@@ -14,16 +14,16 @@ class GroundingMetadataTest {
         val groundingMetadata =
             GroundingMetadata(
                 searchEntryPoint = SearchEntryPoint(renderedContent = "<div>Content</div>"),
-                webSearchQueries = listOf("query1", "query2"),
+                webSearchQueries = arrayOf("query1", "query2"),
                 groundingChunks =
-                    listOf(
+                    arrayOf(
                         GroundingChunk(web = Web(uri = "http://example.com", title = "Example")),
                     ),
                 groundingSupports =
-                    listOf(
+                    arrayOf(
                         GroundingSupport(
                             segment = Segment(startIndex = 0, endIndex = 10, text = "Sometext"),
-                            groundingChunkIndices = listOf(0),
+                            groundingChunkIndices = arrayOf(0),
                         ),
                     ),
             )

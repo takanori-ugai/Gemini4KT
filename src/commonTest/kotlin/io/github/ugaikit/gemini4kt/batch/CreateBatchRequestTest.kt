@@ -22,7 +22,7 @@ class CreateBatchRequestTest {
                                 // Helper to set request using GenerateContentRequest
                                 val genRequest =
                                     GenerateContentRequest(
-                                        contents = listOf(Content(parts = listOf(Part(text = "Hello")))),
+                                        contents = arrayOf(Content(parts = arrayOf(Part(text = "Hello")))),
                                     )
                                 request(genRequest)
                                 metadata {

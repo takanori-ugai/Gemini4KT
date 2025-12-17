@@ -23,12 +23,12 @@ object BatchSample {
         // Prepare standard GenerateContentRequests
         val request1 =
             GenerateContentRequest(
-                contents = listOf(Content(parts = listOf(Part(text = "Tell me a haiku about coding.")))),
+                contents = arrayOf(Content(parts = arrayOf(Part(text = "Tell me a haiku about coding.")))),
             )
 
         val request2 =
             GenerateContentRequest(
-                contents = listOf(Content(parts = listOf(Part(text = "Tell me a haiku about coffee.")))),
+                contents = arrayOf(Content(parts = arrayOf(Part(text = "Tell me a haiku about coffee.")))),
             )
 
         // Create CreateBatchRequest using the DSL

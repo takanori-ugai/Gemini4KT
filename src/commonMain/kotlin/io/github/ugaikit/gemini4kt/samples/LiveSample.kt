@@ -30,7 +30,7 @@ object LiveSample {
         val liveModel = "gemini-2.5-flash-native-audio-preview-09-2025"
         val config =
             LiveConnectConfig(
-                responseModalities = listOf(Modality.AUDIO),
+                responseModalities = arrayOf(Modality.AUDIO),
                 systemInstruction = content { part { text { "You are a helpful assistant and answer in a friendly tone." } } },
             )
 

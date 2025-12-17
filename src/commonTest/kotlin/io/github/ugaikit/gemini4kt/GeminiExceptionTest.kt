@@ -70,7 +70,7 @@ class GeminiExceptionTest {
                 message = "Not Found",
                 status = "NOT_FOUND",
                 details =
-                    listOf(
+                    arrayOf(
                         GeminiErrorDetail(
                             type = "type.googleapis.com/google.rpc.ResourceInfo",
                             reason = "RESOURCE_NOT_FOUND",
@@ -90,7 +90,7 @@ class GeminiExceptionTest {
             GeminiErrorDetail(
                 type = "type.googleapis.com/google.rpc.QuotaFailure",
                 violations =
-                    listOf(
+                    arrayOf(
                         GeminiErrorViolation(
                             description = "Quota exceeded",
                             quotaMetric = "requests",
@@ -99,7 +99,7 @@ class GeminiExceptionTest {
                     ),
                 retryDelay = "10s",
                 links =
-                    listOf(
+                    arrayOf(
                         GeminiErrorLink(
                             description = "Google Cloud Console",
                             url = "https://console.cloud.google.com",

@@ -38,9 +38,9 @@ object FileSearchSample {
             // 3. Generate Content
             val generateContentRequest =
                 GenerateContentRequest(
-                    contents = listOf(Content(parts = listOf(Part(text = "What does the fox do?")))),
+                    contents = arrayOf(Content(parts = arrayOf(Part(text = "What does the fox do?")))),
                     tools =
-                        listOf(
+                        arrayOf(
                             tool {
                                 fileSearch {
                                     fileSearchStoreName(store.name!!)

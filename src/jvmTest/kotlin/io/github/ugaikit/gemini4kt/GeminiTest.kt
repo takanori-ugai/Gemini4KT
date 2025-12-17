@@ -76,7 +76,7 @@ class GeminiTest {
                     )
                 }
 
-            val request = GenerateContentRequest(contents = emptyList())
+            val request = GenerateContentRequest(contents = emptyArray())
             val flow = gemini.streamGenerateContent(request)
             val results = flow.toList()
 
@@ -196,7 +196,7 @@ class GeminiTest {
                     assertEquals("$baseUrl/models/gemini-pro:generateContent", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
-            val request = GenerateContentRequest(contents = emptyList())
+            val request = GenerateContentRequest(contents = emptyArray())
 
             val response = gemini.generateContent(request)
 
@@ -212,7 +212,7 @@ class GeminiTest {
                     assertEquals("$baseUrl/cachedContents", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
-            val request = CachedContent(contents = emptyList())
+            val request = CachedContent(contents = emptyArray())
 
             val response = gemini.createCachedContent(request)
 
@@ -273,7 +273,7 @@ class GeminiTest {
                     assertEquals("$baseUrl/models/gemini-2.0-flash-lite:countTokens", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
-            val request = CountTokensRequest(contents = emptyList())
+            val request = CountTokensRequest(contents = emptyArray())
 
             val response = gemini.countTokens(request)
 
@@ -289,7 +289,7 @@ class GeminiTest {
                     assertEquals("$baseUrl/models/embedding-001:batchEmbedContents", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
-            val request = BatchEmbedRequest(requests = emptyList())
+            val request = BatchEmbedRequest(requests = emptyArray())
 
             val response = gemini.batchEmbedContents(request)
 
@@ -305,7 +305,7 @@ class GeminiTest {
                     assertEquals("$baseUrl/models/embedding-001:embedContent", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
-            val request = EmbedContentRequest(content = Content(parts = emptyList()), model = "models/embedding-001")
+            val request = EmbedContentRequest(content = Content(parts = emptyArray()), model = "models/embedding-001")
 
             val response = gemini.embedContent(request)
 

@@ -13,9 +13,25 @@ import kotlinx.serialization.Serializable
  * within a document.
  */
 @Serializable
+@JsExport
 data class CitationMetadata(
-    val citationSources: List<CitationSource>,
-)
+    val citationSources: Array<CitationSource>,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as CitationMetadata
+
+        if (!citationSources.contentEquals(other.citationSources)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return citationSources.contentHashCode()
+    }
+}
 
 class CitationMetadataBuilder {
     private val citationSources: MutableList<CitationSource> = mutableListOf()
@@ -26,7 +42,7 @@ class CitationMetadataBuilder {
 
     fun build(): CitationMetadata =
         CitationMetadata(
-            citationSources = citationSources,
+            citationSources = citationSources.toTypedArray(),
         )
 }
 

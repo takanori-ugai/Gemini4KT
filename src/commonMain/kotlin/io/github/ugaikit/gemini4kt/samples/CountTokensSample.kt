@@ -10,7 +10,7 @@ object CountTokensSample {
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())
         val text = "Write a story about a magic backpack."
-        val inputJson = CountTokensRequest(listOf(Content(listOf(Part(text)))))
+        val inputJson = CountTokensRequest(arrayOf(Content(arrayOf(Part(text)))))
         println(client.countTokens(inputJson))
     }
 }

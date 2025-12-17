@@ -9,6 +9,22 @@ import kotlinx.serialization.Serializable
  * representing individual embedding requests to be processed in a batch.
  */
 @Serializable
+@JsExport
 data class BatchEmbedRequest(
-    val requests: List<EmbedContentRequest>,
-)
+    val requests: Array<EmbedContentRequest>,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as BatchEmbedRequest
+
+        if (!requests.contentEquals(other.requests)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return requests.contentHashCode()
+    }
+}

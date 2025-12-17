@@ -1,0 +1,31 @@
+Reusing configuration cache.
+> Task :kmpPartiallyResolvedDependenciesChecker
+> Task :jvmTestProcessResources NO-SOURCE
+> Task :processJvmTestResources SKIPPED
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :jvmProcessResources UP-TO-DATE
+> Task :processJvmMainResources SKIPPED
+> Task :compileKotlinJvm UP-TO-DATE
+> Task :compileJvmMainJava NO-SOURCE
+> Task :jvmMainClasses UP-TO-DATE
+> Task :jvmJar UP-TO-DATE
+
+> Task :compileTestKotlinJvm FAILED
+e: file:///app/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/CandidateBuilderTest.kt:85:9 Type inference failed. The value of the type parameter 'T' must be mentioned in input types (argument types, receiver type, or expected type). Try to specify it explicitly.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileTestKotlinJvm'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 3s
+5 actionable tasks: 2 executed, 3 up-to-date
+Configuration cache entry reused.

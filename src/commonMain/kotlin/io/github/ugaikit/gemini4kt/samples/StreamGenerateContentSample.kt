@@ -15,7 +15,7 @@ object StreamGenerateContentSample {
 
         val input =
             GenerateContentRequest(
-                contents = listOf(Content(parts = listOf(Part(text = text)))),
+                contents = arrayOf(Content(parts = arrayOf(Part(text = text)))),
             )
 
         client

@@ -23,7 +23,7 @@ class CandidateBuilderTest {
                 citationMetadata =
                     CitationMetadata(
                         citationSources =
-                            listOf(
+                            arrayOf(
                                 CitationSource(
                                     startIndex = 0,
                                     endIndex = 10,
@@ -36,8 +36,8 @@ class CandidateBuilderTest {
                 avgLogprobs = 0.9
                 logprobsResult =
                     LogprobsResult(
-                        topCandidates = emptyList(),
-                        chosenCandidates = emptyList(),
+                        topCandidates = emptyArray(),
+                        chosenCandidates = emptyArray(),
                     )
                 groundingAttribution {
                     sourceId {
@@ -62,7 +62,7 @@ class CandidateBuilderTest {
         assertEquals(5, candidate.tokenCount)
         assertEquals(0.9, candidate.avgLogprobs)
         assertNotNull(candidate.logprobsResult)
-        assertEquals(1, candidate.groundingAttributions.size)
+        assertEquals(1, candidate.groundingAttributions?.size)
     }
 
     @Test
@@ -82,7 +82,7 @@ class CandidateBuilderTest {
         assertNull(candidate.tokenCount)
         assertNull(candidate.avgLogprobs)
         assertNull(candidate.logprobsResult)
-        assertEquals(0, candidate.groundingAttributions.size)
+        assertNull(candidate.groundingAttributions)
         assertNull(candidate.urlContextMetadata)
     }
 
@@ -97,7 +97,7 @@ class CandidateBuilderTest {
                 urlContextMetadata =
                     UrlContextMetadata(
                         urlMetadata =
-                            listOf(
+                            arrayOf(
                                 UrlMetadata(
                                     retrievedUrl = "http://example.com",
                                     urlRetrievalStatus = "SUCCESS",
