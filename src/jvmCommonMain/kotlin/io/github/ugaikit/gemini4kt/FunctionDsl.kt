@@ -38,7 +38,7 @@ actual fun buildFunctionDeclaration(function: KFunction<*>): FunctionDeclaration
             Schema(
                 type = "object",
                 properties = properties,
-                required = function.valueParameters.map { it.name!! },
+                required = function.valueParameters.map { it.name!! }.toTypedArray(),
             ),
     )
 }

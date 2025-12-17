@@ -62,18 +62,19 @@ class GenerateContentRequestBuilderTest {
                 ?.get(0)
                 ?.text,
         )
-        assertEquals(1, request.tools.size)
+        assertEquals(1, request.tools?.size)
         assertEquals(
             "get_weather",
-            request.tools[0]
-                .functionDeclarations
+            request.tools
+                ?.get(0)
+                ?.functionDeclarations
                 ?.get(0)
                 ?.name,
         )
         assertNotNull(request.toolConfig)
         assertEquals(Mode.ANY, request.toolConfig?.functionCallingConfig?.mode)
-        assertEquals(1, request.safetySettings.size)
-        assertEquals(HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, request.safetySettings[0].category)
+        assertEquals(1, request.safetySettings?.size)
+        assertEquals(HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, request.safetySettings?.get(0)?.category)
         assertNotNull(request.systemInstruction)
         assertEquals("system", request.systemInstruction?.role)
         assertNotNull(request.generationConfig)
@@ -91,9 +92,9 @@ class GenerateContentRequestBuilderTest {
             }
 
         assertEquals(1, request.contents.size)
-        assertTrue(request.tools.isEmpty())
+        assertNull(request.tools)
         assertNull(request.toolConfig)
-        assertTrue(request.safetySettings.isEmpty())
+        assertNull(request.safetySettings)
         assertNull(request.systemInstruction)
         assertNull(request.generationConfig)
         assertNull(request.cachedContent)
@@ -138,7 +139,7 @@ class GenerateContentRequestBuilderTest {
             }
 
         assertEquals(2, request.contents.size)
-        assertEquals(2, request.tools.size)
-        assertEquals(2, request.safetySettings.size)
+        assertEquals(2, request.tools?.size)
+        assertEquals(2, request.safetySettings?.size)
     }
 }

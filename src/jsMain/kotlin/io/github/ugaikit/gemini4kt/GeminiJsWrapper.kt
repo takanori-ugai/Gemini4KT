@@ -32,8 +32,8 @@ class GeminiJsWrapper(
             val request =
                 GenerateContentRequest(
                     contents =
-                        listOf(
-                            Content(parts = listOf(Part(text = prompt))),
+                        arrayOf(
+                            Content(parts = arrayOf(Part(text = prompt))),
                         ),
                 )
             val response = client.generateContent(request, model)
@@ -56,8 +56,8 @@ class GeminiJsWrapper(
                     val request =
                         GenerateContentRequest(
                             contents =
-                                listOf(
-                                    Content(parts = listOf(Part(text = input))),
+                                arrayOf(
+                                    Content(parts = arrayOf(Part(text = input))),
                                 ),
                         )
                     val response = client.generateContent(request, model)

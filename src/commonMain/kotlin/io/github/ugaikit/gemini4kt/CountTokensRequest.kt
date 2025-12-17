@@ -13,6 +13,20 @@ import kotlinx.serialization.Serializable
  * managing input size constraints.
  */
 @Serializable
+@JsExport
 data class CountTokensRequest(
-    val contents: List<Content>,
-)
+    val contents: Array<Content>,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as CountTokensRequest
+
+        if (!contents.contentEquals(other.contents)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int = contents.contentHashCode()
+}

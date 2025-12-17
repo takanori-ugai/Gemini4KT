@@ -29,15 +29,15 @@ object UrlContextSample {
         val input =
             GenerateContentRequest(
                 contents =
-                    listOf(
+                    arrayOf(
                         Content(
                             parts =
-                                listOf(
+                                arrayOf(
                                     Part(text = "Extract the content of the following URL: https://www.google.com"),
                                 ),
                         ),
                     ),
-                tools = listOf(tools),
+                tools = arrayOf(tools),
                 // toolConfig = toolConfig
             )
 

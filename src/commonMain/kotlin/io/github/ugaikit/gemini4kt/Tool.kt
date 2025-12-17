@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 @JsExport
 data class Tool(
-    val functionDeclarations: List<FunctionDeclaration>? = null,
+    val functionDeclarations: Array<FunctionDeclaration>? = null,
     @SerialName("google_search")
     val googleSearch: GoogleSearch? = null,
     @SerialName("code_execution")
@@ -26,7 +26,36 @@ data class Tool(
     val urlContext: UrlContext? = null,
     @SerialName("file_search")
     val fileSearch: FileSearchTool? = null,
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Tool
+
+        if (functionDeclarations != null) {
+            if (other.functionDeclarations == null) return false
+            if (!functionDeclarations.contentEquals(other.functionDeclarations)) return false
+        } else if (other.functionDeclarations != null) {
+            return false
+        }
+        if (googleSearch != other.googleSearch) return false
+        if (codeExecution != other.codeExecution) return false
+        if (urlContext != other.urlContext) return false
+        if (fileSearch != other.fileSearch) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = functionDeclarations?.contentHashCode() ?: 0
+        result = 31 * result + (googleSearch?.hashCode() ?: 0)
+        result = 31 * result + (codeExecution?.hashCode() ?: 0)
+        result = 31 * result + (urlContext?.hashCode() ?: 0)
+        result = 31 * result + (fileSearch?.hashCode() ?: 0)
+        return result
+    }
+}
 
 class ToolBuilder {
     private val functionDeclarations: MutableList<FunctionDeclaration> = mutableListOf()
@@ -57,7 +86,7 @@ class ToolBuilder {
 
     fun build() =
         Tool(
-            functionDeclarations = functionDeclarations,
+            functionDeclarations = functionDeclarations.toTypedArray(),
             googleSearch = googleSearch,
             codeExecution = codeExecution,
             urlContext = urlContext,

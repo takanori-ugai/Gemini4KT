@@ -90,7 +90,7 @@ class GeminiLiveSessionTest {
             val response =
                 BidiGenerateContentToolResponse(
                     functionResponses =
-                        listOf(
+                        arrayOf(
                             FunctionResponse(
                                 name = "myFunc",
                                 response = JsonObject(mapOf("result" to JsonPrimitive("ok"))),

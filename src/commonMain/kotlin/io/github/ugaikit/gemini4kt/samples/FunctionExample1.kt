@@ -16,17 +16,17 @@ object FunctionExample1 {
         val exFunction =
             GenerateContentRequest(
                 contents =
-                    listOf(
+                    arrayOf(
                         Content(
                             role = "user",
                             parts =
-                                listOf(
+                                arrayOf(
                                     Part(text = "Which theaters in Mountain View show Barbie movie?"),
                                 ),
                         ),
                     ),
                 tools =
-                    listOf(
+                    arrayOf(
                         Tool(
                             functionDeclarations = getFunctionDeclarations(),
                         ),
@@ -68,7 +68,7 @@ object FunctionExample1 {
                                     description = "Any kind of description including category or genre",
                                 ),
                         ),
-                    required = listOf("description"),
+                    required = arrayOf("description"),
                 ),
         )
 
@@ -96,7 +96,7 @@ object FunctionExample1 {
                                     description = "Any movie title",
                                 ),
                         ),
-                    required = listOf("location"),
+                    required = arrayOf("location"),
                 ),
         )
 
@@ -132,9 +132,9 @@ object FunctionExample1 {
                                     description = "Date for requested showtime",
                                 ),
                         ),
-                    required = listOf("location", "movie", "theater", "date"),
+                    required = arrayOf("location", "movie", "theater", "date"),
                 ),
         )
 
-    private fun getFunctionDeclarations(): List<FunctionDeclaration> = listOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
+    private fun getFunctionDeclarations(): Array<FunctionDeclaration> = arrayOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
 }

@@ -29,7 +29,10 @@ class FunctionDslTest {
         val parameters = declaration.parameters
         assertEquals("object", parameters.type)
         assertEquals(2, parameters.properties.size)
-        assertEquals(listOf("str", "int"), parameters.required)
+        // Check Array content
+        assertEquals(2, parameters.required.size)
+        assertEquals("str", parameters.required[0])
+        assertEquals("int", parameters.required[1])
 
         val strParam = parameters.properties["str"]!!
         assertEquals("string", strParam.type)

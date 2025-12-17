@@ -13,9 +13,9 @@ object CodeExecutionSample {
         val text = "What is the sum of the first 50 prime numbers? Generate and run code for the calculation, and make sure you get all 50."
         val inputJson =
             GenerateContentRequest(
-                listOf(Content(listOf(Part(text = text)))),
+                arrayOf(Content(arrayOf(Part(text = text)))),
                 tools =
-                    listOf(
+                    arrayOf(
                         tool {
                             codeExecution()
                         },

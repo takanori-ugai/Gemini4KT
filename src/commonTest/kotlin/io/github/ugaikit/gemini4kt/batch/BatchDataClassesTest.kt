@@ -21,7 +21,7 @@ class BatchDataClassesTest {
                 candidates =
                     listOf(
                         Candidate(
-                            content = Content(parts = listOf(Part(text = "Response Text"))),
+                            content = Content(parts = arrayOf(Part(text = "Response Text"))),
                         ),
                     ),
             )

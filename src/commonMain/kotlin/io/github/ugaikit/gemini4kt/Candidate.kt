@@ -22,7 +22,7 @@ data class Candidate(
     val tokenCount: Int? = null,
     val avgLogprobs: Double? = null,
     val logprobsResult: LogprobsResult? = null,
-    val groundingAttributions: List<GroundingAttribution> = emptyList(),
+    val groundingAttributions: List<GroundingAttribution>? = null,
     val groundingMetadata: GroundingMetadata? = null,
     val urlContextMetadata: UrlContextMetadata? = null,
 )
@@ -64,7 +64,7 @@ class CandidateBuilder {
             tokenCount,
             avgLogprobs,
             logprobsResult,
-            groundingAttributions,
+            if (groundingAttributions.isEmpty()) null else groundingAttributions,
             groundingMetadata,
             urlContextMetadata,
         )

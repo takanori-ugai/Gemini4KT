@@ -23,7 +23,7 @@ data class BidiGenerateContentSetup(
     val model: String,
     val generationConfig: GenerationConfig? = null,
     val systemInstruction: Content? = null,
-    val tools: List<Tool>? = null,
+    val tools: Array<Tool>? = null,
     val realtimeInputConfig: RealtimeInputConfig? = null,
     val sessionResumption: SessionResumptionConfig? = null,
     val contextWindowCompression: ContextWindowCompressionConfig? = null,
@@ -37,7 +37,7 @@ data class BidiGenerateContentSetup(
  */
 @Serializable
 data class BidiGenerateContentClientContent(
-    val turns: List<Content>? = null,
+    val turns: Array<Content>? = null,
     val turnComplete: Boolean? = null,
 )
 
@@ -46,7 +46,7 @@ data class BidiGenerateContentClientContent(
  */
 @Serializable
 data class BidiGenerateContentRealtimeInput(
-    val mediaChunks: List<Blob>? = null,
+    val mediaChunks: Array<Blob>? = null,
     val audio: Blob? = null,
     val video: Blob? = null,
     val activityStart: ActivityStart? = null,
@@ -60,7 +60,7 @@ data class BidiGenerateContentRealtimeInput(
  */
 @Serializable
 data class BidiGenerateContentToolResponse(
-    val functionResponses: List<FunctionResponse>? = null,
+    val functionResponses: Array<FunctionResponse>? = null,
 )
 
 /**
@@ -108,12 +108,12 @@ data class BidiGenerateContentServerContent(
 
 @Serializable
 data class BidiGenerateContentToolCall(
-    val functionCalls: List<FunctionCall>? = null,
+    val functionCalls: Array<FunctionCall>? = null,
 )
 
 @Serializable
 data class BidiGenerateContentToolCallCancellation(
-    val ids: List<String>? = null,
+    val ids: Array<String>? = null,
 )
 
 @Serializable
@@ -216,10 +216,46 @@ data class BidiGenerateContentTranscription(
 
 @Serializable
 data class LiveConnectConfig(
-    val responseModalities: List<Modality>? = null,
+    val responseModalities: Array<Modality>? = null,
     val speechConfig: SpeechConfig? = null,
     val systemInstruction: Content? = null,
-    val tools: List<Tool>? = null,
+    val tools: Array<Tool>? = null,
     val generationConfig: GenerationConfig? = null,
     val enableAffectiveDialog: Boolean? = null, // Helper for API v1alpha if needed, but not in main Setup struct
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as LiveConnectConfig
+
+        if (responseModalities != null) {
+            if (other.responseModalities == null) return false
+            if (!responseModalities.contentEquals(other.responseModalities)) return false
+        } else if (other.responseModalities != null) {
+            return false
+        }
+        if (speechConfig != other.speechConfig) return false
+        if (systemInstruction != other.systemInstruction) return false
+        if (tools != null) {
+            if (other.tools == null) return false
+            if (!tools.contentEquals(other.tools)) return false
+        } else if (other.tools != null) {
+            return false
+        }
+        if (generationConfig != other.generationConfig) return false
+        if (enableAffectiveDialog != other.enableAffectiveDialog) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = responseModalities?.contentHashCode() ?: 0
+        result = 31 * result + (speechConfig?.hashCode() ?: 0)
+        result = 31 * result + (systemInstruction?.hashCode() ?: 0)
+        result = 31 * result + (tools?.contentHashCode() ?: 0)
+        result = 31 * result + (generationConfig?.hashCode() ?: 0)
+        result = 31 * result + (enableAffectiveDialog?.hashCode() ?: 0)
+        return result
+    }
+}

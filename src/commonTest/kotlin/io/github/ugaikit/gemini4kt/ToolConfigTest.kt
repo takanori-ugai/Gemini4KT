@@ -13,7 +13,7 @@ class ToolConfigTest {
         val functionCallingConfig =
             FunctionCallingConfig(
                 mode = Mode.ANY,
-                allowedFunctionNames = listOf("search", "translate"),
+                allowedFunctionNames = arrayOf("search", "translate"),
             )
         val toolConfig =
             ToolConfig(

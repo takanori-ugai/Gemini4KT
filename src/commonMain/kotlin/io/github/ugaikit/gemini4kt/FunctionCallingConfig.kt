@@ -18,8 +18,26 @@ import kotlinx.serialization.Serializable
 @JsExport
 data class FunctionCallingConfig(
     val mode: Mode,
-    val allowedFunctionNames: List<String>,
-)
+    val allowedFunctionNames: Array<String>,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as FunctionCallingConfig
+
+        if (mode != other.mode) return false
+        if (!allowedFunctionNames.contentEquals(other.allowedFunctionNames)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = mode.hashCode()
+        result = 31 * result + allowedFunctionNames.contentHashCode()
+        return result
+    }
+}
 
 class FunctionCallingConfigBuilder {
     var mode: Mode = Mode.AUTO
@@ -29,7 +47,7 @@ class FunctionCallingConfigBuilder {
         allowedFunctionNames.add(name)
     }
 
-    fun build() = FunctionCallingConfig(mode, allowedFunctionNames)
+    fun build() = FunctionCallingConfig(mode, allowedFunctionNames.toTypedArray())
 }
 
 fun functionCallingConfig(init: FunctionCallingConfigBuilder.() -> Unit): FunctionCallingConfig = FunctionCallingConfigBuilder().apply(init).build()

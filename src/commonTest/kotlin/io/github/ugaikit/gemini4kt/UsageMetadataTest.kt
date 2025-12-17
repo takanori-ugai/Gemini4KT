@@ -16,12 +16,12 @@ class UsageMetadataTest {
                 candidatesTokenCount = 323,
                 totalTokenCount = 1182,
                 promptTokensDetails =
-                    listOf(
+                    arrayOf(
                         ModalityTokenCount(Modality.TEXT, 31),
                     ),
                 toolUsePromptTokenCount = 712,
                 toolUsePromptTokensDetails =
-                    listOf(
+                    arrayOf(
                         ModalityTokenCount(Modality.TEXT, 712),
                     ),
             )

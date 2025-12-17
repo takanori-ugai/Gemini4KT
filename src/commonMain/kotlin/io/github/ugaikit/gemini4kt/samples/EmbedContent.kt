@@ -13,15 +13,15 @@ object EmbedContent {
         val text = "Write a story about a magic backpack."
         val embedRequest =
             EmbedContentRequest(
-                content = Content(listOf(Part(text))),
+                content = Content(arrayOf(Part(text))),
                 model = "models/text-embedding-004",
             )
         println(client.embedContent(embedRequest, model = "text-embedding-004"))
         val batchEmbedRequest =
             BatchEmbedRequest(
-                listOf(
+                arrayOf(
                     EmbedContentRequest(
-                        content = Content(listOf(Part(text))),
+                        content = Content(arrayOf(Part(text))),
                         model = "models/text-embedding-004",
                     ),
                 ),

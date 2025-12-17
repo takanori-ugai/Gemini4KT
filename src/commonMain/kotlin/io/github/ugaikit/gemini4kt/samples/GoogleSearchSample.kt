@@ -13,9 +13,9 @@ object GoogleSearchSample {
         val text = "Who won the euro 2024?"
         val inputJson =
             GenerateContentRequest(
-                listOf(Content(listOf(Part(text)))),
+                arrayOf(Content(arrayOf(Part(text)))),
                 tools =
-                    listOf(
+                    arrayOf(
                         tool {
                             googleSearch()
                         },

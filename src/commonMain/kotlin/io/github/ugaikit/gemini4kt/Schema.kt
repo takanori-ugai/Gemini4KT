@@ -29,11 +29,41 @@ data class Schema(
     val format: String? = null,
     val description: String? = null,
     val nullable: Boolean = false,
-    val enum: List<String> = emptyList(),
+    val enum: Array<String> = emptyArray(),
     val properties: Map<String, Schema> = emptyMap(),
-    val required: List<String> = emptyList(),
+    val required: Array<String> = emptyArray(),
     val items: Schema? = null,
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Schema
+
+        if (type != other.type) return false
+        if (format != other.format) return false
+        if (description != other.description) return false
+        if (nullable != other.nullable) return false
+        if (!enum.contentEquals(other.enum)) return false
+        if (properties != other.properties) return false
+        if (!required.contentEquals(other.required)) return false
+        if (items != other.items) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + (format?.hashCode() ?: 0)
+        result = 31 * result + (description?.hashCode() ?: 0)
+        result = 31 * result + nullable.hashCode()
+        result = 31 * result + enum.contentHashCode()
+        result = 31 * result + properties.hashCode()
+        result = 31 * result + required.contentHashCode()
+        result = 31 * result + (items?.hashCode() ?: 0)
+        return result
+    }
+}
 
 class SchemaBuilder {
     var type: String = "object" // Default type
@@ -71,9 +101,9 @@ class SchemaBuilder {
             format = format,
             description = description,
             nullable = nullable,
-            enum = enumInternal,
+            enum = enumInternal.toTypedArray(),
             properties = properties,
-            required = requiredInternal,
+            required = requiredInternal.toTypedArray(),
             items = items?.build(),
         )
     }

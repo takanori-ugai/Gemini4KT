@@ -32,15 +32,43 @@ import kotlinx.serialization.Serializable
 @Serializable
 @JsExport
 data class GenerateContentRequest(
-    val contents: List<Content>,
-    val tools: List<Tool> = emptyList(),
+    val contents: Array<Content>,
+    val tools: Array<Tool>? = null,
     val toolConfig: ToolConfig? = null,
-    val safetySettings: List<SafetySetting> = emptyList(),
+    val safetySettings: Array<SafetySetting>? = null,
     @SerialName("system_instruction")
     val systemInstruction: Content? = null,
     val generationConfig: GenerationConfig? = null,
     val cachedContent: String? = null,
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as GenerateContentRequest
+
+        if (!contents.contentEquals(other.contents)) return false
+        if (!tools.contentEquals(other.tools)) return false
+        if (toolConfig != other.toolConfig) return false
+        if (!safetySettings.contentEquals(other.safetySettings)) return false
+        if (systemInstruction != other.systemInstruction) return false
+        if (generationConfig != other.generationConfig) return false
+        if (cachedContent != other.cachedContent) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = contents.contentHashCode()
+        result = 31 * result + tools.contentHashCode()
+        result = 31 * result + (toolConfig?.hashCode() ?: 0)
+        result = 31 * result + safetySettings.contentHashCode()
+        result = 31 * result + (systemInstruction?.hashCode() ?: 0)
+        result = 31 * result + (generationConfig?.hashCode() ?: 0)
+        result = 31 * result + (cachedContent?.hashCode() ?: 0)
+        return result
+    }
+}
 
 class GenerateContentRequestBuilder {
     private val contents: MutableList<Content> = mutableListOf()
@@ -77,10 +105,10 @@ class GenerateContentRequestBuilder {
 
     fun build() =
         GenerateContentRequest(
-            contents = contents,
-            tools = tools,
+            contents = contents.toTypedArray(),
+            tools = if (tools.isEmpty()) null else tools.toTypedArray(),
             toolConfig = toolConfig,
-            safetySettings = safetySettings,
+            safetySettings = if (safetySettings.isEmpty()) null else safetySettings.toTypedArray(),
             systemInstruction = systemInstruction,
             generationConfig = generationConfig,
             cachedContent = cachedContent,

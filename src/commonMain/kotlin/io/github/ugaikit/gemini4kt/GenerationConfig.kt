@@ -32,7 +32,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 @JsExport
 data class GenerationConfig(
-    val stopSequences: List<String>? = null,
+    val stopSequences: Array<String>? = null,
     val temperature: Double? = null,
     val maxOutputTokens: Int? = null,
     val topP: Double? = null,
@@ -40,11 +40,55 @@ data class GenerationConfig(
     @SerialName("response_mime_type")
     val responseMimeType: String? = null,
     @SerialName("response_modalities")
-    val responseModalities: List<Modality>? = null,
+    val responseModalities: Array<Modality>? = null,
     val thinkingConfig: ThinkingConfig? = null,
     val imageConfig: ImageConfig? = null,
     val speechConfig: SpeechConfig? = null,
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as GenerationConfig
+
+        if (stopSequences != null) {
+            if (other.stopSequences == null) return false
+            if (!stopSequences.contentEquals(other.stopSequences)) return false
+        } else if (other.stopSequences != null) {
+            return false
+        }
+        if (temperature != other.temperature) return false
+        if (maxOutputTokens != other.maxOutputTokens) return false
+        if (topP != other.topP) return false
+        if (topK != other.topK) return false
+        if (responseMimeType != other.responseMimeType) return false
+        if (responseModalities != null) {
+            if (other.responseModalities == null) return false
+            if (!responseModalities.contentEquals(other.responseModalities)) return false
+        } else if (other.responseModalities != null) {
+            return false
+        }
+        if (thinkingConfig != other.thinkingConfig) return false
+        if (imageConfig != other.imageConfig) return false
+        if (speechConfig != other.speechConfig) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = stopSequences?.contentHashCode() ?: 0
+        result = 31 * result + (temperature?.hashCode() ?: 0)
+        result = 31 * result + (maxOutputTokens ?: 0)
+        result = 31 * result + (topP?.hashCode() ?: 0)
+        result = 31 * result + (topK ?: 0)
+        result = 31 * result + (responseMimeType?.hashCode() ?: 0)
+        result = 31 * result + (responseModalities?.contentHashCode() ?: 0)
+        result = 31 * result + (thinkingConfig?.hashCode() ?: 0)
+        result = 31 * result + (imageConfig?.hashCode() ?: 0)
+        result = 31 * result + (speechConfig?.hashCode() ?: 0)
+        return result
+    }
+}
 
 class GenerationConfigBuilder {
     private val stopSequences: MutableList<String> = mutableListOf()
@@ -76,13 +120,13 @@ class GenerationConfigBuilder {
 
     fun build() =
         GenerationConfig(
-            stopSequences = if (stopSequences.isEmpty()) null else stopSequences,
+            stopSequences = if (stopSequences.isEmpty()) null else stopSequences.toTypedArray(),
             temperature = temperature,
             maxOutputTokens = maxOutputTokens,
             topP = topP,
             topK = topK,
             responseMimeType = responseMimeType,
-            responseModalities = if (responseModalities.isEmpty()) null else responseModalities,
+            responseModalities = if (responseModalities.isEmpty()) null else responseModalities.toTypedArray(),
             thinkingConfig = thinkingConfig,
             imageConfig = imageConfig,
             speechConfig = speechConfig,

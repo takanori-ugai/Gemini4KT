@@ -19,9 +19,9 @@ object InputWithImage {
 
         val inputWithImage =
             GenerateContentRequest(
-                listOf(
+                arrayOf(
                     Content(
-                        listOf(
+                        arrayOf(
                             Part(text = "What is this picture?"),
                             Part(
                                 inlineData =

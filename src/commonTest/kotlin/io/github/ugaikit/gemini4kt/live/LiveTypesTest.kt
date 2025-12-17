@@ -23,7 +23,7 @@ class LiveTypesTest {
             BidiGenerateContentSetup(
                 model = "models/gemini-2.0-flash-exp",
                 generationConfig = GenerationConfig(temperature = 0.5),
-                systemInstruction = Content(parts = listOf(Part(text = "Hello"))),
+                systemInstruction = Content(parts = arrayOf(Part(text = "Hello"))),
             )
         val jsonStr = json.encodeToString(setup)
         assertNotNull(jsonStr)
@@ -43,7 +43,7 @@ class LiveTypesTest {
 
         val content =
             BidiGenerateContentClientContent(
-                turns = listOf(Content(parts = listOf(Part(text = "Hi")))),
+                turns = arrayOf(Content(parts = arrayOf(Part(text = "Hi")))),
                 turnComplete = true,
             )
         val msg2 = BidiGenerateContentClientMessage(clientContent = content)
@@ -83,7 +83,7 @@ class LiveTypesTest {
     fun `test RealtimeInput serialization`() {
         val input =
             BidiGenerateContentRealtimeInput(
-                mediaChunks = listOf(Blob(mimeType = "audio/pcm", data = "base64encodeddata")),
+                mediaChunks = arrayOf(Blob(mimeType = "audio/pcm", data = "base64encodeddata")),
                 audio = Blob(mimeType = "audio/wav", data = "somesound"),
                 text = "Some text input",
             )
@@ -101,7 +101,7 @@ class LiveTypesTest {
     fun `test BidiGenerateContentToolResponse serialization`() {
         val toolResponse =
             BidiGenerateContentToolResponse(
-                functionResponses = listOf(),
+                functionResponses = arrayOf(),
             )
         val msg = BidiGenerateContentClientMessage(toolResponse = toolResponse)
         val jsonStr = json.encodeToString(msg)
