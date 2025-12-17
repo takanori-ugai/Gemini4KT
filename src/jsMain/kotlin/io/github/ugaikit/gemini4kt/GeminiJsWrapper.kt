@@ -24,7 +24,10 @@ class GeminiJsWrapper(
 
     // Wrapper function: Returns Promise<String> instead of suspend String
     // This IS supported by @JsExport
-    fun generateContentAsync(prompt: String): Promise<String> =
+    fun generateContentAsync(
+        prompt: String,
+        model: String = "gemma-3-4b-it",
+    ): Promise<String> =
         GlobalScope.promise {
             val request =
                 GenerateContentRequest(
@@ -33,7 +36,7 @@ class GeminiJsWrapper(
                             Content(parts = listOf(Part(text = prompt))),
                         ),
                 )
-            val response = client.generateContent(request)
+            val response = client.generateContent(request, model)
             response.candidates
                 .firstOrNull()
                 ?.content
@@ -45,7 +48,7 @@ class GeminiJsWrapper(
     @JsName("generateContent")
     fun generateContent(
         input: dynamic,
-        model: String = "gemma-3-12b-it",
+        model: String = "gemma-3-4b-it",
     ): Promise<dynamic> =
         GlobalScope.promise {
             when (input) {

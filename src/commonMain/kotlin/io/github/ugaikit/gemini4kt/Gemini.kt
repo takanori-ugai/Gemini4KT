@@ -80,7 +80,7 @@ class Gemini(
      */
     fun streamGenerateContent(
         inputJson: GenerateContentRequest,
-        model: String = "gemini-pro",
+        model: String = "gemini-2.5-flash-native-audio-dialog",
     ): Flow<GenerateContentResponse> =
         flow {
             val urlString = "$baseUrl/$model:streamGenerateContent?alt=sse"
@@ -195,7 +195,7 @@ class Gemini(
      */
     suspend fun countTokens(
         inputJson: CountTokensRequest,
-        model: String = "gemini-2.0-flash-lite",
+        model: String = "gemini-2.5-flash-native-audio-dialog",
     ): TotalTokens {
         val urlString = "$baseUrl/$model:countTokens"
         println(inputJson)

@@ -24,6 +24,7 @@ const Content = gemini4kt.io.github.ugaikit.gemini4kt.Content;
 const Part = gemini4kt.io.github.ugaikit.gemini4kt.Part;
 
 const apiKey = process.env.GEMINI_API_KEY;
+const model = "gemma-3-12b-it"
 
 if (!apiKey) {
     console.error("Error: Please set the GEMINI_API_KEY environment variable.");
@@ -38,7 +39,7 @@ async function runSamples() {
     try {
         // Sample 1: Passing a simple string prompt
         // Returns a Promise<String> (the text content)
-        const textResponse = await client.generateContent("Hello, Gemini! Tell me a one-liner.");
+        const textResponse = await client.generateContent("Hello, Gemini! Tell me a one-liner.", model);
         console.log("Response Text:", textResponse);
     } catch (e) {
         console.error("Error in Sample 1:", e);
@@ -54,7 +55,7 @@ async function runSamples() {
                 parts: [{ text: "Explain quantum computing in 10 words." }]
             }]
         };
-        const jsonResponse = await client.generateContent(jsonRequest);
+        const jsonResponse = await client.generateContent(jsonRequest, model);
         console.log("Response Object:", JSON.stringify(jsonResponse, null, 2));
     } catch (e) {
         console.error("Error in Sample 2:", e);
@@ -69,7 +70,7 @@ async function runSamples() {
         const content = new Content([part]);
         const request = new GenerateContentRequest([content]);
 
-        const response = await client.generateContent(request);
+        const response = await client.generateContent(request, model);
         console.log("Response Object:", JSON.stringify(response, null, 2));
 
         // Accessing candidates
