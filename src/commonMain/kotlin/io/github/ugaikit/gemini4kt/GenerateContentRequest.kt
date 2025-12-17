@@ -48,9 +48,19 @@ data class GenerateContentRequest(
         other as GenerateContentRequest
 
         if (!contents.contentEquals(other.contents)) return false
-        if (!tools.contentEquals(other.tools)) return false
+        if (tools != null) {
+            if (other.tools == null) return false
+            if (!tools.contentEquals(other.tools)) return false
+        } else if (other.tools != null) {
+            return false
+        }
         if (toolConfig != other.toolConfig) return false
-        if (!safetySettings.contentEquals(other.safetySettings)) return false
+        if (safetySettings != null) {
+            if (other.safetySettings == null) return false
+            if (!safetySettings.contentEquals(other.safetySettings)) return false
+        } else if (other.safetySettings != null) {
+            return false
+        }
         if (systemInstruction != other.systemInstruction) return false
         if (generationConfig != other.generationConfig) return false
         if (cachedContent != other.cachedContent) return false
@@ -60,9 +70,9 @@ data class GenerateContentRequest(
 
     override fun hashCode(): Int {
         var result = contents.contentHashCode()
-        result = 31 * result + tools.contentHashCode()
+        result = 31 * result + (tools?.contentHashCode() ?: 0)
         result = 31 * result + (toolConfig?.hashCode() ?: 0)
-        result = 31 * result + safetySettings.contentHashCode()
+        result = 31 * result + (safetySettings?.contentHashCode() ?: 0)
         result = 31 * result + (systemInstruction?.hashCode() ?: 0)
         result = 31 * result + (generationConfig?.hashCode() ?: 0)
         result = 31 * result + (cachedContent?.hashCode() ?: 0)
