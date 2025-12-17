@@ -22,29 +22,6 @@ class GeminiJsWrapper(
             explicitNulls = false
         }
 
-    // Wrapper function: Returns Promise<String> instead of suspend String
-    // This IS supported by @JsExport
-    fun generateContentAsync(
-        prompt: String,
-        model: String = "gemma-3-4b-it",
-    ): Promise<String> =
-        GlobalScope.promise {
-            val request =
-                GenerateContentRequest(
-                    contents =
-                        arrayOf(
-                            Content(parts = arrayOf(Part(text = prompt))),
-                        ),
-                )
-            val response = client.generateContent(request, model)
-            response.candidates
-                .firstOrNull()
-                ?.content
-                ?.parts
-                ?.firstOrNull()
-                ?.text ?: ""
-        }
-
     @JsName("generateContent")
     fun generateContent(
         input: dynamic,
