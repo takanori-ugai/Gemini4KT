@@ -25,12 +25,16 @@ data class UsageMetadata(
         if (promptTokensDetails != null) {
             if (other.promptTokensDetails == null) return false
             if (!promptTokensDetails.contentEquals(other.promptTokensDetails)) return false
-        } else if (other.promptTokensDetails != null) return false
+        } else if (other.promptTokensDetails != null) {
+            return false
+        }
         if (toolUsePromptTokenCount != other.toolUsePromptTokenCount) return false
         if (toolUsePromptTokensDetails != null) {
             if (other.toolUsePromptTokensDetails == null) return false
             if (!toolUsePromptTokensDetails.contentEquals(other.toolUsePromptTokensDetails)) return false
-        } else if (other.toolUsePromptTokensDetails != null) return false
+        } else if (other.toolUsePromptTokensDetails != null) {
+            return false
+        }
         if (thoughtsTokenCount != other.thoughtsTokenCount) return false
 
         return true

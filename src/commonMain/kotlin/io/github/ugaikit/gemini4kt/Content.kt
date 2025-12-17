@@ -25,7 +25,9 @@ data class Content(
         if (parts != null) {
             if (other.parts == null) return false
             if (!parts.contentEquals(other.parts)) return false
-        } else if (other.parts != null) return false
+        } else if (other.parts != null) {
+            return false
+        }
         if (role != other.role) return false
 
         return true

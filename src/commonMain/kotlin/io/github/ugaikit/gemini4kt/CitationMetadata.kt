@@ -28,9 +28,7 @@ data class CitationMetadata(
         return true
     }
 
-    override fun hashCode(): Int {
-        return citationSources.contentHashCode()
-    }
+    override fun hashCode(): Int = citationSources.contentHashCode()
 }
 
 class CitationMetadataBuilder {

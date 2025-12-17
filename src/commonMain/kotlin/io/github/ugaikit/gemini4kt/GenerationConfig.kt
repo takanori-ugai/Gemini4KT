@@ -54,7 +54,9 @@ data class GenerationConfig(
         if (stopSequences != null) {
             if (other.stopSequences == null) return false
             if (!stopSequences.contentEquals(other.stopSequences)) return false
-        } else if (other.stopSequences != null) return false
+        } else if (other.stopSequences != null) {
+            return false
+        }
         if (temperature != other.temperature) return false
         if (maxOutputTokens != other.maxOutputTokens) return false
         if (topP != other.topP) return false
@@ -63,7 +65,9 @@ data class GenerationConfig(
         if (responseModalities != null) {
             if (other.responseModalities == null) return false
             if (!responseModalities.contentEquals(other.responseModalities)) return false
-        } else if (other.responseModalities != null) return false
+        } else if (other.responseModalities != null) {
+            return false
+        }
         if (thinkingConfig != other.thinkingConfig) return false
         if (imageConfig != other.imageConfig) return false
         if (speechConfig != other.speechConfig) return false

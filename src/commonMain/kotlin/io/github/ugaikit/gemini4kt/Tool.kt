@@ -36,7 +36,9 @@ data class Tool(
         if (functionDeclarations != null) {
             if (other.functionDeclarations == null) return false
             if (!functionDeclarations.contentEquals(other.functionDeclarations)) return false
-        } else if (other.functionDeclarations != null) return false
+        } else if (other.functionDeclarations != null) {
+            return false
+        }
         if (googleSearch != other.googleSearch) return false
         if (codeExecution != other.codeExecution) return false
         if (urlContext != other.urlContext) return false

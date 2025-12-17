@@ -232,13 +232,17 @@ data class LiveConnectConfig(
         if (responseModalities != null) {
             if (other.responseModalities == null) return false
             if (!responseModalities.contentEquals(other.responseModalities)) return false
-        } else if (other.responseModalities != null) return false
+        } else if (other.responseModalities != null) {
+            return false
+        }
         if (speechConfig != other.speechConfig) return false
         if (systemInstruction != other.systemInstruction) return false
         if (tools != null) {
             if (other.tools == null) return false
             if (!tools.contentEquals(other.tools)) return false
-        } else if (other.tools != null) return false
+        } else if (other.tools != null) {
+            return false
+        }
         if (generationConfig != other.generationConfig) return false
         if (enableAffectiveDialog != other.enableAffectiveDialog) return false
 

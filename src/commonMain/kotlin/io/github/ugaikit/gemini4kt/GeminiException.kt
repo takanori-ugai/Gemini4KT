@@ -49,7 +49,9 @@ data class GeminiError(
         if (details != null) {
             if (other.details == null) return false
             if (!details.contentEquals(other.details)) return false
-        } else if (other.details != null) return false
+        } else if (other.details != null) {
+            return false
+        }
 
         return true
     }
@@ -92,11 +94,15 @@ data class GeminiErrorDetail(
         if (links != null) {
             if (other.links == null) return false
             if (!links.contentEquals(other.links)) return false
-        } else if (other.links != null) return false
+        } else if (other.links != null) {
+            return false
+        }
         if (violations != null) {
             if (other.violations == null) return false
             if (!violations.contentEquals(other.violations)) return false
-        } else if (other.violations != null) return false
+        } else if (other.violations != null) {
+            return false
+        }
 
         return true
     }

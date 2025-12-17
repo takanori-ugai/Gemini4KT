@@ -23,9 +23,7 @@ data class UrlContextMetadata(
         return true
     }
 
-    override fun hashCode(): Int {
-        return urlMetadata.contentHashCode()
-    }
+    override fun hashCode(): Int = urlMetadata.contentHashCode()
 }
 
 /**

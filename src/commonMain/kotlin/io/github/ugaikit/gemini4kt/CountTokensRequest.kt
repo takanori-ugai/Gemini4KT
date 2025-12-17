@@ -28,7 +28,5 @@ data class CountTokensRequest(
         return true
     }
 
-    override fun hashCode(): Int {
-        return contents.contentHashCode()
-    }
+    override fun hashCode(): Int = contents.contentHashCode()
 }

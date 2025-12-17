@@ -24,7 +24,5 @@ data class BatchEmbedRequest(
         return true
     }
 
-    override fun hashCode(): Int {
-        return requests.contentHashCode()
-    }
+    override fun hashCode(): Int = requests.contentHashCode()
 }

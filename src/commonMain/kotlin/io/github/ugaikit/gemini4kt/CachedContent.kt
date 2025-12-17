@@ -27,11 +27,15 @@ data class CachedContent(
         if (contents != null) {
             if (other.contents == null) return false
             if (!contents.contentEquals(other.contents)) return false
-        } else if (other.contents != null) return false
+        } else if (other.contents != null) {
+            return false
+        }
         if (tools != null) {
             if (other.tools == null) return false
             if (!tools.contentEquals(other.tools)) return false
-        } else if (other.tools != null) return false
+        } else if (other.tools != null) {
+            return false
+        }
         if (createTime != other.createTime) return false
         if (updateTime != other.updateTime) return false
         if (usageMetadata != other.usageMetadata) return false
