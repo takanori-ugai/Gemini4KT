@@ -5,6 +5,7 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketExtension
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.readText
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -160,6 +161,7 @@ class GeminiLiveSessionTest {
         }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 class MockWebSocketSession : WebSocketSession {
     val sentFrames = mutableListOf<Frame>()
 
@@ -202,6 +204,7 @@ class MockWebSocketSession : WebSocketSession {
         // The warning said `Function parameter 'reason' is unused`.
     }
 
+    @Deprecated("Deprecated")
     override fun terminate() {
         // Deprecated
     }
