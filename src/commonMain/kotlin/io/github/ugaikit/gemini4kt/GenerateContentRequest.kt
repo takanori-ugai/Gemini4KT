@@ -33,9 +33,9 @@ import kotlinx.serialization.Serializable
 @JsExport
 data class GenerateContentRequest(
     val contents: Array<Content>,
-    val tools: Array<Tool> = emptyArray(),
+    val tools: Array<Tool>? = null,
     val toolConfig: ToolConfig? = null,
-    val safetySettings: Array<SafetySetting> = emptyArray(),
+    val safetySettings: Array<SafetySetting>? = null,
     @SerialName("system_instruction")
     val systemInstruction: Content? = null,
     val generationConfig: GenerationConfig? = null,
@@ -106,9 +106,9 @@ class GenerateContentRequestBuilder {
     fun build() =
         GenerateContentRequest(
             contents = contents.toTypedArray(),
-            tools = tools.toTypedArray(),
+            tools = if (tools.isEmpty()) null else tools.toTypedArray(),
             toolConfig = toolConfig,
-            safetySettings = safetySettings.toTypedArray(),
+            safetySettings = if (safetySettings.isEmpty()) null else safetySettings.toTypedArray(),
             systemInstruction = systemInstruction,
             generationConfig = generationConfig,
             cachedContent = cachedContent,

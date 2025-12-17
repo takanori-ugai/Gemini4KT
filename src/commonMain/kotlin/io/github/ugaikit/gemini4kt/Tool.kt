@@ -86,7 +86,7 @@ class ToolBuilder {
 
     fun build() =
         Tool(
-            functionDeclarations = if (functionDeclarations.isEmpty()) null else functionDeclarations.toTypedArray(),
+            functionDeclarations = functionDeclarations.toTypedArray(),
             googleSearch = googleSearch,
             codeExecution = codeExecution,
             urlContext = urlContext,
