@@ -68,7 +68,7 @@ class GeminiTest {
             gemini =
                 createGemini { request ->
                     assertEquals(HttpMethod.Post, request.method)
-                    assertEquals("$baseUrl/models/gemini-pro:streamGenerateContent?alt=sse", request.url.toString())
+                    assertEquals("$baseUrl/models/gemini-2.5-flash-native-audio-dialog:streamGenerateContent?alt=sse", request.url.toString())
                     respond(
                         content = sseStream,
                         status = HttpStatusCode.OK,
@@ -193,7 +193,7 @@ class GeminiTest {
             val responseJson = """{"candidates": []}"""
             gemini =
                 createGemini { request ->
-                    assertEquals("$baseUrl/models/gemini-pro:generateContent", request.url.toString())
+                    assertEquals("$baseUrl/models/gemma-3-4b-it:generateContent", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
             val request = GenerateContentRequest(contents = emptyArray())
@@ -270,7 +270,7 @@ class GeminiTest {
             val responseJson = """{"totalTokens": 10}"""
             gemini =
                 createGemini { request ->
-                    assertEquals("$baseUrl/models/gemini-2.0-flash-lite:countTokens", request.url.toString())
+                    assertEquals("$baseUrl/models/gemini-2.5-flash-native-audio-dialog:countTokens", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
             val request = CountTokensRequest(contents = emptyArray())
