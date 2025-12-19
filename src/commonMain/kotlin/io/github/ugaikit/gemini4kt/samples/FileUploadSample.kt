@@ -27,10 +27,10 @@ object FileUploadSample {
         val request =
             GenerateContentRequest(
                 contents =
-                    listOf(
+                    arrayOf(
                         Content(
                             parts =
-                                listOf(
+                                arrayOf(
                                     Part(text = "What is in this image?"),
                                     Part(
                                         fileData =

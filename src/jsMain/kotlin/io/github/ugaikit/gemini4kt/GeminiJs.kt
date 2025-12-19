@@ -10,9 +10,9 @@ private suspend fun Gemini.generateTextInternal(
     val request =
         GenerateContentRequest(
             contents =
-                listOf(
+                arrayOf(
                     Content(
-                        parts = listOf(Part(text = prompt)),
+                        parts = arrayOf(Part(text = prompt)),
                     ),
                 ),
         )
@@ -45,7 +45,6 @@ class GeminiJsClient(
         prompt: String,
         model: String = "gemini-pro",
     ): String = client.generateTextInternal(prompt, model)
-
 }
 
 @OptIn(ExperimentalJsExport::class)
@@ -58,9 +57,9 @@ suspend fun runSample1(
     val client = Gemini(apiKey)
     val request =
         GenerateContentRequest(
-            contents = listOf(Content(parts = listOf(Part(text = prompt)))),
+            contents = arrayOf(Content(parts = arrayOf(Part(text = prompt)))),
             safetySettings =
-                listOf(
+                arrayOf(
                     SafetySetting(
                         category = HarmCategory.HARM_CATEGORY_HARASSMENT,
                         threshold = Threshold.BLOCK_ONLY_HIGH,

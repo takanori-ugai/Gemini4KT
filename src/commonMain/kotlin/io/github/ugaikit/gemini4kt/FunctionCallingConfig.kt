@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Configures how function calls are handled within a certain context, specifying
@@ -14,10 +16,12 @@ import kotlinx.serialization.Serializable
  * ensuring only specified functions can be executed, enhancing security and
  * control over the execution environment.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class FunctionCallingConfig(
     val mode: Mode,
-    val allowedFunctionNames: List<String>,
+    val allowedFunctionNames: Array<String>,
 )
 
 class FunctionCallingConfigBuilder {
@@ -28,7 +32,7 @@ class FunctionCallingConfigBuilder {
         allowedFunctionNames.add(name)
     }
 
-    fun build() = FunctionCallingConfig(mode, allowedFunctionNames)
+    fun build() = FunctionCallingConfig(mode, allowedFunctionNames.toTypedArray())
 }
 
 fun functionCallingConfig(init: FunctionCallingConfigBuilder.() -> Unit): FunctionCallingConfig = FunctionCallingConfigBuilder().apply(init).build()

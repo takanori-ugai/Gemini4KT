@@ -76,7 +76,7 @@ class GeminiTest {
                     )
                 }
 
-            val request = GenerateContentRequest(contents = emptyList())
+            val request = GenerateContentRequest(contents = emptyArray())
             val flow = gemini.streamGenerateContent(request)
             val results = flow.toList()
 
@@ -196,7 +196,7 @@ class GeminiTest {
                     assertEquals("$baseUrl/models/gemini-pro:generateContent", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
-            val request = GenerateContentRequest(contents = emptyList())
+            val request = GenerateContentRequest(contents = emptyArray())
 
             val response = gemini.generateContent(request)
 
@@ -305,7 +305,7 @@ class GeminiTest {
                     assertEquals("$baseUrl/models/embedding-001:embedContent", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
-            val request = EmbedContentRequest(content = Content(parts = emptyList()), model = "models/embedding-001")
+            val request = EmbedContentRequest(content = Content(parts = emptyArray()), model = "models/embedding-001")
 
             val response = gemini.embedContent(request)
 

@@ -45,7 +45,7 @@ object FunctionExample2 {
                     ),
             )
 
-        val tools = listOf(Tool(functionDeclarations = listOf(findWeatherFunction)))
+        val tools = arrayOf(Tool(functionDeclarations = arrayOf(findWeatherFunction)))
 
         // Step 1: Send the user's prompt and function declarations to the model.
         val userPrompt = "What's the weather like in Boston?"
@@ -59,23 +59,23 @@ object FunctionExample2 {
         println("Model requested function call: $functionCall")
 
         // Step 2: "Execute" the function and send the response back to the model.
-        val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
+        val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
         sendFunctionResult(client, tools, initialContent, modelResponsePart)
     }
 
     private suspend fun getFunctionCall(
         gemini: Gemini,
-        tools: List<Tool>,
+        tools: Array<Tool>,
         userPrompt: String,
     ): GenerateContentResponse {
-        val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
-        val firstRequest = GenerateContentRequest(contents = listOf(initialContent), tools = tools)
+        val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
+        val firstRequest = GenerateContentRequest(contents = arrayOf(initialContent), tools = tools)
         return gemini.generateContent(firstRequest, "gemini-2.5-flash-lite")
     }
 
     private suspend fun sendFunctionResult(
         gemini: Gemini,
-        tools: List<Tool>,
+        tools: Array<Tool>,
         initialContent: Content,
         modelResponsePart: Part,
     ) {
@@ -88,7 +88,7 @@ object FunctionExample2 {
                 Content(
                     role = "function",
                     parts =
-                        listOf(
+                        arrayOf(
                             Part(
                                 functionResponse =
                                     FunctionResponse(
@@ -99,9 +99,9 @@ object FunctionExample2 {
                         ),
                 )
             val conversationHistory =
-                listOf(
+                arrayOf(
                     initialContent,
-                    Content(role = "model", parts = listOf(modelResponsePart)),
+                    Content(role = "model", parts = arrayOf(modelResponsePart)),
                     functionResponseContent,
                 )
 

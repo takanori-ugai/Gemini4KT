@@ -41,14 +41,14 @@ private suspend fun testContentGeneration(gemini: Gemini) {
     println("--- testCountTokens ---")
     val inputJson2 =
         CountTokensRequest(
-            contents = listOf(Content(parts = listOf(Part(text)))),
+            contents = listOf(Content(parts = arrayOf(Part(text)))),
         )
     println(gemini.countTokens(inputJson2))
 
     println("--- testEmbedContent ---")
     val embedRequest =
         EmbedContentRequest(
-            content = Content(parts = listOf(Part(text))),
+            content = Content(parts = arrayOf(Part(text))),
             model = "models/$EMBED_MODEL",
         )
     println(gemini.embedContent(embedRequest, model = EMBED_MODEL))
@@ -59,7 +59,7 @@ private suspend fun testContentGeneration(gemini: Gemini) {
             requests =
                 listOf(
                     EmbedContentRequest(
-                        content = Content(parts = listOf(Part(text))),
+                        content = Content(parts = arrayOf(Part(text))),
                         model = "models/$EMBED_MODEL",
                     ),
                 ),
@@ -79,10 +79,10 @@ private suspend fun testModelsAndContent(gemini: Gemini) {
     val inputWithImage =
         GenerateContentRequest(
             contents =
-                listOf(
+                arrayOf(
                     Content(
                         parts =
-                            listOf(
+                            arrayOf(
                                 Part(text = "What is this picture?"),
                                 Part(
                                     inlineData =
@@ -111,12 +111,12 @@ private suspend fun testCachedContent(gemini: Gemini) {
     val str = "This is a pen".repeat(REPEAT_COUNT)
     val systemInstruction =
         Content(
-            parts = listOf(Part(text = "Hello, world!")),
+            parts = arrayOf(Part(text = "Hello, world!")),
             role = "system",
         )
     val cachedContent =
         CachedContent(
-            contents = listOf(Content(parts = listOf(Part(text = str)), role = "user")),
+            contents = listOf(Content(parts = arrayOf(Part(text = str)), role = "user")),
             model = "models/gemini-2.5-flash-lite",
             systemInstruction = systemInstruction,
         )
@@ -200,11 +200,11 @@ private fun getShowtimesFunction(): FunctionDeclaration =
             ),
     )
 
-private fun defineFunctionTools(): List<Tool> =
-    listOf(
+private fun defineFunctionTools(): Array<Tool> =
+    arrayOf(
         Tool(
             functionDeclarations =
-                listOf(
+                arrayOf(
                     findMoviesFunction(),
                     findTheatersFunction(),
                     getShowtimesFunction(),
@@ -214,13 +214,13 @@ private fun defineFunctionTools(): List<Tool> =
 
 private suspend fun testFunctionCallingFirstTurn(
     gemini: Gemini,
-    tools: List<Tool>,
+    tools: Array<Tool>,
 ) {
     println("--- testFunctionCallingFirstTurn ---")
     val exFunction =
         GenerateContentRequest(
             contents =
-                listOf(
+                arrayOf(
                     content {
                         role = "user"
                         part {
@@ -244,7 +244,7 @@ private suspend fun testFunctionCallingFirstTurn(
 
 private suspend fun testFunctionCallingSecondTurn(
     gemini: Gemini,
-    tools: List<Tool>,
+    tools: Array<Tool>,
 ) {
     println("--- testFunctionCallingSecondTurn ---")
     val content =
@@ -268,7 +268,7 @@ private suspend fun testFunctionCallingSecondTurn(
     val exFunction2 =
         GenerateContentRequest(
             contents =
-                listOf(
+                arrayOf(
                     content {
                         role = "user"
                         part { text { "Which theaters in Mountain View show Barbie movie?" } }

@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Defines a safety setting for filtering or evaluating content based on a specific harm category.
@@ -13,6 +15,8 @@ import kotlinx.serialization.Serializable
  * @property threshold The [Threshold] indicating the minimum level of probability at which content
  *                     in the specified harm category should be considered actionable or concerning.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class SafetySetting(
     val category: HarmCategory,

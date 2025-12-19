@@ -2,6 +2,8 @@ package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Represents the response from a function call, including the function's name
@@ -14,6 +16,8 @@ import kotlinx.serialization.json.JsonObject
  * by the function. These are typically the result of the function's execution,
  * formatted as strings for uniformity and ease of handling.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class FunctionResponse(
     val name: String,

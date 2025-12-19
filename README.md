@@ -10,14 +10,16 @@ See [RestAPI specifications](https://ai.google.dev/tutorials/rest_quickstart?hl=
 
 ## Running the Example
 
-To run the example, set your Gemini API key as an environment variable and execute the Gradle run command:
+Set your Gemini API key as an environment variable before running the sample:
 
 ```bash
-export GEMINI_API_KEY=your-api-key
+cp .env.example .env
+# Edit .env and set GEMINI_API_KEY=your-real-key
+source .env
 ./gradlew run
 ```
 
-Look at io.github.ugaikit.gemini4kt.ITTest.kt as sample usage.
+`.env` is ignored by git so your key stays local. Look at io.github.ugaikit.gemini4kt.ITTest.kt as sample usage.
 
 ## API Document
 The API Document can be found at [https://takanori-ugai.github.io/Gemini4KT/](https://takanori-ugai.github.io/Gemini4KT/).

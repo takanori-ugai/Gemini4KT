@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Configures the speech generation parameters.
@@ -8,6 +10,8 @@ import kotlinx.serialization.Serializable
  * @property voiceConfig The configuration for a single voice.
  * @property multiSpeakerVoiceConfig The configuration for multiple speakers.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class SpeechConfig(
     val voiceConfig: VoiceConfig? = null,
@@ -19,6 +23,8 @@ data class SpeechConfig(
  *
  * @property prebuiltVoiceConfig The configuration for a prebuilt voice.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class VoiceConfig(
     val prebuiltVoiceConfig: PrebuiltVoiceConfig? = null,
@@ -29,6 +35,8 @@ data class VoiceConfig(
  *
  * @property voiceName The name of the prebuilt voice (e.g., "Kore", "Puck").
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class PrebuiltVoiceConfig(
     val voiceName: String? = null,
@@ -39,9 +47,11 @@ data class PrebuiltVoiceConfig(
  *
  * @property speakerVoiceConfigs A list of speaker voice configurations.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class MultiSpeakerVoiceConfig(
-    val speakerVoiceConfigs: List<SpeakerVoiceConfig>? = null,
+    val speakerVoiceConfigs: Array<SpeakerVoiceConfig>? = null,
 )
 
 /**
@@ -50,6 +60,8 @@ data class MultiSpeakerVoiceConfig(
  * @property speaker The name of the speaker.
  * @property voiceConfig The voice configuration for the speaker.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class SpeakerVoiceConfig(
     val speaker: String? = null,
@@ -110,7 +122,7 @@ class MultiSpeakerVoiceConfigBuilder {
 
     fun build() =
         MultiSpeakerVoiceConfig(
-            speakerVoiceConfigs = if (speakerVoiceConfigs.isEmpty()) null else speakerVoiceConfigs,
+            speakerVoiceConfigs = if (speakerVoiceConfigs.isEmpty()) null else speakerVoiceConfigs.toTypedArray(),
         )
 }
 

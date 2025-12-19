@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Represents the content composed of multiple parts, optionally associated with a specific role.
@@ -10,9 +12,11 @@ import kotlinx.serialization.Serializable
  * @property role An optional string indicating the role or function of this content within a larger context.
  * It can be `null` if the role is not specified or not applicable.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class Content(
-    val parts: List<Part>? = null,
+    val parts: Array<Part>? = null,
     val role: String? = null,
 )
 
@@ -25,7 +29,7 @@ class ContentBuilder {
         parts.add(builder.build())
     }
 
-    fun build() = Content(parts, role)
+    fun build() = Content(parts.toTypedArray(), role)
 }
 
 fun content(init: ContentBuilder.() -> Unit): Content = ContentBuilder().apply(init).build()
