@@ -31,7 +31,12 @@ object LiveSample {
         val config =
             LiveConnectConfig(
                 responseModalities = arrayOf(Modality.AUDIO),
-                systemInstruction = content { part { text { "You are a helpful assistant and answer in a friendly tone." } } },
+                systemInstruction =
+                    content {
+                        part {
+                            text { "You are a helpful assistant and answer in a friendly tone." }
+                        }
+                    },
             )
 
         val client = gemini ?: Gemini(apiKey)
@@ -73,7 +78,7 @@ object LiveSample {
             @Suppress("TooGenericExceptionCaught") e: Exception,
         ) {
             println("Error in LiveSample: ${e.message}")
-            // e.printStackTrace() not available in common
+            throw e
         }
     }
 }

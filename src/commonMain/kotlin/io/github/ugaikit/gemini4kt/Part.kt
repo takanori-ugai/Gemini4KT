@@ -51,7 +51,10 @@ class PartBuilder {
 
     fun text(init: () -> String?) = apply { text = init() }
 
-    fun inlineData(init: InlineDataBuilder.() -> Unit) = apply { inlineData = InlineDataBuilder().apply(init).build() }
+    fun inlineData(init: InlineDataBuilder.() -> Unit) =
+        apply {
+            inlineData = InlineDataBuilder().apply(init).build()
+        }
 
     fun functionCall(init: FunctionCallBuilder.() -> Unit) = apply { functionCall = FunctionCallBuilder().apply(init).build() }
 
@@ -59,9 +62,15 @@ class PartBuilder {
 
     fun fileData(init: () -> FileData?) = apply { fileData = init() }
 
-    fun executableCode(init: ExecutableCodeBuilder.() -> Unit) = apply { executableCode = ExecutableCodeBuilder().apply(init).build() }
+    fun executableCode(init: ExecutableCodeBuilder.() -> Unit) =
+        apply {
+            executableCode = ExecutableCodeBuilder().apply(init).build()
+        }
 
-    fun codeExecutionResult(init: CodeExecutionResultBuilder.() -> Unit) = apply { codeExecutionResult = CodeExecutionResultBuilder().apply(init).build() }
+    fun codeExecutionResult(init: CodeExecutionResultBuilder.() -> Unit) =
+        apply {
+            codeExecutionResult = CodeExecutionResultBuilder().apply(init).build()
+        }
 
     fun build() =
         Part(

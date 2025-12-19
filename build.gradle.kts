@@ -267,6 +267,24 @@ detekt {
     source.from(files("src/**/kotlin"))
     buildUponDefaultConfig = true // preconfigure defaults
     allRules = false // activate all available (even unstable) rules.
+    source.setFrom(
+        files(
+            "src/commonMain/kotlin",
+            "src/commonTest/kotlin",
+            "src/linuxX86Main/kotlin",
+            "src/jvmMain/kotlin",
+            "src/jvmTest/kotlin",
+            "src/androidDeviceTest/kotlin",
+            "src/androidMain/kotlin",
+            "src/jsTest/kotlin",
+            "src/nativeMain/kotlin",
+            "src/wasmJsMain/kotlin",
+            "src/androidHostTest/kotlin",
+            "src/jsMain/kotlin",
+            "src/nativeTest/kotlin",
+            "src/wasmJsTest/kotlin",
+        ),
+    )
     // point to your custom config defining rules to run, overwriting default behavior
     config.from(files("$projectDir/config/detekt/detekt.yml"))
 //    baseline = file("$projectDir/config/baseline.xml") // a way of suppressing issues before introducing detekt

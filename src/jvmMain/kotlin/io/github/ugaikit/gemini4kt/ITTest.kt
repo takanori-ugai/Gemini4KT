@@ -31,11 +31,13 @@ private suspend fun testContentGeneration(gemini: Gemini) {
         }
     val response = gemini.generateContent(inputJson, model = FLASH_MODEL)
     println(
-        response.candidates[0]
-            .content.parts
-            ?.get(0)!!
-            .text!!
-            .replace("\n\n", "\n"),
+        response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull()
+            ?.text
+            ?.replace("\n\n", "\n"),
     )
 
     println("--- testCountTokens ---")
@@ -98,11 +100,13 @@ private suspend fun testModelsAndContent(gemini: Gemini) {
 
     val response = gemini.generateContent(inputWithImage, PRO_MODEL)
     println(
-        response.candidates[0]
-            .content.parts!!
-            .get(0)
-            .text!!
-            .replace("\n\n", "\n"),
+        response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull()
+            ?.text
+            ?.replace("\n\n", "\n"),
     )
 }
 
@@ -238,9 +242,11 @@ private suspend fun testFunctionCallingFirstTurn(
     println(
         gemini
             .generateContent(exFunction, PRO_MODEL)
-            .candidates[0]
-            .content.parts!!
-            .get(0),
+            .candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull(),
     )
 }
 
@@ -303,9 +309,11 @@ private suspend fun testFunctionCallingSecondTurn(
     println(
         gemini
             .generateContent(exFunction2, PRO_MODEL)
-            .candidates[0]
-            .content.parts!!
-            .get(0),
+            .candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull(),
     )
 }
 

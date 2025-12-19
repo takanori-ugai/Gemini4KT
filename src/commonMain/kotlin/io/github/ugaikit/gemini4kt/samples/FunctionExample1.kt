@@ -136,5 +136,10 @@ object FunctionExample1 {
                 ),
         )
 
-    private fun getFunctionDeclarations(): Array<FunctionDeclaration> = arrayOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
+    private fun getFunctionDeclarations(): Array<FunctionDeclaration> =
+        arrayOf(
+            findMoviesFunction(),
+            findTheatersFunction(),
+            getShowtimesFunction(),
+        )
 }

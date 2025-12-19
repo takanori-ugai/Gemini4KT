@@ -38,7 +38,7 @@ class BatchClientTest {
     }
 
     @Test
-    fun createbatchSendsCorrectRequestAndParsesResponse() =
+    fun createBatchSendsCorrectRequestAndParsesResponse() =
         runTest {
             val expectedResponse =
                 """
@@ -88,7 +88,7 @@ class BatchClientTest {
         }
 
     @Test
-    fun getbatchParsesResponseCorrectly() =
+    fun getBatchParsesResponseCorrectly() =
         runTest {
             val expectedResponse =
                 """

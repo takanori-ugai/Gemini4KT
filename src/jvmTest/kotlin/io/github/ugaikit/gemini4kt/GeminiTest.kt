@@ -135,28 +135,8 @@ class GeminiTest {
                     )
                 }
 
-            // It should throw exception, but the original implementation caught it and returned "{}".
-            // Wait, the original implementation had:
-            // catch (e: GeminiException) { throw e }
-            // catch ... logger.error ... "{}"
-            // But inside getContent:
-            // if (resCode != HTTP_OK) ... throw GeminiException ... catch (e: GeminiException) { throw e } ...
-            // So it throws GeminiException.
-            // Wait, looking at the code I wrote:
-            // catch (e: GeminiException) { throw e } ...
-            // So it rethrows.
-            // But the catch (e: IOException) returns "".
-            // Let's verify what the previous test expected.
-            // previous test: `getContent returns empty json on error`.
-            // It mocks error stream. And expects "{}".
-            // In my new implementation, I throw GeminiException if error parsing succeeds.
-            // If the error response is not valid JSON or something else, it might return "{}".
-
-            // Let's try to simulate what happens.
-            try {
+            org.junit.jupiter.api.assertThrows<GeminiException> {
                 gemini.getContent("http://localhost")
-            } catch (e: GeminiException) {
-                // Expected
             }
         }
 

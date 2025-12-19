@@ -132,7 +132,7 @@ class FileSearchTest {
         }
 
     @Test
-fun testGetFileSearchStoreOperation() =
+    fun testGetFileSearchStoreOperation() =
         runTest {
             val opName = "operations/import-op"
             val expectedResponse = Operation(name = opName, done = true)

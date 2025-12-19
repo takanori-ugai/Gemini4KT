@@ -37,7 +37,8 @@ class GeminiLive(
     private val client: HttpClient? = null,
 ) {
     // Base URL for WebSocket connection.
-    private val wsUrl = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
+    private val wsUrl =
+        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
 
     /**
      * Connects to the Live API and sends the initial setup message.
@@ -79,11 +80,15 @@ class GeminiLive(
                                         if (message.setupComplete != null) {
                                             handshakeCompleted.complete(Unit)
                                         } else {
-                                            // If we receive something else before SetupComplete, it might be an error or unexpected behavior.
-                                            // We log it, but we don't complete the handshake yet unless it's a fatal error?
+                                            // If we receive something else before SetupComplete,
+                                            // it might be an error or unexpected behavior.
+                                            // We log it, but we don't complete the handshake yet
+                                            // unless it's a fatal error?
                                             // If it's a serverContent, maybe we should just allow it?
                                             // But per protocol, SetupComplete should be first.
-                                            // If we get an error (e.g. standard HTTP error wrapped in WS?), we might want to fail.
+                                            // If we get an error
+                                            // (e.g. standard HTTP error wrapped in WS?),
+                                            // we might want to fail.
                                             // BidiGenerateContentServerMessage has `serverContent`, `toolCall`, etc.
                                             // We will just forward it.
                                             logger.warn { "Received message before SetupComplete: $message" }
@@ -117,7 +122,9 @@ class GeminiLive(
                         when {
                             config?.generationConfig != null ->
                                 config.generationConfig.copy(
-                                    responseModalities = config.responseModalities ?: config.generationConfig.responseModalities,
+                                    responseModalities =
+                                        config.responseModalities
+                                            ?: config.generationConfig.responseModalities,
                                     speechConfig = config.speechConfig ?: config.generationConfig.speechConfig,
                                 )
                             config?.responseModalities != null || config?.speechConfig != null -> {

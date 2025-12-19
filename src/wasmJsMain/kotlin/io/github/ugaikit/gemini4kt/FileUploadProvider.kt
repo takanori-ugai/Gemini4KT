@@ -83,7 +83,7 @@ actual class FileUploadProvider actual constructor(
         try {
             val stats = NodeFs.statSync(path)
             return stats.size.toLong()
-        } catch (e: Exception) {
+        } catch (e: dynamic) {
             throw IOException("Failed to get file size for $path", e)
         }
     }
@@ -97,7 +97,7 @@ actual class FileUploadProvider actual constructor(
                 byteArray[i] = uint8Array[i]
             }
             return byteArray
-        } catch (e: Exception) {
+        } catch (e: dynamic) {
             throw IOException("Failed to read file $path", e)
         }
     }

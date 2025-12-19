@@ -201,12 +201,8 @@ class BatchTest {
         runTest {
             batch = createBatch { throw IOException("Network error") }
 
-            // Same as original test, expects exception because "" is invalid JSON for BatchJob
-            try {
+            org.junit.jupiter.api.assertThrows<IOException> {
                 batch.getBatch("batches/123")
-                throw AssertionError("Expected Exception was not thrown")
-            } catch (e: Exception) {
-                // Expected
             }
         }
 }

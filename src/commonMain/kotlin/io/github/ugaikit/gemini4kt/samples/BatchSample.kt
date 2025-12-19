@@ -65,7 +65,11 @@ object BatchSample {
             var state = batchJob.metadata?.state
 
             println("Waiting for job completion...")
-            while (state != "BATCH_STATE_SUCCEEDED" && state != "BATCH_STATE_FAILED" && state != "BATCH_STATE_CANCELLED") {
+            while (
+                state != "BATCH_STATE_SUCCEEDED" &&
+                state != "BATCH_STATE_FAILED" &&
+                state != "BATCH_STATE_CANCELLED"
+            ) {
                 delay(10000) // Wait for 10 seconds
                 batchJob = client.getBatch(batchJob.name)
                 state = batchJob.metadata?.state
