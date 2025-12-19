@@ -4,8 +4,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("multiplatform") version "2.2.21"
-    kotlin("plugin.serialization") version "2.2.21"
+    kotlin("multiplatform") version "2.3.0"
+    kotlin("plugin.serialization") version "2.3.0"
     id("org.jetbrains.dokka") version "2.1.0"
 //    id("org.jetbrains.dokka-javadoc") version "2.1.0"
     id("com.android.library") version "8.13.0"
@@ -66,6 +66,9 @@ kotlin {
         binaries.library()
         generateTypeScriptDefinitions()
         nodejs {}
+        compilerOptions {
+            freeCompilerArgs.add("-Xenable-suspend-function-exporting")
+        }
     }
 
     linuxX64 {
@@ -120,7 +123,7 @@ kotlin {
         val jvmCommonMain by creating {
             dependsOn(commonMain)
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
+                implementation("org.jetbrains.kotlin:kotlin-reflect:2.3.0")
             }
         }
         val commonTest by getting {
