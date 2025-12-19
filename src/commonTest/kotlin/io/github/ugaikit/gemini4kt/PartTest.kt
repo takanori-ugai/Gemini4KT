@@ -11,7 +11,7 @@ class PartTest {
     private val image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
 
     @Test
-    fun `serialization with text`() {
+    fun serializationWithText() {
         val part = Part(text = "Hello")
         val expectedJson = """{"text":"Hello"}"""
         val actualJson = json.encodeToString(part)
@@ -19,7 +19,7 @@ class PartTest {
     }
 
     @Test
-    fun `serialization with inlineData`() {
+    fun serializationWithInlineData() {
         val part =
             Part(
                 inlineData =
@@ -42,7 +42,7 @@ class PartTest {
     }
 
     @Test
-    fun `serialization with functionCall`() {
+    fun serializationWithFunctionCall() {
         val part =
             Part(
                 functionCall =
@@ -67,7 +67,7 @@ class PartTest {
     }
 
     @Test
-    fun `serialization with functionResponse`() {
+    fun serializationWithFunctionResponse() {
         val part =
             Part(
                 functionResponse =
@@ -92,7 +92,7 @@ class PartTest {
     }
 
     @Test
-    fun `serialization with fileData`() {
+    fun serializationWithFileData() {
         val part =
             Part(
                 fileData =

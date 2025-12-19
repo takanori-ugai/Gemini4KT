@@ -37,7 +37,7 @@ class FileSearchTest {
     }
 
     @Test
-    fun `test createFileSearchStore`() =
+    fun testCreateFileSearchStore() =
         runTest {
             val request = FileSearchStore(displayName = "Test Store")
             val expectedResponse = FileSearchStore(name = "fileSearchStores/123", displayName = "Test Store")
@@ -56,7 +56,7 @@ class FileSearchTest {
         }
 
     @Test
-    fun `test getFileSearchStore`() =
+    fun testGetFileSearchStore() =
         runTest {
             val storeName = "fileSearchStores/123"
             val expectedResponse = FileSearchStore(name = storeName, displayName = "Test Store")
@@ -75,7 +75,7 @@ class FileSearchTest {
         }
 
     @Test
-    fun `test listFileSearchStores`() =
+    fun testListFileSearchStores() =
         runTest {
             val expectedResponse =
                 ListFileSearchStoresResponse(
@@ -97,7 +97,7 @@ class FileSearchTest {
         }
 
     @Test
-    fun `test deleteFileSearchStore`() =
+    fun testDeleteFileSearchStore() =
         runTest {
             val storeName = "fileSearchStores/123"
 
@@ -112,7 +112,7 @@ class FileSearchTest {
         }
 
     @Test
-    fun `test importFileToFileSearchStore`() =
+    fun testImportFileToFileSearchStore() =
         runTest {
             val storeName = "fileSearchStores/123"
             val request = ImportFileRequest(fileName = "files/abc")
@@ -132,7 +132,7 @@ class FileSearchTest {
         }
 
     @Test
-    fun `test getFileSearchStoreOperation`() =
+    fun testGetFileSearchStoreoperation() =
         runTest {
             val opName = "operations/import-op"
             val expectedResponse = Operation(name = opName, done = true)

@@ -12,7 +12,7 @@ class CreateBatchRequestTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun `test batch creation request with inline requests DSL`() {
+    fun testBatchCreationRequestWithInlineRequestsDSL() {
         val request =
             createBatchRequest {
                 batch {

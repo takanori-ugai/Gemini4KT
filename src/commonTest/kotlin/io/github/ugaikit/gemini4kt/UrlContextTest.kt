@@ -15,7 +15,7 @@ class UrlContextTest {
         }
 
     @Test
-    fun `test Tool serialization with urlContext`() {
+    fun testToolSerializationWithUrlContext() {
         val tool =
             tool {
                 urlContext()
@@ -27,7 +27,7 @@ class UrlContextTest {
     }
 
     @Test
-    fun `test Candidate deserialization with urlContextMetadata`() {
+    fun testCandidateDeserializationWithUrlContextMetadata() {
         val jsonString =
             """
             {

@@ -50,7 +50,7 @@ class GenerateContentRequestBuilderTest {
         }
 
     @Test
-    fun `build with all properties`() {
+    fun buildWithAllProperties() {
         val request = buildFullRequest()
 
         assertEquals(1, request.contents.size)
@@ -85,7 +85,7 @@ class GenerateContentRequestBuilderTest {
     }
 
     @Test
-    fun `build with only required properties`() {
+    fun buildWithOnlyRequiredProperties() {
         val request =
             generateContentRequest {
                 content {
@@ -103,7 +103,7 @@ class GenerateContentRequestBuilderTest {
     }
 
     @Test
-    fun `build with multiple items in lists`() {
+    fun buildWithMultipleItemsInLists() {
         val request =
             generateContentRequest {
                 content {

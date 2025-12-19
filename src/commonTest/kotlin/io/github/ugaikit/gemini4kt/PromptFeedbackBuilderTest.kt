@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 class PromptFeedbackBuilderTest {
     @Test
-    fun `build with single safety rating`() {
+    fun buildWithSingleSafetyRating() {
         val promptFeedback =
             promptFeedback {
                 safetyRating {
@@ -19,7 +19,7 @@ class PromptFeedbackBuilderTest {
     }
 
     @Test
-    fun `build with multiple safety ratings`() {
+    fun buildWithMultipleSafetyRatings() {
         val promptFeedback =
             promptFeedback {
                 safetyRating {
@@ -36,7 +36,7 @@ class PromptFeedbackBuilderTest {
     }
 
     @Test
-    fun `build with no safety ratings`() {
+    fun buildWithNoSafetyRatings() {
         val promptFeedback = promptFeedback {}
         assertEquals(0, promptFeedback.safetyRatings.size)
     }

@@ -1,5 +1,6 @@
 import com.vanniktech.maven.publish.SonatypeHost
 import io.gitlab.arturbosch.detekt.Detekt
+import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
@@ -98,7 +99,7 @@ kotlin {
     iosSimulatorArm64()
 
     androidLibrary {
-        namespace = "com.example.kmpfirstlib"
+        namespace = "io.github.ugaikit.gemini4kt"
         compileSdk = 33
         minSdk = 24
 
@@ -183,6 +184,19 @@ kotlin {
 tasks {
     "wrapper"(Wrapper::class) {
         distributionType = Wrapper.DistributionType.ALL
+    }
+
+    register<JavaExec>("jvmRunFunctionExample3") {
+        group = "application"
+        description = "Run FunctionExample3Runner on the JVM target"
+        dependsOn("jvmJar")
+        mainClass.set("io.github.ugaikit.gemini4kt.samples.FunctionExample3Runner")
+        val jvmJar = named<Jar>("jvmJar")
+        classpath =
+            files(
+                jvmJar.flatMap { jar -> jar.archiveFile },
+                configurations.named("jvmRuntimeClasspath").get(),
+            )
     }
 
     val jacocoTestReport =

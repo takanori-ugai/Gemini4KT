@@ -10,7 +10,7 @@ class FunctionCallTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun `serialization and deserialization of FunctionCall with string argument`() {
+    fun serializationAndDeserializationOfFunctionCallWithStringArgument() {
         val original =
             FunctionCall(
                 name = "find_weather",
@@ -22,7 +22,7 @@ class FunctionCallTest {
     }
 
     @Test
-    fun `serialization and deserialization of FunctionCall with number argument`() {
+    fun serializationAndDeserializationOfFunctionCallWithNumberArgument() {
         val original =
             FunctionCall(
                 name = "get_population",
@@ -34,7 +34,7 @@ class FunctionCallTest {
     }
 
     @Test
-    fun `serialization and deserialization of FunctionCall with boolean argument`() {
+    fun serializationAndDeserializationOfFunctionCallWithBooleanArgument() {
         val original =
             FunctionCall(
                 name = "is_daylight",
@@ -46,7 +46,7 @@ class FunctionCallTest {
     }
 
     @Test
-    fun `serialization and deserialization of FunctionCall with mixed arguments`() {
+    fun serializationAndDeserializationOfFunctionCallWithMixedArguments() {
         val original =
             FunctionCall(
                 name = "get_user_profile",

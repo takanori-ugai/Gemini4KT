@@ -11,7 +11,7 @@ class PartBuilderTest {
     private val image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
 
     @Test
-    fun `build with text`() {
+    fun buildWithText() {
         val part =
             part {
                 text { "Hello" }
@@ -24,7 +24,7 @@ class PartBuilderTest {
     }
 
     @Test
-    fun `build with inlineData`() {
+    fun buildWithInlineData() {
         val part =
             part {
                 inlineData {
@@ -39,7 +39,7 @@ class PartBuilderTest {
     }
 
     @Test
-    fun `build with functionCall`() {
+    fun buildWithFunctionCall() {
         val part =
             part {
                 functionCall {
@@ -54,7 +54,7 @@ class PartBuilderTest {
     }
 
     @Test
-    fun `build with functionResponse`() {
+    fun buildWithFunctionResponse() {
         val part =
             part {
                 functionResponse {
@@ -71,7 +71,7 @@ class PartBuilderTest {
     }
 
     @Test
-    fun `build with fileData`() {
+    fun buildWithFileData() {
         val part =
             part {
                 fileData {

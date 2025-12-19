@@ -8,7 +8,7 @@ import kotlin.test.assertNull
 
 class ToolConfigBuilderTest {
     @Test
-    fun `build with functionCallingConfig`() {
+    fun buildWithFunctionCallingConfig() {
         val toolConfig =
             toolConfig {
                 functionCallingConfig {
@@ -25,7 +25,7 @@ class ToolConfigBuilderTest {
     }
 
     @Test
-    fun `build with retrievalConfig`() {
+    fun buildWithRetrievalConfig() {
         val toolConfig =
             toolConfig {
                 functionCallingConfig {
@@ -45,7 +45,7 @@ class ToolConfigBuilderTest {
     }
 
     @Test
-    fun `build with both properties`() {
+    fun buildWithBothProperties() {
         val toolConfig =
             toolConfig {
                 functionCallingConfig {
@@ -65,7 +65,7 @@ class ToolConfigBuilderTest {
     }
 
     @Test
-    fun `build without functionCallingConfig throws exception`() {
+    fun buildWithoutFunctionCallingConfigThrowsException() {
         assertFailsWith<IllegalStateException> {
             toolConfig {
                 retrievalConfig =

@@ -15,7 +15,7 @@ class BatchDataClassesTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun `BatchInlineResponse serialization and deserialization`() {
+    fun batchinlineresponseSerializationAndDeserialization() {
         val response =
             GenerateContentResponse(
                 candidates =
@@ -48,7 +48,7 @@ class BatchDataClassesTest {
     }
 
     @Test
-    fun `BatchInlineResponse with error deserialization`() {
+    fun batchinlineresponseWithErrorDeserialization() {
         val jsonString =
             """
             {
@@ -70,7 +70,7 @@ class BatchDataClassesTest {
     }
 
     @Test
-    fun `BatchJob serialization and deserialization`() {
+    fun batchjobSerializationAndDeserialization() {
         val batchJob =
             BatchJob(
                 name = "batches/123",
@@ -104,7 +104,7 @@ class BatchDataClassesTest {
     }
 
     @Test
-    fun `BatchJob with error deserialization`() {
+    fun batchjobWithErrorDeserialization() {
         val jsonString =
             """
             {
@@ -128,7 +128,7 @@ class BatchDataClassesTest {
     }
 
     @Test
-    fun `ListBatchesResponse serialization and deserialization`() {
+    fun listbatchesresponseSerializationAndDeserialization() {
         val listBatchesResponse =
             ListBatchesResponse(
                 operations =

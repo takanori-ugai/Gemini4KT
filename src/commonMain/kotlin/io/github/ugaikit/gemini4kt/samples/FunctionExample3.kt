@@ -20,7 +20,10 @@ object FunctionExample3 {
     fun add(
         @GeminiParameter(description = "first number") a: Int,
         @GeminiParameter(description = "second number") b: Int,
-    ): Int = a + b
+    ): Int {
+        println("Add is called")
+        return a + b
+    }
 
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())
@@ -74,7 +77,19 @@ object FunctionExample3 {
 
             val secondRequest = GenerateContentRequest(contents = conversationHistory, tools = tools)
             val secondResponse = client.generateContent(secondRequest, "gemini-2.5-flash-lite")
-            println("Final response: ${secondResponse.candidates[0].content.parts!!.get(0).text}")
+            val firstCandidate = secondResponse.candidates.firstOrNull()
+            val finalText =
+                firstCandidate
+                    ?.content
+                    ?.parts
+                    ?.firstOrNull()
+                    ?.text
+            if (finalText != null) {
+                println("Final response: $finalText")
+            } else {
+                // Show the full candidate content when the model returns non-text parts.
+                println("Final candidate content: ${firstCandidate?.content}")
+            }
         }
     }
 }

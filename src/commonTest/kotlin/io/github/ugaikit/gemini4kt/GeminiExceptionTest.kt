@@ -11,7 +11,7 @@ class GeminiExceptionTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun `test GeminiException initialization`() {
+    fun testGeminiExceptionInitialization() {
         val error =
             GeminiError(
                 code = 400,
@@ -25,7 +25,7 @@ class GeminiExceptionTest {
     }
 
     @Test
-    fun `test GeminiErrorResponse deserialization`() {
+    fun testGeminiErrorResponseDeserialization() {
         val jsonString =
             """
             {
@@ -64,7 +64,7 @@ class GeminiExceptionTest {
     }
 
     @Test
-    fun `test GeminiError serialization`() {
+    fun testGeminiErrorSerialization() {
         val error =
             GeminiError(
                 code = 404,
@@ -86,7 +86,7 @@ class GeminiExceptionTest {
     }
 
     @Test
-    fun `test GeminiErrorDetail with multiple fields`() {
+    fun testGeminiErrorDetailWithMultipleFields() {
         val detail =
             GeminiErrorDetail(
                 type = "type.googleapis.com/google.rpc.QuotaFailure",
@@ -124,7 +124,7 @@ class GeminiExceptionTest {
     }
 
     @Test
-    fun `test GeminiErrorDetail empty`() {
+    fun testGeminiErrorDetailEmpty() {
         val detail = GeminiErrorDetail()
         assertNull(detail.type)
         assertNull(detail.reason)

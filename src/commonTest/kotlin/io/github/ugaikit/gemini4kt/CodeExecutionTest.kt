@@ -14,7 +14,7 @@ class CodeExecutionTest {
         }
 
     @Test
-    fun `test tool with code execution serialization`() {
+    fun testToolWithCodeExecutionSerialization() {
         val tool =
             tool {
                 codeExecution()
@@ -27,7 +27,7 @@ class CodeExecutionTest {
     }
 
     @Test
-    fun `test part with executable code serialization`() {
+    fun testPartWithExecutableCodeSerialization() {
         val part =
             part {
                 executableCode {
@@ -41,7 +41,7 @@ class CodeExecutionTest {
     }
 
     @Test
-    fun `test part with code execution result serialization`() {
+    fun testPartWithCodeExecutionResultSerialization() {
         val part =
             part {
                 codeExecutionResult {
@@ -55,7 +55,7 @@ class CodeExecutionTest {
     }
 
     @Test
-    fun `test part with text and code execution result serialization`() {
+    fun testPartWithTextAndCodeExecutionResultSerialization() {
         // Just checking multiple fields
         val part =
             part {

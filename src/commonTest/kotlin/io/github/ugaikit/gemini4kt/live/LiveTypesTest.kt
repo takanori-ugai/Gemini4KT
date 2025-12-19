@@ -18,7 +18,7 @@ class LiveTypesTest {
         }
 
     @Test
-    fun `test BidiGenerateContentSetup serialization`() {
+    fun testBidiGenerateContentSetupSerialization() {
         val setup =
             BidiGenerateContentSetup(
                 model = "models/gemini-2.0-flash-exp",
@@ -34,7 +34,7 @@ class LiveTypesTest {
     }
 
     @Test
-    fun `test BidiGenerateContentClientMessage serialization`() {
+    fun testBidiGenerateContentClientMessageSerialization() {
         val setup = BidiGenerateContentSetup(model = "models/gemini-pro")
         val msg = BidiGenerateContentClientMessage(setup = setup)
         val jsonStr = json.encodeToString(msg)
@@ -53,7 +53,7 @@ class LiveTypesTest {
     }
 
     @Test
-    fun `test BidiGenerateContentServerMessage deserialization`() {
+    fun testBidiGenerateContentServerMessageDeserialization() {
         val jsonStr =
             """
             {
@@ -81,7 +81,7 @@ class LiveTypesTest {
     }
 
     @Test
-    fun `test RealtimeInput serialization`() {
+    fun testRealtimeInputSerialization() {
         val input =
             BidiGenerateContentRealtimeInput(
                 mediaChunks = listOf(Blob(mimeType = "audio/pcm", data = "base64encodeddata")),
@@ -99,7 +99,7 @@ class LiveTypesTest {
     }
 
     @Test
-    fun `test BidiGenerateContentToolResponse serialization`() {
+    fun testBidiGenerateContentToolResponseSerialization() {
         val toolResponse =
             BidiGenerateContentToolResponse(
                 functionResponses = listOf(),
@@ -111,7 +111,7 @@ class LiveTypesTest {
     }
 
     @Test
-    fun `test BidiGenerateContentToolCall deserialization`() {
+    fun testBidiGenerateContentToolCallDeserialization() {
         val jsonStr =
             """
             {

@@ -28,7 +28,7 @@ class GeminiLiveSessionTest {
         }
 
     @Test
-    fun `test sendClientContent sends correct JSON`() =
+    fun testSendClientContentSendsCorrectJSON() =
         runTest {
             val mockSession = MockWebSocketSession()
             val incoming = Channel<BidiGenerateContentServerMessage>()
@@ -52,7 +52,7 @@ class GeminiLiveSessionTest {
         }
 
     @Test
-    fun `test sendRealtimeInput sends correct JSON`() =
+    fun testSendRealtimeInputSendsCorrectJSON() =
         runTest {
             val mockSession = MockWebSocketSession()
             val incoming = Channel<BidiGenerateContentServerMessage>()
@@ -76,7 +76,7 @@ class GeminiLiveSessionTest {
         }
 
     @Test
-    fun `test sendToolResponse sends correct JSON`() =
+    fun testSendToolResponseSendsCorrectJSON() =
         runTest {
             val mockSession = MockWebSocketSession()
             val incoming = Channel<BidiGenerateContentServerMessage>()
@@ -110,7 +110,7 @@ class GeminiLiveSessionTest {
         }
 
     @Test
-    fun `test receive gets messages from channel`() =
+    fun testReceiveGetsMessagesFromChannel() =
         runTest {
             val mockSession = MockWebSocketSession()
             val incoming = Channel<BidiGenerateContentServerMessage>(1)
@@ -130,7 +130,7 @@ class GeminiLiveSessionTest {
         }
 
     @Test
-    fun `test close closes session and channel`() =
+    fun testCloseClosesSessionAndChannel() =
         runTest {
             val mockSession = MockWebSocketSession()
             val incoming = Channel<BidiGenerateContentServerMessage>()

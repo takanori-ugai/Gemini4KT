@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 class GroundingPassageIdBuilderTest {
     @Test
-    fun `test GroundingPassageIdBuilder`() {
+    fun testGroundingPassageIdBuilder() {
         val groundingPassageId =
             groundingPassageId {
                 passageId = "passage-123"

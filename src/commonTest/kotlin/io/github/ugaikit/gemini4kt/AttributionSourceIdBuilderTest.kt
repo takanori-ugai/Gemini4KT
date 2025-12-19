@@ -7,7 +7,7 @@ import kotlin.test.assertNull
 
 class AttributionSourceIdBuilderTest {
     @Test
-    fun `build with groundingPassage`() {
+    fun buildWithGroundingPassage() {
         val attributionSourceId =
             attributionSourceId {
                 groundingPassage {
@@ -21,7 +21,7 @@ class AttributionSourceIdBuilderTest {
     }
 
     @Test
-    fun `build with semanticRetrieverChunk`() {
+    fun buildWithSemanticRetrieverChunk() {
         val attributionSourceId =
             attributionSourceId {
                 semanticRetrieverChunk {
@@ -35,7 +35,7 @@ class AttributionSourceIdBuilderTest {
     }
 
     @Test
-    fun `build with both properties`() {
+    fun buildWithBothProperties() {
         val attributionSourceId =
             attributionSourceId {
                 groundingPassage {
@@ -50,7 +50,7 @@ class AttributionSourceIdBuilderTest {
     }
 
     @Test
-    fun `build with no properties`() {
+    fun buildWithNoProperties() {
         val attributionSourceId = attributionSourceId {}
         assertNull(attributionSourceId.groundingPassage)
         assertNull(attributionSourceId.semanticRetrieverChunk)

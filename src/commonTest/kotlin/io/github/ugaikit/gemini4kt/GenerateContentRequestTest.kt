@@ -10,7 +10,7 @@ class GenerateContentRequestTest {
     private val json = Json { prettyPrint = true }
 
     @Test
-    fun `serialization with only contents`() {
+    fun serializationWithOnlyContents() {
         val request =
             GenerateContentRequest(
                 contents =
@@ -91,7 +91,7 @@ class GenerateContentRequestTest {
         )
 
     @Test
-    fun `serialization with all properties`() {
+    fun serializationWithAllProperties() {
         val request = createFullRequest()
         val actualJson = json.encodeToString(request)
         // Spot-check key fields rather than full structural equality (arrays/defaults are always emitted).
