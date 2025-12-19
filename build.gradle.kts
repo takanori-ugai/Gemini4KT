@@ -1,14 +1,15 @@
 import com.vanniktech.maven.publish.SonatypeHost
 import io.gitlab.arturbosch.detekt.Detekt
+import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("multiplatform") version "2.2.21"
-    kotlin("plugin.serialization") version "2.2.21"
+    kotlin("multiplatform") version "2.3.0"
+    kotlin("plugin.serialization") version "2.3.0"
     id("org.jetbrains.dokka") version "2.1.0"
 //    id("org.jetbrains.dokka-javadoc") version "2.1.0"
-    id("com.android.library") version "8.13.0"
+    id("com.android.kotlin.multiplatform.library") version "8.13.2"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.0.1"
     id("com.github.spotbugs") version "6.4.8"
@@ -30,10 +31,12 @@ repositories {
 kotlin {
     applyDefaultHierarchyTemplate()
 
-    targets.all {
-        compilations.all {
-            compilerOptions.configure {
-                freeCompilerArgs.add("-Xexpect-actual-classes")
+    targets.configureEach {
+        compilations.configureEach {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    freeCompilerArgs.add("-Xexpect-actual-classes")
+                }
             }
         }
     }
@@ -56,16 +59,19 @@ kotlin {
             mainClass.set("io.github.ugaikit.gemini4kt.ITTestKt")
         }
     }
-    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
-    wasmJs {
-        binaries.executable()
-        nodejs {}
-    }
+//    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+//    wasmJs {
+//        binaries.executable()
+//        nodejs {}
+//    }
 
     js(IR) {
         binaries.library()
         generateTypeScriptDefinitions()
         nodejs {}
+        compilerOptions {
+            freeCompilerArgs.add("-Xenable-suspend-function-exporting")
+        }
     }
 
     linuxX64 {
@@ -92,17 +98,17 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
-    androidTarget {
-        publishLibraryVariants("release")
-        compilations.all {
-            compileTaskProvider.configure {
-                compilerOptions {
-                    jvmTarget.set(JvmTarget.JVM_11)
-                }
-            }
+    androidLibrary {
+        namespace = "io.github.ugaikit.gemini4kt"
+        compileSdk = 33
+        minSdk = 24
+
+        withJava() // enable java compilation support
+        withHostTestBuilder {}.configure {}
+        withDeviceTestBuilder {
+            sourceSetTreeName = "test"
         }
     }
-
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -120,7 +126,7 @@ kotlin {
         val jvmCommonMain by creating {
             dependsOn(commonMain)
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
+                implementation("org.jetbrains.kotlin:kotlin-reflect:2.3.0")
             }
         }
         val commonTest by getting {
@@ -142,11 +148,11 @@ kotlin {
                 implementation("io.mockk:mockk:1.14.7")
             }
         }
-        val wasmJsMain by getting {
-            dependencies {
-                // implementation("io.ktor:ktor-client-core:3.0.3") // Already in commonMain
-            }
-        }
+//        val wasmJsMain by getting {
+//            dependencies {
+//                // implementation("io.ktor:ktor-client-core:3.0.3") // Already in commonMain
+//            }
+//        }
 
         val jsMain by getting
         val jsTest by getting
@@ -178,6 +184,19 @@ kotlin {
 tasks {
     "wrapper"(Wrapper::class) {
         distributionType = Wrapper.DistributionType.ALL
+    }
+
+    register<JavaExec>("jvmRunFunctionExample3") {
+        group = "application"
+        description = "Run FunctionExample3Runner on the JVM target"
+        dependsOn("jvmJar")
+        mainClass.set("io.github.ugaikit.gemini4kt.samples.FunctionExample3Runner")
+        val jvmJar = named<Jar>("jvmJar")
+        classpath =
+            files(
+                jvmJar.flatMap { jar -> jar.archiveFile },
+                configurations.named("jvmRuntimeClasspath").get(),
+            )
     }
 
     val jacocoTestReport =
@@ -248,6 +267,24 @@ detekt {
     source.from(files("src/**/kotlin"))
     buildUponDefaultConfig = true // preconfigure defaults
     allRules = false // activate all available (even unstable) rules.
+    source.setFrom(
+        files(
+            "src/commonMain/kotlin",
+            "src/commonTest/kotlin",
+            "src/linuxX86Main/kotlin",
+            "src/jvmMain/kotlin",
+            "src/jvmTest/kotlin",
+            "src/androidDeviceTest/kotlin",
+            "src/androidMain/kotlin",
+            "src/jsTest/kotlin",
+            "src/nativeMain/kotlin",
+            "src/wasmJsMain/kotlin",
+            "src/androidHostTest/kotlin",
+            "src/jsMain/kotlin",
+            "src/nativeTest/kotlin",
+            "src/wasmJsTest/kotlin",
+        ),
+    )
     // point to your custom config defining rules to run, overwriting default behavior
     config.from(files("$projectDir/config/detekt/detekt.yml"))
 //    baseline = file("$projectDir/config/baseline.xml") // a way of suppressing issues before introducing detekt
@@ -308,17 +345,5 @@ mavenPublishing {
             developerConnection = "scm:https://github.com/takanori-ugai/Gemini4KT.git"
             url = "https://github.com/takanori-ugai/Gemini4KT"
         }
-    }
-}
-
-android {
-    namespace = "io.github.ugaikit.gemini4kt"
-    compileSdk = 34
-    defaultConfig {
-        minSdk = 21
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
     }
 }

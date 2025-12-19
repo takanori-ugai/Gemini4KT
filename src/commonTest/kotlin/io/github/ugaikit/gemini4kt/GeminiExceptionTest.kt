@@ -11,7 +11,7 @@ class GeminiExceptionTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun `test GeminiException initialization`() {
+    fun testGeminiExceptionInitialization() {
         val error =
             GeminiError(
                 code = 400,
@@ -25,7 +25,7 @@ class GeminiExceptionTest {
     }
 
     @Test
-    fun `test GeminiErrorResponse deserialization`() {
+    fun testGeminiErrorResponseDeserialization() {
         val jsonString =
             """
             {
@@ -53,9 +53,10 @@ class GeminiExceptionTest {
         assertEquals("API key not valid. Please pass a valid API key.", response.error.message)
         assertEquals("INVALID_ARGUMENT", response.error.status)
         assertNotNull(response.error.details)
-        assertEquals(1, response.error.details?.size)
+        val details = checkNotNull(response.error.details)
+        assertEquals(1, details.size)
 
-        val detail = response.error.details!![0]
+        val detail = details[0]
         assertEquals("type.googleapis.com/google.rpc.ErrorInfo", detail.type)
         assertEquals("API_KEY_INVALID", detail.reason)
         assertEquals("googleapis.com", detail.domain)
@@ -63,7 +64,7 @@ class GeminiExceptionTest {
     }
 
     @Test
-    fun `test GeminiError serialization`() {
+    fun testGeminiErrorSerialization() {
         val error =
             GeminiError(
                 code = 404,
@@ -85,7 +86,7 @@ class GeminiExceptionTest {
     }
 
     @Test
-    fun `test GeminiErrorDetail with multiple fields`() {
+    fun testGeminiErrorDetailWithMultipleFields() {
         val detail =
             GeminiErrorDetail(
                 type = "type.googleapis.com/google.rpc.QuotaFailure",
@@ -123,7 +124,7 @@ class GeminiExceptionTest {
     }
 
     @Test
-    fun `test GeminiErrorDetail empty`() {
+    fun testGeminiErrorDetailEmpty() {
         val detail = GeminiErrorDetail()
         assertNull(detail.type)
         assertNull(detail.reason)

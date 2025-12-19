@@ -20,19 +20,22 @@ object FunctionExample3 {
     fun add(
         @GeminiParameter(description = "first number") a: Int,
         @GeminiParameter(description = "second number") b: Int,
-    ): Int = a + b
+    ): Int {
+        println("Add is called")
+        return a + b
+    }
 
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())
 
         val addFunction = buildFunctionDeclaration(::add)
 
-        val tools = listOf(Tool(functionDeclarations = listOf(addFunction)))
+        val tools = arrayOf(Tool(functionDeclarations = arrayOf(addFunction)))
 
         // Step 1: Send the user's prompt and function declarations to the model.
         val userPrompt = "What is 123 plus 456?"
-        val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
-        val firstRequest = GenerateContentRequest(contents = listOf(initialContent), tools = tools)
+        val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
+        val firstRequest = GenerateContentRequest(contents = arrayOf(initialContent), tools = tools)
         val firstResponse = client.generateContent(firstRequest, "gemini-2.5-flash-lite")
 
         val modelResponsePart =
@@ -53,7 +56,7 @@ object FunctionExample3 {
                 Content(
                     role = "function",
                     parts =
-                        listOf(
+                        arrayOf(
                             Part(
                                 functionResponse =
                                     FunctionResponse(
@@ -66,15 +69,27 @@ object FunctionExample3 {
 
             // Add the history (user prompt, model's function call) and the new function response to the next request.
             val conversationHistory =
-                listOf(
+                arrayOf(
                     initialContent,
-                    Content(role = "model", parts = listOf(modelResponsePart)),
+                    Content(role = "model", parts = arrayOf(modelResponsePart)),
                     functionResponseContent,
                 )
 
             val secondRequest = GenerateContentRequest(contents = conversationHistory, tools = tools)
             val secondResponse = client.generateContent(secondRequest, "gemini-2.5-flash-lite")
-            println("Final response: ${secondResponse.candidates[0].content.parts!!.get(0).text}")
+            val firstCandidate = secondResponse.candidates.firstOrNull()
+            val finalText =
+                firstCandidate
+                    ?.content
+                    ?.parts
+                    ?.firstOrNull()
+                    ?.text
+            if (finalText != null) {
+                println("Final response: $finalText")
+            } else {
+                // Show the full candidate content when the model returns non-text parts.
+                println("Final candidate content: ${firstCandidate?.content}")
+            }
         }
     }
 }

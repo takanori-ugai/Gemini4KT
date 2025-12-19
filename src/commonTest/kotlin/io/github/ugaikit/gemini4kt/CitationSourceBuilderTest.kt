@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 class CitationSourceBuilderTest {
     @Test
-    fun `test CitationSourceBuilder`() {
+    fun testCitationSourceBuilder() {
         val citationSource =
             citationSource {
                 startIndex = 0

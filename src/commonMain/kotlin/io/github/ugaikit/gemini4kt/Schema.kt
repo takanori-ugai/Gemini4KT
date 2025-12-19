@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Represents the schema definition for a data model, detailing its structure,
@@ -22,6 +24,8 @@ import kotlinx.serialization.Serializable
  * @property items The schema for items in an array, applicable when the type is
  * "array". Defines the schema of elements within the array.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class Schema(
     val type: String,

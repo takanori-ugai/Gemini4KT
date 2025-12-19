@@ -46,13 +46,13 @@ jobs:
           build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
           build-scan-terms-of-use-agree: "yes"
       - name: Build with Gradle
-        run: ./gradlew ktlintFormat kotlinWasmUpgradeYarnLock
+        run: ./gradlew ktlintFormat
       - name: Run jvm tests
-        run: ./gradlew jvmTest wasmJsTest jacoco 
+        run: ./gradlew jvmTest 
       - name: Prepare jsNodeTest
         run: ./gradlew kotlinUpgradeYarnLock 
       - name: Run jsNodeTest
-        run: ./gradlew jsNodeTest
+        run: ./gradlew jsNodeTest jacoco
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:

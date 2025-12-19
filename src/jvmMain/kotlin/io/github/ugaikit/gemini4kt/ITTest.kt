@@ -31,24 +31,26 @@ private suspend fun testContentGeneration(gemini: Gemini) {
         }
     val response = gemini.generateContent(inputJson, model = FLASH_MODEL)
     println(
-        response.candidates[0]
-            .content.parts
-            ?.get(0)!!
-            .text!!
-            .replace("\n\n", "\n"),
+        response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull()
+            ?.text
+            ?.replace("\n\n", "\n"),
     )
 
     println("--- testCountTokens ---")
     val inputJson2 =
         CountTokensRequest(
-            contents = listOf(Content(parts = listOf(Part(text)))),
+            contents = listOf(Content(parts = arrayOf(Part(text)))),
         )
     println(gemini.countTokens(inputJson2))
 
     println("--- testEmbedContent ---")
     val embedRequest =
         EmbedContentRequest(
-            content = Content(parts = listOf(Part(text))),
+            content = Content(parts = arrayOf(Part(text))),
             model = "models/$EMBED_MODEL",
         )
     println(gemini.embedContent(embedRequest, model = EMBED_MODEL))
@@ -59,7 +61,7 @@ private suspend fun testContentGeneration(gemini: Gemini) {
             requests =
                 listOf(
                     EmbedContentRequest(
-                        content = Content(parts = listOf(Part(text))),
+                        content = Content(parts = arrayOf(Part(text))),
                         model = "models/$EMBED_MODEL",
                     ),
                 ),
@@ -79,10 +81,10 @@ private suspend fun testModelsAndContent(gemini: Gemini) {
     val inputWithImage =
         GenerateContentRequest(
             contents =
-                listOf(
+                arrayOf(
                     Content(
                         parts =
-                            listOf(
+                            arrayOf(
                                 Part(text = "What is this picture?"),
                                 Part(
                                     inlineData =
@@ -98,11 +100,13 @@ private suspend fun testModelsAndContent(gemini: Gemini) {
 
     val response = gemini.generateContent(inputWithImage, PRO_MODEL)
     println(
-        response.candidates[0]
-            .content.parts!!
-            .get(0)!!
-            .text!!
-            .replace("\n\n", "\n"),
+        response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull()
+            ?.text
+            ?.replace("\n\n", "\n"),
     )
 }
 
@@ -111,20 +115,22 @@ private suspend fun testCachedContent(gemini: Gemini) {
     val str = "This is a pen".repeat(REPEAT_COUNT)
     val systemInstruction =
         Content(
-            parts = listOf(Part(text = "Hello, world!")),
+            parts = arrayOf(Part(text = "Hello, world!")),
             role = "system",
         )
     val cachedContent =
         CachedContent(
-            contents = listOf(Content(parts = listOf(Part(text = str)), role = "user")),
+            contents = listOf(Content(parts = arrayOf(Part(text = str)), role = "user")),
             model = "models/gemini-2.5-flash-lite",
             systemInstruction = systemInstruction,
         )
     val cache = gemini.createCachedContent(cachedContent)
     println(cache)
     println(gemini.listCachedContent())
-    println(gemini.getCachedContent(cache.name!!))
-    gemini.deleteCachedContent(cache.name!!)
+    cache.name?.let {
+        println(gemini.getCachedContent(it))
+        gemini.deleteCachedContent(it)
+    }
     println("Cached content deleted.")
 }
 
@@ -200,11 +206,11 @@ private fun getShowtimesFunction(): FunctionDeclaration =
             ),
     )
 
-private fun defineFunctionTools(): List<Tool> =
-    listOf(
+private fun defineFunctionTools(): Array<Tool> =
+    arrayOf(
         Tool(
             functionDeclarations =
-                listOf(
+                arrayOf(
                     findMoviesFunction(),
                     findTheatersFunction(),
                     getShowtimesFunction(),
@@ -214,13 +220,13 @@ private fun defineFunctionTools(): List<Tool> =
 
 private suspend fun testFunctionCallingFirstTurn(
     gemini: Gemini,
-    tools: List<Tool>,
+    tools: Array<Tool>,
 ) {
     println("--- testFunctionCallingFirstTurn ---")
     val exFunction =
         GenerateContentRequest(
             contents =
-                listOf(
+                arrayOf(
                     content {
                         role = "user"
                         part {
@@ -236,15 +242,17 @@ private suspend fun testFunctionCallingFirstTurn(
     println(
         gemini
             .generateContent(exFunction, PRO_MODEL)
-            .candidates[0]
-            .content.parts!!
-            .get(0),
+            .candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull(),
     )
 }
 
 private suspend fun testFunctionCallingSecondTurn(
     gemini: Gemini,
-    tools: List<Tool>,
+    tools: Array<Tool>,
 ) {
     println("--- testFunctionCallingSecondTurn ---")
     val content =
@@ -268,7 +276,7 @@ private suspend fun testFunctionCallingSecondTurn(
     val exFunction2 =
         GenerateContentRequest(
             contents =
-                listOf(
+                arrayOf(
                     content {
                         role = "user"
                         part { text { "Which theaters in Mountain View show Barbie movie?" } }
@@ -301,9 +309,11 @@ private suspend fun testFunctionCallingSecondTurn(
     println(
         gemini
             .generateContent(exFunction2, PRO_MODEL)
-            .candidates[0]
-            .content.parts!!
-            .get(0),
+            .candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull(),
     )
 }
 

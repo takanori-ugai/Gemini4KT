@@ -7,13 +7,13 @@ import kotlin.test.assertEquals
 
 class ToolConfigTest {
     @Test
-    fun `ToolConfig serializes correctly with retrievalConfig`() {
+    fun toolConfigSerializesCorrectlyWithRetrievalConfig() {
         val latLng = LatLng(latitude = 34.0522, longitude = -118.2437)
         val retrievalConfig = RetrievalConfig(latLng = latLng, languageCode = "en-US")
         val functionCallingConfig =
             FunctionCallingConfig(
                 mode = Mode.ANY,
-                allowedFunctionNames = listOf("search", "translate"),
+                allowedFunctionNames = arrayOf("search", "translate"),
             )
         val toolConfig =
             ToolConfig(

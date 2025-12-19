@@ -9,7 +9,7 @@ class SpeechConfigTest {
     private val json = Json { prettyPrint = true }
 
     @Test
-    fun `test single voice config serialization`() {
+    fun testSingleVoiceConfigSerialization() {
         val config =
             generationConfig {
                 responseModality(Modality.AUDIO)
@@ -66,7 +66,7 @@ class SpeechConfigTest {
     }
 
     @Test
-    fun `test multi speaker config serialization`() {
+    fun testMultiSpeakerConfigSerialization() {
         val config =
             generationConfig {
                 responseModality(Modality.AUDIO)

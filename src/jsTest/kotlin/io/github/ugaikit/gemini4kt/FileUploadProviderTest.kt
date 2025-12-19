@@ -20,18 +20,21 @@ class FileUploadProviderTest {
         try {
             js("require('fs')")
         } catch (e: dynamic) {
+            // fs is not available in non-Node.js environments
             null
         }
     private val path: dynamic =
         try {
             js("require('path')")
         } catch (e: dynamic) {
+            // path is not available in non-Node.js environments
             null
         }
     private val os: dynamic =
         try {
             js("require('os')")
         } catch (e: dynamic) {
+            // os is not available in non-Node.js environments
             null
         }
 
@@ -103,7 +106,7 @@ class FileUploadProviderTest {
                 try {
                     fs.unlinkSync(tempFile)
                 } catch (e: dynamic) {
-                    // Ignore cleanup errors
+                    // Ignore cleanup errors, as failing to delete a temp file should not fail the test
                 }
             }
         }

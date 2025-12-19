@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Represents a part of content, which can be one of several types such as text, inline data,
@@ -19,6 +21,8 @@ import kotlinx.serialization.Serializable
  * @property executableCode Information about executable code associated with this part, if any.
  * @property codeExecutionResult Information about code execution result associated with this part, if any.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class Part(
     val text: String? = null,
@@ -47,7 +51,10 @@ class PartBuilder {
 
     fun text(init: () -> String?) = apply { text = init() }
 
-    fun inlineData(init: InlineDataBuilder.() -> Unit) = apply { inlineData = InlineDataBuilder().apply(init).build() }
+    fun inlineData(init: InlineDataBuilder.() -> Unit) =
+        apply {
+            inlineData = InlineDataBuilder().apply(init).build()
+        }
 
     fun functionCall(init: FunctionCallBuilder.() -> Unit) = apply { functionCall = FunctionCallBuilder().apply(init).build() }
 
@@ -55,9 +62,15 @@ class PartBuilder {
 
     fun fileData(init: () -> FileData?) = apply { fileData = init() }
 
-    fun executableCode(init: ExecutableCodeBuilder.() -> Unit) = apply { executableCode = ExecutableCodeBuilder().apply(init).build() }
+    fun executableCode(init: ExecutableCodeBuilder.() -> Unit) =
+        apply {
+            executableCode = ExecutableCodeBuilder().apply(init).build()
+        }
 
-    fun codeExecutionResult(init: CodeExecutionResultBuilder.() -> Unit) = apply { codeExecutionResult = CodeExecutionResultBuilder().apply(init).build() }
+    fun codeExecutionResult(init: CodeExecutionResultBuilder.() -> Unit) =
+        apply {
+            codeExecutionResult = CodeExecutionResultBuilder().apply(init).build()
+        }
 
     fun build() =
         Part(

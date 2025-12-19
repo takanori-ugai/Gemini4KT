@@ -10,7 +10,7 @@ class FileSearchStoreTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun `test FileSearchStore serialization`() {
+    fun testFileSearchStoreSerialization() {
         val store =
             FileSearchStore(
                 name = "fileSearchStores/test-store",
@@ -24,7 +24,7 @@ class FileSearchStoreTest {
     }
 
     @Test
-    fun `test ImportFileRequest serialization`() {
+    fun testImportFileRequestSerialization() {
         val request =
             ImportFileRequest(
                 fileName = "files/test-file",
@@ -38,7 +38,7 @@ class FileSearchStoreTest {
     }
 
     @Test
-    fun `test Operation serialization`() {
+    fun testOperationSerialization() {
         val operation =
             Operation(
                 name = "operations/op-123",
@@ -52,7 +52,7 @@ class FileSearchStoreTest {
     }
 
     @Test
-    fun `test UploadFileSearchStoreRequest serialization`() {
+    fun testUploadFileSearchStoreRequestSerialization() {
         val request =
             UploadFileSearchStoreRequest(
                 displayName = "Uploaded Doc",

@@ -14,7 +14,7 @@ class ToolBuilderTest {
      * "location" and "description", with "description" being required.
      */
     @Test
-    fun `test ToolBuilder with single function declaration`() {
+    fun testToolBuilderWithSingleFunctionDeclaration() {
         val tool =
             tool {
                 functionDeclaration {
@@ -42,7 +42,7 @@ class ToolBuilderTest {
     }
 
     @Test
-    fun `test ToolBuilder with multiple function declarations`() {
+    fun testToolBuilderWithMultipleFunctionDeclarations() {
         val tool =
             tool {
                 functionDeclaration {
@@ -99,14 +99,14 @@ class ToolBuilderTest {
      * is empty when no declarations are provided.
      */
     @Test
-    fun `test ToolBuilder with no function declarations`() {
+    fun testToolBuilderWithNoFunctionDeclarations() {
         val tool = tool {}
 
         assertEquals(0, tool.functionDeclarations!!.size)
     }
 
     @Test
-    fun `test ToolBuilder with googleSearch`() {
+    fun testToolBuilderWithGoogleSearch() {
         val tool =
             tool {
                 googleSearch()

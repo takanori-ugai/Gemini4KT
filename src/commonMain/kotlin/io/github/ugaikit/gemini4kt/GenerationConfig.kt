@@ -2,6 +2,8 @@ package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Configures the parameters for content generation, including conditions for
@@ -29,9 +31,11 @@ import kotlinx.serialization.Serializable
  * Gemini 1.5 pro, where "application/json" might be required. It is nullable to
  * accommodate different or default response formats.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class GenerationConfig(
-    val stopSequences: List<String>? = null,
+    val stopSequences: Array<String>? = null,
     val temperature: Double? = null,
     val maxOutputTokens: Int? = null,
     val topP: Double? = null,
@@ -39,7 +43,7 @@ data class GenerationConfig(
     @SerialName("response_mime_type")
     val responseMimeType: String? = null,
     @SerialName("response_modalities")
-    val responseModalities: List<Modality>? = null,
+    val responseModalities: Array<Modality>? = null,
     val thinkingConfig: ThinkingConfig? = null,
     val imageConfig: ImageConfig? = null,
     val speechConfig: SpeechConfig? = null,
@@ -75,13 +79,13 @@ class GenerationConfigBuilder {
 
     fun build() =
         GenerationConfig(
-            stopSequences = if (stopSequences.isEmpty()) null else stopSequences,
+            stopSequences = if (stopSequences.isEmpty()) null else stopSequences.toTypedArray(),
             temperature = temperature,
             maxOutputTokens = maxOutputTokens,
             topP = topP,
             topK = topK,
             responseMimeType = responseMimeType,
-            responseModalities = if (responseModalities.isEmpty()) null else responseModalities,
+            responseModalities = if (responseModalities.isEmpty()) null else responseModalities.toTypedArray(),
             thinkingConfig = thinkingConfig,
             imageConfig = imageConfig,
             speechConfig = speechConfig,

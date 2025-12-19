@@ -21,6 +21,9 @@ import kotlinx.io.files.Path
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
+import kotlin.js.JsName
 
 /**
  * A logger for logging messages. Uses KotlinLogging library for simplified logging.
@@ -336,5 +339,23 @@ class Gemini(
         } catch (e: Exception) {
             logger.error { e.message }
         }
+    }
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+@JsName("Gemini")
+class GeminiJsExport(
+    apiKey: String,
+) {
+    private val delegate = Gemini(apiKey)
+    private val jsonHelper = Json { ignoreUnknownKeys = true }
+
+    suspend fun generateContent(
+        request: GenerateContentRequest,
+        model: String = "gemini-pro",
+    ): String {
+        val response = delegate.generateContent(request, model)
+        return jsonHelper.encodeToString(response)
     }
 }

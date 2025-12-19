@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Represents a tool that encapsulates function declarations, providing a structured
@@ -9,6 +11,8 @@ import kotlinx.serialization.Serializable
  * @property functionDeclarations A [FunctionDeclaration] object containing the
  * details of the functions declared by this tool.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class ToolConfig(
     val functionCallingConfig: FunctionCallingConfig,

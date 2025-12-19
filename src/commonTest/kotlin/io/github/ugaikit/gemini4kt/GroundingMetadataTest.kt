@@ -10,7 +10,7 @@ class GroundingMetadataTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun `test serialization`() {
+    fun testSerialization() {
         val groundingMetadata =
             GroundingMetadata(
                 searchEntryPoint = SearchEntryPoint(renderedContent = "<div>Content</div>"),
@@ -37,7 +37,7 @@ class GroundingMetadataTest {
     }
 
     @Test
-    fun `test deserialization`() {
+    fun testDeserialization() {
         val jsonString =
             """
             {
@@ -84,7 +84,7 @@ class GroundingMetadataTest {
     }
 
     @Test
-    fun `test deserialization with missing fields`() {
+    fun testDeserializationWithMissingFields() {
         val jsonString = "{}"
 
         val groundingMetadata = json.decodeFromString<GroundingMetadata>(jsonString)

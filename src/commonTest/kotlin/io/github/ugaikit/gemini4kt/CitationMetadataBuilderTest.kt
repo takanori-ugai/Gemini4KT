@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 class CitationMetadataBuilderTest {
     @Test
-    fun `test CitationMetadataBuilder`() {
+    fun testCitationMetadataBuilder() {
         val citationMetadata =
             citationMetadata {
                 citationSource {

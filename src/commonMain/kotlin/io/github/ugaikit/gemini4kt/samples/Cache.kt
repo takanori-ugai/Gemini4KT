@@ -18,23 +18,23 @@ object Cache {
         val str = "This is a pen".repeat(REPEAT_COUNT)
         val cachedContent =
             CachedContent(
-                contents = listOf(Content(listOf(Part(text = str)), "user")),
+                contents = listOf(Content(arrayOf(Part(text = str)), "user")),
                 model = "models/gemini-2.5-flash-lite",
-                systemInstruction = Content(listOf(Part(text = "Hello, world!")), "system"),
+                systemInstruction = Content(arrayOf(Part(text = "Hello, world!")), "system"),
             )
         val cache = client.createCachedContent(cachedContent)
         println(cachedContent)
         println(cache)
         println(client.listCachedContent())
-        println(client.getCachedContent(cache.name!!))
+        cache.name?.let { println(client.getCachedContent(it)) }
         println("--------------------------------------------------------------")
 
         val text = "Summarize the sentences."
         val inputJson =
             GenerateContentRequest(
-                listOf(Content(listOf(Part(text)))),
+                arrayOf(Content(arrayOf(Part(text)))),
                 safetySettings =
-                    listOf(
+                    arrayOf(
                         SafetySetting(
                             category = HarmCategory.HARM_CATEGORY_HARASSMENT,
                             threshold = Threshold.BLOCK_ONLY_HIGH,
@@ -54,6 +54,6 @@ object Cache {
                 .replace("\n\n", "\n"),
         )
 
-        client.deleteCachedContent(cache.name!!)
+        cache.name?.let { client.deleteCachedContent(it) }
     }
 }

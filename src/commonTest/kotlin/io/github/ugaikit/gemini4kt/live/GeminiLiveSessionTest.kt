@@ -5,6 +5,7 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketExtension
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.readText
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -18,7 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class GeminiLiveSessionTest {
     private val json =
         Json {
@@ -27,7 +28,7 @@ class GeminiLiveSessionTest {
         }
 
     @Test
-    fun `test sendClientContent sends correct JSON`() =
+    fun testSendClientContentSendsCorrectJSON() =
         runTest {
             val mockSession = MockWebSocketSession()
             val incoming = Channel<BidiGenerateContentServerMessage>()
@@ -51,7 +52,7 @@ class GeminiLiveSessionTest {
         }
 
     @Test
-    fun `test sendRealtimeInput sends correct JSON`() =
+    fun testSendRealtimeInputSendsCorrectJSON() =
         runTest {
             val mockSession = MockWebSocketSession()
             val incoming = Channel<BidiGenerateContentServerMessage>()
@@ -75,7 +76,7 @@ class GeminiLiveSessionTest {
         }
 
     @Test
-    fun `test sendToolResponse sends correct JSON`() =
+    fun testSendToolResponseSendsCorrectJSON() =
         runTest {
             val mockSession = MockWebSocketSession()
             val incoming = Channel<BidiGenerateContentServerMessage>()
@@ -109,7 +110,7 @@ class GeminiLiveSessionTest {
         }
 
     @Test
-    fun `test receive gets messages from channel`() =
+    fun testReceiveGetsMessagesFromChannel() =
         runTest {
             val mockSession = MockWebSocketSession()
             val incoming = Channel<BidiGenerateContentServerMessage>(1)
@@ -129,7 +130,7 @@ class GeminiLiveSessionTest {
         }
 
     @Test
-    fun `test close closes session and channel`() =
+    fun testCloseClosesSessionAndChannel() =
         runTest {
             val mockSession = MockWebSocketSession()
             val incoming = Channel<BidiGenerateContentServerMessage>()
@@ -202,6 +203,7 @@ class MockWebSocketSession : WebSocketSession {
         // The warning said `Function parameter 'reason' is unused`.
     }
 
+    @Deprecated("Deprecated in WebSocketSession")
     override fun terminate() {
         // Deprecated
     }

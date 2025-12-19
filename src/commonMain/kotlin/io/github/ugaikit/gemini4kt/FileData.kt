@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Encapsulates data about a file, including its MIME type and a URI pointing to
@@ -13,6 +15,8 @@ import kotlinx.serialization.Serializable
  * the file. This URI specifies where the file can be accessed or downloaded from,
  * providing a reference to the file's location.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class FileData(
     val mimeType: String,

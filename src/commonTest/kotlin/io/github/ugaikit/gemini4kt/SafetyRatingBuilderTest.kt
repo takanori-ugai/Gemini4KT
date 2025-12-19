@@ -7,7 +7,7 @@ import kotlin.test.assertNull
 
 class SafetyRatingBuilderTest {
     @Test
-    fun `build with all properties`() {
+    fun buildWithAllProperties() {
         val safetyRating =
             safetyRating {
                 category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
@@ -21,7 +21,7 @@ class SafetyRatingBuilderTest {
     }
 
     @Test
-    fun `build with required properties only`() {
+    fun buildWithRequiredPropertiesOnly() {
         val safetyRating =
             safetyRating {
                 category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT
@@ -34,7 +34,7 @@ class SafetyRatingBuilderTest {
     }
 
     @Test
-    fun `build without required properties throws exception`() {
+    fun buildWithoutRequiredPropertiesThrowsException() {
         assertFailsWith<RuntimeException> {
             safetyRating {
                 probability = HarmProbability.NEGLIGIBLE

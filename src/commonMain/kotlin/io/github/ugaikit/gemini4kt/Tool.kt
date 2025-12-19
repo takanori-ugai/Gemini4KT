@@ -2,6 +2,8 @@ package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Represents a tool that encapsulates function declarations, providing a structured
@@ -14,9 +16,11 @@ import kotlinx.serialization.Serializable
  * @property urlContext A [UrlContext] object representing a url context tool.
  * @property fileSearch A [FileSearchTool] object representing a file search tool.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class Tool(
-    val functionDeclarations: List<FunctionDeclaration>? = null,
+    val functionDeclarations: Array<FunctionDeclaration>? = null,
     @SerialName("google_search")
     val googleSearch: GoogleSearch? = null,
     @SerialName("code_execution")
@@ -56,7 +60,7 @@ class ToolBuilder {
 
     fun build() =
         Tool(
-            functionDeclarations = functionDeclarations,
+            functionDeclarations = functionDeclarations.toTypedArray(),
             googleSearch = googleSearch,
             codeExecution = codeExecution,
             urlContext = urlContext,
@@ -78,7 +82,7 @@ class FileSearchToolBuilder {
 
     fun build() =
         FileSearchTool(
-            fileSearchStoreNames = fileSearchStoreNames,
+            fileSearchStoreNames = if (fileSearchStoreNames.isEmpty()) null else fileSearchStoreNames.toTypedArray(),
             metadataFilter = metadataFilter,
         )
 }

@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Represents inline data that can be included in a request or response, typically for media content.
@@ -9,6 +11,8 @@ import kotlinx.serialization.Serializable
  * @property data The actual content data, encoded as a String. This is often base64 encoded data
  * for binary content like images.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class InlineData(
     val mimeType: String,
