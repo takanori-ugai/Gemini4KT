@@ -19,7 +19,8 @@ class ToolConfigBuilderTest {
             }
 
         assertNotNull(toolConfig.functionCallingConfig)
-        assertEquals(Mode.ANY, toolConfig.functionCallingConfig?.mode)
+        val functionCallingConfig = checkNotNull(toolConfig.functionCallingConfig)
+        assertEquals(Mode.ANY, functionCallingConfig.mode)
         assertNull(toolConfig.retrievalConfig)
     }
 
@@ -38,8 +39,9 @@ class ToolConfigBuilderTest {
             }
 
         assertNotNull(toolConfig.retrievalConfig)
-        assertEquals(34.0522, toolConfig.retrievalConfig?.latLng?.latitude)
-        assertNotNull(toolConfig.functionCallingConfig)
+        val retrievalConfig = checkNotNull(toolConfig.retrievalConfig)
+        assertEquals(34.0522, retrievalConfig.latLng?.latitude)
+        checkNotNull(toolConfig.functionCallingConfig)
     }
 
     @Test

@@ -26,7 +26,7 @@ object Cache {
         println(cachedContent)
         println(cache)
         println(client.listCachedContent())
-        println(client.getCachedContent(cache.name!!))
+        cache.name?.let { println(client.getCachedContent(it)) }
         println("--------------------------------------------------------------")
 
         val text = "Summarize the sentences."
@@ -54,6 +54,6 @@ object Cache {
                 .replace("\n\n", "\n"),
         )
 
-        client.deleteCachedContent(cache.name!!)
+        cache.name?.let { client.deleteCachedContent(it) }
     }
 }

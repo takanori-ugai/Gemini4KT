@@ -114,18 +114,20 @@ class GeminiLive(
             val setupMessage =
                 setup ?: run {
                     val generationConfig =
-                        if (config?.generationConfig != null) {
-                            config.generationConfig.copy(
-                                responseModalities = config.responseModalities ?: config.generationConfig.responseModalities,
-                                speechConfig = config.speechConfig ?: config.generationConfig.speechConfig,
-                            )
-                        } else if (config?.responseModalities != null || config?.speechConfig != null) {
-                            io.github.ugaikit.gemini4kt.GenerationConfig(
-                                responseModalities = config?.responseModalities,
-                                speechConfig = config?.speechConfig,
-                            )
-                        } else {
-                            null
+                        when {
+                            config?.generationConfig != null ->
+                                config.generationConfig.copy(
+                                    responseModalities = config.responseModalities ?: config.generationConfig.responseModalities,
+                                    speechConfig = config.speechConfig ?: config.generationConfig.speechConfig,
+                                )
+                            config?.responseModalities != null || config?.speechConfig != null -> {
+                                val connectConfig = requireNotNull(config)
+                                io.github.ugaikit.gemini4kt.GenerationConfig(
+                                    responseModalities = connectConfig.responseModalities,
+                                    speechConfig = connectConfig.speechConfig,
+                                )
+                            }
+                            else -> null
                         }
 
                     // Ensure model has "models/" prefix if not present

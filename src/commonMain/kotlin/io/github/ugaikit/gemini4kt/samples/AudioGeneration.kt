@@ -81,9 +81,9 @@ object AudioGeneration {
 
             val base64Audio =
                 response.candidates
-                    ?.get(0)
-                    ?.content
-                    ?.parts
+                    .get(0)
+                    .content
+                    .parts
                     ?.get(0)
                     ?.inlineData
                     ?.data

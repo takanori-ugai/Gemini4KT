@@ -28,15 +28,15 @@ object CodeExecutionSample {
             )
 
         println(response)
-        response.candidates?.get(0)?.content?.parts?.forEach { part ->
+        response.candidates.get(0).content.parts?.forEach { part ->
             if (part.text != null) {
                 println("Text: ${part.text}")
             }
             if (part.executableCode != null) {
-                println("Executable Code (${part.executableCode?.language}):\n${part.executableCode?.code}")
+                println("Executable Code (${part.executableCode.language}):\n${part.executableCode.code}")
             }
             if (part.codeExecutionResult != null) {
-                println("Execution Result (${part.codeExecutionResult?.outcome}):\n${part.codeExecutionResult?.output}")
+                println("Execution Result (${part.codeExecutionResult.outcome}):\n${part.codeExecutionResult.output}")
             }
         }
     }

@@ -5,6 +5,7 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketExtension
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.readText
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -18,7 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class GeminiLiveSessionTest {
     private val json =
         Json {
@@ -202,6 +203,7 @@ class MockWebSocketSession : WebSocketSession {
         // The warning said `Function parameter 'reason' is unused`.
     }
 
+    @Deprecated("Deprecated in WebSocketSession")
     override fun terminate() {
         // Deprecated
     }

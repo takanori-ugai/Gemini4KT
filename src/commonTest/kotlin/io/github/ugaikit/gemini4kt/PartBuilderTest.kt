@@ -34,7 +34,8 @@ class PartBuilderTest {
             }
         assertNull(part.text)
         assertNotNull(part.inlineData)
-        assertEquals("image/png", part.inlineData?.mimeType)
+        val inlineData = checkNotNull(part.inlineData)
+        assertEquals("image/png", inlineData.mimeType)
     }
 
     @Test
@@ -48,7 +49,8 @@ class PartBuilderTest {
             }
         assertNull(part.text)
         assertNotNull(part.functionCall)
-        assertEquals("get_weather", part.functionCall?.name)
+        val functionCall = checkNotNull(part.functionCall)
+        assertEquals("get_weather", functionCall.name)
     }
 
     @Test
@@ -64,7 +66,8 @@ class PartBuilderTest {
             }
         assertNull(part.text)
         assertNotNull(part.functionResponse)
-        assertEquals("get_weather", part.functionResponse?.name)
+        val functionResponse = checkNotNull(part.functionResponse)
+        assertEquals("get_weather", functionResponse.name)
     }
 
     @Test
@@ -80,6 +83,7 @@ class PartBuilderTest {
             }
         assertNull(part.text)
         assertNotNull(part.fileData)
-        assertEquals("image/png", part.fileData?.mimeType)
+        val fileData = checkNotNull(part.fileData)
+        assertEquals("image/png", fileData.mimeType)
     }
 }

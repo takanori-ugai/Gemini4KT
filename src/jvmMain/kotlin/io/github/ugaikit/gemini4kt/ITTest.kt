@@ -100,7 +100,7 @@ private suspend fun testModelsAndContent(gemini: Gemini) {
     println(
         response.candidates[0]
             .content.parts!!
-            .get(0)!!
+            .get(0)
             .text!!
             .replace("\n\n", "\n"),
     )
@@ -123,8 +123,10 @@ private suspend fun testCachedContent(gemini: Gemini) {
     val cache = gemini.createCachedContent(cachedContent)
     println(cache)
     println(gemini.listCachedContent())
-    println(gemini.getCachedContent(cache.name!!))
-    gemini.deleteCachedContent(cache.name!!)
+    cache.name?.let {
+        println(gemini.getCachedContent(it))
+        gemini.deleteCachedContent(it)
+    }
     println("Cached content deleted.")
 }
 

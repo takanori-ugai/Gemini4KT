@@ -71,13 +71,16 @@ class GenerateContentRequestBuilderTest {
                 ?.name,
         )
         assertNotNull(request.toolConfig)
-        assertEquals(Mode.ANY, request.toolConfig?.functionCallingConfig?.mode)
+        val toolConfig = checkNotNull(request.toolConfig)
+        assertEquals(Mode.ANY, toolConfig.functionCallingConfig.mode)
         assertEquals(1, request.safetySettings.size)
         assertEquals(HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, request.safetySettings[0].category)
         assertNotNull(request.systemInstruction)
-        assertEquals("system", request.systemInstruction?.role)
+        val systemInstruction = checkNotNull(request.systemInstruction)
+        assertEquals("system", systemInstruction.role)
         assertNotNull(request.generationConfig)
-        assertEquals(0.9, request.generationConfig?.temperature)
+        val generationConfig = checkNotNull(request.generationConfig)
+        assertEquals(0.9, generationConfig.temperature)
         assertEquals("cached-content-123", request.cachedContent)
     }
 

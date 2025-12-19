@@ -68,11 +68,12 @@ class LiveTypesTest {
 
         val msg = json.decodeFromString<BidiGenerateContentServerMessage>(jsonStr)
         assertNotNull(msg.serverContent)
-        assertEquals(true, msg.serverContent?.turnComplete)
+        val serverContent = checkNotNull(msg.serverContent)
+        assertEquals(true, serverContent.turnComplete)
         assertEquals(
             "Hello there",
-            msg.serverContent
-                ?.modelTurn
+            serverContent
+                .modelTurn
                 ?.parts
                 ?.first()
                 ?.text,
@@ -123,8 +124,7 @@ class LiveTypesTest {
             """.trimIndent()
         val msg = json.decodeFromString<BidiGenerateContentServerMessage>(jsonStr)
         assertNotNull(msg.toolCall)
-        val calls = msg.toolCall?.functionCalls
-        assertNotNull(calls)
+        val calls = checkNotNull(checkNotNull(msg.toolCall).functionCalls)
         assertEquals(1, calls.size)
         assertEquals("get_weather", calls[0].name)
     }

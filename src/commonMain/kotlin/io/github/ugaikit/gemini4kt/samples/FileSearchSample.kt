@@ -33,7 +33,8 @@ object FileSearchSample {
 
         try {
             // 2. Upload file
-            uploadFileToStore(fileSearch, store.name!!, filePath)
+            val storeName = store.name ?: return
+            uploadFileToStore(fileSearch, storeName, filePath)
 
             // 3. Generate Content
             val generateContentRequest =
@@ -43,7 +44,7 @@ object FileSearchSample {
                         arrayOf(
                             tool {
                                 fileSearch {
-                                    fileSearchStoreName(store.name!!)
+                                    fileSearchStoreName(storeName)
                                 }
                             },
                         ),

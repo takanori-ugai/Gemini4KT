@@ -15,7 +15,8 @@ class AttributionSourceIdBuilderTest {
                 }
             }
         assertNotNull(attributionSourceId.groundingPassage)
-        assertEquals("passage123", attributionSourceId.groundingPassage?.passageId)
+        val groundingPassage = checkNotNull(attributionSourceId.groundingPassage)
+        assertEquals("passage123", groundingPassage.passageId)
         assertNull(attributionSourceId.semanticRetrieverChunk)
     }
 
@@ -29,7 +30,8 @@ class AttributionSourceIdBuilderTest {
             }
         assertNull(attributionSourceId.groundingPassage)
         assertNotNull(attributionSourceId.semanticRetrieverChunk)
-        assertEquals("source123", attributionSourceId.semanticRetrieverChunk?.source)
+        val semanticRetrieverChunk = checkNotNull(attributionSourceId.semanticRetrieverChunk)
+        assertEquals("source123", semanticRetrieverChunk.source)
     }
 
     @Test

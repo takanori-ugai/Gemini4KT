@@ -53,9 +53,10 @@ class GeminiExceptionTest {
         assertEquals("API key not valid. Please pass a valid API key.", response.error.message)
         assertEquals("INVALID_ARGUMENT", response.error.status)
         assertNotNull(response.error.details)
-        assertEquals(1, response.error.details?.size)
+        val details = checkNotNull(response.error.details)
+        assertEquals(1, details.size)
 
-        val detail = response.error.details!![0]
+        val detail = details[0]
         assertEquals("type.googleapis.com/google.rpc.ErrorInfo", detail.type)
         assertEquals("API_KEY_INVALID", detail.reason)
         assertEquals("googleapis.com", detail.domain)

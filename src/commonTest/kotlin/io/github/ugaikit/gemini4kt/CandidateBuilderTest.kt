@@ -107,8 +107,9 @@ class CandidateBuilderTest {
             }
 
         assertNotNull(candidate.urlContextMetadata)
-        assertEquals(1, candidate.urlContextMetadata!!.urlMetadata.size)
-        assertEquals("http://example.com", candidate.urlContextMetadata!!.urlMetadata[0].retrievedUrl)
+        val urlContextMetadata = checkNotNull(candidate.urlContextMetadata)
+        assertEquals(1, urlContextMetadata.urlMetadata.size)
+        assertEquals("http://example.com", urlContextMetadata.urlMetadata[0].retrievedUrl)
     }
 
     @Test
