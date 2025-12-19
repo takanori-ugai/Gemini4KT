@@ -4,9 +4,9 @@ We will not maintain this library anymore. We are moving to Google Gen AI Java S
 
 ## Kotlin Wrapper Library for Gemini's RestAPI
 
-This is a Kotlin wrapper library for Gemini's RestAPI, a lightweight library that does not require the Android SDK. Currently, it is JVM-only.
+This is a Kotlin Multiplatform wrapper library for Gemini's RestAPI, a lightweight library that does not require the Android SDK.
 
-See [RestAPI specifications](https://ai.google.dev/tutorials/rest_quickstart?hl=en) and https://ai.google.dev/api/rest/ for more information.
+See [RestAPI specifications](https://ai.google.dev/gemini-api/docs/quickstart?hl=en) and https://ai.google.dev/gemini-api/reference/rest for more information.
 
 ## Running the Example
 
@@ -16,21 +16,23 @@ Set your Gemini API key as an environment variable before running the sample:
 cp .env.example .env
 # Edit .env and set GEMINI_API_KEY=your-real-key
 source .env
-./gradlew run
+./gradlew jvmRun
 ```
 
-`.env` is ignored by git so your key stays local. Look at io.github.ugaikit.gemini4kt.ITTest.kt as sample usage.
+`.env` is ignored by git so your key stays local. Look at `src/commonTest/kotlin/io/github/ugaikit/gemini4kt/samples` for sample usage.
 
 ## API Document
 The API Document can be found at [https://takanori-ugai.github.io/Gemini4KT/](https://takanori-ugai.github.io/Gemini4KT/).
 
 ## Usage in Gradle
 ```gradle.kts
-dependencies {
-    implementation("io.github.ugaikit:gemini4kt:0.3.0")
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation("io.github.ugaikit:gemini4kt:0.8.0")
+            }
+        }
+    }
 }
 ```
-
-## Multiplatform Support
-[Google Generative AI SDK for Kotlin Multiplatform](https://github.com/PatilShreyas/generative-ai-kmp) supports
-multiplatform.
