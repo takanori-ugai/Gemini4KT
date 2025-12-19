@@ -19,7 +19,7 @@ class CreateBatchRequestBuilder {
 
     fun build(): CreateBatchRequest =
         CreateBatchRequest(
-            batch = batch ?: throw IllegalStateException("Batch config must be provided."),
+            batch = batch ?: error("Batch config must be provided."),
         )
 }
 
@@ -39,7 +39,7 @@ class BatchConfigBuilder {
     fun build(): BatchConfig =
         BatchConfig(
             displayName = displayName,
-            inputConfig = inputConfig ?: throw IllegalStateException("Input config must be provided."),
+            inputConfig = inputConfig ?: error("Input config must be provided."),
         )
 }
 
@@ -57,7 +57,7 @@ class BatchInputConfigBuilder {
 
     fun build(): BatchInputConfig =
         BatchInputConfig(
-            requests = requests ?: throw IllegalStateException("Requests must be provided."),
+            requests = requests ?: error("Requests must be provided."),
         )
 }
 
@@ -98,7 +98,7 @@ class BatchItemRequestBuilder {
 
     fun build(): BatchItemRequest =
         BatchItemRequest(
-            request = request ?: throw IllegalStateException("Request must be provided."),
+            request = request ?: error("Request must be provided."),
             metadata = metadata,
         )
 }

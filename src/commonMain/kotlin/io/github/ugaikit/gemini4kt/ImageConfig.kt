@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Configures the image generation parameters.
@@ -8,6 +10,8 @@ import kotlinx.serialization.Serializable
  * @property aspectRatio The aspect ratio of the generated image (e.g., "16:9", "4:3", "1:1").
  * @property imageSize The size of the generated image (e.g., "2K").
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class ImageConfig(
     val aspectRatio: String? = null,

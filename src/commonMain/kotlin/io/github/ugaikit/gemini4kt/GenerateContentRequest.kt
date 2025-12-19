@@ -1,7 +1,11 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Represents a request to generate content, specifying the inputs, tools, and
@@ -29,12 +33,16 @@ import kotlinx.serialization.Serializable
  * generation methods, and other technical parameters. It is nullable, allowing
  * for flexibility in cases where default configurations are sufficient.
  */
+@OptIn(ExperimentalJsExport::class, ExperimentalSerializationApi::class)
+@JsExport
 @Serializable
 data class GenerateContentRequest(
-    val contents: List<Content>,
-    val tools: List<Tool> = emptyList(),
+    val contents: Array<Content>,
+    @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+    val tools: Array<Tool> = emptyArray(),
     val toolConfig: ToolConfig? = null,
-    val safetySettings: List<SafetySetting> = emptyList(),
+    @EncodeDefault(EncodeDefault.Mode.ALWAYS)
+    val safetySettings: Array<SafetySetting> = emptyArray(),
     @SerialName("system_instruction")
     val systemInstruction: Content? = null,
     val generationConfig: GenerationConfig? = null,
@@ -76,10 +84,10 @@ class GenerateContentRequestBuilder {
 
     fun build() =
         GenerateContentRequest(
-            contents = contents,
-            tools = tools,
+            contents = contents.toTypedArray(),
+            tools = tools.toTypedArray(),
             toolConfig = toolConfig,
-            safetySettings = safetySettings,
+            safetySettings = safetySettings.toTypedArray(),
             systemInstruction = systemInstruction,
             generationConfig = generationConfig,
             cachedContent = cachedContent,

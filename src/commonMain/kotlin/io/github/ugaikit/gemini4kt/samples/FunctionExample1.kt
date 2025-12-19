@@ -16,17 +16,17 @@ object FunctionExample1 {
         val exFunction =
             GenerateContentRequest(
                 contents =
-                    listOf(
+                    arrayOf(
                         Content(
                             role = "user",
                             parts =
-                                listOf(
+                                arrayOf(
                                     Part(text = "Which theaters in Mountain View show Barbie movie?"),
                                 ),
                         ),
                     ),
                 tools =
-                    listOf(
+                    arrayOf(
                         Tool(
                             functionDeclarations = getFunctionDeclarations(),
                         ),
@@ -136,5 +136,10 @@ object FunctionExample1 {
                 ),
         )
 
-    private fun getFunctionDeclarations(): List<FunctionDeclaration> = listOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
+    private fun getFunctionDeclarations(): Array<FunctionDeclaration> =
+        arrayOf(
+            findMoviesFunction(),
+            findTheatersFunction(),
+            getShowtimesFunction(),
+        )
 }

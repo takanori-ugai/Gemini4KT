@@ -11,7 +11,7 @@ class PartBuilderTest {
     private val image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
 
     @Test
-    fun `build with text`() {
+    fun buildWithText() {
         val part =
             part {
                 text { "Hello" }
@@ -24,7 +24,7 @@ class PartBuilderTest {
     }
 
     @Test
-    fun `build with inlineData`() {
+    fun buildWithInlineData() {
         val part =
             part {
                 inlineData {
@@ -34,11 +34,12 @@ class PartBuilderTest {
             }
         assertNull(part.text)
         assertNotNull(part.inlineData)
-        assertEquals("image/png", part.inlineData?.mimeType)
+        val inlineData = checkNotNull(part.inlineData)
+        assertEquals("image/png", inlineData.mimeType)
     }
 
     @Test
-    fun `build with functionCall`() {
+    fun buildWithFunctionCall() {
         val part =
             part {
                 functionCall {
@@ -48,11 +49,12 @@ class PartBuilderTest {
             }
         assertNull(part.text)
         assertNotNull(part.functionCall)
-        assertEquals("get_weather", part.functionCall?.name)
+        val functionCall = checkNotNull(part.functionCall)
+        assertEquals("get_weather", functionCall.name)
     }
 
     @Test
-    fun `build with functionResponse`() {
+    fun buildWithFunctionResponse() {
         val part =
             part {
                 functionResponse {
@@ -64,11 +66,12 @@ class PartBuilderTest {
             }
         assertNull(part.text)
         assertNotNull(part.functionResponse)
-        assertEquals("get_weather", part.functionResponse?.name)
+        val functionResponse = checkNotNull(part.functionResponse)
+        assertEquals("get_weather", functionResponse.name)
     }
 
     @Test
-    fun `build with fileData`() {
+    fun buildWithFileData() {
         val part =
             part {
                 fileData {
@@ -80,6 +83,7 @@ class PartBuilderTest {
             }
         assertNull(part.text)
         assertNotNull(part.fileData)
-        assertEquals("image/png", part.fileData?.mimeType)
+        val fileData = checkNotNull(part.fileData)
+        assertEquals("image/png", fileData.mimeType)
     }
 }

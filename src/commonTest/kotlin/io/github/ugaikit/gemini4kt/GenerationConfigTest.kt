@@ -9,7 +9,7 @@ class GenerationConfigTest {
     private val json = Json { prettyPrint = true }
 
     @Test
-    fun `test GenerationConfig serialization with responseModalities`() {
+    fun testGenerationConfigSerializationWithResponseModalities() {
         val config =
             generationConfig {
                 responseModality(Modality.TEXT)
@@ -25,7 +25,7 @@ class GenerationConfigTest {
     }
 
     @Test
-    fun `test GenerationConfig serialization without responseModalities`() {
+    fun testGenerationConfigSerializationWithoutResponseModalities() {
         val config =
             generationConfig {
                 temperature = 0.5
@@ -38,7 +38,7 @@ class GenerationConfigTest {
     }
 
     @Test
-    fun `test GenerationConfig serialization with imageConfig`() {
+    fun testGenerationConfigSerializationWithImageConfig() {
         val config =
             generationConfig {
                 imageConfig {

@@ -8,7 +8,7 @@ import kotlin.test.assertNull
 
 class CandidateBuilderTest {
     @Test
-    fun `build with all properties`() {
+    fun buildWithAllProperties() {
         val candidate =
             candidate {
                 content {
@@ -66,7 +66,7 @@ class CandidateBuilderTest {
     }
 
     @Test
-    fun `build with required properties only`() {
+    fun buildWithRequiredPropertiesOnly() {
         val candidate =
             candidate {
                 content {
@@ -87,7 +87,7 @@ class CandidateBuilderTest {
     }
 
     @Test
-    fun `build with urlContextMetadata`() {
+    fun buildWithUrlContextMetadata() {
         val candidate =
             candidate {
                 content {
@@ -107,12 +107,13 @@ class CandidateBuilderTest {
             }
 
         assertNotNull(candidate.urlContextMetadata)
-        assertEquals(1, candidate.urlContextMetadata!!.urlMetadata.size)
-        assertEquals("http://example.com", candidate.urlContextMetadata!!.urlMetadata[0].retrievedUrl)
+        val urlContextMetadata = checkNotNull(candidate.urlContextMetadata)
+        assertEquals(1, urlContextMetadata.urlMetadata.size)
+        assertEquals("http://example.com", urlContextMetadata.urlMetadata[0].retrievedUrl)
     }
 
     @Test
-    fun `build with multiple safety ratings`() {
+    fun buildWithMultipleSafetyRatings() {
         val candidate =
             candidate {
                 content {
@@ -133,7 +134,7 @@ class CandidateBuilderTest {
     }
 
     @Test
-    fun `build without required properties throws exception`() {
+    fun buildWithoutRequiredPropertiesThrowsException() {
         assertFailsWith<RuntimeException> {
             candidate {
                 finishReason = "STOP"

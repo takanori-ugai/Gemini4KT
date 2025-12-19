@@ -18,12 +18,12 @@ class LiveTypesTest {
         }
 
     @Test
-    fun `test BidiGenerateContentSetup serialization`() {
+    fun testBidiGenerateContentSetupSerialization() {
         val setup =
             BidiGenerateContentSetup(
                 model = "models/gemini-2.0-flash-exp",
                 generationConfig = GenerationConfig(temperature = 0.5),
-                systemInstruction = Content(parts = listOf(Part(text = "Hello"))),
+                systemInstruction = Content(parts = arrayOf(Part(text = "Hello"))),
             )
         val jsonStr = json.encodeToString(setup)
         assertNotNull(jsonStr)
@@ -34,7 +34,7 @@ class LiveTypesTest {
     }
 
     @Test
-    fun `test BidiGenerateContentClientMessage serialization`() {
+    fun testBidiGenerateContentClientMessageSerialization() {
         val setup = BidiGenerateContentSetup(model = "models/gemini-pro")
         val msg = BidiGenerateContentClientMessage(setup = setup)
         val jsonStr = json.encodeToString(msg)
@@ -43,7 +43,7 @@ class LiveTypesTest {
 
         val content =
             BidiGenerateContentClientContent(
-                turns = listOf(Content(parts = listOf(Part(text = "Hi")))),
+                turns = listOf(Content(parts = arrayOf(Part(text = "Hi")))),
                 turnComplete = true,
             )
         val msg2 = BidiGenerateContentClientMessage(clientContent = content)
@@ -53,7 +53,7 @@ class LiveTypesTest {
     }
 
     @Test
-    fun `test BidiGenerateContentServerMessage deserialization`() {
+    fun testBidiGenerateContentServerMessageDeserialization() {
         val jsonStr =
             """
             {
@@ -68,11 +68,12 @@ class LiveTypesTest {
 
         val msg = json.decodeFromString<BidiGenerateContentServerMessage>(jsonStr)
         assertNotNull(msg.serverContent)
-        assertEquals(true, msg.serverContent?.turnComplete)
+        val serverContent = checkNotNull(msg.serverContent)
+        assertEquals(true, serverContent.turnComplete)
         assertEquals(
             "Hello there",
-            msg.serverContent
-                ?.modelTurn
+            serverContent
+                .modelTurn
                 ?.parts
                 ?.first()
                 ?.text,
@@ -80,7 +81,7 @@ class LiveTypesTest {
     }
 
     @Test
-    fun `test RealtimeInput serialization`() {
+    fun testRealtimeInputSerialization() {
         val input =
             BidiGenerateContentRealtimeInput(
                 mediaChunks = listOf(Blob(mimeType = "audio/pcm", data = "base64encodeddata")),
@@ -98,7 +99,7 @@ class LiveTypesTest {
     }
 
     @Test
-    fun `test BidiGenerateContentToolResponse serialization`() {
+    fun testBidiGenerateContentToolResponseSerialization() {
         val toolResponse =
             BidiGenerateContentToolResponse(
                 functionResponses = listOf(),
@@ -110,7 +111,7 @@ class LiveTypesTest {
     }
 
     @Test
-    fun `test BidiGenerateContentToolCall deserialization`() {
+    fun testBidiGenerateContentToolCallDeserialization() {
         val jsonStr =
             """
             {
@@ -123,8 +124,7 @@ class LiveTypesTest {
             """.trimIndent()
         val msg = json.decodeFromString<BidiGenerateContentServerMessage>(jsonStr)
         assertNotNull(msg.toolCall)
-        val calls = msg.toolCall?.functionCalls
-        assertNotNull(calls)
+        val calls = checkNotNull(checkNotNull(msg.toolCall).functionCalls)
         assertEquals(1, calls.size)
         assertEquals("get_weather", calls[0].name)
     }

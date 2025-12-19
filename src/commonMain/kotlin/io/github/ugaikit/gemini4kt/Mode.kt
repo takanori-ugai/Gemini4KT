@@ -1,5 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
+
 /**
  * Enumerates the possible modes of operation or configuration settings, providing
  * predefined options for various functionalities.
@@ -13,6 +16,8 @@ package io.github.ugaikit.gemini4kt
  * @property NONE Specifies that no particular mode is to be applied, possibly
  * disabling the functionality or leaving it in a neutral state.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 enum class Mode {
     MODE_UNSPECIFIED,
     AUTO,

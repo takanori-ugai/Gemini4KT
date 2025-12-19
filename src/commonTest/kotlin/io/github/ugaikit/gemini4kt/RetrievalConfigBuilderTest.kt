@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 class RetrievalConfigBuilderTest {
     @Test
-    fun `test RetrievalConfigBuilder`() {
+    fun testRetrievalConfigBuilder() {
         val retrievalConfig =
             retrievalConfig {
                 latLng = LatLng(latitude = 35.6895, longitude = 139.6917)

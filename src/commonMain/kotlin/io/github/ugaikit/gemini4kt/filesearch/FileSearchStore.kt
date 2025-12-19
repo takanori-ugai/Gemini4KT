@@ -9,9 +9,11 @@ import kotlinx.serialization.Serializable
  * @property displayName Optional. The human-readable display name for the FileSearchStore.
  * @property createTime Output only. The Timestamp of when the FileSearchStore was created.
  * @property updateTime Output only. The Timestamp of when the FileSearchStore was last updated.
- * @property activeDocumentsCount Output only. The number of documents in the FileSearchStore that are active and ready for retrieval.
+ * @property activeDocumentsCount Output only. The number of documents in the FileSearchStore
+ * that are active and ready for retrieval.
  * @property pendingDocumentsCount Output only. The number of documents in the FileSearchStore that are being processed.
- * @property failedDocumentsCount Output only. The number of documents in the FileSearchStore that have failed processing.
+ * @property failedDocumentsCount Output only. The number of documents in the FileSearchStore
+ * that have failed processing.
  * @property sizeBytes Output only. The size of raw bytes ingested into the FileSearchStore.
  */
 @Serializable

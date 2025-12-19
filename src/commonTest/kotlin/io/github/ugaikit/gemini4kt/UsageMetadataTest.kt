@@ -9,7 +9,7 @@ class UsageMetadataTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun `test serialization`() {
+    fun testSerialization() {
         val usageMetadata =
             UsageMetadata(
                 promptTokenCount = 31,
@@ -35,7 +35,7 @@ class UsageMetadataTest {
     }
 
     @Test
-    fun `test deserialization`() {
+    fun testDeserialization() {
         val jsonString =
             """
             {
@@ -73,7 +73,7 @@ class UsageMetadataTest {
     }
 
     @Test
-    fun `test deserialization with missing fields`() {
+    fun testDeserializationWithMissingFields() {
         val jsonString =
             """
             {

@@ -12,7 +12,7 @@ class CreateBatchRequestTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun `test batch creation request with inline requests DSL`() {
+    fun testBatchCreationRequestWithInlineRequestsDSL() {
         val request =
             createBatchRequest {
                 batch {
@@ -22,7 +22,7 @@ class CreateBatchRequestTest {
                                 // Helper to set request using GenerateContentRequest
                                 val genRequest =
                                     GenerateContentRequest(
-                                        contents = listOf(Content(parts = listOf(Part(text = "Hello")))),
+                                        contents = arrayOf(Content(parts = arrayOf(Part(text = "Hello")))),
                                     )
                                 request(genRequest)
                                 metadata {

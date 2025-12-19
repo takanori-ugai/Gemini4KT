@@ -178,7 +178,7 @@ class Batch(
             }
         } catch (e: IOException) {
             logger.error { e.stackTraceToString() }
-            ""
+            throw e
         } catch (e: ClientRequestException) {
             logger.error { "Client Request Exception: ${e.message}" }
             throw e

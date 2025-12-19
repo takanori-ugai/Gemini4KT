@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 class FileDataBuilderTest {
     @Test
-    fun `build with all properties`() {
+    fun buildWithAllProperties() {
         val fileData =
             fileData {
                 mimeType = "image/png"

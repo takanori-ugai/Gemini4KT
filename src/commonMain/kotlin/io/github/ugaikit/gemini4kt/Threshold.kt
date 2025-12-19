@@ -1,5 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
+
 /**
  * Enumerates the possible thresholds for content blocking or filtering based on safety assessments.
  *
@@ -19,6 +22,8 @@ package io.github.ugaikit.gemini4kt
  * been specified, which may default to the most permissive or restrictive setting depending
  * on context.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 enum class Threshold {
     BLOCK_NONE,
     BLOCK_ONLY_HIGH,

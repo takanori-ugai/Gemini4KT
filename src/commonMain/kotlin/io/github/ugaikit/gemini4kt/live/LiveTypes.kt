@@ -23,7 +23,7 @@ data class BidiGenerateContentSetup(
     val model: String,
     val generationConfig: GenerationConfig? = null,
     val systemInstruction: Content? = null,
-    val tools: List<Tool>? = null,
+    val tools: Array<Tool>? = null,
     val realtimeInputConfig: RealtimeInputConfig? = null,
     val sessionResumption: SessionResumptionConfig? = null,
     val contextWindowCompression: ContextWindowCompressionConfig? = null,
@@ -216,10 +216,10 @@ data class BidiGenerateContentTranscription(
 
 @Serializable
 data class LiveConnectConfig(
-    val responseModalities: List<Modality>? = null,
+    val responseModalities: Array<Modality>? = null,
     val speechConfig: SpeechConfig? = null,
     val systemInstruction: Content? = null,
-    val tools: List<Tool>? = null,
+    val tools: Array<Tool>? = null,
     val generationConfig: GenerationConfig? = null,
     val enableAffectiveDialog: Boolean? = null, // Helper for API v1alpha if needed, but not in main Setup struct
 )

@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Describes a function, including its name, a description of its purpose or
@@ -14,6 +16,8 @@ import kotlinx.serialization.Serializable
  * of the parameters that the function accepts. This ensures that callers can
  * construct valid calls to the function by adhering to this schema.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class FunctionDeclaration(
     val name: String,
