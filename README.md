@@ -22,7 +22,7 @@ source .env
 `.env` is ignored by git so your key stays local. Look at `src/commonTest/kotlin/io/github/ugaikit/gemini4kt/samples` for sample usage.
 
 ## API Document
-The API Document can be found at [https://takanori-ugai.github.io/Gemini4KT/](https://takanori-ugai.github.io/Gemini4KT/).
+The API documentation is available at [https://takanori-ugai.github.io/Gemini4KT/](https://takanori-ugai.github.io/Gemini4KT/).
 
 ## Usage in Gradle
 ```gradle.kts
