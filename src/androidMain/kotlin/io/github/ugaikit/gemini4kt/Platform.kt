@@ -1,3 +1,6 @@
+/**
+ * Provides platform-specific implementations for the Android platform.
+ */
 package io.github.ugaikit.gemini4kt
 
 /**

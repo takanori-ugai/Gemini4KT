@@ -1,3 +1,6 @@
+/**
+ * Provides platform-specific implementations for the JVM platform.
+ */
 package io.github.ugaikit.gemini4kt
 
 import java.io.File

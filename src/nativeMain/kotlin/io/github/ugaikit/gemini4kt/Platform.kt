@@ -1,3 +1,6 @@
+/**
+ * Provides platform-specific implementations for the native platform.
+ */
 package io.github.ugaikit.gemini4kt
 
 import io.ktor.client.HttpClient

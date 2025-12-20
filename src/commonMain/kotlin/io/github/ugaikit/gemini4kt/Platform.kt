@@ -1,3 +1,6 @@
+/**
+ * Provides common declarations for platform-specific implementations.
+ */
 package io.github.ugaikit.gemini4kt
 
 /**
