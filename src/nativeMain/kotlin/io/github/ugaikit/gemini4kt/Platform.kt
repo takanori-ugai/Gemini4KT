@@ -40,8 +40,6 @@ internal actual fun getApiKey(): String = getenv("GEMINI_API_KEY")?.toKString() 
 /**
  * Retrieves an image as a base64 encoded string for the native platform.
  *
- * Retrieves an image as a base64 encoded string for the native platform.
- *
  * This function currently returns an empty string as a placeholder.
  *
  * @return An empty string as a placeholder for the image.

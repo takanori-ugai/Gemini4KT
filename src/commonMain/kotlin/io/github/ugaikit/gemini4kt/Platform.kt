@@ -13,8 +13,6 @@ internal expect fun getApiKey(): String
 /**
  * Expects a platform-specific implementation to retrieve an image as a base64 encoded string.
  *
- * Expects a platform-specific implementation to retrieve an image as a base64 encoded string.
- *
  * This function is expected to be implemented in platform-specific code to provide the image data.
  *
  * @return The base64 encoded image as a [String] for the common platform.
