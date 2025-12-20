@@ -9,7 +9,7 @@ package io.github.ugaikit.gemini4kt
  * Environment variables are not directly accessible in JS.
  * This function returns an empty string or a specific value.
  *
- * @return An empty string as a placeholder.
+ * @return An empty string as a placeholder for the image.
  */
 internal actual fun getApiKey(): String {
     // Environment variables are not directly accessible in JS in the same way.

@@ -13,6 +13,6 @@ internal expect fun getApiKey(): String
 /**
  * Expects a platform-specific implementation to retrieve an image as a base64 encoded string.
  *
- * @return The base64 encoded image as a [String].
+ * @return The base64 encoded image as a [String] for the common platform.
  */
 internal expect fun getImage(): String
