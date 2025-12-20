@@ -10,6 +10,12 @@ import kotlinx.cinterop.toKString
 import kotlinx.serialization.json.Json
 import platform.posix.getenv
 
+/**
+ * Creates an HTTP client configured for the native platform.
+ *
+ * @param json The JSON configuration for serialization.
+ * @return A configured [HttpClient] instance.
+ */
 actual fun createHttpClient(json: Json): HttpClient =
     HttpClient {
         install(ContentNegotiation) {
@@ -21,6 +27,16 @@ actual fun createHttpClient(json: Json): HttpClient =
     }
 
 @OptIn(ExperimentalForeignApi::class)
+/**
+ * Retrieves the API key from the environment variables for the native platform.
+ *
+ * @return The API key as a [String].
+ */
 internal actual fun getApiKey(): String = getenv("GEMINI_API_KEY")?.toKString() ?: ""
 
+/**
+ * Retrieves an image as a base64 encoded string for the native platform.
+ *
+ * @return An empty string as a placeholder.
+ */
 internal actual fun getImage(): String = ""
