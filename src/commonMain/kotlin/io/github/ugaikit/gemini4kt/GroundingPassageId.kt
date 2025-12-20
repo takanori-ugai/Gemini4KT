@@ -17,10 +17,23 @@ data class GroundingPassageId(
     val partIndex: Int,
 )
 
+/**
+ * Represents the grounding passage id builder.
+ */
 class GroundingPassageIdBuilder {
+    /**
+     * Holds the passage id.
+     */
     lateinit var passageId: String
+
+    /**
+     * Holds the part index.
+     */
     var partIndex: Int = 0
 
+    /**
+     * Handles build.
+     */
     fun build(): GroundingPassageId =
         GroundingPassageId(
             passageId = passageId,
@@ -28,4 +41,9 @@ class GroundingPassageIdBuilder {
         )
 }
 
+/**
+ * Handles grounding passage id.
+ *
+ * @param init The init.
+ */
 fun groundingPassageId(init: GroundingPassageIdBuilder.() -> Unit): GroundingPassageId = GroundingPassageIdBuilder().apply(init).build()

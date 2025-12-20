@@ -8,7 +8,16 @@ import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.io.files.Path
 
+/**
+ * Represents the file upload sample.
+ */
 object FileUploadSample {
+    /**
+     * Handles run.
+     *
+     * @param imagePath The image path.
+     * @param gemini The gemini.
+     */
     suspend fun run(
         imagePath: String,
         gemini: Gemini? = null,

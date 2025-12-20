@@ -4,6 +4,9 @@ import kotlinx.serialization.Serializable
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
+/**
+ * Represents the code execution.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable

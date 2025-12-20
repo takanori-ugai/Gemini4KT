@@ -12,9 +12,17 @@ import java.nio.file.Paths
 import java.util.Base64
 import java.util.Properties
 
+/**
+ * Represents the text to image.
+ *
+ * @property gemini The gemini.
+ */
 class TextToImage(
     private val gemini: Gemini,
 ) {
+    /**
+     * Handles generate image.
+     */
     suspend fun generateImage() {
         val prompt = "Create a picture of a nano banana dish in a fancy restaurant with a Gemini theme"
 
@@ -56,7 +64,15 @@ class TextToImage(
     }
 }
 
+/**
+ * Represents the text to image sample.
+ */
 object TextToImageSample {
+    /**
+     * Handles main.
+     *
+     * @param args The args.
+     */
     @JvmStatic
     fun main(args: Array<String>) =
         runBlocking {

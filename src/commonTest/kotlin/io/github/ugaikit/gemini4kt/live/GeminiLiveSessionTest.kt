@@ -19,14 +19,23 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+/**
+ * Represents the gemini live session test.
+ */
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class GeminiLiveSessionTest {
+    /**
+     * Holds the json.
+     */
     private val json =
         Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
         }
 
+    /**
+     * Tests test send client content sends correct json.
+     */
     @Test
     fun testSendClientContentSendsCorrectJSON() =
         runTest {
@@ -51,6 +60,9 @@ class GeminiLiveSessionTest {
             assertTrue(text.contains("\"turnComplete\":true"))
         }
 
+    /**
+     * Tests test send realtime input sends correct json.
+     */
     @Test
     fun testSendRealtimeInputSendsCorrectJSON() =
         runTest {
@@ -75,6 +87,9 @@ class GeminiLiveSessionTest {
             assertTrue(text.contains("\"text\":\"Hello\""))
         }
 
+    /**
+     * Tests test send tool response sends correct json.
+     */
     @Test
     fun testSendToolResponseSendsCorrectJSON() =
         runTest {
@@ -109,6 +124,9 @@ class GeminiLiveSessionTest {
             assertTrue(text.contains("\"myFunc\""))
         }
 
+    /**
+     * Tests test receive gets messages from channel.
+     */
     @Test
     fun testReceiveGetsMessagesFromChannel() =
         runTest {
@@ -129,6 +147,9 @@ class GeminiLiveSessionTest {
             assertEquals(msg, received)
         }
 
+    /**
+     * Tests test close closes session and channel.
+     */
     @Test
     fun testCloseClosesSessionAndChannel() =
         runTest {
@@ -161,16 +182,48 @@ class GeminiLiveSessionTest {
         }
 }
 
+/**
+ * Represents the mock web socket session.
+ */
 class MockWebSocketSession : WebSocketSession {
+    /**
+     * Holds the sent frames.
+     */
     val sentFrames = mutableListOf<Frame>()
 
+    /**
+     * Holds the coroutine context.
+     */
     override val coroutineContext: CoroutineContext = Job()
+
+    /**
+     * Holds the masking.
+     */
     override var masking: Boolean = false
+
+    /**
+     * Holds the max frame size.
+     */
     override var maxFrameSize: Long = Long.MAX_VALUE
+
+    /**
+     * Holds the incoming.
+     */
     override val incoming: Channel<Frame> = Channel()
+
+    /**
+     * Holds the outgoing.
+     */
     override val outgoing: Channel<Frame> = Channel(Channel.UNLIMITED)
+
+    /**
+     * Holds the extensions.
+     */
     override val extensions: List<WebSocketExtension<*>> = emptyList()
 
+    /**
+     * Handles flush.
+     */
     override suspend fun flush() {
         // No-op
     }
@@ -179,10 +232,21 @@ class MockWebSocketSession : WebSocketSession {
         "Use send(Frame) instead",
         ReplaceWith("send(Frame.Text(message))"),
     ) // Suppress warning if needed or just implement
+
+    /**
+     * Handles send.
+     *
+     * @param message The message.
+     */
     suspend fun send(message: String) {
         send(Frame.Text(message))
     }
 
+    /**
+     * Handles send.
+     *
+     * @param frame The frame.
+     */
     override suspend fun send(frame: Frame) {
         sentFrames.add(frame)
     }
@@ -191,6 +255,11 @@ class MockWebSocketSession : WebSocketSession {
         "Use close() instead",
         ReplaceWith("close()"),
     )
+    /**
+     * Handles close.
+     *
+     * @param reason The reason.
+     */
     suspend fun close(reason: io.ktor.websocket.CloseReason) { // Unused parameter fixed by removing or suppressing. But here we override a deprecated member?
         // CloseReason is parameter name. If I change to `_`, it might clash if it's an interface override.
         // Wait, `WebSocketSession` inherits `WebSocketSession` -> `CoroutineScope`?
@@ -203,6 +272,9 @@ class MockWebSocketSession : WebSocketSession {
         // The warning said `Function parameter 'reason' is unused`.
     }
 
+    /**
+     * Handles terminate.
+     */
     @Deprecated("Deprecated in WebSocketSession")
     override fun terminate() {
         // Deprecated

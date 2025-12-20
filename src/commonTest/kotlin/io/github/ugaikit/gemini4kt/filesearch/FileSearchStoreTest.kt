@@ -6,9 +6,18 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the file search store test.
+ */
 class FileSearchStoreTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Tests test file search store serialization.
+     */
     @Test
     fun testFileSearchStoreSerialization() {
         val store =
@@ -23,6 +32,9 @@ class FileSearchStoreTest {
         assertEquals(store, decoded)
     }
 
+    /**
+     * Tests test import file request serialization.
+     */
     @Test
     fun testImportFileRequestSerialization() {
         val request =
@@ -37,6 +49,9 @@ class FileSearchStoreTest {
         assertEquals(request, decoded)
     }
 
+    /**
+     * Tests test operation serialization.
+     */
     @Test
     fun testOperationSerialization() {
         val operation =
@@ -51,6 +66,9 @@ class FileSearchStoreTest {
         assertEquals(operation, decoded)
     }
 
+    /**
+     * Tests test upload file search store request serialization.
+     */
     @Test
     fun testUploadFileSearchStoreRequestSerialization() {
         val request =

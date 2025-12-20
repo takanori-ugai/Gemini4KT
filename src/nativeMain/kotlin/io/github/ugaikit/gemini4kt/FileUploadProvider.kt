@@ -22,30 +22,70 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+/**
+ * Represents the file wrapper.
+ *
+ * @property file The file.
+ */
 @Serializable
 private data class FileWrapper(
     val file: GeminiFile,
 )
 
+/**
+ * Represents the upload file request.
+ *
+ * @property file The file.
+ */
 @Serializable
 private data class UploadFileRequest(
     val file: FileInput,
 )
 
+/**
+ * Represents the file input.
+ *
+ * @property displayName The display name.
+ */
 @Serializable
 private data class FileInput(
     val displayName: String,
 )
 
+/**
+ * Represents the file upload provider.
+ *
+ * @property apiKey The api key.
+ * @property client The client.
+ * @property json The json.
+ */
 actual class FileUploadProvider actual constructor(
     private val apiKey: String,
     private val client: HttpClient?,
     private val json: Json,
 ) {
+    /**
+     * Holds the http client.
+     */
     private val httpClient = client ?: createHttpClient(json)
+
+    /**
+     * Holds the fs.
+     */
     private val fs = SystemFileSystem
+
+    /**
+     * Holds the base url.
+     */
     private val baseUrl = "https://generativelanguage.googleapis.com"
 
+    /**
+     * Handles upload.
+     *
+     * @param file The file.
+     * @param mimeType The mime type.
+     * @param displayName The display name.
+     */
     actual suspend fun upload(
         file: Path,
         mimeType: String,
@@ -64,6 +104,14 @@ actual class FileUploadProvider actual constructor(
         return uploadFile(uploadUrl, file, mimeType, fileSize)
     }
 
+    /**
+     * Handles upload to file search store.
+     *
+     * @param fileSearchStoreName The file search store name.
+     * @param file The file.
+     * @param mimeType The mime type.
+     * @param uploadRequest The upload request.
+     */
     actual suspend fun uploadToFileSearchStore(
         fileSearchStoreName: String,
         file: Path,
@@ -83,6 +131,14 @@ actual class FileUploadProvider actual constructor(
         return uploadFileToSearchStore(uploadUrl, file, mimeType, fileSize)
     }
 
+    /**
+     * Handles get initial upload url.
+     *
+     * @param mimeType The mime type.
+     * @param fileSize The file size.
+     * @param endpoint The endpoint.
+     * @param bodyContent The body content.
+     */
     private suspend fun getInitialUploadUrl(
         mimeType: String,
         fileSize: Long,
@@ -109,6 +165,14 @@ actual class FileUploadProvider actual constructor(
                 ?: throw IOException("Upload URL not found in response headers")
         }
 
+    /**
+     * Handles perform upload.
+     *
+     * @param uploadUrl The upload url.
+     * @param file The file.
+     * @param mimeType The mime type.
+     * @param fileSize The file size.
+     */
     private suspend fun performUpload(
         uploadUrl: String,
         file: Path,
@@ -133,6 +197,14 @@ actual class FileUploadProvider actual constructor(
             response.bodyAsText()
         }
 
+    /**
+     * Handles upload file.
+     *
+     * @param uploadUrl The upload url.
+     * @param file The file.
+     * @param mimeType The mime type.
+     * @param fileSize The file size.
+     */
     private suspend fun uploadFile(
         uploadUrl: String,
         file: Path,
@@ -143,6 +215,14 @@ actual class FileUploadProvider actual constructor(
         return json.decodeFromString<FileWrapper>(responseText).file
     }
 
+    /**
+     * Handles upload file to search store.
+     *
+     * @param uploadUrl The upload url.
+     * @param file The file.
+     * @param mimeType The mime type.
+     * @param fileSize The file size.
+     */
     private suspend fun uploadFileToSearchStore(
         uploadUrl: String,
         file: Path,

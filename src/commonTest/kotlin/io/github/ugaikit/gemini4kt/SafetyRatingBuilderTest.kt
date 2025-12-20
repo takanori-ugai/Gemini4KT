@@ -5,7 +5,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
+/**
+ * Represents the safety rating builder test.
+ */
 class SafetyRatingBuilderTest {
+    /**
+     * Handles build with all properties.
+     */
     @Test
     fun buildWithAllProperties() {
         val safetyRating =
@@ -20,6 +26,9 @@ class SafetyRatingBuilderTest {
         assertEquals(true, safetyRating.blocked)
     }
 
+    /**
+     * Handles build with required properties only.
+     */
     @Test
     fun buildWithRequiredPropertiesOnly() {
         val safetyRating =
@@ -33,6 +42,9 @@ class SafetyRatingBuilderTest {
         assertNull(safetyRating.blocked)
     }
 
+    /**
+     * Handles build without required properties throws exception.
+     */
     @Test
     fun buildWithoutRequiredPropertiesThrowsException() {
         assertFailsWith<RuntimeException> {

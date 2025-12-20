@@ -12,6 +12,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.collect
 import kotlin.io.encoding.ExperimentalEncodingApi
 
+/**
+ * Represents the live sample.
+ */
 @OptIn(ExperimentalEncodingApi::class)
 object LiveSample {
     /**

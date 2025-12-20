@@ -49,34 +49,99 @@ data class GenerationConfig(
     val speechConfig: SpeechConfig? = null,
 )
 
+/**
+ * Represents the generation config builder.
+ */
 class GenerationConfigBuilder {
+    /**
+     * Holds the stop sequences.
+     */
     private val stopSequences: MutableList<String> = mutableListOf()
+
+    /**
+     * Holds the temperature.
+     */
     var temperature: Double? = null
+
+    /**
+     * Holds the max output tokens.
+     */
     var maxOutputTokens: Int? = null
+
+    /**
+     * Holds the top p.
+     */
     var topP: Double? = null
+
+    /**
+     * Holds the top k.
+     */
     var topK: Int? = null
+
+    /**
+     * Holds the response mime type.
+     */
     var responseMimeType: String? = null
+
+    /**
+     * Holds the response modalities.
+     */
     private val responseModalities: MutableList<Modality> = mutableListOf()
+
+    /**
+     * Holds the thinking config.
+     */
     var thinkingConfig: ThinkingConfig? = null
+
+    /**
+     * Holds the image config.
+     */
     var imageConfig: ImageConfig? = null
+
+    /**
+     * Holds the speech config.
+     */
     var speechConfig: SpeechConfig? = null
 
+    /**
+     * Handles stop sequence.
+     *
+     * @param sequence The sequence.
+     */
     fun stopSequence(sequence: String) {
         stopSequences.add(sequence)
     }
 
+    /**
+     * Handles response modality.
+     *
+     * @param modality The modality.
+     */
     fun responseModality(modality: Modality) {
         responseModalities.add(modality)
     }
 
+    /**
+     * Handles image config.
+     *
+     * @param init The init.
+     */
     fun imageConfig(init: ImageConfigBuilder.() -> Unit) {
         imageConfig = ImageConfigBuilder().apply(init).build()
     }
 
+    /**
+     * Handles speech config.
+     *
+     * @param init The init.
+     */
     fun speechConfig(init: SpeechConfigBuilder.() -> Unit) {
         speechConfig = SpeechConfigBuilder().apply(init).build()
     }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         GenerationConfig(
             stopSequences = if (stopSequences.isEmpty()) null else stopSequences.toTypedArray(),
@@ -92,4 +157,9 @@ class GenerationConfigBuilder {
         )
 }
 
+/**
+ * Handles generation config.
+ *
+ * @param init The init.
+ */
 fun generationConfig(init: GenerationConfigBuilder.() -> Unit): GenerationConfig = GenerationConfigBuilder().apply(init).build()

@@ -20,16 +20,39 @@ data class Content(
     val role: String? = null,
 )
 
+/**
+ * Represents the content builder.
+ */
 class ContentBuilder {
+    /**
+     * Holds the parts.
+     */
     private var parts: MutableList<Part> = mutableListOf()
+
+    /**
+     * Holds the role.
+     */
     var role: String? = null
 
+    /**
+     * Handles part.
+     *
+     * @param init The init.
+     */
     fun part(init: PartBuilder.() -> Unit) {
         val builder = PartBuilder().apply(init)
         parts.add(builder.build())
     }
 
+    /**
+     * Handles build.
+     */
     fun build() = Content(parts.toTypedArray(), role)
 }
 
+/**
+ * Handles content.
+ *
+ * @param init The init.
+ */
 fun content(init: ContentBuilder.() -> Unit): Content = ContentBuilder().apply(init).build()

@@ -8,7 +8,17 @@ import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.getImage
 
+/**
+ * Represents the input with image.
+ */
 object InputWithImage {
+    /**
+     * Handles run.
+     *
+     * @param args The args.
+     * @param gemini The gemini.
+     * @param imageProvider The image provider.
+     */
     suspend fun run(
         args: Array<String>,
         gemini: Gemini? = null,

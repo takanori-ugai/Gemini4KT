@@ -5,9 +5,18 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the speech config test.
+ */
 class SpeechConfigTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { prettyPrint = true }
 
+    /**
+     * Tests test single voice config serialization.
+     */
     @Test
     fun testSingleVoiceConfigSerialization() {
         val config =
@@ -65,6 +74,9 @@ class SpeechConfigTest {
         assertEquals(parsedExpected, parsedActual)
     }
 
+    /**
+     * Tests test multi speaker config serialization.
+     */
     @Test
     fun testMultiSpeakerConfigSerialization() {
         val config =

@@ -14,6 +14,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
+/**
+ * Represents the function example2.
+ */
 object FunctionExample2 {
     /**
      * A sample function that finds the weather in a given location.
@@ -23,6 +26,11 @@ object FunctionExample2 {
      */
     fun findWeather(location: String): String = "The weather in $location is super sunny"
 
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())
 
@@ -63,6 +71,13 @@ object FunctionExample2 {
         sendFunctionResult(client, tools, initialContent, modelResponsePart)
     }
 
+    /**
+     * Handles get function call.
+     *
+     * @param gemini The gemini.
+     * @param tools The tools.
+     * @param userPrompt The user prompt.
+     */
     private suspend fun getFunctionCall(
         gemini: Gemini,
         tools: Array<Tool>,
@@ -73,6 +88,14 @@ object FunctionExample2 {
         return gemini.generateContent(firstRequest, "gemini-2.5-flash-lite")
     }
 
+    /**
+     * Handles send function result.
+     *
+     * @param gemini The gemini.
+     * @param tools The tools.
+     * @param initialContent The initial content.
+     * @param modelResponsePart The model response part.
+     */
     private suspend fun sendFunctionResult(
         gemini: Gemini,
         tools: Array<Tool>,

@@ -46,10 +46,25 @@ class Gemini(
      * JSON configuration setup to ignore unknown keys during deserialization.
      */
     internal val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Holds the http client.
+     */
     private val httpClient = client ?: createHttpClient(json)
+
+    /**
+     * Holds the provider.
+     */
     private val provider: FileUploadProvider = fileUploadProvider ?: FileUploadProvider(apiKey, httpClient, json)
 
+    /**
+     * Holds the b url.
+     */
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
+
+    /**
+     * Holds the base url.
+     */
     private val baseUrl = "$bUrl/models"
 
     companion object {
@@ -342,15 +357,31 @@ class Gemini(
     }
 }
 
+/**
+ * Represents the gemini js export.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @JsName("Gemini")
 class GeminiJsExport(
     apiKey: String,
 ) {
+    /**
+     * Holds the delegate.
+     */
     private val delegate = Gemini(apiKey)
+
+    /**
+     * Holds the json helper.
+     */
     private val jsonHelper = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Handles generate content.
+     *
+     * @param request The request.
+     * @param model The model.
+     */
     suspend fun generateContent(
         request: GenerateContentRequest,
         model: String = "gemini-pro",

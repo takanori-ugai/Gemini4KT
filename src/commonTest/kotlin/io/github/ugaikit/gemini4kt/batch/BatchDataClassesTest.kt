@@ -11,9 +11,18 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+/**
+ * Represents the batch data classes test.
+ */
 class BatchDataClassesTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Handles batchinlineresponse serialization and deserialization.
+     */
     @Test
     fun batchinlineresponseSerializationAndDeserialization() {
         val response =
@@ -47,6 +56,9 @@ class BatchDataClassesTest {
         )
     }
 
+    /**
+     * Handles batchinlineresponse with error deserialization.
+     */
     @Test
     fun batchinlineresponseWithErrorDeserialization() {
         val jsonString =
@@ -69,6 +81,9 @@ class BatchDataClassesTest {
         assertTrue(deserialized.error.toString().contains("Invalid request"))
     }
 
+    /**
+     * Handles batchjob serialization and deserialization.
+     */
     @Test
     fun batchjobSerializationAndDeserialization() {
         val batchJob =
@@ -103,6 +118,9 @@ class BatchDataClassesTest {
         assertEquals(true, deserialized.done)
     }
 
+    /**
+     * Handles batchjob with error deserialization.
+     */
     @Test
     fun batchjobWithErrorDeserialization() {
         val jsonString =
@@ -127,6 +145,9 @@ class BatchDataClassesTest {
         assertEquals("INTERNAL", deserialized.error?.status)
     }
 
+    /**
+     * Handles listbatchesresponse serialization and deserialization.
+     */
     @Test
     fun listbatchesresponseSerializationAndDeserialization() {
         val listBatchesResponse =

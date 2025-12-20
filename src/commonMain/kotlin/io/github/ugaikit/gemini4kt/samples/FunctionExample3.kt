@@ -15,7 +15,16 @@ import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
+/**
+ * Represents the function example3.
+ */
 object FunctionExample3 {
+    /**
+     * Handles add.
+     *
+     * @param a The a.
+     * @param b The b.
+     */
     @GeminiFunction(description = "add two numbers")
     fun add(
         @GeminiParameter(description = "first number") a: Int,
@@ -25,6 +34,11 @@ object FunctionExample3 {
         return a + b
     }
 
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())
 

@@ -5,7 +5,13 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the code execution test.
+ */
 class CodeExecutionTest {
+    /**
+     * Holds the json.
+     */
     private val json =
         Json {
             ignoreUnknownKeys = true
@@ -13,6 +19,9 @@ class CodeExecutionTest {
             prettyPrint = false
         }
 
+    /**
+     * Tests test tool with code execution serialization.
+     */
     @Test
     fun testToolWithCodeExecutionSerialization() {
         val tool =
@@ -26,6 +35,9 @@ class CodeExecutionTest {
         assertEquals(expected, encoded)
     }
 
+    /**
+     * Tests test part with executable code serialization.
+     */
     @Test
     fun testPartWithExecutableCodeSerialization() {
         val part =
@@ -40,6 +52,9 @@ class CodeExecutionTest {
         assertEquals(expected, encoded)
     }
 
+    /**
+     * Tests test part with code execution result serialization.
+     */
     @Test
     fun testPartWithCodeExecutionResultSerialization() {
         val part =
@@ -54,6 +69,9 @@ class CodeExecutionTest {
         assertEquals(expected, encoded)
     }
 
+    /**
+     * Tests test part with text and code execution result serialization.
+     */
     @Test
     fun testPartWithTextAndCodeExecutionResultSerialization() {
         // Just checking multiple fields

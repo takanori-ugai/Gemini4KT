@@ -25,15 +25,37 @@ data class FunctionDeclaration(
     val parameters: Schema,
 )
 
+/**
+ * Represents the function declaration builder.
+ */
 class FunctionDeclarationBuilder {
+    /**
+     * Holds the name.
+     */
     lateinit var name: String
+
+    /**
+     * Holds the description.
+     */
     lateinit var description: String
+
+    /**
+     * Holds the parameters.
+     */
     private var parameters: Schema? = null
 
+    /**
+     * Handles parameters.
+     *
+     * @param init The init.
+     */
     fun parameters(init: SchemaBuilder.() -> Unit) {
         parameters = SchemaBuilder().apply(init).build()
     }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         FunctionDeclaration(
             name,
@@ -42,4 +64,9 @@ class FunctionDeclarationBuilder {
         )
 }
 
+/**
+ * Handles function declaration.
+ *
+ * @param init The init.
+ */
 fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit): FunctionDeclaration = FunctionDeclarationBuilder().apply(init).build()

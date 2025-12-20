@@ -25,17 +25,43 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
 
+/**
+ * Represents the gemini test.
+ */
 class GeminiTest {
+    /**
+     * Holds the gemini.
+     */
     private lateinit var gemini: Gemini
+
+    /**
+     * Holds the file upload provider.
+     */
     private lateinit var fileUploadProvider: FileUploadProvider
+
+    /**
+     * Holds the base url.
+     */
     private val baseUrl = "https://generativelanguage.googleapis.com/v1beta"
+
+    /**
+     * Holds the api key.
+     */
     private val apiKey = "test-api-key"
 
+    /**
+     * Handles setup.
+     */
     @BeforeEach
     fun setup() {
         fileUploadProvider = mockk()
     }
 
+    /**
+     * Handles create gemini.
+     *
+     * @param handler The handler.
+     */
     private fun createGemini(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): Gemini {
         val client =
             HttpClient(MockEngine) {
@@ -53,6 +79,9 @@ class GeminiTest {
         )
     }
 
+    /**
+     * Handles stream generate content.
+     */
     @Test
     fun `streamGenerateContent yields responses on success`() =
         runTest {
@@ -85,6 +114,9 @@ class GeminiTest {
             assertNotNull(results[1].candidates)
         }
 
+    /**
+     * Handles get content.
+     */
     @Test
     fun `getContent with inputJson returns content on success`() =
         runTest {
@@ -104,6 +136,9 @@ class GeminiTest {
             assertEquals(response, result)
         }
 
+    /**
+     * Handles get content.
+     */
     @Test
     fun `getContent without inputJson returns content on success`() =
         runTest {
@@ -123,6 +158,9 @@ class GeminiTest {
             assertEquals(response, result)
         }
 
+    /**
+     * Handles get content.
+     */
     @Test
     fun `getContent returns empty json on error`() =
         runTest {
@@ -140,6 +178,9 @@ class GeminiTest {
             }
         }
 
+    /**
+     * Handles delete content.
+     */
     @Test
     fun `deleteContent succeeds with 200 response`() =
         runTest {
@@ -152,6 +193,9 @@ class GeminiTest {
             gemini.deleteContent("http://localhost")
         }
 
+    /**
+     * Handles delete content.
+     */
     @Test
     fun `deleteContent handles error response`() =
         runTest {
@@ -167,6 +211,9 @@ class GeminiTest {
             // Should log error but not throw
         }
 
+    /**
+     * Handles generate content.
+     */
     @Test
     fun `generateContent calls getContent with correct parameters`() =
         runTest {
@@ -183,6 +230,9 @@ class GeminiTest {
             assertNotNull(response)
         }
 
+    /**
+     * Handles create cached content.
+     */
     @Test
     fun `createCachedContent calls getContent with correct parameters`() =
         runTest {
@@ -199,6 +249,9 @@ class GeminiTest {
             assertEquals("cachedContent-123", response.name)
         }
 
+    /**
+     * Handles list cached content.
+     */
     @Test
     fun `listCachedContent calls getContent with correct parameters`() =
         runTest {
@@ -214,6 +267,9 @@ class GeminiTest {
             assertNotNull(response)
         }
 
+    /**
+     * Handles get cached content.
+     */
     @Test
     fun `getCachedContent calls getContent with correct parameters`() =
         runTest {
@@ -230,6 +286,9 @@ class GeminiTest {
             assertEquals(name, response.name)
         }
 
+    /**
+     * Handles delete cached content.
+     */
     @Test
     fun `deleteCachedContent calls deleteContent with correct parameters`() =
         runTest {
@@ -244,6 +303,9 @@ class GeminiTest {
             gemini.deleteCachedContent(name)
         }
 
+    /**
+     * Handles count tokens.
+     */
     @Test
     fun `countTokens calls getContent with correct parameters`() =
         runTest {
@@ -260,6 +322,9 @@ class GeminiTest {
             assertEquals(10, response.totalTokens)
         }
 
+    /**
+     * Handles batch embed contents.
+     */
     @Test
     fun `batchEmbedContents calls getContent with correct parameters`() =
         runTest {
@@ -276,6 +341,9 @@ class GeminiTest {
             assertNotNull(response)
         }
 
+    /**
+     * Handles embed content.
+     */
     @Test
     fun `embedContent calls getContent with correct parameters`() =
         runTest {
@@ -292,6 +360,9 @@ class GeminiTest {
             assertNotNull(response)
         }
 
+    /**
+     * Handles get models.
+     */
     @Test
     fun `getModels calls getContent with correct parameters`() =
         runTest {
@@ -307,6 +378,9 @@ class GeminiTest {
             assertNotNull(response)
         }
 
+    /**
+     * Handles upload file.
+     */
     @Test
     fun `uploadFile calls fileUploadProvider with correct parameters`() =
         runTest {

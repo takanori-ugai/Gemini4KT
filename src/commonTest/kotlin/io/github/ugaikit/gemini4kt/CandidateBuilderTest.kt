@@ -6,7 +6,13 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+/**
+ * Represents the candidate builder test.
+ */
 class CandidateBuilderTest {
+    /**
+     * Handles build with all properties.
+     */
     @Test
     fun buildWithAllProperties() {
         val candidate =
@@ -65,6 +71,9 @@ class CandidateBuilderTest {
         assertEquals(1, candidate.groundingAttributions.size)
     }
 
+    /**
+     * Handles build with required properties only.
+     */
     @Test
     fun buildWithRequiredPropertiesOnly() {
         val candidate =
@@ -86,6 +95,9 @@ class CandidateBuilderTest {
         assertNull(candidate.urlContextMetadata)
     }
 
+    /**
+     * Handles build with url context metadata.
+     */
     @Test
     fun buildWithUrlContextMetadata() {
         val candidate =
@@ -112,6 +124,9 @@ class CandidateBuilderTest {
         assertEquals("http://example.com", urlContextMetadata.urlMetadata[0].retrievedUrl)
     }
 
+    /**
+     * Handles build with multiple safety ratings.
+     */
     @Test
     fun buildWithMultipleSafetyRatings() {
         val candidate =
@@ -133,6 +148,9 @@ class CandidateBuilderTest {
         assertEquals(2, candidate.safetyRatings?.size)
     }
 
+    /**
+     * Handles build without required properties throws exception.
+     */
     @Test
     fun buildWithoutRequiredPropertiesThrowsException() {
         assertFailsWith<RuntimeException> {

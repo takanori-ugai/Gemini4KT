@@ -3,7 +3,13 @@ package io.github.ugaikit.gemini4kt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the file data builder test.
+ */
 class FileDataBuilderTest {
+    /**
+     * Handles build with all properties.
+     */
     @Test
     fun buildWithAllProperties() {
         val fileData =

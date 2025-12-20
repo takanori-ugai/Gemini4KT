@@ -3,7 +3,15 @@ package io.github.ugaikit.gemini4kt.samples
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
+/**
+ * Represents the file search sample runner.
+ */
 object FileSearchSampleRunner {
+    /**
+     * Handles main.
+     *
+     * @param args The args.
+     */
     @JvmStatic
     fun main(args: Array<String>) =
         runBlocking {

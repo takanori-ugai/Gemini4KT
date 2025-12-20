@@ -13,7 +13,15 @@ import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
+/**
+ * Represents the samples test.
+ */
 class SamplesTest {
+    /**
+     * Handles create mock gemini.
+     *
+     * @param responseText The response text.
+     */
     private fun createMockGemini(responseText: String): Gemini {
         val mockEngine =
             MockEngine { _ ->
@@ -27,6 +35,11 @@ class SamplesTest {
         return Gemini(apiKey = "test_key", client = client)
     }
 
+    /**
+     * Handles create mock file search.
+     *
+     * @param responseText The response text.
+     */
     private fun createMockFileSearch(responseText: String): FileSearch {
         val mockEngine =
             MockEngine { _ ->
@@ -40,6 +53,9 @@ class SamplesTest {
         return FileSearch(apiKey = "test_key", client = client)
     }
 
+    /**
+     * Tests test samples1.
+     */
     @Test
     fun testSamples1() =
         runTest {
@@ -65,6 +81,9 @@ class SamplesTest {
             Samples1.run(gemini)
         }
 
+    /**
+     * Tests test audio generation.
+     */
     @Test
     fun testAudioGeneration() =
         runTest {
@@ -93,6 +112,9 @@ class SamplesTest {
             AudioGeneration.run(gemini)
         }
 
+    /**
+     * Tests test code execution sample.
+     */
     @Test
     fun testCodeExecutionSample() =
         runTest {
@@ -130,6 +152,9 @@ class SamplesTest {
             CodeExecutionSample.run(gemini)
         }
 
+    /**
+     * Tests test count tokens sample.
+     */
     @Test
     fun testCountTokensSample() =
         runTest {
@@ -145,6 +170,9 @@ class SamplesTest {
             CountTokensSample.run(gemini)
         }
 
+    /**
+     * Tests test embed content.
+     */
     @Test
     fun testEmbedContent() =
         runTest {
@@ -182,6 +210,9 @@ class SamplesTest {
             EmbedContent.run(gemini)
         }
 
+    /**
+     * Tests test google search sample.
+     */
     @Test
     fun testGoogleSearchSample() =
         runTest {
@@ -212,6 +243,9 @@ class SamplesTest {
             GoogleSearchSample.run(gemini)
         }
 
+    /**
+     * Tests test batch sample.
+     */
     @Test
     fun testBatchSample() =
         runTest {
@@ -264,6 +298,9 @@ class SamplesTest {
             BatchSample.run(batch)
         }
 
+    /**
+     * Tests test function example1.
+     */
     @Test
     fun testFunctionExample1() =
         runTest {
@@ -289,6 +326,9 @@ class SamplesTest {
             FunctionExample1.run(gemini)
         }
 
+    /**
+     * Tests test function example2.
+     */
     @Test
     fun testFunctionExample2() =
         runTest {
@@ -348,6 +388,9 @@ class SamplesTest {
             FunctionExample2.run(gemini)
         }
 
+    /**
+     * Tests test function example3.
+     */
     @Test
     fun testFunctionExample3() =
         runTest {
@@ -410,6 +453,9 @@ class SamplesTest {
             FunctionExample3.run(gemini)
         }
 
+    /**
+     * Tests test stream generate content sample.
+     */
     @Test
     fun testStreamGenerateContentSample() =
         runTest {
@@ -435,6 +481,9 @@ class SamplesTest {
             StreamGenerateContentSample.run(gemini)
         }
 
+    /**
+     * Tests test url context sample.
+     */
     @Test
     fun testUrlContextSample() =
         runTest {
@@ -468,6 +517,9 @@ class SamplesTest {
             UrlContextSample.run(gemini)
         }
 
+    /**
+     * Tests test input with image.
+     */
     @Test
     fun testInputWithImage() =
         runTest {
@@ -493,6 +545,9 @@ class SamplesTest {
             InputWithImage.run(args = emptyArray(), gemini = gemini, imageProvider = { "base64image" })
         }
 
+    /**
+     * Tests test cache.
+     */
     @Test
     fun testCache() =
         runTest {

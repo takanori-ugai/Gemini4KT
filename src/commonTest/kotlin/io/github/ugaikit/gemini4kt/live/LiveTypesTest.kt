@@ -10,13 +10,22 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+/**
+ * Represents the live types test.
+ */
 class LiveTypesTest {
+    /**
+     * Holds the json.
+     */
     private val json =
         Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
         }
 
+    /**
+     * Tests test bidi generate content setup serialization.
+     */
     @Test
     fun testBidiGenerateContentSetupSerialization() {
         val setup =
@@ -33,6 +42,9 @@ class LiveTypesTest {
         assertTrue(jsonStr.contains("systemInstruction"))
     }
 
+    /**
+     * Tests test bidi generate content client message serialization.
+     */
     @Test
     fun testBidiGenerateContentClientMessageSerialization() {
         val setup = BidiGenerateContentSetup(model = "models/gemini-pro")
@@ -52,6 +64,9 @@ class LiveTypesTest {
         assertTrue(jsonStr2.contains("turnComplete"))
     }
 
+    /**
+     * Tests test bidi generate content server message deserialization.
+     */
     @Test
     fun testBidiGenerateContentServerMessageDeserialization() {
         val jsonStr =
@@ -80,6 +95,9 @@ class LiveTypesTest {
         )
     }
 
+    /**
+     * Tests test realtime input serialization.
+     */
     @Test
     fun testRealtimeInputSerialization() {
         val input =
@@ -98,6 +116,9 @@ class LiveTypesTest {
         assertTrue(jsonStr.contains("Some text input"))
     }
 
+    /**
+     * Tests test bidi generate content tool response serialization.
+     */
     @Test
     fun testBidiGenerateContentToolResponseSerialization() {
         val toolResponse =
@@ -110,6 +131,9 @@ class LiveTypesTest {
         assertTrue(jsonStr.contains("functionResponses"))
     }
 
+    /**
+     * Tests test bidi generate content tool call deserialization.
+     */
     @Test
     fun testBidiGenerateContentToolCallDeserialization() {
         val jsonStr =

@@ -5,7 +5,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+/**
+ * Represents the attribution source id builder test.
+ */
 class AttributionSourceIdBuilderTest {
+    /**
+     * Handles build with grounding passage.
+     */
     @Test
     fun buildWithGroundingPassage() {
         val attributionSourceId =
@@ -20,6 +26,9 @@ class AttributionSourceIdBuilderTest {
         assertNull(attributionSourceId.semanticRetrieverChunk)
     }
 
+    /**
+     * Handles build with semantic retriever chunk.
+     */
     @Test
     fun buildWithSemanticRetrieverChunk() {
         val attributionSourceId =
@@ -34,6 +43,9 @@ class AttributionSourceIdBuilderTest {
         assertEquals("source123", semanticRetrieverChunk.source)
     }
 
+    /**
+     * Handles build with both properties.
+     */
     @Test
     fun buildWithBothProperties() {
         val attributionSourceId =
@@ -49,6 +61,9 @@ class AttributionSourceIdBuilderTest {
         assertNotNull(attributionSourceId.semanticRetrieverChunk)
     }
 
+    /**
+     * Handles build with no properties.
+     */
     @Test
     fun buildWithNoProperties() {
         val attributionSourceId = attributionSourceId {}

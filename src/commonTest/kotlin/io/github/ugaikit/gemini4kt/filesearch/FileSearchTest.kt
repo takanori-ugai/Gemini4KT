@@ -18,11 +18,30 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the file search test.
+ */
 class FileSearchTest {
+    /**
+     * Holds the file search.
+     */
     private lateinit var fileSearch: FileSearch
+
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Holds the b url.
+     */
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
 
+    /**
+     * Handles create file search.
+     *
+     * @param handler The handler.
+     */
     private fun createFileSearch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): FileSearch {
         val client =
             HttpClient(MockEngine) {
@@ -36,6 +55,9 @@ class FileSearchTest {
         return FileSearch(apiKey = "test-api-key", client = client)
     }
 
+    /**
+     * Tests test create file search store.
+     */
     @Test
     fun testCreateFileSearchStore() =
         runTest {
@@ -55,6 +77,9 @@ class FileSearchTest {
             assertEquals(expectedResponse, result)
         }
 
+    /**
+     * Tests test get file search store.
+     */
     @Test
     fun testGetFileSearchStore() =
         runTest {
@@ -74,6 +99,9 @@ class FileSearchTest {
             assertEquals(expectedResponse, result)
         }
 
+    /**
+     * Tests test list file search stores.
+     */
     @Test
     fun testListFileSearchStores() =
         runTest {
@@ -96,6 +124,9 @@ class FileSearchTest {
             assertEquals(expectedResponse, result)
         }
 
+    /**
+     * Tests test delete file search store.
+     */
     @Test
     fun testDeleteFileSearchStore() =
         runTest {
@@ -111,6 +142,9 @@ class FileSearchTest {
             fileSearch.deleteFileSearchStore(storeName, force = true)
         }
 
+    /**
+     * Tests test import file to file search store.
+     */
     @Test
     fun testImportFileToFileSearchStore() =
         runTest {
@@ -131,6 +165,9 @@ class FileSearchTest {
             assertEquals(expectedResponse, result)
         }
 
+    /**
+     * Tests test get file search store operation.
+     */
     @Test
     fun testGetFileSearchStoreOperation() =
         runTest {

@@ -8,7 +8,15 @@ import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 
+/**
+ * Represents the stream generate content sample.
+ */
 object StreamGenerateContentSample {
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())
         val text = "Tell me a story about a magic backpack."

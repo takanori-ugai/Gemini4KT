@@ -14,7 +14,17 @@ import io.github.ugaikit.gemini4kt.tool
 import kotlinx.coroutines.delay
 import kotlinx.io.files.Path
 
+/**
+ * Represents the file search sample.
+ */
 object FileSearchSample {
+    /**
+     * Handles run.
+     *
+     * @param filePath The file path.
+     * @param geminiInstance The gemini instance.
+     * @param fileSearchInstance The file search instance.
+     */
     suspend fun run(
         filePath: String,
         geminiInstance: Gemini? = null,
@@ -70,6 +80,13 @@ object FileSearchSample {
         }
     }
 
+    /**
+     * Handles upload file to store.
+     *
+     * @param fileSearch The file search.
+     * @param storeName The store name.
+     * @param filePath The file path.
+     */
     private suspend fun uploadFileToStore(
         fileSearch: FileSearch,
         storeName: String,

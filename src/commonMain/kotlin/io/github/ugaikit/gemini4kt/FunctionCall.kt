@@ -23,10 +23,26 @@ data class FunctionCall(
     val args: Map<String, JsonElement>,
 )
 
+/**
+ * Represents the function call builder.
+ */
 class FunctionCallBuilder {
+    /**
+     * Holds the name.
+     */
     var name: String = ""
+
+    /**
+     * Holds the args.
+     */
     private val args: MutableMap<String, JsonElement> = mutableMapOf()
 
+    /**
+     * Handles arg.
+     *
+     * @param key The key.
+     * @param value The value.
+     */
     fun arg(
         key: String,
         value: JsonElement,
@@ -34,7 +50,15 @@ class FunctionCallBuilder {
         args[key] = value
     }
 
+    /**
+     * Handles build.
+     */
     fun build() = FunctionCall(name, args)
 }
 
+/**
+ * Handles function call.
+ *
+ * @param init The init.
+ */
 fun functionCall(init: FunctionCallBuilder.() -> Unit): FunctionCall = FunctionCallBuilder().apply(init).build()

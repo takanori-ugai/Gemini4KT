@@ -11,7 +11,15 @@ import io.github.ugaikit.gemini4kt.ThinkingConfig
 import io.github.ugaikit.gemini4kt.Threshold
 import io.github.ugaikit.gemini4kt.getApiKey
 
+/**
+ * Represents the samples1.
+ */
 object Samples1 {
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())
         val text = "Write a story about a magic backpack."

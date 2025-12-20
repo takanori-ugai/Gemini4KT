@@ -10,6 +10,11 @@ import io.github.ugaikit.gemini4kt.getApiKey
  * manage or interact with a set of models in the context of the application.
  */
 object Models {
+    /**
+     * Handles list models.
+     *
+     * @param gemini The gemini.
+     */
     suspend fun listModels(gemini: Gemini = Gemini(getApiKey())) {
         // Retrieve and print each model
         gemini.getModels().models.forEach(::println)

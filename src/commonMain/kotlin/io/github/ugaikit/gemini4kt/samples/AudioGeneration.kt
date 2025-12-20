@@ -10,7 +10,15 @@ import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+/**
+ * Represents the audio generation.
+ */
 object AudioGeneration {
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
     suspend fun run(gemini: Gemini? = null): String? {
         // Example 1: Single voice
         val config1 =

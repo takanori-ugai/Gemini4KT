@@ -5,7 +5,13 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the tool config test.
+ */
 class ToolConfigTest {
+    /**
+     * Handles tool config serializes correctly with retrieval config.
+     */
     @Test
     fun toolConfigSerializesCorrectlyWithRetrievalConfig() {
         val latLng = LatLng(latitude = 34.0522, longitude = -118.2437)

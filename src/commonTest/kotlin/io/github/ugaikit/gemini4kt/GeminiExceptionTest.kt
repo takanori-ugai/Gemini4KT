@@ -7,9 +7,18 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+/**
+ * Represents the gemini exception test.
+ */
 class GeminiExceptionTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Tests test gemini exception initialization.
+     */
     @Test
     fun testGeminiExceptionInitialization() {
         val error =
@@ -24,6 +33,9 @@ class GeminiExceptionTest {
         assertEquals(error, exception.error)
     }
 
+    /**
+     * Tests test gemini error response deserialization.
+     */
     @Test
     fun testGeminiErrorResponseDeserialization() {
         val jsonString =
@@ -63,6 +75,9 @@ class GeminiExceptionTest {
         assertEquals("generativelanguage.googleapis.com", detail.metadata?.get("service"))
     }
 
+    /**
+     * Tests test gemini error serialization.
+     */
     @Test
     fun testGeminiErrorSerialization() {
         val error =
@@ -85,6 +100,9 @@ class GeminiExceptionTest {
         assertEquals(error, decodedError)
     }
 
+    /**
+     * Tests test gemini error detail with multiple fields.
+     */
     @Test
     fun testGeminiErrorDetailWithMultipleFields() {
         val detail =
@@ -123,6 +141,9 @@ class GeminiExceptionTest {
         assertEquals("https://console.cloud.google.com", decodedDetail.links?.get(0)?.url)
     }
 
+    /**
+     * Tests test gemini error detail empty.
+     */
     @Test
     fun testGeminiErrorDetailEmpty() {
         val detail = GeminiErrorDetail()

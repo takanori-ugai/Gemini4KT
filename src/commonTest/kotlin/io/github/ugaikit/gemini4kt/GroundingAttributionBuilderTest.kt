@@ -4,7 +4,13 @@ import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
+/**
+ * Represents the grounding attribution builder test.
+ */
 class GroundingAttributionBuilderTest {
+    /**
+     * Handles build with all properties.
+     */
     @Test
     fun buildWithAllProperties() {
         val groundingAttribution =
@@ -26,6 +32,9 @@ class GroundingAttributionBuilderTest {
         assertNotNull(groundingAttribution.content)
     }
 
+    /**
+     * Handles build without required properties throws exception.
+     */
     @Test
     fun buildWithoutRequiredPropertiesThrowsException() {
         assertFailsWith<RuntimeException> {

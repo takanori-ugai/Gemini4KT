@@ -20,6 +20,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+/**
+ * Holds the logger.
+ */
 private val logger = KotlinLogging.logger {}
 
 /**
@@ -29,6 +32,9 @@ class GeminiLive(
     private val apiKey: String,
     private val model: String,
     private val config: LiveConnectConfig? = null,
+    /**
+     * Holds the json.
+     */
     private val json: Json =
         Json {
             ignoreUnknownKeys = true
@@ -37,6 +43,10 @@ class GeminiLive(
     private val client: HttpClient? = null,
 ) {
     // Base URL for WebSocket connection.
+
+    /**
+     * Holds the ws url.
+     */
     private val wsUrl =
         "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
 
@@ -178,6 +188,14 @@ class GeminiLive(
     }
 }
 
+/**
+ * Represents the gemini live session.
+ *
+ * @property session The session.
+ * @property incomingMessages The incoming messages.
+ * @property json The json.
+ * @property listenerJob The listener job.
+ */
 class GeminiLiveSession(
     private val session: WebSocketSession,
     private val incomingMessages: Channel<BidiGenerateContentServerMessage>,
@@ -208,6 +226,11 @@ class GeminiLiveSession(
         send(msg)
     }
 
+    /**
+     * Handles send.
+     *
+     * @param msg The msg.
+     */
     private suspend fun send(msg: BidiGenerateContentClientMessage) {
         val txt = json.encodeToString(msg)
         logger.debug { "Sending message: $txt" }

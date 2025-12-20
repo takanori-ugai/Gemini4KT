@@ -31,33 +31,77 @@ data class Tool(
     val fileSearch: FileSearchTool? = null,
 )
 
+/**
+ * Represents the tool builder.
+ */
 class ToolBuilder {
+    /**
+     * Holds the function declarations.
+     */
     private val functionDeclarations: MutableList<FunctionDeclaration> = mutableListOf()
+
+    /**
+     * Holds the google search.
+     */
     private var googleSearch: GoogleSearch? = null
+
+    /**
+     * Holds the code execution.
+     */
     private var codeExecution: CodeExecution? = null
+
+    /**
+     * Holds the url context.
+     */
     private var urlContext: UrlContext? = null
+
+    /**
+     * Holds the file search.
+     */
     private var fileSearch: FileSearchTool? = null
 
+    /**
+     * Handles function declaration.
+     *
+     * @param init The init.
+     */
     fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit) {
         functionDeclarations.add(FunctionDeclarationBuilder().apply(init).build())
     }
 
+    /**
+     * Handles google search.
+     */
     fun googleSearch() {
         this.googleSearch = GoogleSearch()
     }
 
+    /**
+     * Handles code execution.
+     */
     fun codeExecution() {
         this.codeExecution = CodeExecution()
     }
 
+    /**
+     * Handles url context.
+     */
     fun urlContext() {
         this.urlContext = UrlContext()
     }
 
+    /**
+     * Handles file search.
+     *
+     * @param init The init.
+     */
     fun fileSearch(init: FileSearchToolBuilder.() -> Unit) {
         this.fileSearch = FileSearchToolBuilder().apply(init).build()
     }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         Tool(
             functionDeclarations = functionDeclarations.toTypedArray(),
@@ -68,18 +112,41 @@ class ToolBuilder {
         )
 }
 
+/**
+ * Represents the file search tool builder.
+ */
 class FileSearchToolBuilder {
+    /**
+     * Holds the file search store names.
+     */
     private var fileSearchStoreNames: MutableList<String> = mutableListOf()
+
+    /**
+     * Holds the metadata filter.
+     */
     private var metadataFilter: String? = null
 
+    /**
+     * Handles file search store name.
+     *
+     * @param name The name.
+     */
     fun fileSearchStoreName(name: String) {
         fileSearchStoreNames.add(name)
     }
 
+    /**
+     * Handles metadata filter.
+     *
+     * @param filter The filter.
+     */
     fun metadataFilter(filter: String) {
         this.metadataFilter = filter
     }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         FileSearchTool(
             fileSearchStoreNames = if (fileSearchStoreNames.isEmpty()) null else fileSearchStoreNames.toTypedArray(),
@@ -87,4 +154,9 @@ class FileSearchToolBuilder {
         )
 }
 
+/**
+ * Handles tool.
+ *
+ * @param init The init.
+ */
 fun tool(init: ToolBuilder.() -> Unit): Tool = ToolBuilder().apply(init).build()

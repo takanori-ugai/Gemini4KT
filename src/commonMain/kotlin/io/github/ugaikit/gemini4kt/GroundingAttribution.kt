@@ -17,19 +17,47 @@ data class GroundingAttribution(
     val content: Content,
 )
 
+/**
+ * Represents the grounding attribution builder.
+ */
 class GroundingAttributionBuilder {
+    /**
+     * Holds the source id.
+     */
     lateinit var sourceId: AttributionSourceId
+
+    /**
+     * Holds the content.
+     */
     lateinit var content: Content
 
+    /**
+     * Handles source id.
+     *
+     * @param init The init.
+     */
     fun sourceId(init: AttributionSourceIdBuilder.() -> Unit) {
         sourceId = AttributionSourceIdBuilder().apply(init).build()
     }
 
+    /**
+     * Handles content.
+     *
+     * @param init The init.
+     */
     fun content(init: ContentBuilder.() -> Unit) {
         content = ContentBuilder().apply(init).build()
     }
 
+    /**
+     * Handles build.
+     */
     fun build() = GroundingAttribution(sourceId, content)
 }
 
+/**
+ * Handles grounding attribution.
+ *
+ * @param init The init.
+ */
 fun groundingAttribution(init: GroundingAttributionBuilder.() -> Unit): GroundingAttribution = GroundingAttributionBuilder().apply(init).build()

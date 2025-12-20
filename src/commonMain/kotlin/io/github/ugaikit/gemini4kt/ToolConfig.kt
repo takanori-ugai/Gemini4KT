@@ -19,14 +19,32 @@ data class ToolConfig(
     val retrievalConfig: RetrievalConfig? = null,
 )
 
+/**
+ * Represents the tool config builder.
+ */
 class ToolConfigBuilder {
+    /**
+     * Holds the function calling config.
+     */
     private var functionCallingConfig: FunctionCallingConfig? = null
+
+    /**
+     * Holds the retrieval config.
+     */
     var retrievalConfig: RetrievalConfig? = null
 
+    /**
+     * Handles function calling config.
+     *
+     * @param init The init.
+     */
     fun functionCallingConfig(init: FunctionCallingConfigBuilder.() -> Unit) {
         functionCallingConfig = FunctionCallingConfigBuilder().apply(init).build()
     }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         ToolConfig(
             functionCallingConfig = functionCallingConfig ?: error("FunctionCallingConfig must be initialized"),
@@ -34,4 +52,9 @@ class ToolConfigBuilder {
         )
 }
 
+/**
+ * Handles tool config.
+ *
+ * @param init The init.
+ */
 fun toolConfig(init: ToolConfigBuilder.() -> Unit): ToolConfig = ToolConfigBuilder().apply(init).build()

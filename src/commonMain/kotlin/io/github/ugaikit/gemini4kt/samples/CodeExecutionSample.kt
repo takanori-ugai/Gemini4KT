@@ -7,7 +7,15 @@ import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.tool
 
+/**
+ * Represents the code execution sample.
+ */
 object CodeExecutionSample {
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())
         val text =

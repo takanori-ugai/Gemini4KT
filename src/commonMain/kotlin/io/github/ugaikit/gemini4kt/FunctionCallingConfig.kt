@@ -24,15 +24,38 @@ data class FunctionCallingConfig(
     val allowedFunctionNames: Array<String>,
 )
 
+/**
+ * Represents the function calling config builder.
+ */
 class FunctionCallingConfigBuilder {
+    /**
+     * Holds the mode.
+     */
     var mode: Mode = Mode.AUTO
+
+    /**
+     * Holds the allowed function names.
+     */
     private val allowedFunctionNames: MutableList<String> = mutableListOf()
 
+    /**
+     * Handles allow function.
+     *
+     * @param name The name.
+     */
     fun allowFunction(name: String) {
         allowedFunctionNames.add(name)
     }
 
+    /**
+     * Handles build.
+     */
     fun build() = FunctionCallingConfig(mode, allowedFunctionNames.toTypedArray())
 }
 
+/**
+ * Handles function calling config.
+ *
+ * @param init The init.
+ */
 fun functionCallingConfig(init: FunctionCallingConfigBuilder.() -> Unit): FunctionCallingConfig = FunctionCallingConfigBuilder().apply(init).build()

@@ -17,35 +17,87 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.js.JsAny
 
+/**
+ * Represents the file wrapper.
+ *
+ * @property file The file.
+ */
 @Serializable
 private data class FileWrapper(
     val file: GeminiFile,
 )
 
+/**
+ * Represents the node fs.
+ */
 @kotlin.js.JsModule("fs")
 external object NodeFs {
+    /**
+     * Handles stat sync.
+     *
+     * @param path The path.
+     */
     fun statSync(path: String): NodeStats
 
+    /**
+     * Handles read file sync.
+     *
+     * @param path The path.
+     */
     fun readFileSync(path: String): Uint8Array
 }
 
+/**
+ * Represents the node stats.
+ */
 external interface NodeStats : JsAny {
+    /**
+     * Holds the size.
+     */
     val size: Double
 }
 
+/**
+ * Represents the uint8 array.
+ */
 external class Uint8Array : JsAny {
+    /**
+     * Holds the length.
+     */
     val length: Int
 
+    /**
+     * Handles get.
+     *
+     * @param index The index.
+     */
     operator fun get(index: Int): Byte
 }
 
+/**
+ * Represents the file upload provider.
+ *
+ * @property apiKey The api key.
+ * @property client The client.
+ * @property json The json.
+ */
 actual class FileUploadProvider actual constructor(
     private val apiKey: String,
     private val client: HttpClient?,
     private val json: Json,
 ) {
+    /**
+     * Holds the http client.
+     */
     private val httpClient = client ?: createHttpClient(json)
 
+    /**
+     * Handles upload.
+     *
+     * @param file The file.
+     * @param mimeType The mime type.
+     * @param displayName The display name.
+     */
     actual suspend fun upload(
         file: Path,
         mimeType: String,
@@ -58,6 +110,14 @@ actual class FileUploadProvider actual constructor(
         return uploadFile(uploadUrl, pathStr, mimeType, fileSize)
     }
 
+    /**
+     * Handles upload to file search store.
+     *
+     * @param fileSearchStoreName The file search store name.
+     * @param file The file.
+     * @param mimeType The mime type.
+     * @param uploadRequest The upload request.
+     */
     actual suspend fun uploadToFileSearchStore(
         fileSearchStoreName: String,
         file: Path,
@@ -79,6 +139,11 @@ actual class FileUploadProvider actual constructor(
         return uploadFileToSearchStore(uploadUrl, pathStr, mimeType, fileSize)
     }
 
+    /**
+     * Handles get file size.
+     *
+     * @param path The path.
+     */
     private fun getFileSize(path: String): Long {
         try {
             val stats = NodeFs.statSync(path)
@@ -88,6 +153,11 @@ actual class FileUploadProvider actual constructor(
         }
     }
 
+    /**
+     * Handles read file.
+     *
+     * @param path The path.
+     */
     private fun readFile(path: String): ByteArray {
         try {
             val uint8Array = NodeFs.readFileSync(path)
@@ -102,6 +172,15 @@ actual class FileUploadProvider actual constructor(
         }
     }
 
+    /**
+     * Handles get upload url.
+     *
+     * @param baseUrl The base url.
+     * @param apiKey The api key.
+     * @param mimeType The mime type.
+     * @param displayName The display name.
+     * @param fileSize The file size.
+     */
     private suspend fun getUploadUrl(
         baseUrl: String,
         apiKey: String,
@@ -128,6 +207,16 @@ actual class FileUploadProvider actual constructor(
             ?: throw IOException("Upload URL not found in response headers")
     }
 
+    /**
+     * Handles get file search store upload url.
+     *
+     * @param baseUrl The base url.
+     * @param apiKey The api key.
+     * @param fileSearchStoreName The file search store name.
+     * @param mimeType The mime type.
+     * @param fileSize The file size.
+     * @param uploadRequest The upload request.
+     */
     private suspend fun getFileSearchStoreUploadUrl(
         baseUrl: String,
         apiKey: String,
@@ -155,6 +244,14 @@ actual class FileUploadProvider actual constructor(
             ?: throw IOException("Upload URL not found in response headers")
     }
 
+    /**
+     * Handles upload file.
+     *
+     * @param uploadUrl The upload url.
+     * @param path The path.
+     * @param mimeType The mime type.
+     * @param fileSize The file size.
+     */
     private suspend fun uploadFile(
         uploadUrl: String,
         path: String,
@@ -180,6 +277,14 @@ actual class FileUploadProvider actual constructor(
         return json.decodeFromString<FileWrapper>(responseText).file
     }
 
+    /**
+     * Handles upload file to search store.
+     *
+     * @param uploadUrl The upload url.
+     * @param path The path.
+     * @param mimeType The mime type.
+     * @param fileSize The file size.
+     */
     private suspend fun uploadFileToSearchStore(
         uploadUrl: String,
         path: String,

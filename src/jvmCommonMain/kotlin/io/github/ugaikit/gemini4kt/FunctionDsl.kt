@@ -4,6 +4,11 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.valueParameters
 
+/**
+ * Handles get type name.
+ *
+ * @param type The type.
+ */
 private fun getTypeName(type: kotlin.reflect.KClassifier): String =
     when (type) {
         Int::class -> "integer"
@@ -15,11 +20,22 @@ private fun getTypeName(type: kotlin.reflect.KClassifier): String =
         else -> throw IllegalArgumentException("Unsupported parameter type: $type")
     }
 
+/**
+ * Handles build function declaration.
+ *
+ * @param function The function.
+ */
 actual fun buildFunctionDeclaration(function: KFunction<*>): FunctionDeclaration {
+    /**
+     * Holds the function annotation.
+     */
     val functionAnnotation =
         function.findAnnotation<GeminiFunction>()
             ?: throw IllegalArgumentException("Function must be annotated with @GeminiFunction")
 
+    /**
+     * Holds the properties.
+     */
     val properties =
         function.valueParameters.associate { param ->
             val paramAnnotation =

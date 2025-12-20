@@ -28,6 +28,9 @@ internal actual fun getApiKey(): String =
  * @return The base64 encoded image as a [String] for the JVM platform.
  */
 internal actual fun getImage(): String {
+    /**
+     * Holds the image.
+     */
     val image = File(Gemini::class.java.getResource("/scones.jpg").toURI())
     return Base64.getEncoder().encodeToString(image.readBytes())
 }

@@ -11,7 +11,13 @@ import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
+/**
+ * Represents the input with image test.
+ */
 class InputWithImageTest {
+    /**
+     * Tests test run.
+     */
     @Test
     fun testRun() =
         runTest {

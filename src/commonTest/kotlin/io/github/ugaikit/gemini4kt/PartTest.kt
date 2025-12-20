@@ -6,10 +6,23 @@ import kotlinx.serialization.json.JsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the part test.
+ */
 class PartTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Holds the image.
+     */
     private val image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
 
+    /**
+     * Handles serialization with text.
+     */
     @Test
     fun serializationWithText() {
         val part = Part(text = "Hello")
@@ -18,6 +31,9 @@ class PartTest {
         assertEquals(json.parseToJsonElement(expectedJson), json.parseToJsonElement(actualJson))
     }
 
+    /**
+     * Handles serialization with inline data.
+     */
     @Test
     fun serializationWithInlineData() {
         val part =
@@ -41,6 +57,9 @@ class PartTest {
         assertEquals(json.parseToJsonElement(expectedJson), json.parseToJsonElement(actualJson))
     }
 
+    /**
+     * Handles serialization with function call.
+     */
     @Test
     fun serializationWithFunctionCall() {
         val part =
@@ -66,6 +85,9 @@ class PartTest {
         assertEquals(json.parseToJsonElement(expectedJson), json.parseToJsonElement(actualJson))
     }
 
+    /**
+     * Handles serialization with function response.
+     */
     @Test
     fun serializationWithFunctionResponse() {
         val part =
@@ -91,6 +113,9 @@ class PartTest {
         assertEquals(json.parseToJsonElement(expectedJson), json.parseToJsonElement(actualJson))
     }
 
+    /**
+     * Handles serialization with file data.
+     */
     @Test
     fun serializationWithFileData() {
         val part =

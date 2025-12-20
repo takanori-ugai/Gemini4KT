@@ -9,7 +9,15 @@ import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
 import io.github.ugaikit.gemini4kt.getApiKey
 
+/**
+ * Represents the function example1.
+ */
 object FunctionExample1 {
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())
 
@@ -44,6 +52,9 @@ object FunctionExample1 {
         )
     }
 
+    /**
+     * Handles find movies function.
+     */
     private fun findMoviesFunction(): FunctionDeclaration =
         FunctionDeclaration(
             name = "find_movies",
@@ -72,6 +83,9 @@ object FunctionExample1 {
                 ),
         )
 
+    /**
+     * Handles find theaters function.
+     */
     private fun findTheatersFunction(): FunctionDeclaration =
         FunctionDeclaration(
             name = "find_theaters",
@@ -100,6 +114,9 @@ object FunctionExample1 {
                 ),
         )
 
+    /**
+     * Handles get showtimes function.
+     */
     private fun getShowtimesFunction(): FunctionDeclaration =
         FunctionDeclaration(
             name = "get_showtimes",
@@ -136,6 +153,9 @@ object FunctionExample1 {
                 ),
         )
 
+    /**
+     * Handles get function declarations.
+     */
     private fun getFunctionDeclarations(): Array<FunctionDeclaration> =
         arrayOf(
             findMoviesFunction(),

@@ -18,14 +18,37 @@ data class ImageConfig(
     val imageSize: String? = null,
 )
 
+/**
+ * Represents the image config builder.
+ */
 class ImageConfigBuilder {
+    /**
+     * Holds the aspect ratio.
+     */
     var aspectRatio: String? = null
+
+    /**
+     * Holds the image size.
+     */
     var imageSize: String? = null
 
+    /**
+     * Handles aspect ratio.
+     *
+     * @param init The init.
+     */
     fun aspectRatio(init: () -> String) = apply { aspectRatio = init() }
 
+    /**
+     * Handles image size.
+     *
+     * @param init The init.
+     */
     fun imageSize(init: () -> String) = apply { imageSize = init() }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         ImageConfig(
             aspectRatio = aspectRatio,
@@ -33,4 +56,9 @@ class ImageConfigBuilder {
         )
 }
 
+/**
+ * Handles image config.
+ *
+ * @param init The init.
+ */
 fun imageConfig(init: ImageConfigBuilder.() -> Unit): ImageConfig = ImageConfigBuilder().apply(init).build()

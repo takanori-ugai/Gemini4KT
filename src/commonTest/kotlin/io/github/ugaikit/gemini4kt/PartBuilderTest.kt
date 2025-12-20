@@ -7,9 +7,18 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+/**
+ * Represents the part builder test.
+ */
 class PartBuilderTest {
+    /**
+     * Holds the image.
+     */
     private val image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
 
+    /**
+     * Handles build with text.
+     */
     @Test
     fun buildWithText() {
         val part =
@@ -23,6 +32,9 @@ class PartBuilderTest {
         assertNull(part.fileData)
     }
 
+    /**
+     * Handles build with inline data.
+     */
     @Test
     fun buildWithInlineData() {
         val part =
@@ -38,6 +50,9 @@ class PartBuilderTest {
         assertEquals("image/png", inlineData.mimeType)
     }
 
+    /**
+     * Handles build with function call.
+     */
     @Test
     fun buildWithFunctionCall() {
         val part =
@@ -53,6 +68,9 @@ class PartBuilderTest {
         assertEquals("get_weather", functionCall.name)
     }
 
+    /**
+     * Handles build with function response.
+     */
     @Test
     fun buildWithFunctionResponse() {
         val part =
@@ -70,6 +88,9 @@ class PartBuilderTest {
         assertEquals("get_weather", functionResponse.name)
     }
 
+    /**
+     * Handles build with file data.
+     */
     @Test
     fun buildWithFileData() {
         val part =

@@ -3,7 +3,13 @@ package io.github.ugaikit.gemini4kt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the citation metadata builder test.
+ */
 class CitationMetadataBuilderTest {
+    /**
+     * Tests test citation metadata builder.
+     */
     @Test
     fun testCitationMetadataBuilder() {
         val citationMetadata =

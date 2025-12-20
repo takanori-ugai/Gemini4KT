@@ -8,9 +8,18 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the create batch request test.
+ */
 class CreateBatchRequestTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Tests test batch creation request with inline requests dsl.
+     */
     @Test
     fun testBatchCreationRequestWithInlineRequestsDSL() {
         val request =

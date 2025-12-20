@@ -4,6 +4,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
+/**
+ * Represents the tool builder test.
+ */
 class ToolBuilderTest {
     /**
      * Tests the `ToolBuilder` with a single function declaration.
@@ -41,6 +44,9 @@ class ToolBuilderTest {
         assertEquals("object", tool.functionDeclarations[0].parameters.type)
     }
 
+    /**
+     * Tests test tool builder with multiple function declarations.
+     */
     @Test
     fun testToolBuilderWithMultipleFunctionDeclarations() {
         val tool =
@@ -105,6 +111,9 @@ class ToolBuilderTest {
         assertEquals(0, tool.functionDeclarations!!.size)
     }
 
+    /**
+     * Tests test tool builder with google search.
+     */
     @Test
     fun testToolBuilderWithGoogleSearch() {
         val tool =

@@ -6,7 +6,13 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+/**
+ * Represents the tool config builder test.
+ */
 class ToolConfigBuilderTest {
+    /**
+     * Handles build with function calling config.
+     */
     @Test
     fun buildWithFunctionCallingConfig() {
         val toolConfig =
@@ -24,6 +30,9 @@ class ToolConfigBuilderTest {
         assertNull(toolConfig.retrievalConfig)
     }
 
+    /**
+     * Handles build with retrieval config.
+     */
     @Test
     fun buildWithRetrievalConfig() {
         val toolConfig =
@@ -44,6 +53,9 @@ class ToolConfigBuilderTest {
         checkNotNull(toolConfig.functionCallingConfig)
     }
 
+    /**
+     * Handles build with both properties.
+     */
     @Test
     fun buildWithBothProperties() {
         val toolConfig =
@@ -64,6 +76,9 @@ class ToolConfigBuilderTest {
         assertNotNull(toolConfig.retrievalConfig)
     }
 
+    /**
+     * Handles build without function calling config throws exception.
+     */
     @Test
     fun buildWithoutFunctionCallingConfigThrowsException() {
         assertFailsWith<IllegalStateException> {

@@ -4,6 +4,9 @@ import kotlinx.serialization.Serializable
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
+/**
+ * Represents the url context.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable

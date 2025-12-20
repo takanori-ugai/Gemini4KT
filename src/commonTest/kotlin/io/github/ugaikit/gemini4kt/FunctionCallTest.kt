@@ -6,9 +6,18 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the function call test.
+ */
 class FunctionCallTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Handles serialization and deserialization of function call with string argument.
+     */
     @Test
     fun serializationAndDeserializationOfFunctionCallWithStringArgument() {
         val original =
@@ -21,6 +30,9 @@ class FunctionCallTest {
         assertEquals(original, decoded)
     }
 
+    /**
+     * Handles serialization and deserialization of function call with number argument.
+     */
     @Test
     fun serializationAndDeserializationOfFunctionCallWithNumberArgument() {
         val original =
@@ -33,6 +45,9 @@ class FunctionCallTest {
         assertEquals(original, decoded)
     }
 
+    /**
+     * Handles serialization and deserialization of function call with boolean argument.
+     */
     @Test
     fun serializationAndDeserializationOfFunctionCallWithBooleanArgument() {
         val original =
@@ -45,6 +60,9 @@ class FunctionCallTest {
         assertEquals(original, decoded)
     }
 
+    /**
+     * Handles serialization and deserialization of function call with mixed arguments.
+     */
     @Test
     fun serializationAndDeserializationOfFunctionCallWithMixedArguments() {
         val original =

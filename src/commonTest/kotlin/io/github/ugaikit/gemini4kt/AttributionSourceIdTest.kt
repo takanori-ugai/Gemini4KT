@@ -6,7 +6,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
+/**
+ * Represents the attribution source id test.
+ */
 class AttributionSourceIdTest {
+    /**
+     * Tests test default constructor.
+     */
     @Test
     fun testDefaultConstructor() {
         val attributionSourceId = AttributionSourceId()
@@ -14,6 +20,9 @@ class AttributionSourceIdTest {
         assertNull(attributionSourceId.semanticRetrieverChunk)
     }
 
+    /**
+     * Tests test constructor with grounding passage.
+     */
     @Test
     fun testConstructorWithGroundingPassage() {
         val groundingPassage = GroundingPassageId(passageId = "passage123", partIndex = 1)
@@ -22,6 +31,9 @@ class AttributionSourceIdTest {
         assertNull(attributionSourceId.semanticRetrieverChunk)
     }
 
+    /**
+     * Tests test constructor with semantic retriever chunk.
+     */
     @Test
     fun testConstructorWithSemanticRetrieverChunk() {
         val semanticRetrieverChunk = SemanticRetrieverChunk(source = "source123", chunk = "chunk content")
@@ -30,6 +42,9 @@ class AttributionSourceIdTest {
         assertEquals(semanticRetrieverChunk, attributionSourceId.semanticRetrieverChunk)
     }
 
+    /**
+     * Tests test constructor with both properties.
+     */
     @Test
     fun testConstructorWithBothProperties() {
         val groundingPassage = GroundingPassageId(passageId = "passage123", partIndex = 1)
@@ -43,6 +58,9 @@ class AttributionSourceIdTest {
         assertEquals(semanticRetrieverChunk, attributionSourceId.semanticRetrieverChunk)
     }
 
+    /**
+     * Tests test jsonserialization and deserialization.
+     */
     @Test
     fun testJSONSerializationAndDeserialization() {
         val groundingPassage = GroundingPassageId(passageId = "passage123", partIndex = 1)

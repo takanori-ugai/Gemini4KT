@@ -6,9 +6,18 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
+/**
+ * Represents the grounding metadata test.
+ */
 class GroundingMetadataTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Tests test serialization.
+     */
     @Test
     fun testSerialization() {
         val groundingMetadata =
@@ -36,6 +45,9 @@ class GroundingMetadataTest {
         assertEquals(expectedJson, json.encodeToString(groundingMetadata))
     }
 
+    /**
+     * Tests test deserialization.
+     */
     @Test
     fun testDeserialization() {
         val jsonString =
@@ -83,6 +95,9 @@ class GroundingMetadataTest {
         assertEquals(0, groundingMetadata.groundingSupports[0].groundingChunkIndices[0])
     }
 
+    /**
+     * Tests test deserialization with missing fields.
+     */
     @Test
     fun testDeserializationWithMissingFields() {
         val jsonString = "{}"

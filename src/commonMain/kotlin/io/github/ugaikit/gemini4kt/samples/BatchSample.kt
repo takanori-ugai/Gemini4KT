@@ -8,7 +8,15 @@ import io.github.ugaikit.gemini4kt.batch.createBatchRequest
 import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.coroutines.delay
 
+/**
+ * Represents the batch sample.
+ */
 object BatchSample {
+    /**
+     * Handles run.
+     *
+     * @param batchClient The batch client.
+     */
     suspend fun run(batchClient: Batch? = null) {
         val client =
             batchClient ?: run {

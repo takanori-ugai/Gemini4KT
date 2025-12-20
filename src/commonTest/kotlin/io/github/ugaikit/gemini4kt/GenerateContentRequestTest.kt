@@ -5,9 +5,18 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the generate content request test.
+ */
 class GenerateContentRequestTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { prettyPrint = true }
 
+    /**
+     * Handles serialization with only contents.
+     */
     @Test
     fun serializationWithOnlyContents() {
         val request =

@@ -19,20 +19,51 @@ data class InlineData(
     val data: String,
 )
 
+/**
+ * Handles inline data.
+ *
+ * @param init The init.
+ */
 fun inlineData(init: InlineDataBuilder.() -> Unit): InlineData {
+    /**
+     * Holds the builder.
+     */
     val builder = InlineDataBuilder()
     builder.init()
     return builder.build()
 }
 
+/**
+ * Represents the inline data builder.
+ */
 class InlineDataBuilder {
+    /**
+     * Holds the mime type.
+     */
     private var mimeType: String = ""
+
+    /**
+     * Holds the data.
+     */
     private var data: String = ""
 
+    /**
+     * Handles mime type.
+     *
+     * @param init The init.
+     */
     fun mimeType(init: () -> String) = apply { mimeType = init() }
 
+    /**
+     * Handles data.
+     *
+     * @param init The init.
+     */
     fun data(init: () -> String) = apply { data = init() }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         InlineData(
             mimeType = mimeType,

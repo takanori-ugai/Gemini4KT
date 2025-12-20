@@ -23,18 +23,41 @@ import java.io.IOException
 // Note: FileWrapper is private in jvmMain but since we are copying implementation,
 // we need to make sure we don't conflict or we can reuse it if it was shared.
 // But it's defined in the same file in jvmMain, so we define it here too.
+
+/**
+ * Represents the file wrapper.
+ *
+ * @property file The file.
+ */
 @Serializable
 private data class FileWrapper(
     val file: GeminiFile,
 )
 
+/**
+ * Represents the file upload provider.
+ *
+ * @property apiKey The api key.
+ * @property client The client.
+ * @property json The json.
+ */
 actual class FileUploadProvider actual constructor(
     private val apiKey: String,
     private val client: HttpClient?,
     private val json: Json,
 ) {
+    /**
+     * Holds the http client.
+     */
     private val httpClient = client ?: createHttpClient(json)
 
+    /**
+     * Handles upload.
+     *
+     * @param file The file.
+     * @param mimeType The mime type.
+     * @param displayName The display name.
+     */
     actual suspend fun upload(
         file: Path,
         mimeType: String,
@@ -46,6 +69,14 @@ actual class FileUploadProvider actual constructor(
         return uploadFile(uploadUrl, javaFile, mimeType)
     }
 
+    /**
+     * Handles upload to file search store.
+     *
+     * @param fileSearchStoreName The file search store name.
+     * @param file The file.
+     * @param mimeType The mime type.
+     * @param uploadRequest The upload request.
+     */
     actual suspend fun uploadToFileSearchStore(
         fileSearchStoreName: String,
         file: Path,
@@ -58,6 +89,15 @@ actual class FileUploadProvider actual constructor(
         return uploadFileToSearchStore(uploadUrl, javaFile, mimeType)
     }
 
+    /**
+     * Handles get upload url.
+     *
+     * @param baseUrl The base url.
+     * @param apiKey The api key.
+     * @param mimeType The mime type.
+     * @param displayName The display name.
+     * @param fileSize The file size.
+     */
     private suspend fun getUploadUrl(
         baseUrl: String,
         apiKey: String,
@@ -85,6 +125,16 @@ actual class FileUploadProvider actual constructor(
                 ?: throw IOException("Upload URL not found in response headers")
         }
 
+    /**
+     * Handles get file search store upload url.
+     *
+     * @param baseUrl The base url.
+     * @param apiKey The api key.
+     * @param fileSearchStoreName The file search store name.
+     * @param mimeType The mime type.
+     * @param fileSize The file size.
+     * @param uploadRequest The upload request.
+     */
     private suspend fun getFileSearchStoreUploadUrl(
         baseUrl: String,
         apiKey: String,
@@ -113,6 +163,13 @@ actual class FileUploadProvider actual constructor(
                 ?: throw IOException("Upload URL not found in response headers")
         }
 
+    /**
+     * Handles upload file.
+     *
+     * @param uploadUrl The upload url.
+     * @param file The file.
+     * @param mimeType The mime type.
+     */
     private suspend fun uploadFile(
         uploadUrl: String,
         file: File,
@@ -136,6 +193,13 @@ actual class FileUploadProvider actual constructor(
             json.decodeFromString<FileWrapper>(responseText).file
         }
 
+    /**
+     * Handles upload file to search store.
+     *
+     * @param uploadUrl The upload url.
+     * @param file The file.
+     * @param mimeType The mime type.
+     */
     private suspend fun uploadFileToSearchStore(
         uploadUrl: String,
         file: File,

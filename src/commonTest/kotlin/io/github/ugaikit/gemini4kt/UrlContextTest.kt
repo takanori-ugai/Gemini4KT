@@ -7,13 +7,22 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+/**
+ * Represents the url context test.
+ */
 class UrlContextTest {
+    /**
+     * Holds the json.
+     */
     private val json =
         Json {
             encodeDefaults = true
             ignoreUnknownKeys = true
         }
 
+    /**
+     * Tests test tool serialization with url context.
+     */
     @Test
     fun testToolSerializationWithUrlContext() {
         val tool =
@@ -26,6 +35,9 @@ class UrlContextTest {
         assertTrue(jsonString.contains("\"url_context\":{}"))
     }
 
+    /**
+     * Tests test candidate deserialization with url context metadata.
+     */
     @Test
     fun testCandidateDeserializationWithUrlContextMetadata() {
         val jsonString =

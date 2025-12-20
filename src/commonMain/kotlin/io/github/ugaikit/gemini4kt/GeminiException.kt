@@ -51,12 +51,26 @@ data class GeminiErrorDetail(
     val violations: List<GeminiErrorViolation>? = null,
 )
 
+/**
+ * Represents the gemini error link.
+ *
+ * @property description The description.
+ * @property url The url.
+ */
 @Serializable
 data class GeminiErrorLink(
     val description: String? = null,
     val url: String? = null,
 )
 
+/**
+ * Represents the gemini error violation.
+ *
+ * @property quotaMetric The quota metric.
+ * @property quotaId The quota id.
+ * @property quotaDimensions The quota dimensions.
+ * @property description The description.
+ */
 @Serializable
 data class GeminiErrorViolation(
     val quotaMetric: String? = null,

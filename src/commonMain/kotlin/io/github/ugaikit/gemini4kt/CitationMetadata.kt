@@ -17,17 +17,36 @@ data class CitationMetadata(
     val citationSources: List<CitationSource>,
 )
 
+/**
+ * Represents the citation metadata builder.
+ */
 class CitationMetadataBuilder {
+    /**
+     * Holds the citation sources.
+     */
     private val citationSources: MutableList<CitationSource> = mutableListOf()
 
+    /**
+     * Handles citation source.
+     *
+     * @param init The init.
+     */
     fun citationSource(init: CitationSourceBuilder.() -> Unit) {
         citationSources.add(CitationSourceBuilder().apply(init).build())
     }
 
+    /**
+     * Handles build.
+     */
     fun build(): CitationMetadata =
         CitationMetadata(
             citationSources = citationSources,
         )
 }
 
+/**
+ * Handles citation metadata.
+ *
+ * @param init The init.
+ */
 fun citationMetadata(init: CitationMetadataBuilder.() -> Unit): CitationMetadata = CitationMetadataBuilder().apply(init).build()

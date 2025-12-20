@@ -6,7 +6,13 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+/**
+ * Represents the generate content request builder test.
+ */
 class GenerateContentRequestBuilderTest {
+    /**
+     * Handles build full request.
+     */
     private fun buildFullRequest(): GenerateContentRequest =
         generateContentRequest {
             content {
@@ -49,6 +55,9 @@ class GenerateContentRequestBuilderTest {
             cachedContent = "cached-content-123"
         }
 
+    /**
+     * Handles build with all properties.
+     */
     @Test
     fun buildWithAllProperties() {
         val request = buildFullRequest()
@@ -84,6 +93,9 @@ class GenerateContentRequestBuilderTest {
         assertEquals("cached-content-123", request.cachedContent)
     }
 
+    /**
+     * Handles build with only required properties.
+     */
     @Test
     fun buildWithOnlyRequiredProperties() {
         val request =
@@ -102,6 +114,9 @@ class GenerateContentRequestBuilderTest {
         assertNull(request.cachedContent)
     }
 
+    /**
+     * Handles build with multiple items in lists.
+     */
     @Test
     fun buildWithMultipleItemsInLists() {
         val request =

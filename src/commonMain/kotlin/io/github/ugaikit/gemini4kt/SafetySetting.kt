@@ -23,11 +23,29 @@ data class SafetySetting(
     val threshold: Threshold,
 )
 
+/**
+ * Represents the safety setting builder.
+ */
 class SafetySettingBuilder {
+    /**
+     * Holds the category.
+     */
     lateinit var category: HarmCategory
+
+    /**
+     * Holds the threshold.
+     */
     lateinit var threshold: Threshold
 
+    /**
+     * Handles build.
+     */
     fun build() = SafetySetting(category, threshold)
 }
 
+/**
+ * Handles safety setting.
+ *
+ * @param init The init.
+ */
 fun safetySetting(init: SafetySettingBuilder.() -> Unit): SafetySetting = SafetySettingBuilder().apply(init).build()

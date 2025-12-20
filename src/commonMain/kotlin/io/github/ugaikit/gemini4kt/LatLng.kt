@@ -4,6 +4,12 @@ import kotlinx.serialization.Serializable
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
+/**
+ * Represents the lat lng.
+ *
+ * @property latitude The latitude.
+ * @property longitude The longitude.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable

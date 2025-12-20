@@ -15,7 +15,13 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the file upload provider test.
+ */
 class FileUploadProviderTest {
+    /**
+     * Holds the fs.
+     */
     private val fs: dynamic =
         try {
             js("require('fs')")
@@ -23,6 +29,10 @@ class FileUploadProviderTest {
             // fs is not available in non-Node.js environments
             null
         }
+
+    /**
+     * Holds the path.
+     */
     private val path: dynamic =
         try {
             js("require('path')")
@@ -30,6 +40,10 @@ class FileUploadProviderTest {
             // path is not available in non-Node.js environments
             null
         }
+
+    /**
+     * Holds the os.
+     */
     private val os: dynamic =
         try {
             js("require('os')")
@@ -38,8 +52,14 @@ class FileUploadProviderTest {
             null
         }
 
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Tests test upload.
+     */
     @Test
     fun testUpload() =
         runTest {
