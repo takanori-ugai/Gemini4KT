@@ -23,6 +23,10 @@ internal actual fun getApiKey(): String =
 /**
  * Retrieves an image from resources and encodes it as a base64 string for the JVM platform.
  *
+ * Retrieves an image from resources and encodes it as a base64 string for the JVM platform.
+ *
+ * This function reads an image file from the resources and converts it to a base64 encoded string.
+ *
  * @return The base64 encoded image as a [String] for the JVM platform.
  */
 internal actual fun getImage(): String {
