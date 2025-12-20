@@ -2,6 +2,7 @@ import com.vanniktech.maven.publish.SonatypeHost
 import io.gitlab.arturbosch.detekt.Detekt
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExec
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
@@ -67,6 +68,7 @@ kotlin {
 
     js(IR) {
         binaries.library()
+        binaries.executable()
         generateTypeScriptDefinitions()
         nodejs {}
         compilerOptions {
@@ -186,6 +188,10 @@ tasks {
         distributionType = Wrapper.DistributionType.ALL
     }
 
+    named("jsNodeProductionLibraryDistribution") {
+        dependsOn("jsProductionExecutableCompileSync")
+    }
+
     register<JavaExec>("jvmRunFunctionExample3") {
         group = "application"
         description = "Run FunctionExample3Runner on the JVM target"
@@ -273,6 +279,7 @@ detekt {
             "src/commonTest/kotlin",
             "src/linuxX86Main/kotlin",
             "src/jvmMain/kotlin",
+            "src/jvmCommonMain/kotlin",
             "src/jvmTest/kotlin",
             "src/androidDeviceTest/kotlin",
             "src/androidMain/kotlin",
@@ -312,16 +319,22 @@ spotless {
     }
 }
 
+tasks.named<NodeJsExec>("jsNodeProductionRun") {
+    val cliArgs = providers.gradleProperty("cliArgs").orNull
+
+    if (!cliArgs.isNullOrBlank()) {
+        println("Gradle: 'CLI_ARGS' is '$cliArgs'")
+        environment("CLI_ARGS", cliArgs)
+    }
+}
+
 mavenPublishing {
-    // Maven Central に公開する場合の設定
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
 
     signAllPublications()
 
-    // ライブラリの座標設定
     coordinates("io.github.ugaikit", "gemini4kt", "0.8.0")
 
-    // POM情報（Maven Centralには必須）
     pom {
         name = "gemini4kt"
         description = "A lightweight Kotlin library for the Gemini API."

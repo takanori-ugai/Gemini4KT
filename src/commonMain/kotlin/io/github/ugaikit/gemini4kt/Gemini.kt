@@ -270,7 +270,7 @@ class Gemini(
      * @param file The file to upload.
      * @param mimeType The MIME type of the file.
      * @param displayName The display name of the file.
-     * @return The uploaded file as a [File] object.
+     * @return The uploaded file wrapped as a [GeminiFile].
      */
     suspend fun uploadFile(
         file: Path,
