@@ -33,7 +33,7 @@ class GeminiAITest {
                     json(
                         Json {
                             ignoreUnknownKeys = true
-                            encodeDefaults = true
+                            encodeDefaults = false
                             explicitNulls = false
                         },
                     )

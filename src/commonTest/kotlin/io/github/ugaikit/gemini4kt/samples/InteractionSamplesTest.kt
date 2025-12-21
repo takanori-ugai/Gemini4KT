@@ -27,7 +27,7 @@ class InteractionSamplesTest {
                     json(
                         Json {
                             ignoreUnknownKeys = true
-                            encodeDefaults = true
+                            encodeDefaults = false
                             explicitNulls = false
                         },
                     )

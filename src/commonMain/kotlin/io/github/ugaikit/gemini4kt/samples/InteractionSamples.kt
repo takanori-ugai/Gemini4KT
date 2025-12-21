@@ -18,7 +18,7 @@ object InteractionSamples {
     private val json =
         Json {
             ignoreUnknownKeys = true
-            encodeDefaults = true
+            encodeDefaults = false
         }
 
     suspend fun runSimple(client: GeminiAI? = null) {
