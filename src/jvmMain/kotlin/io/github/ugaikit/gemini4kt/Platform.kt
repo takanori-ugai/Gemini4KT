@@ -12,13 +12,22 @@ import java.util.Properties
  *
  * @return The API key as a [String].
  */
-internal actual fun getApiKey(): String =
-    Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-        Properties()
-            .apply {
-                load(inputStream)
-            }.getProperty("apiKey")
+internal actual fun getApiKey(): String {
+    val envKey = System.getenv("GEMINI_API_KEY")
+    if (!envKey.isNullOrBlank()) {
+        return envKey
     }
+    val stream = Gemini::class.java.getResourceAsStream("/prop.properties")
+    if (stream != null) {
+        return stream.use { inputStream ->
+            Properties()
+                .apply {
+                    load(inputStream)
+                }.getProperty("apiKey")
+        }
+    }
+    throw RuntimeException("GEMINI_API_KEY environment variable not set and prop.properties not found.")
+}
 
 /**
  * Retrieves an image from resources and encodes it as a base64 string for the JVM platform.
