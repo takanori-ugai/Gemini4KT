@@ -6,6 +6,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -44,16 +45,14 @@ class GeminiAI(
         val apiKey = getApiKey()
         val response: HttpResponse =
             httpClient.post("$baseUrl/interactions") {
-                url {
-                    parameters.append("key", apiKey)
-                }
+                header("x-goog-api-key", apiKey)
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
         if (!response.status.isSuccess()) {
             val errorBody = response.bodyAsText()
-            throw GeminiException(parseError(errorBody))
+            throw GeminiException(parseError(errorBody, response.status.value))
         }
 
         return response.body()
@@ -64,14 +63,12 @@ class GeminiAI(
         val apiKey = getApiKey()
         val response: HttpResponse =
             httpClient.get("$baseUrl/interactions/$id") {
-                url {
-                    parameters.append("key", apiKey)
-                }
+                header("x-goog-api-key", apiKey)
             }
 
         if (!response.status.isSuccess()) {
             val errorBody = response.bodyAsText()
-            throw GeminiException(parseError(errorBody))
+            throw GeminiException(parseError(errorBody, response.status.value))
         }
         return response.body()
     }
@@ -81,14 +78,12 @@ class GeminiAI(
         val apiKey = getApiKey()
         val response: HttpResponse =
             httpClient.delete("$baseUrl/interactions/$id") {
-                url {
-                    parameters.append("key", apiKey)
-                }
+                header("x-goog-api-key", apiKey)
             }
 
         if (!response.status.isSuccess()) {
             val errorBody = response.bodyAsText()
-            throw GeminiException(parseError(errorBody))
+            throw GeminiException(parseError(errorBody, response.status.value))
         }
     }
 
@@ -97,23 +92,24 @@ class GeminiAI(
         val apiKey = getApiKey()
         val response: HttpResponse =
             httpClient.post("$baseUrl/interactions/$id/cancel") {
-                url {
-                    parameters.append("key", apiKey)
-                }
+                header("x-goog-api-key", apiKey)
             }
 
         if (!response.status.isSuccess()) {
             val errorBody = response.bodyAsText()
-            throw GeminiException(parseError(errorBody))
+            throw GeminiException(parseError(errorBody, response.status.value))
         }
         return response.body()
     }
 
-    private fun parseError(body: String): GeminiError =
+    private fun parseError(
+        body: String,
+        statusCode: Int,
+    ): GeminiError =
         try {
             json.decodeFromString<GeminiErrorResponse>(body).error
         } catch (e: Exception) {
-            GeminiError(INTERNAL_SERVER_ERROR, "Unknown error: $body", "UNKNOWN")
+            GeminiError(statusCode, "Unknown error: $body", "UNKNOWN")
         }
 
     companion object {
