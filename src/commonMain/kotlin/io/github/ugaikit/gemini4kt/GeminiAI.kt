@@ -33,6 +33,8 @@ class GeminiAI(
 
     private val httpClient = client ?: createHttpClient(json)
 
+    private val baseUrl = "https://generativelanguage.googleapis.com/v1beta"
+
     private suspend fun getApiKey(): String =
         apiKey ?: io.github.ugaikit.gemini4kt
             .getApiKey()
@@ -41,7 +43,7 @@ class GeminiAI(
     suspend fun createInteraction(request: CreateInteractionRequest): Interaction {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.post("v1beta/interactions") {
+            httpClient.post("$baseUrl/interactions") {
                 url {
                     parameters.append("key", apiKey)
                 }
@@ -61,7 +63,7 @@ class GeminiAI(
     suspend fun getInteraction(id: String): Interaction {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.get("v1beta/interactions/$id") {
+            httpClient.get("$baseUrl/interactions/$id") {
                 url {
                     parameters.append("key", apiKey)
                 }
@@ -78,7 +80,7 @@ class GeminiAI(
     suspend fun deleteInteraction(id: String) {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.delete("v1beta/interactions/$id") {
+            httpClient.delete("$baseUrl/interactions/$id") {
                 url {
                     parameters.append("key", apiKey)
                 }
@@ -94,7 +96,7 @@ class GeminiAI(
     suspend fun cancelInteraction(id: String): Interaction {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.post("v1beta/interactions/$id/cancel") {
+            httpClient.post("$baseUrl/interactions/$id/cancel") {
                 url {
                     parameters.append("key", apiKey)
                 }
