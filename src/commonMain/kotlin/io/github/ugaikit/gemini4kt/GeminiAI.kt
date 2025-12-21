@@ -6,6 +6,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -33,6 +34,8 @@ class GeminiAI(
 
     private val httpClient = client ?: createHttpClient(json)
 
+    private val baseUrl = "https://generativelanguage.googleapis.com/v1beta"
+
     private suspend fun getApiKey(): String =
         apiKey ?: io.github.ugaikit.gemini4kt
             .getApiKey()
@@ -41,17 +44,15 @@ class GeminiAI(
     suspend fun createInteraction(request: CreateInteractionRequest): Interaction {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.post("v1beta/interactions") {
-                url {
-                    parameters.append("key", apiKey)
-                }
+            httpClient.post("$baseUrl/interactions") {
+                header("x-goog-api-key", apiKey)
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
 
         if (!response.status.isSuccess()) {
             val errorBody = response.bodyAsText()
-            throw GeminiException(parseError(errorBody))
+            throw GeminiException(parseError(errorBody, response.status.value))
         }
 
         return response.body()
@@ -61,15 +62,13 @@ class GeminiAI(
     suspend fun getInteraction(id: String): Interaction {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.get("v1beta/interactions/$id") {
-                url {
-                    parameters.append("key", apiKey)
-                }
+            httpClient.get("$baseUrl/interactions/$id") {
+                header("x-goog-api-key", apiKey)
             }
 
         if (!response.status.isSuccess()) {
             val errorBody = response.bodyAsText()
-            throw GeminiException(parseError(errorBody))
+            throw GeminiException(parseError(errorBody, response.status.value))
         }
         return response.body()
     }
@@ -78,15 +77,13 @@ class GeminiAI(
     suspend fun deleteInteraction(id: String) {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.delete("v1beta/interactions/$id") {
-                url {
-                    parameters.append("key", apiKey)
-                }
+            httpClient.delete("$baseUrl/interactions/$id") {
+                header("x-goog-api-key", apiKey)
             }
 
         if (!response.status.isSuccess()) {
             val errorBody = response.bodyAsText()
-            throw GeminiException(parseError(errorBody))
+            throw GeminiException(parseError(errorBody, response.status.value))
         }
     }
 
@@ -94,24 +91,25 @@ class GeminiAI(
     suspend fun cancelInteraction(id: String): Interaction {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.post("v1beta/interactions/$id/cancel") {
-                url {
-                    parameters.append("key", apiKey)
-                }
+            httpClient.post("$baseUrl/interactions/$id/cancel") {
+                header("x-goog-api-key", apiKey)
             }
 
         if (!response.status.isSuccess()) {
             val errorBody = response.bodyAsText()
-            throw GeminiException(parseError(errorBody))
+            throw GeminiException(parseError(errorBody, response.status.value))
         }
         return response.body()
     }
 
-    private fun parseError(body: String): GeminiError =
+    private fun parseError(
+        body: String,
+        statusCode: Int,
+    ): GeminiError =
         try {
             json.decodeFromString<GeminiErrorResponse>(body).error
         } catch (e: Exception) {
-            GeminiError(INTERNAL_SERVER_ERROR, "Unknown error: $body", "UNKNOWN")
+            GeminiError(statusCode, "Unknown error: $body", "UNKNOWN")
         }
 
     companion object {
