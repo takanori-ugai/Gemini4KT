@@ -28,7 +28,7 @@ class GeminiAI(
     private val json =
         Json {
             ignoreUnknownKeys = true
-            encodeDefaults = true
+            encodeDefaults = false
             explicitNulls = false
         }
 
