@@ -4,6 +4,7 @@ import io.github.ugaikit.gemini4kt.GeminiAI
 import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.getImage
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
+import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.interaction.InteractionContent
 import io.github.ugaikit.gemini4kt.interaction.InteractionTool
 import io.github.ugaikit.gemini4kt.interaction.InteractionTurn
@@ -30,7 +31,7 @@ object InteractionSamples {
                 input = JsonPrimitive("Hello, how are you?"),
             )
         val interaction = ai.createInteraction(request)
-        println(interaction.outputs?.firstOrNull()?.text)
+        printOutputs(interaction)
     }
 
     suspend fun runMultiTurn(client: GeminiAI? = null) {
@@ -50,7 +51,7 @@ object InteractionSamples {
                 input = inputJson,
             )
         val interaction = ai.createInteraction(request)
-        println(interaction.outputs?.firstOrNull()?.text)
+        printOutputs(interaction)
     }
 
     suspend fun runImageInput(
@@ -73,7 +74,7 @@ object InteractionSamples {
                 input = inputJson,
             )
         val interaction = ai.createInteraction(request)
-        println(interaction.outputs?.firstOrNull()?.text)
+        printOutputs(interaction)
     }
 
     suspend fun runFunctionCalling(client: GeminiAI? = null) {
@@ -111,7 +112,25 @@ object InteractionSamples {
                 input = JsonPrimitive("What is the weather like in Boston, MA?"),
             )
         val interaction = ai.createInteraction(request)
-        println(interaction.outputs?.firstOrNull())
+        printOutputs(interaction)
+    }
+
+    private fun printOutputs(interaction: Interaction) {
+        val outputs = interaction.outputs
+        if (outputs.isNullOrEmpty()) {
+            println("No outputs. Status: ${interaction.status}")
+            return
+        }
+        outputs.forEach { content ->
+            println("Type: ${content.type}")
+            when (content.type) {
+                "text" -> println("Text: ${content.text}")
+                "image" -> println("Image: [Image Data]")
+                "function_call" -> println("Function Call: ${content.name}(${content.arguments})")
+                "thought" -> println("Thought: ${content.summary?.content?.text ?: "No summary"}")
+                else -> println("Content: $content")
+            }
+        }
     }
 
     suspend fun runDeepResearch(client: GeminiAI? = null) {
