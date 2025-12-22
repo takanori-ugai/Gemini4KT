@@ -1,0 +1,68 @@
+package io.github.ugaikit.gemini4kt.interaction
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+@Serializable
+enum class InteractionStatus {
+    @SerialName("in_progress")
+    IN_PROGRESS,
+
+    @SerialName("requires_action")
+    REQUIRES_ACTION,
+
+    @SerialName("completed")
+    COMPLETED,
+
+    @SerialName("failed")
+    FAILED,
+
+    @SerialName("cancelled")
+    CANCELLED,
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+@Serializable
+enum class ThinkingLevel {
+    @SerialName("minimal")
+    MINIMAL,
+
+    @SerialName("low")
+    LOW,
+
+    @SerialName("medium")
+    MEDIUM,
+
+    @SerialName("high")
+    HIGH,
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+@Serializable
+enum class ThinkingSummaries {
+    @SerialName("auto")
+    AUTO,
+
+    @SerialName("none")
+    NONE,
+}
+
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+@Serializable
+enum class InteractionResponseModality {
+    @SerialName("text")
+    TEXT,
+
+    @SerialName("image")
+    IMAGE,
+
+    @SerialName("audio")
+    AUDIO,
+}
