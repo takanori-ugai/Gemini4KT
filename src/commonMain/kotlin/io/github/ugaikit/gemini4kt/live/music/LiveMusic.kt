@@ -5,6 +5,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.header
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
@@ -23,11 +24,53 @@ import kotlinx.serialization.json.Json
 private val logger = KotlinLogging.logger {}
 
 /**
+ * Options for configuring the LiveMusic WebSocket connection.
+ */
+data class LiveMusicOptions(
+    val apiVersion: String = "v1alpha",
+    val baseUrl: String = "https://generativelanguage.googleapis.com/",
+)
+
+private fun buildWebSocketUrl(options: LiveMusicOptions): String {
+    val baseWithoutSlash = if (options.baseUrl.endsWith("/")) options.baseUrl.dropLast(1) else options.baseUrl
+    val wsBase =
+        when {
+            baseWithoutSlash.startsWith("http://") -> baseWithoutSlash.replaceFirst("http://", "ws://")
+            baseWithoutSlash.startsWith("https://") -> baseWithoutSlash.replaceFirst("https://", "wss://")
+            baseWithoutSlash.startsWith("ws://") || baseWithoutSlash.startsWith("wss://") -> baseWithoutSlash
+            else -> "wss://$baseWithoutSlash"
+        }
+    return "$wsBase/ws/google.ai.generativelanguage.${options.apiVersion}.GenerativeService.BidiGenerateMusic"
+}
+
+private suspend fun processMessage(text: String, handshakeCompleted: CompletableDeferred<Unit>, incomingMessages: Channel<LiveMusicServerMessage>, json: Json) {
+    try {
+        val message = json.decodeFromString<LiveMusicServerMessage>(text)
+
+        if (!handshakeCompleted.isCompleted) {
+            if (message.setupComplete != null) {
+                handshakeCompleted.complete(Unit)
+            } else {
+                logger.warn { "Received message before SetupComplete: $message" }
+            }
+        }
+
+        incomingMessages.send(message)
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to parse message" }
+        if (!handshakeCompleted.isCompleted) {
+            handshakeCompleted.completeExceptionally(e)
+        }
+    }
+}
+
+/**
  * A client for interacting with the Gemini Live Music API via WebSockets.
  */
 class LiveMusic(
     private val apiKey: String,
     private val model: String,
+    private val options: LiveMusicOptions = LiveMusicOptions(),
     private val json: Json =
         Json {
             ignoreUnknownKeys = true
@@ -35,8 +78,7 @@ class LiveMusic(
         },
     private val client: HttpClient? = null,
 ) {
-    private val wsUrl =
-        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateMusic"
+    private val wsUrl = buildWebSocketUrl(options)
 
     /**
      * Connects to the Live Music API and sends the initial setup message.
@@ -56,7 +98,12 @@ class LiveMusic(
 
         var session: DefaultClientWebSocketSession? = null
         try {
-            session = httpClient.webSocketSession(urlString)
+            session =
+                httpClient.webSocketSession(urlString) {
+                    header("x-goog-api-key", apiKey)
+                    header("x-goog-api-client", "gemini4kt")
+                }
+            logger.info { "WebSocket session established." }
 
             val incomingMessages = Channel<LiveMusicServerMessage>(Channel.UNLIMITED)
             val scope = CoroutineScope(Dispatchers.Default)
@@ -65,33 +112,22 @@ class LiveMusic(
             // Launch a coroutine to listen for messages
             val listenerJob =
                 scope.launch {
-                    try {
-                        for (frame in session.incoming) {
-                            if (frame is Frame.Text) {
-                                val text = frame.readText()
-                                logger.debug { "Received message: $text" }
-                                try {
-                                    val message = json.decodeFromString<LiveMusicServerMessage>(text)
-
-                                    if (!handshakeCompleted.isCompleted) {
-                                        if (message.setupComplete != null) {
-                                            handshakeCompleted.complete(Unit)
-                                        } else {
-                                            logger.warn { "Received message before SetupComplete: $message" }
-                                        }
-                                    }
-
-                                    incomingMessages.send(message)
-                                } catch (e: Exception) {
-                                    logger.error(e) { "Failed to parse message" }
-                                    if (!handshakeCompleted.isCompleted) {
-                                        handshakeCompleted.completeExceptionally(e)
-                                    }
-                                }
-                            }
-                        }
-                    } catch (e: Exception) {
-                        logger.error(e) { "WebSocket error" }
+                                                            try {
+                                                                for (frame in session.incoming) {
+                                                                    logger.debug { "Received a frame: ${frame.frameType.name}" }
+                                                                    if (frame is Frame.Text) {
+                                                                        val text = frame.readText()
+                                                                        logger.debug { "Received message: $text" }
+                                                                        processMessage(text, handshakeCompleted, incomingMessages, json)
+                                                                    } else if (frame is Frame.Binary) {
+                                                                        val bytes = frame.data
+                                                                        val text = bytes.toString(Charsets.UTF_8)
+                                                                        logger.debug { "Received binary frame with size: ${bytes.size}" }
+                                                                        logger.debug { "Binary frame content as string: $text" }
+                                                                        processMessage(text, handshakeCompleted, incomingMessages, json)
+                                                                    }
+                                                                }
+                                                            } catch (e: Exception) {                        logger.error(e) { "WebSocket error" }
                         incomingMessages.close(e)
                         if (!handshakeCompleted.isCompleted) {
                             handshakeCompleted.completeExceptionally(e)
@@ -124,6 +160,7 @@ class LiveMusic(
 
             return LiveMusicSession(session, incomingMessages, json, listenerJob)
         } catch (e: Exception) {
+            logger.error(e) { "Error in connect method" }
             session?.close()
             throw e
         }

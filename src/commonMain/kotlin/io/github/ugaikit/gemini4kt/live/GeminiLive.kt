@@ -25,6 +25,28 @@ import kotlinx.serialization.json.Json
  */
 private val logger = KotlinLogging.logger {}
 
+private suspend fun processMessage(text: String, handshakeCompleted: CompletableDeferred<Unit>, incomingMessages: Channel<BidiGenerateContentServerMessage>, json: Json) {
+    try {
+        val message = json.decodeFromString<BidiGenerateContentServerMessage>(text)
+
+        // Check for handshake completion on the first relevant message
+        if (!handshakeCompleted.isCompleted) {
+            if (message.setupComplete != null) {
+                handshakeCompleted.complete(Unit)
+            } else {
+                logger.warn { "Received message before SetupComplete: $message" }
+            }
+        }
+
+        incomingMessages.send(message)
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to parse message" }
+        if (!handshakeCompleted.isCompleted) {
+            handshakeCompleted.completeExceptionally(e)
+        }
+    }
+}
+
 /**
  * A client for interacting with the Gemini Live API via WebSockets.
  */
@@ -48,7 +70,7 @@ class GeminiLive(
      * Holds the ws url.
      */
     private val wsUrl =
-        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
+        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent"
 
     /**
      * Connects to the Live API and sends the initial setup message.
@@ -82,36 +104,13 @@ class GeminiLive(
                             if (frame is Frame.Text) {
                                 val text = frame.readText()
                                 logger.debug { "Received message: $text" }
-                                try {
-                                    val message = json.decodeFromString<BidiGenerateContentServerMessage>(text)
-
-                                    // Check for handshake completion on the first relevant message
-                                    if (!handshakeCompleted.isCompleted) {
-                                        if (message.setupComplete != null) {
-                                            handshakeCompleted.complete(Unit)
-                                        } else {
-                                            // If we receive something else before SetupComplete,
-                                            // it might be an error or unexpected behavior.
-                                            // We log it, but we don't complete the handshake yet
-                                            // unless it's a fatal error?
-                                            // If it's a serverContent, maybe we should just allow it?
-                                            // But per protocol, SetupComplete should be first.
-                                            // If we get an error
-                                            // (e.g. standard HTTP error wrapped in WS?),
-                                            // we might want to fail.
-                                            // BidiGenerateContentServerMessage has `serverContent`, `toolCall`, etc.
-                                            // We will just forward it.
-                                            logger.warn { "Received message before SetupComplete: $message" }
-                                        }
-                                    }
-
-                                    incomingMessages.send(message)
-                                } catch (e: Exception) {
-                                    logger.error(e) { "Failed to parse message" }
-                                    if (!handshakeCompleted.isCompleted) {
-                                        handshakeCompleted.completeExceptionally(e)
-                                    }
-                                }
+                                processMessage(text, handshakeCompleted, incomingMessages, json)
+                            } else if (frame is Frame.Binary) {
+                                val bytes = frame.data
+                                val text = bytes.toString(Charsets.UTF_8)
+                                logger.debug { "Received binary frame with size: ${bytes.size}" }
+                                logger.debug { "Binary frame content as string: $text" }
+                                processMessage(text, handshakeCompleted, incomingMessages, json)
                             }
                         }
                     } catch (e: Exception) {
