@@ -7,6 +7,7 @@ import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.getLiveClient
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentClientContent
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentRealtimeInput
+import io.github.ugaikit.gemini4kt.live.BidiGenerateContentServerMessage
 import io.github.ugaikit.gemini4kt.live.Blob
 import io.github.ugaikit.gemini4kt.live.LiveConnectConfig
 import kotlinx.coroutines.CancellationException
@@ -23,6 +24,20 @@ import kotlin.io.encoding.ExperimentalEncodingApi
  */
 @OptIn(ExperimentalEncodingApi::class)
 object LiveSample {
+    interface Session {
+        fun receive(): kotlinx.coroutines.flow.Flow<BidiGenerateContentServerMessage>
+
+        suspend fun sendRealtimeInput(input: BidiGenerateContentRealtimeInput)
+
+        suspend fun sendClientContent(content: BidiGenerateContentClientContent)
+
+        suspend fun close()
+    }
+
+    interface LiveClient {
+        suspend fun connect(): Session
+    }
+
     /**
      * Executes an interactive live audio session with the Gemini live model.
      *
@@ -36,10 +51,9 @@ object LiveSample {
         inputAudioBase64: String?,
         onAudioData: (String) -> Unit,
         gemini: Gemini? = null,
+        clientFactory: (() -> LiveClient)? = null,
     ): Unit =
         coroutineScope {
-            val apiKey = getApiKey()
-
             val liveModel = "gemini-2.5-flash-native-audio-preview-12-2025"
             val config =
                 LiveConnectConfig(
@@ -52,8 +66,12 @@ object LiveSample {
                         },
                 )
 
-            val client = gemini ?: Gemini(apiKey)
-            val liveClient = client.getLiveClient(liveModel, config)
+            val liveClient: LiveClient =
+                clientFactory?.invoke()
+                    ?: run {
+                        val geminiClient = gemini ?: Gemini(getApiKey())
+                        geminiClient.getLiveClient(liveModel, config).toLiveClient()
+                    }
 
             try {
                 val session = liveClient.connect()
@@ -145,3 +163,19 @@ object LiveSample {
             }
         }
 }
+
+private fun io.github.ugaikit.gemini4kt.live.GeminiLive.toLiveClient(): LiveSample.LiveClient =
+    object : LiveSample.LiveClient {
+        override suspend fun connect(): LiveSample.Session {
+            val session = this@toLiveClient.connect()
+            return object : LiveSample.Session {
+                override fun receive(): kotlinx.coroutines.flow.Flow<BidiGenerateContentServerMessage> = session.receive()
+
+                override suspend fun sendRealtimeInput(input: BidiGenerateContentRealtimeInput) = session.sendRealtimeInput(input)
+
+                override suspend fun sendClientContent(content: BidiGenerateContentClientContent) = session.sendClientContent(content)
+
+                override suspend fun close() = session.close()
+            }
+        }
+    }

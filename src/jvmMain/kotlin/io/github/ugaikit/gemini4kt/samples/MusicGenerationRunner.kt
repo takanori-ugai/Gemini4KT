@@ -29,7 +29,9 @@ object MusicGenerationRunner {
 
             val outputDir = File("build/outputs")
             if (!outputDir.exists()) {
-                outputDir.mkdirs()
+                if (!outputDir.mkdirs()) {
+                    println("Warning: Failed to create output directory: ${outputDir.absolutePath}")
+                }
             }
             val outputFile = File(outputDir, "generated_music.wav")
             // We'll accumulate PCM data in memory and write to WAV at the end.

@@ -18,6 +18,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -187,13 +188,9 @@ class GeminiLive(
 
             // Wait for setup complete message
             try {
-                // Wait with timeout? The original code had 10s timeout.
-                // We can use withTimeout. But let's stick to simple wait for now or use the one from Coroutines.
-                // Since we don't want to block indefinitely.
-                // kotlinx.coroutines.withTimeout(10000) { handshakeCompleted.await() }
-                // But I need to import withTimeout.
-
-                handshakeCompleted.await()
+                withTimeout(10_000) {
+                    handshakeCompleted.await()
+                }
             } catch (e: Exception) {
                 logger.error(e) { "Error waiting for SetupComplete" }
                 // Close resources

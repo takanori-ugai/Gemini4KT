@@ -4,8 +4,10 @@ import io.github.ugaikit.gemini4kt.live.MockWebSocketSession
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondOk
+import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -25,23 +27,54 @@ class LiveMusicTest {
             encodeDefaults = true
         }
 
+    private data class TrackedClient(
+        val client: HttpClient,
+        val closed: CompletableDeferred<Unit>,
+    )
+
+    private fun buildTrackingClient(): TrackedClient {
+        val closed = CompletableDeferred<Unit>()
+        val client =
+            HttpClient(MockEngine) {
+                install(WebSockets)
+                engine {
+                    addHandler { respondOk() }
+                }
+            }
+        client.coroutineContext[Job]?.invokeOnCompletion { closed.complete(Unit) }
+        return TrackedClient(client, closed)
+    }
+
     private fun buildSession(
         mockSession: MockWebSocketSession,
         incoming: Channel<LiveMusicServerMessage>,
         listenerJob: Job = Job(),
         ownsClient: Boolean = true,
     ): LiveMusicSession =
+        buildTrackingClient().let { tracked ->
+            LiveMusicSession(
+                session = mockSession,
+                incomingMessages = incoming,
+                json = json,
+                listenerJob = listenerJob,
+                httpClient = tracked.client,
+                ownsClient = ownsClient,
+            )
+        }
+
+    private fun buildSessionWithClient(
+        mockSession: MockWebSocketSession,
+        incoming: Channel<LiveMusicServerMessage>,
+        listenerJob: Job = Job(),
+        trackedClient: TrackedClient,
+        ownsClient: Boolean,
+    ): LiveMusicSession =
         LiveMusicSession(
             session = mockSession,
             incomingMessages = incoming,
             json = json,
             listenerJob = listenerJob,
-            httpClient =
-                HttpClient(MockEngine) {
-                    engine {
-                        addHandler { respondOk() }
-                    }
-                },
+            httpClient = trackedClient.client,
             ownsClient = ownsClient,
         )
 
@@ -199,5 +232,37 @@ class LiveMusicTest {
 
             assertTrue(job.isCancelled)
             assertTrue(incoming.isClosedForSend)
+        }
+
+    @Test
+    fun testCloseClosesOwnedHttpClient() =
+        runTest {
+            val mockSession = MockWebSocketSession()
+            val incoming = Channel<LiveMusicServerMessage>()
+            val job = Job()
+            val client = buildTrackingClient()
+            val session = buildSessionWithClient(mockSession, incoming, job, client, ownsClient = true)
+
+            session.close()
+
+            assertTrue(job.isCancelled)
+            assertTrue(incoming.isClosedForSend)
+            assertTrue(client.closed.isCompleted)
+        }
+
+    @Test
+    fun testCloseDoesNotCloseUnownedHttpClient() =
+        runTest {
+            val mockSession = MockWebSocketSession()
+            val incoming = Channel<LiveMusicServerMessage>()
+            val job = Job()
+            val client = buildTrackingClient()
+            val session = buildSessionWithClient(mockSession, incoming, job, client, ownsClient = false)
+
+            session.close()
+
+            assertTrue(job.isCancelled)
+            assertTrue(incoming.isClosedForSend)
+            assertTrue(!client.closed.isCompleted)
         }
 }

@@ -14,10 +14,12 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -177,7 +179,9 @@ class LiveMusic(
 
             // Wait for setup complete message
             try {
-                handshakeCompleted.await()
+                withTimeout(10_000) {
+                    handshakeCompleted.await()
+                }
             } catch (e: Exception) {
                 logger.error(e) { "Error waiting for SetupComplete" }
                 // Close resources
@@ -287,7 +291,7 @@ class LiveMusicSession(
         try {
             session.close()
         } finally {
-            listenerJob.cancel()
+            listenerJob.cancelAndJoin()
             incomingMessages.close()
             if (ownsClient) {
                 httpClient.close()
