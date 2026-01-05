@@ -14,6 +14,14 @@ import javax.sound.sampled.AudioSystem
  * Runner for MusicGeneration sample.
  */
 object MusicGenerationRunner {
+    /**
+     * Runs the MusicGeneration sample, collects base64-encoded PCM audio, and writes it to a WAV file.
+     *
+     * Creates the build/outputs directory if it does not exist, invokes MusicGeneration.run with an
+     * onAudioData callback that decodes and accumulates PCM bytes in memory, and—if any audio was
+     * received—saves the accumulated PCM to build/outputs/generated_music.wav using a 44.1 kHz sample
+     * rate and 1 channel. Accumulating PCM in memory may consume significant memory for long sessions.
+     */
     @JvmStatic
     fun main(args: Array<String>) {
         runBlocking {
