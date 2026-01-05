@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Represents the schema definition for a data model, detailing its structure,
@@ -22,6 +24,8 @@ import kotlinx.serialization.Serializable
  * @property items The schema for items in an array, applicable when the type is
  * "array". Defines the schema of elements within the array.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class Schema(
     val type: String,
@@ -34,20 +38,65 @@ data class Schema(
     val items: Schema? = null,
 )
 
+/**
+ * Represents the schema builder.
+ */
 class SchemaBuilder {
+    /**
+     * Holds the type.
+     */
     var type: String = "object" // Default type
+
+    /**
+     * Holds the format.
+     */
     var format: String? = null
+
+    /**
+     * Holds the description.
+     */
     var description: String? = null
+
+    /**
+     * Holds the nullable.
+     */
     var nullable: Boolean = false
+
+    /**
+     * Holds the enum internal.
+     */
     private val enumInternal: MutableList<String> = mutableListOf()
+
+    /**
+     * Holds the properties internal.
+     */
     private val propertiesInternal: MutableMap<String, SchemaBuilder.() -> Unit> = mutableMapOf()
+
+    /**
+     * Holds the required internal.
+     */
     private val requiredInternal: MutableList<String> = mutableListOf()
+
+    /**
+     * Holds the items.
+     */
     var items: SchemaBuilder? = null
 
+    /**
+     * Handles enum.
+     *
+     * @param values The values.
+     */
     fun enum(vararg values: String) {
         enumInternal.addAll(values)
     }
 
+    /**
+     * Handles property.
+     *
+     * @param name The name.
+     * @param init The init.
+     */
     fun property(
         name: String,
         init: SchemaBuilder.() -> Unit,
@@ -55,14 +104,27 @@ class SchemaBuilder {
         propertiesInternal[name] = init
     }
 
+    /**
+     * Handles required.
+     *
+     * @param fields The fields.
+     */
     fun required(vararg fields: String) {
         requiredInternal.addAll(fields)
     }
 
+    /**
+     * Handles items.
+     *
+     * @param init The init.
+     */
     fun items(init: SchemaBuilder.() -> Unit) {
         items = SchemaBuilder().apply(init)
     }
 
+    /**
+     * Handles build.
+     */
     fun build(): Schema {
         val properties = propertiesInternal.mapValues { SchemaBuilder().apply(it.value).build() }
         return Schema(

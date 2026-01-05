@@ -6,11 +6,21 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Mode
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.functionCallingConfig
+import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.tool
 import io.github.ugaikit.gemini4kt.toolConfig
 
+/**
+ * Represents the url context sample.
+ */
 object UrlContextSample {
-    suspend fun run(gemini: Gemini) {
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val tools =
             tool {
                 urlContext()
@@ -27,20 +37,20 @@ object UrlContextSample {
         val input =
             GenerateContentRequest(
                 contents =
-                    listOf(
+                    arrayOf(
                         Content(
                             parts =
-                                listOf(
+                                arrayOf(
                                     Part(text = "Extract the content of the following URL: https://www.google.com"),
                                 ),
                         ),
                     ),
-                tools = listOf(tools),
+                tools = arrayOf(tools),
                 // toolConfig = toolConfig
             )
 
         val response =
-            gemini.generateContent(
+            client.generateContent(
                 input,
             )
         println(

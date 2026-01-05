@@ -10,20 +10,29 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+/**
+ * Represents the live types test.
+ */
 class LiveTypesTest {
+    /**
+     * Holds the json.
+     */
     private val json =
         Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
         }
 
+    /**
+     * Tests test bidi generate content setup serialization.
+     */
     @Test
-    fun `test BidiGenerateContentSetup serialization`() {
+    fun testBidiGenerateContentSetupSerialization() {
         val setup =
             BidiGenerateContentSetup(
                 model = "models/gemini-2.0-flash-exp",
                 generationConfig = GenerationConfig(temperature = 0.5),
-                systemInstruction = Content(parts = listOf(Part(text = "Hello"))),
+                systemInstruction = Content(parts = arrayOf(Part(text = "Hello"))),
             )
         val jsonStr = json.encodeToString(setup)
         assertNotNull(jsonStr)
@@ -33,8 +42,11 @@ class LiveTypesTest {
         assertTrue(jsonStr.contains("systemInstruction"))
     }
 
+    /**
+     * Tests test bidi generate content client message serialization.
+     */
     @Test
-    fun `test BidiGenerateContentClientMessage serialization`() {
+    fun testBidiGenerateContentClientMessageSerialization() {
         val setup = BidiGenerateContentSetup(model = "models/gemini-pro")
         val msg = BidiGenerateContentClientMessage(setup = setup)
         val jsonStr = json.encodeToString(msg)
@@ -43,7 +55,7 @@ class LiveTypesTest {
 
         val content =
             BidiGenerateContentClientContent(
-                turns = listOf(Content(parts = listOf(Part(text = "Hi")))),
+                turns = listOf(Content(parts = arrayOf(Part(text = "Hi")))),
                 turnComplete = true,
             )
         val msg2 = BidiGenerateContentClientMessage(clientContent = content)
@@ -52,8 +64,11 @@ class LiveTypesTest {
         assertTrue(jsonStr2.contains("turnComplete"))
     }
 
+    /**
+     * Tests test bidi generate content server message deserialization.
+     */
     @Test
-    fun `test BidiGenerateContentServerMessage deserialization`() {
+    fun testBidiGenerateContentServerMessageDeserialization() {
         val jsonStr =
             """
             {
@@ -68,19 +83,23 @@ class LiveTypesTest {
 
         val msg = json.decodeFromString<BidiGenerateContentServerMessage>(jsonStr)
         assertNotNull(msg.serverContent)
-        assertEquals(true, msg.serverContent?.turnComplete)
+        val serverContent = checkNotNull(msg.serverContent)
+        assertEquals(true, serverContent.turnComplete)
         assertEquals(
             "Hello there",
-            msg.serverContent
-                ?.modelTurn
+            serverContent
+                .modelTurn
                 ?.parts
                 ?.first()
                 ?.text,
         )
     }
 
+    /**
+     * Tests test realtime input serialization.
+     */
     @Test
-    fun `test RealtimeInput serialization`() {
+    fun testRealtimeInputSerialization() {
         val input =
             BidiGenerateContentRealtimeInput(
                 mediaChunks = listOf(Blob(mimeType = "audio/pcm", data = "base64encodeddata")),
@@ -95,5 +114,42 @@ class LiveTypesTest {
         assertTrue(jsonStr.contains("base64encodeddata"))
         assertTrue(jsonStr.contains("text"))
         assertTrue(jsonStr.contains("Some text input"))
+    }
+
+    /**
+     * Tests test bidi generate content tool response serialization.
+     */
+    @Test
+    fun testBidiGenerateContentToolResponseSerialization() {
+        val toolResponse =
+            BidiGenerateContentToolResponse(
+                functionResponses = listOf(),
+            )
+        val msg = BidiGenerateContentClientMessage(toolResponse = toolResponse)
+        val jsonStr = json.encodeToString(msg)
+        assertTrue(jsonStr.contains("toolResponse"))
+        assertTrue(jsonStr.contains("functionResponses"))
+    }
+
+    /**
+     * Tests test bidi generate content tool call deserialization.
+     */
+    @Test
+    fun testBidiGenerateContentToolCallDeserialization() {
+        val jsonStr =
+            """
+            {
+                "toolCall": {
+                    "functionCalls": [
+                        { "name": "get_weather", "args": {"location": "London"} }
+                    ]
+                }
+            }
+            """.trimIndent()
+        val msg = json.decodeFromString<BidiGenerateContentServerMessage>(jsonStr)
+        assertNotNull(msg.toolCall)
+        val calls = checkNotNull(checkNotNull(msg.toolCall).functionCalls)
+        assertEquals(1, calls.size)
+        assertEquals("get_weather", calls[0].name)
     }
 }

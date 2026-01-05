@@ -25,17 +25,43 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
 
+/**
+ * Represents the gemini test.
+ */
 class GeminiTest {
+    /**
+     * Holds the gemini.
+     */
     private lateinit var gemini: Gemini
+
+    /**
+     * Holds the file upload provider.
+     */
     private lateinit var fileUploadProvider: FileUploadProvider
+
+    /**
+     * Holds the base url.
+     */
     private val baseUrl = "https://generativelanguage.googleapis.com/v1beta"
+
+    /**
+     * Holds the api key.
+     */
     private val apiKey = "test-api-key"
 
+    /**
+     * Handles setup.
+     */
     @BeforeEach
     fun setup() {
         fileUploadProvider = mockk()
     }
 
+    /**
+     * Handles create gemini.
+     *
+     * @param handler The handler.
+     */
     private fun createGemini(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): Gemini {
         val client =
             HttpClient(MockEngine) {
@@ -53,6 +79,9 @@ class GeminiTest {
         )
     }
 
+    /**
+     * Handles stream generate content.
+     */
     @Test
     fun `streamGenerateContent yields responses on success`() =
         runTest {
@@ -76,7 +105,7 @@ class GeminiTest {
                     )
                 }
 
-            val request = GenerateContentRequest(contents = emptyList())
+            val request = GenerateContentRequest(contents = emptyArray())
             val flow = gemini.streamGenerateContent(request)
             val results = flow.toList()
 
@@ -85,6 +114,9 @@ class GeminiTest {
             assertNotNull(results[1].candidates)
         }
 
+    /**
+     * Handles get content.
+     */
     @Test
     fun `getContent with inputJson returns content on success`() =
         runTest {
@@ -104,6 +136,9 @@ class GeminiTest {
             assertEquals(response, result)
         }
 
+    /**
+     * Handles get content.
+     */
     @Test
     fun `getContent without inputJson returns content on success`() =
         runTest {
@@ -123,6 +158,9 @@ class GeminiTest {
             assertEquals(response, result)
         }
 
+    /**
+     * Handles get content.
+     */
     @Test
     fun `getContent returns empty json on error`() =
         runTest {
@@ -135,31 +173,14 @@ class GeminiTest {
                     )
                 }
 
-            // It should throw exception, but the original implementation caught it and returned "{}".
-            // Wait, the original implementation had:
-            // catch (e: GeminiException) { throw e }
-            // catch ... logger.error ... "{}"
-            // But inside getContent:
-            // if (resCode != HTTP_OK) ... throw GeminiException ... catch (e: GeminiException) { throw e } ...
-            // So it throws GeminiException.
-            // Wait, looking at the code I wrote:
-            // catch (e: GeminiException) { throw e } ...
-            // So it rethrows.
-            // But the catch (e: IOException) returns "".
-            // Let's verify what the previous test expected.
-            // previous test: `getContent returns empty json on error`.
-            // It mocks error stream. And expects "{}".
-            // In my new implementation, I throw GeminiException if error parsing succeeds.
-            // If the error response is not valid JSON or something else, it might return "{}".
-
-            // Let's try to simulate what happens.
-            try {
+            org.junit.jupiter.api.assertThrows<GeminiException> {
                 gemini.getContent("http://localhost")
-            } catch (e: GeminiException) {
-                // Expected
             }
         }
 
+    /**
+     * Handles delete content.
+     */
     @Test
     fun `deleteContent succeeds with 200 response`() =
         runTest {
@@ -172,6 +193,9 @@ class GeminiTest {
             gemini.deleteContent("http://localhost")
         }
 
+    /**
+     * Handles delete content.
+     */
     @Test
     fun `deleteContent handles error response`() =
         runTest {
@@ -187,6 +211,9 @@ class GeminiTest {
             // Should log error but not throw
         }
 
+    /**
+     * Handles generate content.
+     */
     @Test
     fun `generateContent calls getContent with correct parameters`() =
         runTest {
@@ -196,13 +223,16 @@ class GeminiTest {
                     assertEquals("$baseUrl/models/gemini-pro:generateContent", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
-            val request = GenerateContentRequest(contents = emptyList())
+            val request = GenerateContentRequest(contents = emptyArray())
 
             val response = gemini.generateContent(request)
 
             assertNotNull(response)
         }
 
+    /**
+     * Handles create cached content.
+     */
     @Test
     fun `createCachedContent calls getContent with correct parameters`() =
         runTest {
@@ -219,6 +249,9 @@ class GeminiTest {
             assertEquals("cachedContent-123", response.name)
         }
 
+    /**
+     * Handles list cached content.
+     */
     @Test
     fun `listCachedContent calls getContent with correct parameters`() =
         runTest {
@@ -234,6 +267,9 @@ class GeminiTest {
             assertNotNull(response)
         }
 
+    /**
+     * Handles get cached content.
+     */
     @Test
     fun `getCachedContent calls getContent with correct parameters`() =
         runTest {
@@ -250,6 +286,9 @@ class GeminiTest {
             assertEquals(name, response.name)
         }
 
+    /**
+     * Handles delete cached content.
+     */
     @Test
     fun `deleteCachedContent calls deleteContent with correct parameters`() =
         runTest {
@@ -264,6 +303,9 @@ class GeminiTest {
             gemini.deleteCachedContent(name)
         }
 
+    /**
+     * Handles count tokens.
+     */
     @Test
     fun `countTokens calls getContent with correct parameters`() =
         runTest {
@@ -280,6 +322,9 @@ class GeminiTest {
             assertEquals(10, response.totalTokens)
         }
 
+    /**
+     * Handles batch embed contents.
+     */
     @Test
     fun `batchEmbedContents calls getContent with correct parameters`() =
         runTest {
@@ -296,6 +341,9 @@ class GeminiTest {
             assertNotNull(response)
         }
 
+    /**
+     * Handles embed content.
+     */
     @Test
     fun `embedContent calls getContent with correct parameters`() =
         runTest {
@@ -305,13 +353,16 @@ class GeminiTest {
                     assertEquals("$baseUrl/models/embedding-001:embedContent", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
-            val request = EmbedContentRequest(content = Content(parts = emptyList()), model = "models/embedding-001")
+            val request = EmbedContentRequest(content = Content(parts = emptyArray()), model = "models/embedding-001")
 
             val response = gemini.embedContent(request)
 
             assertNotNull(response)
         }
 
+    /**
+     * Handles get models.
+     */
     @Test
     fun `getModels calls getContent with correct parameters`() =
         runTest {
@@ -327,6 +378,9 @@ class GeminiTest {
             assertNotNull(response)
         }
 
+    /**
+     * Handles upload file.
+     */
     @Test
     fun `uploadFile calls fileUploadProvider with correct parameters`() =
         runTest {

@@ -7,25 +7,33 @@ import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.getApiKey
 
+/**
+ * Represents the embed content.
+ */
 object EmbedContent {
-    suspend fun run() {
-        val gemini = Gemini(getApiKey())
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val text = "Write a story about a magic backpack."
         val embedRequest =
             EmbedContentRequest(
-                content = Content(listOf(Part(text))),
+                content = Content(arrayOf(Part(text))),
                 model = "models/text-embedding-004",
             )
-        println(gemini.embedContent(embedRequest, model = "text-embedding-004"))
+        println(client.embedContent(embedRequest, model = "text-embedding-004"))
         val batchEmbedRequest =
             BatchEmbedRequest(
                 listOf(
                     EmbedContentRequest(
-                        content = Content(listOf(Part(text))),
+                        content = Content(arrayOf(Part(text))),
                         model = "models/text-embedding-004",
                     ),
                 ),
             )
-        println(gemini.batchEmbedContents(batchEmbedRequest, model = "text-embedding-004"))
+        println(client.batchEmbedContents(batchEmbedRequest, model = "text-embedding-004"))
     }
 }

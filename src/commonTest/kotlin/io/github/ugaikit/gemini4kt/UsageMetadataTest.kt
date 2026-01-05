@@ -5,11 +5,20 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the usage metadata test.
+ */
 class UsageMetadataTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Tests test serialization.
+     */
     @Test
-    fun `test serialization`() {
+    fun testSerialization() {
         val usageMetadata =
             UsageMetadata(
                 promptTokenCount = 31,
@@ -34,8 +43,11 @@ class UsageMetadataTest {
         assertEquals(expectedJson, json.encodeToString(usageMetadata))
     }
 
+    /**
+     * Tests test deserialization.
+     */
     @Test
-    fun `test deserialization`() {
+    fun testDeserialization() {
         val jsonString =
             """
             {
@@ -72,8 +84,11 @@ class UsageMetadataTest {
         assertEquals(712, usageMetadata.toolUsePromptTokensDetails?.get(0)?.tokenCount)
     }
 
+    /**
+     * Tests test deserialization with missing fields.
+     */
     @Test
-    fun `test deserialization with missing fields`() {
+    fun testDeserializationWithMissingFields() {
         val jsonString =
             """
             {

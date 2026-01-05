@@ -3,9 +3,15 @@ package io.github.ugaikit.gemini4kt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the prompt feedback builder test.
+ */
 class PromptFeedbackBuilderTest {
+    /**
+     * Handles build with single safety rating.
+     */
     @Test
-    fun `build with single safety rating`() {
+    fun buildWithSingleSafetyRating() {
         val promptFeedback =
             promptFeedback {
                 safetyRating {
@@ -18,8 +24,11 @@ class PromptFeedbackBuilderTest {
         assertEquals(HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, promptFeedback.safetyRatings[0].category)
     }
 
+    /**
+     * Handles build with multiple safety ratings.
+     */
     @Test
-    fun `build with multiple safety ratings`() {
+    fun buildWithMultipleSafetyRatings() {
         val promptFeedback =
             promptFeedback {
                 safetyRating {
@@ -35,8 +44,11 @@ class PromptFeedbackBuilderTest {
         assertEquals(2, promptFeedback.safetyRatings.size)
     }
 
+    /**
+     * Handles build with no safety ratings.
+     */
     @Test
-    fun `build with no safety ratings`() {
+    fun buildWithNoSafetyRatings() {
         val promptFeedback = promptFeedback {}
         assertEquals(0, promptFeedback.safetyRatings.size)
     }

@@ -3,9 +3,15 @@ package io.github.ugaikit.gemini4kt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the retrieval config builder test.
+ */
 class RetrievalConfigBuilderTest {
+    /**
+     * Tests test retrieval config builder.
+     */
     @Test
-    fun `test RetrievalConfigBuilder`() {
+    fun testRetrievalConfigBuilder() {
         val retrievalConfig =
             retrievalConfig {
                 latLng = LatLng(latitude = 35.6895, longitude = 139.6917)

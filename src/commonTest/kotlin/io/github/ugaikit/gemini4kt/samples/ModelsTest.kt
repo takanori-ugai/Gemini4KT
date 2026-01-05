@@ -11,7 +11,13 @@ import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
+/**
+ * Represents the models test.
+ */
 class ModelsTest {
+    /**
+     * Tests test list models.
+     */
     @Test
     fun testListModels() =
         runTest {

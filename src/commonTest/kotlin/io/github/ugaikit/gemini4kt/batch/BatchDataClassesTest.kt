@@ -11,17 +11,26 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+/**
+ * Represents the batch data classes test.
+ */
 class BatchDataClassesTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Handles batchinlineresponse serialization and deserialization.
+     */
     @Test
-    fun `BatchInlineResponse serialization and deserialization`() {
+    fun batchinlineresponseSerializationAndDeserialization() {
         val response =
             GenerateContentResponse(
                 candidates =
                     listOf(
                         Candidate(
-                            content = Content(parts = listOf(Part(text = "Response Text"))),
+                            content = Content(parts = arrayOf(Part(text = "Response Text"))),
                         ),
                     ),
             )
@@ -47,8 +56,11 @@ class BatchDataClassesTest {
         )
     }
 
+    /**
+     * Handles batchinlineresponse with error deserialization.
+     */
     @Test
-    fun `BatchInlineResponse with error deserialization`() {
+    fun batchinlineresponseWithErrorDeserialization() {
         val jsonString =
             """
             {
@@ -69,8 +81,11 @@ class BatchDataClassesTest {
         assertTrue(deserialized.error.toString().contains("Invalid request"))
     }
 
+    /**
+     * Handles batchjob serialization and deserialization.
+     */
     @Test
-    fun `BatchJob serialization and deserialization`() {
+    fun batchjobSerializationAndDeserialization() {
         val batchJob =
             BatchJob(
                 name = "batches/123",
@@ -103,8 +118,11 @@ class BatchDataClassesTest {
         assertEquals(true, deserialized.done)
     }
 
+    /**
+     * Handles batchjob with error deserialization.
+     */
     @Test
-    fun `BatchJob with error deserialization`() {
+    fun batchjobWithErrorDeserialization() {
         val jsonString =
             """
             {
@@ -127,8 +145,11 @@ class BatchDataClassesTest {
         assertEquals("INTERNAL", deserialized.error?.status)
     }
 
+    /**
+     * Handles listbatchesresponse serialization and deserialization.
+     */
     @Test
-    fun `ListBatchesResponse serialization and deserialization`() {
+    fun listbatchesresponseSerializationAndDeserialization() {
         val listBatchesResponse =
             ListBatchesResponse(
                 operations =

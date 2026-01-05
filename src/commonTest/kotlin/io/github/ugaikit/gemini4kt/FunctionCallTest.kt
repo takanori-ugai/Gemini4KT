@@ -6,11 +6,20 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the function call test.
+ */
 class FunctionCallTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Handles serialization and deserialization of function call with string argument.
+     */
     @Test
-    fun `serialization and deserialization of FunctionCall with string argument`() {
+    fun serializationAndDeserializationOfFunctionCallWithStringArgument() {
         val original =
             FunctionCall(
                 name = "find_weather",
@@ -21,8 +30,11 @@ class FunctionCallTest {
         assertEquals(original, decoded)
     }
 
+    /**
+     * Handles serialization and deserialization of function call with number argument.
+     */
     @Test
-    fun `serialization and deserialization of FunctionCall with number argument`() {
+    fun serializationAndDeserializationOfFunctionCallWithNumberArgument() {
         val original =
             FunctionCall(
                 name = "get_population",
@@ -33,8 +45,11 @@ class FunctionCallTest {
         assertEquals(original, decoded)
     }
 
+    /**
+     * Handles serialization and deserialization of function call with boolean argument.
+     */
     @Test
-    fun `serialization and deserialization of FunctionCall with boolean argument`() {
+    fun serializationAndDeserializationOfFunctionCallWithBooleanArgument() {
         val original =
             FunctionCall(
                 name = "is_daylight",
@@ -45,8 +60,11 @@ class FunctionCallTest {
         assertEquals(original, decoded)
     }
 
+    /**
+     * Handles serialization and deserialization of function call with mixed arguments.
+     */
     @Test
-    fun `serialization and deserialization of FunctionCall with mixed arguments`() {
+    fun serializationAndDeserializationOfFunctionCallWithMixedArguments() {
         val original =
             FunctionCall(
                 name = "get_user_profile",

@@ -14,6 +14,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
+/**
+ * Represents the function example2.
+ */
 object FunctionExample2 {
     /**
      * A sample function that finds the weather in a given location.
@@ -23,8 +26,13 @@ object FunctionExample2 {
      */
     fun findWeather(location: String): String = "The weather in $location is super sunny"
 
-    suspend fun run() {
-        val gemini = Gemini(getApiKey())
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
 
         val findWeatherFunction =
             FunctionDeclaration(
@@ -45,11 +53,11 @@ object FunctionExample2 {
                     ),
             )
 
-        val tools = listOf(Tool(functionDeclarations = listOf(findWeatherFunction)))
+        val tools = arrayOf(Tool(functionDeclarations = arrayOf(findWeatherFunction)))
 
         // Step 1: Send the user's prompt and function declarations to the model.
         val userPrompt = "What's the weather like in Boston?"
-        val firstResponse = getFunctionCall(gemini, tools, userPrompt)
+        val firstResponse = getFunctionCall(client, tools, userPrompt)
 
         val modelResponsePart =
             firstResponse.candidates[0]
@@ -59,23 +67,38 @@ object FunctionExample2 {
         println("Model requested function call: $functionCall")
 
         // Step 2: "Execute" the function and send the response back to the model.
-        val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
-        sendFunctionResult(gemini, tools, initialContent, modelResponsePart)
+        val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
+        sendFunctionResult(client, tools, initialContent, modelResponsePart)
     }
 
+    /**
+     * Handles get function call.
+     *
+     * @param gemini The gemini.
+     * @param tools The tools.
+     * @param userPrompt The user prompt.
+     */
     private suspend fun getFunctionCall(
         gemini: Gemini,
-        tools: List<Tool>,
+        tools: Array<Tool>,
         userPrompt: String,
     ): GenerateContentResponse {
-        val initialContent = Content(role = "user", parts = listOf(Part(text = userPrompt)))
-        val firstRequest = GenerateContentRequest(contents = listOf(initialContent), tools = tools)
+        val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
+        val firstRequest = GenerateContentRequest(contents = arrayOf(initialContent), tools = tools)
         return gemini.generateContent(firstRequest, "gemini-2.5-flash-lite")
     }
 
+    /**
+     * Handles send function result.
+     *
+     * @param gemini The gemini.
+     * @param tools The tools.
+     * @param initialContent The initial content.
+     * @param modelResponsePart The model response part.
+     */
     private suspend fun sendFunctionResult(
         gemini: Gemini,
-        tools: List<Tool>,
+        tools: Array<Tool>,
         initialContent: Content,
         modelResponsePart: Part,
     ) {
@@ -88,7 +111,7 @@ object FunctionExample2 {
                 Content(
                     role = "function",
                     parts =
-                        listOf(
+                        arrayOf(
                             Part(
                                 functionResponse =
                                     FunctionResponse(
@@ -99,9 +122,9 @@ object FunctionExample2 {
                         ),
                 )
             val conversationHistory =
-                listOf(
+                arrayOf(
                     initialContent,
-                    Content(role = "model", parts = listOf(modelResponsePart)),
+                    Content(role = "model", parts = arrayOf(modelResponsePart)),
                     functionResponseContent,
                 )
 

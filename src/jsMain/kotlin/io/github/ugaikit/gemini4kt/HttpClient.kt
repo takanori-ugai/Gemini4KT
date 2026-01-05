@@ -7,6 +7,11 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
+/**
+ * Handles create http client.
+ *
+ * @param json The json.
+ */
 actual fun createHttpClient(json: Json): HttpClient =
     HttpClient {
         install(ContentNegotiation) {

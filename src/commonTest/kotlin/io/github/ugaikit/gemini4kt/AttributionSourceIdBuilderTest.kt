@@ -5,9 +5,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+/**
+ * Represents the attribution source id builder test.
+ */
 class AttributionSourceIdBuilderTest {
+    /**
+     * Handles build with grounding passage.
+     */
     @Test
-    fun `build with groundingPassage`() {
+    fun buildWithGroundingPassage() {
         val attributionSourceId =
             attributionSourceId {
                 groundingPassage {
@@ -15,12 +21,16 @@ class AttributionSourceIdBuilderTest {
                 }
             }
         assertNotNull(attributionSourceId.groundingPassage)
-        assertEquals("passage123", attributionSourceId.groundingPassage?.passageId)
+        val groundingPassage = checkNotNull(attributionSourceId.groundingPassage)
+        assertEquals("passage123", groundingPassage.passageId)
         assertNull(attributionSourceId.semanticRetrieverChunk)
     }
 
+    /**
+     * Handles build with semantic retriever chunk.
+     */
     @Test
-    fun `build with semanticRetrieverChunk`() {
+    fun buildWithSemanticRetrieverChunk() {
         val attributionSourceId =
             attributionSourceId {
                 semanticRetrieverChunk {
@@ -29,11 +39,15 @@ class AttributionSourceIdBuilderTest {
             }
         assertNull(attributionSourceId.groundingPassage)
         assertNotNull(attributionSourceId.semanticRetrieverChunk)
-        assertEquals("source123", attributionSourceId.semanticRetrieverChunk?.source)
+        val semanticRetrieverChunk = checkNotNull(attributionSourceId.semanticRetrieverChunk)
+        assertEquals("source123", semanticRetrieverChunk.source)
     }
 
+    /**
+     * Handles build with both properties.
+     */
     @Test
-    fun `build with both properties`() {
+    fun buildWithBothProperties() {
         val attributionSourceId =
             attributionSourceId {
                 groundingPassage {
@@ -47,8 +61,11 @@ class AttributionSourceIdBuilderTest {
         assertNotNull(attributionSourceId.semanticRetrieverChunk)
     }
 
+    /**
+     * Handles build with no properties.
+     */
     @Test
-    fun `build with no properties`() {
+    fun buildWithNoProperties() {
         val attributionSourceId = attributionSourceId {}
         assertNull(attributionSourceId.groundingPassage)
         assertNull(attributionSourceId.semanticRetrieverChunk)

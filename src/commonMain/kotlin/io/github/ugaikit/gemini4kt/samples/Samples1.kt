@@ -11,15 +11,23 @@ import io.github.ugaikit.gemini4kt.ThinkingConfig
 import io.github.ugaikit.gemini4kt.Threshold
 import io.github.ugaikit.gemini4kt.getApiKey
 
+/**
+ * Represents the samples1.
+ */
 object Samples1 {
-    suspend fun run() {
-        val gemini = Gemini(getApiKey())
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val text = "Write a story about a magic backpack."
         val inputJson =
             GenerateContentRequest(
-                listOf(Content(listOf(Part(text)))),
+                arrayOf(Content(arrayOf(Part(text)))),
                 safetySettings =
-                    listOf(
+                    arrayOf(
                         SafetySetting(
                             category = HarmCategory.HARM_CATEGORY_HARASSMENT,
                             threshold = Threshold.BLOCK_ONLY_HIGH,
@@ -32,7 +40,7 @@ object Samples1 {
                     ),
             )
         println(
-            gemini
+            client
                 .generateContent(
                     inputJson,
                     model = "gemini-2.5-flash-lite",

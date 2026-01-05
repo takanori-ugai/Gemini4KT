@@ -4,6 +4,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
+/**
+ * Tests test function.
+ *
+ * @param str The str.
+ * @param int The int.
+ */
 @GeminiFunction(description = "A test function")
 @Suppress("EmptyFunctionBlock", "UnusedParameter")
 fun testFunction(
@@ -12,6 +18,12 @@ fun testFunction(
 ) {
 }
 
+/**
+ * Handles function without annotation.
+ *
+ * @param str The str.
+ * @param int The int.
+ */
 @Suppress("EmptyFunctionBlock", "UnusedParameter")
 fun functionWithoutAnnotation(
     str: String,
@@ -19,7 +31,13 @@ fun functionWithoutAnnotation(
 ) {
 }
 
+/**
+ * Represents the function dsl test.
+ */
 class FunctionDslTest {
+    /**
+     * Handles build function declaration.
+     */
     @Test
     fun `buildFunctionDeclaration generates correct declaration for annotated function`() {
         val declaration = buildFunctionDeclaration(::testFunction)
@@ -40,6 +58,9 @@ class FunctionDslTest {
         assertEquals("An integer parameter", intParam.description)
     }
 
+    /**
+     * Handles build function declaration.
+     */
     @Test
     fun `buildFunctionDeclaration throws exception for function without annotation`() {
         assertThrows<IllegalArgumentException> {

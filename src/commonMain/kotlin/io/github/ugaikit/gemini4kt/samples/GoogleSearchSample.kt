@@ -7,22 +7,30 @@ import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.tool
 
+/**
+ * Represents the google search sample.
+ */
 object GoogleSearchSample {
-    suspend fun run() {
-        val gemini = Gemini(getApiKey())
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val text = "Who won the euro 2024?"
         val inputJson =
             GenerateContentRequest(
-                listOf(Content(listOf(Part(text)))),
+                arrayOf(Content(arrayOf(Part(text)))),
                 tools =
-                    listOf(
+                    arrayOf(
                         tool {
                             googleSearch()
                         },
                     ),
             )
         val response =
-            gemini.generateContent(
+            client.generateContent(
                 inputJson,
                 model = "gemini-2.0-flash-exp",
             )

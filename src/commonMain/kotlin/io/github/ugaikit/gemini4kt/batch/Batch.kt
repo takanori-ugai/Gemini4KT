@@ -21,6 +21,9 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+/**
+ * Holds the logger.
+ */
 private val logger = KotlinLogging.logger {}
 
 /**
@@ -32,9 +35,24 @@ class Batch(
     private val apiKey: String,
     private val client: HttpClient? = null,
 ) {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Holds the http client.
+     */
     private val httpClient = client ?: createHttpClient(json)
+
+    /**
+     * Holds the b url.
+     */
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
+
+    /**
+     * Holds the base url.
+     */
     private val baseUrl = "$bUrl/models"
 
     companion object {
@@ -133,6 +151,12 @@ class Batch(
         )
     }
 
+    /**
+     * Handles get content.
+     *
+     * @param urlStr The url str.
+     * @param inputJson The input json.
+     */
     private suspend fun getContent(
         urlStr: String,
         inputJson: String? = null,
@@ -178,12 +202,17 @@ class Batch(
             }
         } catch (e: IOException) {
             logger.error { e.stackTraceToString() }
-            ""
+            throw e
         } catch (e: ClientRequestException) {
             logger.error { "Client Request Exception: ${e.message}" }
             throw e
         }
 
+    /**
+     * Handles delete content.
+     *
+     * @param urlStr The url str.
+     */
     private suspend fun deleteContent(urlStr: String) {
         try {
             val response =

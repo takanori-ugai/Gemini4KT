@@ -6,6 +6,7 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.websocket.Frame
+import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import kotlinx.coroutines.CompletableDeferred
@@ -19,6 +20,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+/**
+ * Holds the logger.
+ */
 private val logger = KotlinLogging.logger {}
 
 /**
@@ -28,6 +32,9 @@ class GeminiLive(
     private val apiKey: String,
     private val model: String,
     private val config: LiveConnectConfig? = null,
+    /**
+     * Holds the json.
+     */
     private val json: Json =
         Json {
             ignoreUnknownKeys = true
@@ -36,7 +43,12 @@ class GeminiLive(
     private val client: HttpClient? = null,
 ) {
     // Base URL for WebSocket connection.
-    private val wsUrl = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
+
+    /**
+     * Holds the ws url.
+     */
+    private val wsUrl =
+        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
 
     /**
      * Connects to the Live API and sends the initial setup message.
@@ -78,11 +90,15 @@ class GeminiLive(
                                         if (message.setupComplete != null) {
                                             handshakeCompleted.complete(Unit)
                                         } else {
-                                            // If we receive something else before SetupComplete, it might be an error or unexpected behavior.
-                                            // We log it, but we don't complete the handshake yet unless it's a fatal error?
+                                            // If we receive something else before SetupComplete,
+                                            // it might be an error or unexpected behavior.
+                                            // We log it, but we don't complete the handshake yet
+                                            // unless it's a fatal error?
                                             // If it's a serverContent, maybe we should just allow it?
                                             // But per protocol, SetupComplete should be first.
-                                            // If we get an error (e.g. standard HTTP error wrapped in WS?), we might want to fail.
+                                            // If we get an error
+                                            // (e.g. standard HTTP error wrapped in WS?),
+                                            // we might want to fail.
                                             // BidiGenerateContentServerMessage has `serverContent`, `toolCall`, etc.
                                             // We will just forward it.
                                             logger.warn { "Received message before SetupComplete: $message" }
@@ -113,18 +129,22 @@ class GeminiLive(
             val setupMessage =
                 setup ?: run {
                     val generationConfig =
-                        if (config?.generationConfig != null) {
-                            config.generationConfig.copy(
-                                responseModalities = config.responseModalities ?: config.generationConfig.responseModalities,
-                                speechConfig = config.speechConfig ?: config.generationConfig.speechConfig,
-                            )
-                        } else if (config?.responseModalities != null || config?.speechConfig != null) {
-                            io.github.ugaikit.gemini4kt.GenerationConfig(
-                                responseModalities = config?.responseModalities,
-                                speechConfig = config?.speechConfig,
-                            )
-                        } else {
-                            null
+                        when {
+                            config?.generationConfig != null ->
+                                config.generationConfig.copy(
+                                    responseModalities =
+                                        config.responseModalities
+                                            ?: config.generationConfig.responseModalities,
+                                    speechConfig = config.speechConfig ?: config.generationConfig.speechConfig,
+                                )
+                            config?.responseModalities != null || config?.speechConfig != null -> {
+                                val connectConfig = requireNotNull(config)
+                                io.github.ugaikit.gemini4kt.GenerationConfig(
+                                    responseModalities = connectConfig.responseModalities,
+                                    speechConfig = connectConfig.speechConfig,
+                                )
+                            }
+                            else -> null
                         }
 
                     // Ensure model has "models/" prefix if not present
@@ -168,8 +188,16 @@ class GeminiLive(
     }
 }
 
+/**
+ * Represents the gemini live session.
+ *
+ * @property session The session.
+ * @property incomingMessages The incoming messages.
+ * @property json The json.
+ * @property listenerJob The listener job.
+ */
 class GeminiLiveSession(
-    private val session: DefaultClientWebSocketSession,
+    private val session: WebSocketSession,
     private val incomingMessages: Channel<BidiGenerateContentServerMessage>,
     private val json: Json,
     private val listenerJob: Job,
@@ -198,6 +226,11 @@ class GeminiLiveSession(
         send(msg)
     }
 
+    /**
+     * Handles send.
+     *
+     * @param msg The msg.
+     */
     private suspend fun send(msg: BidiGenerateContentClientMessage) {
         val txt = json.encodeToString(msg)
         logger.debug { "Sending message: $txt" }

@@ -2,6 +2,8 @@ package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Configures the parameters for content generation, including conditions for
@@ -29,9 +31,11 @@ import kotlinx.serialization.Serializable
  * Gemini 1.5 pro, where "application/json" might be required. It is nullable to
  * accommodate different or default response formats.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class GenerationConfig(
-    val stopSequences: List<String>? = null,
+    val stopSequences: Array<String>? = null,
     val temperature: Double? = null,
     val maxOutputTokens: Int? = null,
     val topP: Double? = null,
@@ -39,53 +43,123 @@ data class GenerationConfig(
     @SerialName("response_mime_type")
     val responseMimeType: String? = null,
     @SerialName("response_modalities")
-    val responseModalities: List<Modality>? = null,
+    val responseModalities: Array<Modality>? = null,
     val thinkingConfig: ThinkingConfig? = null,
     val imageConfig: ImageConfig? = null,
     val speechConfig: SpeechConfig? = null,
 )
 
+/**
+ * Represents the generation config builder.
+ */
 class GenerationConfigBuilder {
+    /**
+     * Holds the stop sequences.
+     */
     private val stopSequences: MutableList<String> = mutableListOf()
+
+    /**
+     * Holds the temperature.
+     */
     var temperature: Double? = null
+
+    /**
+     * Holds the max output tokens.
+     */
     var maxOutputTokens: Int? = null
+
+    /**
+     * Holds the top p.
+     */
     var topP: Double? = null
+
+    /**
+     * Holds the top k.
+     */
     var topK: Int? = null
+
+    /**
+     * Holds the response mime type.
+     */
     var responseMimeType: String? = null
+
+    /**
+     * Holds the response modalities.
+     */
     private val responseModalities: MutableList<Modality> = mutableListOf()
+
+    /**
+     * Holds the thinking config.
+     */
     var thinkingConfig: ThinkingConfig? = null
+
+    /**
+     * Holds the image config.
+     */
     var imageConfig: ImageConfig? = null
+
+    /**
+     * Holds the speech config.
+     */
     var speechConfig: SpeechConfig? = null
 
+    /**
+     * Handles stop sequence.
+     *
+     * @param sequence The sequence.
+     */
     fun stopSequence(sequence: String) {
         stopSequences.add(sequence)
     }
 
+    /**
+     * Handles response modality.
+     *
+     * @param modality The modality.
+     */
     fun responseModality(modality: Modality) {
         responseModalities.add(modality)
     }
 
+    /**
+     * Handles image config.
+     *
+     * @param init The init.
+     */
     fun imageConfig(init: ImageConfigBuilder.() -> Unit) {
         imageConfig = ImageConfigBuilder().apply(init).build()
     }
 
+    /**
+     * Handles speech config.
+     *
+     * @param init The init.
+     */
     fun speechConfig(init: SpeechConfigBuilder.() -> Unit) {
         speechConfig = SpeechConfigBuilder().apply(init).build()
     }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         GenerationConfig(
-            stopSequences = if (stopSequences.isEmpty()) null else stopSequences,
+            stopSequences = if (stopSequences.isEmpty()) null else stopSequences.toTypedArray(),
             temperature = temperature,
             maxOutputTokens = maxOutputTokens,
             topP = topP,
             topK = topK,
             responseMimeType = responseMimeType,
-            responseModalities = if (responseModalities.isEmpty()) null else responseModalities,
+            responseModalities = if (responseModalities.isEmpty()) null else responseModalities.toTypedArray(),
             thinkingConfig = thinkingConfig,
             imageConfig = imageConfig,
             speechConfig = speechConfig,
         )
 }
 
+/**
+ * Handles generation config.
+ *
+ * @param init The init.
+ */
 fun generationConfig(init: GenerationConfigBuilder.() -> Unit): GenerationConfig = GenerationConfigBuilder().apply(init).build()

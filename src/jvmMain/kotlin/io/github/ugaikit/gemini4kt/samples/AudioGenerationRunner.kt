@@ -10,7 +10,15 @@ import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
 
+/**
+ * Represents the audio generation runner.
+ */
 object AudioGenerationRunner {
+    /**
+     * Handles main.
+     *
+     * @param args The args.
+     */
     @JvmStatic
     fun main(args: Array<String>) =
         runBlocking {

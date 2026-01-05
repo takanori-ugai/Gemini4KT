@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>io.github.ugaikit.gemini4kt.samples</title>
     <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
-    <script>var pathToRoot = "../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+        <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
 <script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
 <script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
@@ -25,20 +25,18 @@
 <link href="../../styles/main.css" rel="Stylesheet">
 <link href="../../styles/prism.css" rel="Stylesheet">
 <link href="../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
 <link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
-<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
 <script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
 <script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
 <script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
 <script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer="defer"></script>
-<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
 </head>
 <body>
-    <div class="root">
-    <nav class="navigation theme-dark" id="navigation-wrapper">
-            <a class="library-name--link" href="../../index.html">
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../index.html" tabindex="1">
                     gemini4kt
             </a>
         <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
@@ -46,11 +44,15 @@
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
         <div class="library-version" id="library-version">
-0.7.0        </div>
+0.8.0        </div>
         <div class="navigation-controls">
-        <div class="filter-section filter-section_loading" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active=""
-                        data-filter=":/main">jvm</button>
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector common-like" data-active="" aria-pressed="true"
+                        data-filter=":/commonMain">common</button>
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
+                        data-filter=":/jvmMain">jvm</button>
+                <button class="platform-tag platform-selector common-like" data-active="" aria-pressed="true"
+                        data-filter=":/nativeMain">native</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
                         data-role="dropdown-toggle"
@@ -59,24 +61,40 @@
                         aria-expanded="false"
                         aria-label="Toggle source sets"
                 ></button>
-                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
-                    <div class="dropdown--header"><span>Platform filter</span>
-                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
                             <i class="ui-kit-icon ui-kit-icon_cross"></i>
                         </button>
                     </div>
+                        <li role="option" class="dropdown--option platform-selector-option common-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":/commonMain"
+                                       data-filter=":/commonMain"/>
+                                <span class="checkbox--icon"></span>
+                                common
+                            </label>
+                        </li>
                         <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
                             <label class="checkbox">
-                                <input type="checkbox" class="checkbox--input" id=":/main"
-                                       data-filter=":/main"/>
+                                <input type="checkbox" class="checkbox--input" id=":/jvmMain"
+                                       data-filter=":/jvmMain"/>
                                 <span class="checkbox--icon"></span>
                                 jvm
+                            </label>
+                        </li>
+                        <li role="option" class="dropdown--option platform-selector-option common-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":/nativeMain"
+                                       data-filter=":/nativeMain"/>
+                                <span class="checkbox--icon"></span>
+                                native
                             </label>
                         </li>
                 </ul>
                 <div class="dropdown--overlay"></div>
             </div>
-        </div>
+        </ul>
             <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
                     type="button">Switch theme
             </button>
@@ -84,27 +102,29 @@
                 API
             </div>
         </div>
-    </nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
-                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
-                        data-role="dropdown-listbox">
-                        <div class="dropdown--header">
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
                             <span>
                                     gemini4kt
                             </span>
-                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
-                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
-                            </button>
-                        </div>
-                        <div class="sidebar--inner" id="sideMenu"></div>
-                    </ul>
-                    <div class="dropdown--overlay"></div>
-                </div>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
-<div class="main-content" data-page-type="package" id="content" pageIds="gemini4kt::io.github.ugaikit.gemini4kt.samples////PointingToDeclaration//-251573632">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="package" id="content" pageIds="gemini4kt::io.github.ugaikit.gemini4kt.samples////PointingToDeclaration//814332267">
   <div class="breadcrumbs"><a href="../../index.html">gemini4kt</a><span class="delimiter">/</span><span class="current">io.github.ugaikit.gemini4kt.samples</span></div>
   <div class="cover ">
     <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
@@ -113,108 +133,596 @@
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="FUNCTION,EXTENSION_FUNCTION">Functions</button></div>
     <div class="tabs-section-body">
       <div data-togglable="TYPE">
-        <h2 class="">Types</h2>
-        <div class="table"><a data-name="1099167344%2FClasslikes%2F-251573632" anchor-label="Cache" id="1099167344%2FClasslikes%2F-251573632" data-filterable-set=":/main"></a>
-          <div class="table-row" data-filterable-current=":/main" data-filterable-set=":/main">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="360534180%2FClasslikes%2F1558683979" anchor-label="AudioGeneration" id="360534180%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-audio-generation/index.html"><span>Audio</span><wbr></wbr><span><span>Generation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="360534180%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-audio-generation/index.html">AudioGeneration</a></div><div class="brief "><p class="paragraph">Represents the audio generation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-458687212%2FClasslikes%2F2112555339" anchor-label="AudioGenerationRunner" id="-458687212%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-audio-generation-runner/index.html"><span>Audio</span><wbr></wbr><span>Generation</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-458687212%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-audio-generation-runner/index.html">AudioGenerationRunner</a></div><div class="brief "><p class="paragraph">Represents the audio generation runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-151404050%2FClasslikes%2F1558683979" anchor-label="BatchSample" id="-151404050%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-batch-sample/index.html"><span>Batch</span><wbr></wbr><span><span>Sample</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-151404050%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-batch-sample/index.html">BatchSample</a></div><div class="brief "><p class="paragraph">Represents the batch sample.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1546006818%2FClasslikes%2F2112555339" anchor-label="BatchSampleRunner" id="-1546006818%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-batch-sample-runner/index.html"><span>Batch</span><wbr></wbr><span>Sample</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1546006818%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-batch-sample-runner/index.html">BatchSampleRunner</a></div><div class="brief "><p class="paragraph">Represents the batch sample runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1099167344%2FClasslikes%2F1558683979" anchor-label="Cache" id="1099167344%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-cache/index.html"><span><span>Cache</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1099167344%2FClasslikes%2F-251573632"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1099167344%2FClasslikes%2F1558683979"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-cache/index.html">Cache</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-cache/index.html">Cache</a></div><div class="brief "><p class="paragraph">Represents the cache.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="301927305%2FClasslikes%2F-251573632" anchor-label="CountTokens" id="301927305%2FClasslikes%2F-251573632" data-filterable-set=":/main"></a>
-          <div class="table-row" data-filterable-current=":/main" data-filterable-set=":/main">
+<a data-name="-2680352%2FClasslikes%2F2112555339" anchor-label="CacheRunner" id="-2680352%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="-count-tokens/index.html"><span>Count</span><wbr></wbr><span><span>Tokens</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="301927305%2FClasslikes%2F-251573632"></span>
+                  <div><a href="-cache-runner/index.html"><span>Cache</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2680352%2FClasslikes%2F2112555339"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-count-tokens/index.html">CountTokens</a></div></div></div>
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-cache-runner/index.html">CacheRunner</a></div><div class="brief "><p class="paragraph">Represents the cache runner.</p></div></div>                  </div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1579912531%2FClasslikes%2F-251573632" anchor-label="EmboedCOntent" id="-1579912531%2FClasslikes%2F-251573632" data-filterable-set=":/main"></a>
-          <div class="table-row" data-filterable-current=":/main" data-filterable-set=":/main">
+<a data-name="-953179555%2FClasslikes%2F1558683979" anchor-label="CodeExecutionSample" id="-953179555%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="-emboed-c-ontent/index.html"><span>Emboed</span><wbr></wbr><span><span>COntent</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1579912531%2FClasslikes%2F-251573632"></span>
+                  <div><a href="-code-execution-sample/index.html"><span>Code</span><wbr></wbr><span>Execution</span><wbr></wbr><span><span>Sample</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-953179555%2FClasslikes%2F1558683979"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-emboed-c-ontent/index.html">EmboedCOntent</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-code-execution-sample/index.html">CodeExecutionSample</a></div><div class="brief "><p class="paragraph">Represents the code execution sample.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="156401%2FClasslikes%2F-251573632" anchor-label="FunctionExample1" id="156401%2FClasslikes%2F-251573632" data-filterable-set=":/main"></a>
-          <div class="table-row" data-filterable-current=":/main" data-filterable-set=":/main">
+<a data-name="469458957%2FClasslikes%2F2112555339" anchor-label="CodeExecutionSampleRunner" id="469458957%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-code-execution-sample-runner/index.html"><span>Code</span><wbr></wbr><span>Execution</span><wbr></wbr><span>Sample</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="469458957%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-code-execution-sample-runner/index.html">CodeExecutionSampleRunner</a></div><div class="brief "><p class="paragraph">Represents the code execution sample runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1433024569%2FClasslikes%2F2112555339" anchor-label="CountTokensRunner" id="1433024569%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-count-tokens-runner/index.html"><span>Count</span><wbr></wbr><span>Tokens</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1433024569%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-count-tokens-runner/index.html">CountTokensRunner</a></div><div class="brief "><p class="paragraph">Represents the count tokens runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1906966785%2FClasslikes%2F1558683979" anchor-label="CountTokensSample" id="-1906966785%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-count-tokens-sample/index.html"><span>Count</span><wbr></wbr><span>Tokens</span><wbr></wbr><span><span>Sample</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1906966785%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-count-tokens-sample/index.html">CountTokensSample</a></div><div class="brief "><p class="paragraph">Represents the count tokens sample.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1869029840%2FClasslikes%2F1558683979" anchor-label="EmbedContent" id="-1869029840%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-embed-content/index.html"><span>Embed</span><wbr></wbr><span><span>Content</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1869029840%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-embed-content/index.html">EmbedContent</a></div><div class="brief "><p class="paragraph">Represents the embed content.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="470757792%2FClasslikes%2F2112555339" anchor-label="EmbedContentRunner" id="470757792%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-embed-content-runner/index.html"><span>Embed</span><wbr></wbr><span>Content</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="470757792%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-embed-content-runner/index.html">EmbedContentRunner</a></div><div class="brief "><p class="paragraph">Represents the embed content runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1583719618%2FClasslikes%2F1558683979" anchor-label="FileSearchSample" id="1583719618%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-file-search-sample/index.html"><span>File</span><wbr></wbr><span>Search</span><wbr></wbr><span><span>Sample</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1583719618%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-file-search-sample/index.html">FileSearchSample</a></div><div class="brief "><p class="paragraph">Represents the file search sample.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1644346702%2FClasslikes%2F2112555339" anchor-label="FileSearchSampleRunner" id="-1644346702%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-file-search-sample-runner/index.html"><span>File</span><wbr></wbr><span>Search</span><wbr></wbr><span>Sample</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1644346702%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-file-search-sample-runner/index.html">FileSearchSampleRunner</a></div><div class="brief "><p class="paragraph">Represents the file search sample runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="468529481%2FClasslikes%2F1558683979" anchor-label="FileUploadSample" id="468529481%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-file-upload-sample/index.html"><span>File</span><wbr></wbr><span>Upload</span><wbr></wbr><span><span>Sample</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="468529481%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-file-upload-sample/index.html">FileUploadSample</a></div><div class="brief "><p class="paragraph">Represents the file upload sample.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1475015175%2FClasslikes%2F2112555339" anchor-label="FileUploadSampleRunner" id="-1475015175%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-file-upload-sample-runner/index.html"><span>File</span><wbr></wbr><span>Upload</span><wbr></wbr><span>Sample</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1475015175%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-file-upload-sample-runner/index.html">FileUploadSampleRunner</a></div><div class="brief "><p class="paragraph">Represents the file upload sample runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="156401%2FClasslikes%2F1558683979" anchor-label="FunctionExample1" id="156401%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-function-example1/index.html"><span>Function</span><wbr></wbr><span><span>Example1</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="156401%2FClasslikes%2F-251573632"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="156401%2FClasslikes%2F1558683979"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-function-example1/index.html">FunctionExample1</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-function-example1/index.html">FunctionExample1</a></div><div class="brief "><p class="paragraph">Represents the function example1.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1587232603%2FClasslikes%2F-251573632" anchor-label="InputWithImage" id="-1587232603%2FClasslikes%2F-251573632" data-filterable-set=":/main"></a>
-          <div class="table-row" data-filterable-current=":/main" data-filterable-set=":/main">
+<a data-name="819487137%2FClasslikes%2F2112555339" anchor-label="FunctionExample1Runner" id="819487137%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-function-example1-runner/index.html"><span>Function</span><wbr></wbr><span><span>Example1Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="819487137%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-function-example1-runner/index.html">FunctionExample1Runner</a></div><div class="brief "><p class="paragraph">Represents the function example1 runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="31176208%2FClasslikes%2F1558683979" anchor-label="FunctionExample2" id="31176208%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-function-example2/index.html"><span>Function</span><wbr></wbr><span><span>Example2</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="31176208%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-function-example2/index.html">FunctionExample2</a></div><div class="brief "><p class="paragraph">Represents the function example2.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1190616704%2FClasslikes%2F2112555339" anchor-label="FunctionExample2Runner" id="-1190616704%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-function-example2-runner/index.html"><span>Function</span><wbr></wbr><span><span>Example2Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1190616704%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-function-example2-runner/index.html">FunctionExample2Runner</a></div><div class="brief "><p class="paragraph">Represents the function example2 runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="62196015%2FClasslikes%2F1558683979" anchor-label="FunctionExample3" id="62196015%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-function-example3/index.html"><span>Function</span><wbr></wbr><span><span>Example3</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="62196015%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-function-example3/index.html">FunctionExample3</a></div><div class="brief "><p class="paragraph">Represents the function example3.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1094246751%2FClasslikes%2F2112555339" anchor-label="FunctionExample3Runner" id="1094246751%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-function-example3-runner/index.html"><span>Function</span><wbr></wbr><span><span>Example3Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1094246751%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-function-example3-runner/index.html">FunctionExample3Runner</a></div><div class="brief "><p class="paragraph">Represents the function example3 runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1492032923%2FClasslikes%2F1558683979" anchor-label="GoogleSearchSample" id="-1492032923%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-google-search-sample/index.html"><span>Google</span><wbr></wbr><span>Search</span><wbr></wbr><span><span>Sample</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1492032923%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-google-search-sample/index.html">GoogleSearchSample</a></div><div class="brief "><p class="paragraph">Represents the google search sample.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="582941205%2FClasslikes%2F2112555339" anchor-label="GoogleSearchSampleRunner" id="582941205%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-google-search-sample-runner/index.html"><span>Google</span><wbr></wbr><span>Search</span><wbr></wbr><span>Sample</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="582941205%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-google-search-sample-runner/index.html">GoogleSearchSampleRunner</a></div><div class="brief "><p class="paragraph">Represents the google search sample runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1587232603%2FClasslikes%2F1558683979" anchor-label="InputWithImage" id="-1587232603%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-input-with-image/index.html"><span>Input</span><wbr></wbr><span>With</span><wbr></wbr><span><span>Image</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1587232603%2FClasslikes%2F-251573632"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1587232603%2FClasslikes%2F1558683979"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-input-with-image/index.html">InputWithImage</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-input-with-image/index.html">InputWithImage</a></div><div class="brief "><p class="paragraph">Represents the input with image.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1396535898%2FClasslikes%2F-251573632" anchor-label="Models" id="-1396535898%2FClasslikes%2F-251573632" data-filterable-set=":/main"></a>
-          <div class="table-row" data-filterable-current=":/main" data-filterable-set=":/main">
+<a data-name="-1776113579%2FClasslikes%2F2112555339" anchor-label="InputWithImageRunner" id="-1776113579%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-input-with-image-runner/index.html"><span>Input</span><wbr></wbr><span>With</span><wbr></wbr><span>Image</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1776113579%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-input-with-image-runner/index.html">InputWithImageRunner</a></div><div class="brief "><p class="paragraph">Represents the input with image runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1448897626%2FClasslikes%2F1558683979" anchor-label="LiveSample" id="1448897626%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-live-sample/index.html"><span>Live</span><wbr></wbr><span><span>Sample</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1448897626%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-live-sample/index.html">LiveSample</a></div><div class="brief "><p class="paragraph">Represents the live sample.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1506412470%2FClasslikes%2F2112555339" anchor-label="LiveSampleRunner" id="-1506412470%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-live-sample-runner/index.html"><span>Live</span><wbr></wbr><span>Sample</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1506412470%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-live-sample-runner/index.html">LiveSampleRunner</a></div><div class="brief "><p class="paragraph">Represents the live sample runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1396535898%2FClasslikes%2F1558683979" anchor-label="Models" id="-1396535898%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-models/index.html"><span><span>Models</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1396535898%2FClasslikes%2F-251573632"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1396535898%2FClasslikes%2F1558683979"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-models/index.html">Models</a></div><div class="brief "><p class="paragraph">Represents a collection of models.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-models/index.html">Models</a></div><div class="brief "><p class="paragraph">Represents a collection of models.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1976770360%2FClasslikes%2F-251573632" anchor-label="Samples1" id="-1976770360%2FClasslikes%2F-251573632" data-filterable-set=":/main"></a>
-          <div class="table-row" data-filterable-current=":/main" data-filterable-set=":/main">
+<a data-name="-1976770360%2FClasslikes%2F1558683979" anchor-label="Samples1" id="-1976770360%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-samples1/index.html"><span><span>Samples1</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1976770360%2FClasslikes%2F-251573632"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1976770360%2FClasslikes%2F1558683979"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-samples1/index.html">Samples1</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-samples1/index.html">Samples1</a></div><div class="brief "><p class="paragraph">Represents the samples1.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-875765192%2FClasslikes%2F2112555339" anchor-label="Samples1Runner" id="-875765192%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-samples1-runner/index.html"><span><span>Samples1Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-875765192%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-samples1-runner/index.html">Samples1Runner</a></div><div class="brief "><p class="paragraph">Represents the samples1 runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1520703556%2FClasslikes%2F1558683979" anchor-label="StreamGenerateContentSample" id="1520703556%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-stream-generate-content-sample/index.html"><span>Stream</span><wbr></wbr><span>Generate</span><wbr></wbr><span>Content</span><wbr></wbr><span><span>Sample</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1520703556%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-stream-generate-content-sample/index.html">StreamGenerateContentSample</a></div><div class="brief "><p class="paragraph">Represents the stream generate content sample.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1027837108%2FClasslikes%2F2112555339" anchor-label="StreamGenerateContentSampleRunner" id="1027837108%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-stream-generate-content-sample-runner/index.html"><span>Stream</span><wbr></wbr><span>Generate</span><wbr></wbr><span>Content</span><wbr></wbr><span>Sample</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1027837108%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-stream-generate-content-sample-runner/index.html">StreamGenerateContentSampleRunner</a></div><div class="brief "><p class="paragraph">Represents the stream generate content sample runner.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1766675615%2FClasslikes%2F2112555339" anchor-label="TextToImage" id="1766675615%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-text-to-image/index.html"><span>Text</span><wbr></wbr><span>To</span><wbr></wbr><span><span>Image</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1766675615%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">class </span><a href="-text-to-image/index.html">TextToImage</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">gemini<span class="token operator">: </span><a href="../io.github.ugaikit.gemini4kt/-gemini/index.html">Gemini</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Represents the text to image.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-439181419%2FClasslikes%2F2112555339" anchor-label="TextToImageSample" id="-439181419%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-text-to-image-sample/index.html"><span>Text</span><wbr></wbr><span>To</span><wbr></wbr><span>Image</span><wbr></wbr><span><span>Sample</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-439181419%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-text-to-image-sample/index.html">TextToImageSample</a></div><div class="brief "><p class="paragraph">Represents the text to image sample.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="937402950%2FClasslikes%2F1558683979" anchor-label="UrlContextSample" id="937402950%2FClasslikes%2F1558683979" data-filterable-set=":/commonMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/commonMain" data-filterable-set=":/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-url-context-sample/index.html"><span>Url</span><wbr></wbr><span>Context</span><wbr></wbr><span><span>Sample</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="937402950%2FClasslikes%2F1558683979"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/commonMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-url-context-sample/index.html">UrlContextSample</a></div><div class="brief "><p class="paragraph">Represents the url context sample.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2013524682%2FClasslikes%2F2112555339" anchor-label="UrlContextSampleRunner" id="-2013524682%2FClasslikes%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-url-context-sample-runner/index.html"><span>Url</span><wbr></wbr><span>Context</span><wbr></wbr><span>Sample</span><wbr></wbr><span><span>Runner</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2013524682%2FClasslikes%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-url-context-sample-runner/index.html">UrlContextSampleRunner</a></div><div class="brief "><p class="paragraph">Represents the url context sample runner.</p></div></div>                  </div>
                 </div>
               </div>
             </div>
@@ -222,18 +730,54 @@
         </div>
       </div>
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
-        <div class="table"><a data-name="-1140490314%2FFunctions%2F-251573632" anchor-label="main" id="-1140490314%2FFunctions%2F-251573632" data-filterable-set=":/main"></a>
-          <div class="table-row" data-filterable-current=":/main" data-filterable-set=":/main">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-1140490314%2FFunctions%2F-1320772854" anchor-label="main" id="-1140490314%2FFunctions%2F-1320772854" data-filterable-set=":/jvmMain,:/nativeMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain,:/nativeMain" data-filterable-set=":/jvmMain,:/nativeMain">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="main.html"><span><span>main</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1140490314%2FFunctions%2F-251573632"></span>
+                  <div><span data-unresolved-link="io.github.ugaikit.gemini4kt.samples//main/#/PointingToDeclaration/"><span><span>main</span></span></span></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1140490314%2FFunctions%2F-1320772854"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="main.html"><span class="token function">main</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="main.html"><span class="token function">main</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="main.html"><span class="token function">main</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="main.html"><span class="token function">main</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="main.html"><span class="token function">main</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="main.html"><span class="token function">main</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><br><div class="symbol monospace"><span class="token keyword">fun </span><a href="main.html"><span class="token function">main</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">The entry point of the application.</p></div></div></div>
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button><button class="platform-bookmark" data-filterable-current=":/nativeMain" data-filterable-set=":/nativeMain" data-toggle=":/nativeMain">native</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">fun </span><a href="[jvm]main.html"><span class="token function">main</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Handles main.</p></div></div><div class="content sourceset-dependent-content" data-togglable=":/nativeMain"><div class="symbol monospace"><span class="token keyword">fun </span><a href="[native]main.html"><span class="token function">main</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Entry point for running the Models sample.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-777776946%2FFunctions%2F2112555339" anchor-label="readWavToPcm" id="-777776946%2FFunctions%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="read-wav-to-pcm.html"><span>read</span><wbr></wbr><span>Wav</span><wbr></wbr><span>To</span><wbr></wbr><span><span>Pcm</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-777776946%2FFunctions%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">fun </span><a href="read-wav-to-pcm.html"><span class="token function">readWavToPcm</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">file<span class="token operator">: </span><span data-unresolved-link="java.io/File///PointingToDeclaration/">File</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="kotlin/ByteArray///PointingToDeclaration/">ByteArray</span></div><div class="brief "><p class="paragraph">Handles read wav to pcm.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1423315447%2FFunctions%2F2112555339" anchor-label="savePcmToWav" id="-1423315447%2FFunctions%2F2112555339" data-filterable-set=":/jvmMain"></a>
+          <div class="table-row table-row_content" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="save-pcm-to-wav.html"><span>save</span><wbr></wbr><span>Pcm</span><wbr></wbr><span>To</span><wbr></wbr><span><span>Wav</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1423315447%2FFunctions%2F2112555339"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":/jvmMain" data-filterable-set=":/jvmMain" data-active="" data-toggle=":/jvmMain">jvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":/jvmMain"><div class="symbol monospace"><span class="token keyword">fun </span><a href="save-pcm-to-wav.html"><span class="token function">savePcmToWav</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">pcmData<span class="token operator">: </span><span data-unresolved-link="kotlin/ByteArray///PointingToDeclaration/">ByteArray</span><span class="token punctuation">, </span></span><span class="parameter ">filePath<span class="token operator">: </span><span data-unresolved-link="kotlin/String///PointingToDeclaration/">String</span><span class="token punctuation">, </span></span><span class="parameter ">sampleRate<span class="token operator">: </span><span data-unresolved-link="kotlin/Float///PointingToDeclaration/">Float</span><span class="token punctuation">, </span></span><span class="parameter ">channels<span class="token operator">: </span><span data-unresolved-link="kotlin/Int///PointingToDeclaration/">Int</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Saves PCM byte array as a WAV file.</p></div></div>                  </div>
                 </div>
               </div>
             </div>
@@ -244,17 +788,21 @@
   </div>
 </div>
     <div class="footer">
-        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
-        <span>© 2025 Copyright</span>
-        <span class="pull-right">
-            <span>Generated by </span>
-            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
-                <span>dokka</span>
-            </a>
-        </span>
-    </div>
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2025 Copyright</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

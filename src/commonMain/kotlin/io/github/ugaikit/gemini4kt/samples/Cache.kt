@@ -8,31 +8,44 @@ import io.github.ugaikit.gemini4kt.HarmCategory
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.SafetySetting
 import io.github.ugaikit.gemini4kt.Threshold
+import io.github.ugaikit.gemini4kt.getApiKey
 
+/**
+ * Holds the repeat count.
+ */
 private const val REPEAT_COUNT = 10000
 
+/**
+ * Represents the cache.
+ */
 object Cache {
-    suspend fun run(gemini: Gemini) {
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val str = "This is a pen".repeat(REPEAT_COUNT)
         val cachedContent =
             CachedContent(
-                contents = listOf(Content(listOf(Part(text = str)), "user")),
+                contents = listOf(Content(arrayOf(Part(text = str)), "user")),
                 model = "models/gemini-2.5-flash-lite",
-                systemInstruction = Content(listOf(Part(text = "Hello, world!")), "system"),
+                systemInstruction = Content(arrayOf(Part(text = "Hello, world!")), "system"),
             )
-        val cache = gemini.createCachedContent(cachedContent)
+        val cache = client.createCachedContent(cachedContent)
         println(cachedContent)
         println(cache)
-        println(gemini.listCachedContent())
-        println(gemini.getCachedContent(cache.name!!))
+        println(client.listCachedContent())
+        cache.name?.let { println(client.getCachedContent(it)) }
         println("--------------------------------------------------------------")
 
         val text = "Summarize the sentences."
         val inputJson =
             GenerateContentRequest(
-                listOf(Content(listOf(Part(text)))),
+                arrayOf(Content(arrayOf(Part(text)))),
                 safetySettings =
-                    listOf(
+                    arrayOf(
                         SafetySetting(
                             category = HarmCategory.HARM_CATEGORY_HARASSMENT,
                             threshold = Threshold.BLOCK_ONLY_HIGH,
@@ -41,7 +54,7 @@ object Cache {
                 cachedContent = cache.name,
             )
         println(
-            gemini
+            client
                 .generateContent(
                     inputJson,
                     model = "gemini-2.5-flash-lite",
@@ -52,6 +65,6 @@ object Cache {
                 .replace("\n\n", "\n"),
         )
 
-        gemini.deleteCachedContent(cache.name!!)
+        cache.name?.let { client.deleteCachedContent(it) }
     }
 }

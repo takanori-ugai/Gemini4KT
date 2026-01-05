@@ -6,9 +6,15 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+/**
+ * Represents the tool config builder test.
+ */
 class ToolConfigBuilderTest {
+    /**
+     * Handles build with function calling config.
+     */
     @Test
-    fun `build with functionCallingConfig`() {
+    fun buildWithFunctionCallingConfig() {
         val toolConfig =
             toolConfig {
                 functionCallingConfig {
@@ -19,12 +25,16 @@ class ToolConfigBuilderTest {
             }
 
         assertNotNull(toolConfig.functionCallingConfig)
-        assertEquals(Mode.ANY, toolConfig.functionCallingConfig?.mode)
+        val functionCallingConfig = checkNotNull(toolConfig.functionCallingConfig)
+        assertEquals(Mode.ANY, functionCallingConfig.mode)
         assertNull(toolConfig.retrievalConfig)
     }
 
+    /**
+     * Handles build with retrieval config.
+     */
     @Test
-    fun `build with retrievalConfig`() {
+    fun buildWithRetrievalConfig() {
         val toolConfig =
             toolConfig {
                 functionCallingConfig {
@@ -38,12 +48,16 @@ class ToolConfigBuilderTest {
             }
 
         assertNotNull(toolConfig.retrievalConfig)
-        assertEquals(34.0522, toolConfig.retrievalConfig?.latLng?.latitude)
-        assertNotNull(toolConfig.functionCallingConfig)
+        val retrievalConfig = checkNotNull(toolConfig.retrievalConfig)
+        assertEquals(34.0522, retrievalConfig.latLng?.latitude)
+        checkNotNull(toolConfig.functionCallingConfig)
     }
 
+    /**
+     * Handles build with both properties.
+     */
     @Test
-    fun `build with both properties`() {
+    fun buildWithBothProperties() {
         val toolConfig =
             toolConfig {
                 functionCallingConfig {
@@ -62,8 +76,11 @@ class ToolConfigBuilderTest {
         assertNotNull(toolConfig.retrievalConfig)
     }
 
+    /**
+     * Handles build without function calling config throws exception.
+     */
     @Test
-    fun `build without functionCallingConfig throws exception`() {
+    fun buildWithoutFunctionCallingConfigThrowsException() {
         assertFailsWith<IllegalStateException> {
             toolConfig {
                 retrievalConfig =

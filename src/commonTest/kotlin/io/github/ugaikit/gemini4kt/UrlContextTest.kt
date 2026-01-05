@@ -7,15 +7,24 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+/**
+ * Represents the url context test.
+ */
 class UrlContextTest {
+    /**
+     * Holds the json.
+     */
     private val json =
         Json {
             encodeDefaults = true
             ignoreUnknownKeys = true
         }
 
+    /**
+     * Tests test tool serialization with url context.
+     */
     @Test
-    fun `test Tool serialization with urlContext`() {
+    fun testToolSerializationWithUrlContext() {
         val tool =
             tool {
                 urlContext()
@@ -26,8 +35,11 @@ class UrlContextTest {
         assertTrue(jsonString.contains("\"url_context\":{}"))
     }
 
+    /**
+     * Tests test candidate deserialization with url context metadata.
+     */
     @Test
-    fun `test Candidate deserialization with urlContextMetadata`() {
+    fun testCandidateDeserializationWithUrlContextMetadata() {
         val jsonString =
             """
             {
@@ -55,13 +67,14 @@ class UrlContextTest {
         val candidate = json.decodeFromString<Candidate>(jsonString)
 
         assertNotNull(candidate.urlContextMetadata)
-        assertEquals(2, candidate.urlContextMetadata!!.urlMetadata.size)
+        val urlContextMetadata = checkNotNull(candidate.urlContextMetadata)
+        assertEquals(2, urlContextMetadata.urlMetadata.size)
 
-        val meta1 = candidate.urlContextMetadata!!.urlMetadata[0]
+        val meta1 = urlContextMetadata.urlMetadata[0]
         assertEquals("https://example.com/recipe1", meta1.retrievedUrl)
         assertEquals("URL_RETRIEVAL_STATUS_SUCCESS", meta1.urlRetrievalStatus)
 
-        val meta2 = candidate.urlContextMetadata!!.urlMetadata[1]
+        val meta2 = urlContextMetadata.urlMetadata[1]
         assertEquals("https://example.com/recipe2", meta2.retrievedUrl)
         assertEquals("URL_RETRIEVAL_STATUS_SUCCESS", meta2.urlRetrievalStatus)
     }

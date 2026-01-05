@@ -21,6 +21,9 @@ import kotlinx.io.files.Path
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
+import kotlin.js.JsName
 
 /**
  * A logger for logging messages. Uses KotlinLogging library for simplified logging.
@@ -43,10 +46,25 @@ class Gemini(
      * JSON configuration setup to ignore unknown keys during deserialization.
      */
     internal val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Holds the http client.
+     */
     private val httpClient = client ?: createHttpClient(json)
+
+    /**
+     * Holds the provider.
+     */
     private val provider: FileUploadProvider = fileUploadProvider ?: FileUploadProvider(apiKey, httpClient, json)
 
+    /**
+     * Holds the b url.
+     */
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
+
+    /**
+     * Holds the base url.
+     */
     private val baseUrl = "$bUrl/models"
 
     companion object {
@@ -252,7 +270,7 @@ class Gemini(
      * @param file The file to upload.
      * @param mimeType The MIME type of the file.
      * @param displayName The display name of the file.
-     * @return The uploaded file as a [File] object.
+     * @return The uploaded file wrapped as a [GeminiFile].
      */
     suspend fun uploadFile(
         file: Path,
@@ -336,5 +354,39 @@ class Gemini(
         } catch (e: Exception) {
             logger.error { e.message }
         }
+    }
+}
+
+/**
+ * Represents the gemini js export.
+ */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+@JsName("Gemini")
+class GeminiJsExport(
+    apiKey: String,
+) {
+    /**
+     * Holds the delegate.
+     */
+    private val delegate = Gemini(apiKey)
+
+    /**
+     * Holds the json helper.
+     */
+    private val jsonHelper = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Handles generate content.
+     *
+     * @param request The request.
+     * @param model The model.
+     */
+    suspend fun generateContent(
+        request: GenerateContentRequest,
+        model: String = "gemini-pro",
+    ): String {
+        val response = delegate.generateContent(request, model)
+        return jsonHelper.encodeToString(response)
     }
 }

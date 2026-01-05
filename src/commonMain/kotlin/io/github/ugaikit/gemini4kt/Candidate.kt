@@ -27,33 +27,97 @@ data class Candidate(
     val urlContextMetadata: UrlContextMetadata? = null,
 )
 
+/**
+ * Represents the candidate builder.
+ */
 class CandidateBuilder {
+    /**
+     * Holds the content.
+     */
     lateinit var content: Content
+
+    /**
+     * Holds the finish reason.
+     */
     var finishReason: String? = null
+
+    /**
+     * Holds the index.
+     */
     var index: Int = 0
+
+    /**
+     * Holds the safety ratings.
+     */
     private var safetyRatings: MutableList<SafetyRating> = mutableListOf()
+
+    /**
+     * Holds the citation metadata.
+     */
     var citationMetadata: CitationMetadata? = null
+
+    /**
+     * Holds the token count.
+     */
     var tokenCount: Int? = null
+
+    /**
+     * Holds the avg logprobs.
+     */
     var avgLogprobs: Double? = null
+
+    /**
+     * Holds the logprobs result.
+     */
     var logprobsResult: LogprobsResult? = null
+
+    /**
+     * Holds the grounding attributions.
+     */
     private var groundingAttributions: MutableList<GroundingAttribution> = mutableListOf()
+
+    /**
+     * Holds the grounding metadata.
+     */
     var groundingMetadata: GroundingMetadata? = null
+
+    /**
+     * Holds the url context metadata.
+     */
     var urlContextMetadata: UrlContextMetadata? = null
 
+    /**
+     * Handles content.
+     *
+     * @param init The init.
+     */
     fun content(init: ContentBuilder.() -> Unit) {
         content = ContentBuilder().apply(init).build()
     }
 
+    /**
+     * Handles safety rating.
+     *
+     * @param init The init.
+     */
     fun safetyRating(init: SafetyRatingBuilder.() -> Unit) {
         val builder = SafetyRatingBuilder().apply(init)
         safetyRatings.add(builder.build())
     }
 
+    /**
+     * Handles grounding attribution.
+     *
+     * @param init The init.
+     */
     fun groundingAttribution(init: GroundingAttributionBuilder.() -> Unit) {
         val builder = GroundingAttributionBuilder().apply(init)
         groundingAttributions.add(builder.build())
     }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         Candidate(
             content,
@@ -70,4 +134,9 @@ class CandidateBuilder {
         )
 }
 
+/**
+ * Handles candidate.
+ *
+ * @param init The init.
+ */
 fun candidate(init: CandidateBuilder.() -> Unit): Candidate = CandidateBuilder().apply(init).build()

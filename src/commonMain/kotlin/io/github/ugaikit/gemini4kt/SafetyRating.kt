@@ -22,12 +22,34 @@ data class SafetyRating(
     val blocked: Boolean? = null,
 )
 
+/**
+ * Represents the safety rating builder.
+ */
 class SafetyRatingBuilder {
+    /**
+     * Holds the category.
+     */
     lateinit var category: HarmCategory
+
+    /**
+     * Holds the probability.
+     */
     lateinit var probability: HarmProbability
+
+    /**
+     * Holds the blocked.
+     */
     var blocked: Boolean? = null
 
+    /**
+     * Handles build.
+     */
     fun build() = SafetyRating(category, probability, blocked)
 }
 
+/**
+ * Handles safety rating.
+ *
+ * @param init The init.
+ */
 fun safetyRating(init: SafetyRatingBuilder.() -> Unit): SafetyRating = SafetyRatingBuilder().apply(init).build()

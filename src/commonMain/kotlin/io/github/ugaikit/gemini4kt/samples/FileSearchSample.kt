@@ -14,11 +14,25 @@ import io.github.ugaikit.gemini4kt.tool
 import kotlinx.coroutines.delay
 import kotlinx.io.files.Path
 
+/**
+ * Represents the file search sample.
+ */
 object FileSearchSample {
-    suspend fun run(filePath: String) {
+    /**
+     * Handles run.
+     *
+     * @param filePath The file path.
+     * @param geminiInstance The gemini instance.
+     * @param fileSearchInstance The file search instance.
+     */
+    suspend fun run(
+        filePath: String,
+        geminiInstance: Gemini? = null,
+        fileSearchInstance: FileSearch? = null,
+    ) {
         val apiKey = getApiKey()
-        val fileSearch = FileSearch(apiKey)
-        val gemini = Gemini(apiKey)
+        val fileSearch = fileSearchInstance ?: FileSearch(apiKey)
+        val gemini = geminiInstance ?: Gemini(apiKey)
 
         // 1. Create FileSearchStore
         val store =
@@ -29,17 +43,18 @@ object FileSearchSample {
 
         try {
             // 2. Upload file
-            uploadFileToStore(fileSearch, store.name!!, filePath)
+            val storeName = store.name ?: return
+            uploadFileToStore(fileSearch, storeName, filePath)
 
             // 3. Generate Content
             val generateContentRequest =
                 GenerateContentRequest(
-                    contents = listOf(Content(parts = listOf(Part(text = "What does the fox do?")))),
+                    contents = arrayOf(Content(parts = arrayOf(Part(text = "What does the fox do?")))),
                     tools =
-                        listOf(
+                        arrayOf(
                             tool {
                                 fileSearch {
-                                    fileSearchStoreName(store.name!!)
+                                    fileSearchStoreName(storeName)
                                 }
                             },
                         ),
@@ -65,6 +80,13 @@ object FileSearchSample {
         }
     }
 
+    /**
+     * Handles upload file to store.
+     *
+     * @param fileSearch The file search.
+     * @param storeName The store name.
+     * @param filePath The file path.
+     */
     private suspend fun uploadFileToStore(
         fileSearch: FileSearch,
         storeName: String,

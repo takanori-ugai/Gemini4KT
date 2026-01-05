@@ -28,12 +28,33 @@ data class CitationSource(
     val license: String,
 )
 
+/**
+ * Represents the citation source builder.
+ */
 class CitationSourceBuilder {
+    /**
+     * Holds the start index.
+     */
     var startIndex: Int = 0
+
+    /**
+     * Holds the end index.
+     */
     var endIndex: Int = 0
+
+    /**
+     * Holds the uri.
+     */
     lateinit var uri: String
+
+    /**
+     * Holds the license.
+     */
     lateinit var license: String
 
+    /**
+     * Handles build.
+     */
     fun build(): CitationSource =
         CitationSource(
             startIndex = startIndex,
@@ -43,4 +64,9 @@ class CitationSourceBuilder {
         )
 }
 
+/**
+ * Handles citation source.
+ *
+ * @param init The init.
+ */
 fun citationSource(init: CitationSourceBuilder.() -> Unit): CitationSource = CitationSourceBuilder().apply(init).build()

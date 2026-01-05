@@ -5,11 +5,20 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
+/**
+ * Represents the generation config test.
+ */
 class GenerationConfigTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { prettyPrint = true }
 
+    /**
+     * Tests test generation config serialization with response modalities.
+     */
     @Test
-    fun `test GenerationConfig serialization with responseModalities`() {
+    fun testGenerationConfigSerializationWithResponseModalities() {
         val config =
             generationConfig {
                 responseModality(Modality.TEXT)
@@ -24,8 +33,11 @@ class GenerationConfigTest {
         assertTrue(jsonString.contains("\"IMAGE\""))
     }
 
+    /**
+     * Tests test generation config serialization without response modalities.
+     */
     @Test
-    fun `test GenerationConfig serialization without responseModalities`() {
+    fun testGenerationConfigSerializationWithoutResponseModalities() {
         val config =
             generationConfig {
                 temperature = 0.5
@@ -37,8 +49,11 @@ class GenerationConfigTest {
         assertTrue(!jsonString.contains("\"response_modalities\":"))
     }
 
+    /**
+     * Tests test generation config serialization with image config.
+     */
     @Test
-    fun `test GenerationConfig serialization with imageConfig`() {
+    fun testGenerationConfigSerializationWithImageConfig() {
         val config =
             generationConfig {
                 imageConfig {

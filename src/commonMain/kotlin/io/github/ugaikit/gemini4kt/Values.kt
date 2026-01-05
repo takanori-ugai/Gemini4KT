@@ -16,14 +16,33 @@ data class Values(
     val values: List<Double>,
 )
 
+/**
+ * Represents the values builder.
+ */
 class ValuesBuilder {
+    /**
+     * Holds the values.
+     */
     private val values: MutableList<Double> = mutableListOf()
 
+    /**
+     * Handles value.
+     *
+     * @param value The value.
+     */
     fun value(value: Double) {
         values.add(value)
     }
 
+    /**
+     * Handles build.
+     */
     fun build() = Values(values)
 }
 
+/**
+ * Handles values.
+ *
+ * @param init The init.
+ */
 fun values(init: ValuesBuilder.() -> Unit): Values = ValuesBuilder().apply(init).build()

@@ -6,12 +6,19 @@ import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.getApiKey
 
+/**
+ * Represents the count tokens sample.
+ */
 object CountTokensSample {
-    suspend fun run() {
-        val apiKey = getApiKey()
-        val gemini = Gemini(apiKey)
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
         val text = "Write a story about a magic backpack."
-        val inputJson = CountTokensRequest(listOf(Content(listOf(Part(text)))))
-        println(gemini.countTokens(inputJson))
+        val inputJson = CountTokensRequest(listOf(Content(arrayOf(Part(text)))))
+        println(client.countTokens(inputJson))
     }
 }

@@ -6,9 +6,15 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+/**
+ * Represents the candidate builder test.
+ */
 class CandidateBuilderTest {
+    /**
+     * Handles build with all properties.
+     */
     @Test
-    fun `build with all properties`() {
+    fun buildWithAllProperties() {
         val candidate =
             candidate {
                 content {
@@ -65,8 +71,11 @@ class CandidateBuilderTest {
         assertEquals(1, candidate.groundingAttributions.size)
     }
 
+    /**
+     * Handles build with required properties only.
+     */
     @Test
-    fun `build with required properties only`() {
+    fun buildWithRequiredPropertiesOnly() {
         val candidate =
             candidate {
                 content {
@@ -86,8 +95,11 @@ class CandidateBuilderTest {
         assertNull(candidate.urlContextMetadata)
     }
 
+    /**
+     * Handles build with url context metadata.
+     */
     @Test
-    fun `build with urlContextMetadata`() {
+    fun buildWithUrlContextMetadata() {
         val candidate =
             candidate {
                 content {
@@ -107,12 +119,16 @@ class CandidateBuilderTest {
             }
 
         assertNotNull(candidate.urlContextMetadata)
-        assertEquals(1, candidate.urlContextMetadata!!.urlMetadata.size)
-        assertEquals("http://example.com", candidate.urlContextMetadata!!.urlMetadata[0].retrievedUrl)
+        val urlContextMetadata = checkNotNull(candidate.urlContextMetadata)
+        assertEquals(1, urlContextMetadata.urlMetadata.size)
+        assertEquals("http://example.com", urlContextMetadata.urlMetadata[0].retrievedUrl)
     }
 
+    /**
+     * Handles build with multiple safety ratings.
+     */
     @Test
-    fun `build with multiple safety ratings`() {
+    fun buildWithMultipleSafetyRatings() {
         val candidate =
             candidate {
                 content {
@@ -132,8 +148,11 @@ class CandidateBuilderTest {
         assertEquals(2, candidate.safetyRatings?.size)
     }
 
+    /**
+     * Handles build without required properties throws exception.
+     */
     @Test
-    fun `build without required properties throws exception`() {
+    fun buildWithoutRequiredPropertiesThrowsException() {
         assertFailsWith<RuntimeException> {
             candidate {
                 finishReason = "STOP"

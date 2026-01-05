@@ -8,26 +8,35 @@ import io.github.ugaikit.gemini4kt.batch.createBatchRequest
 import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.coroutines.delay
 
+/**
+ * Represents the batch sample.
+ */
 object BatchSample {
-    suspend fun run() {
-        val apiKey = getApiKey()
-        if (apiKey.isBlank()) {
-            println("GEMINI_API_KEY not found.")
-            return
-        }
-
-        // Initialize Batch client
-        val batchClient = Batch(apiKey)
+    /**
+     * Handles run.
+     *
+     * @param batchClient The batch client.
+     */
+    suspend fun run(batchClient: Batch? = null) {
+        val client =
+            batchClient ?: run {
+                val apiKey = getApiKey()
+                if (apiKey.isBlank()) {
+                    println("GEMINI_API_KEY not found.")
+                    return
+                }
+                Batch(apiKey)
+            }
 
         // Prepare standard GenerateContentRequests
         val request1 =
             GenerateContentRequest(
-                contents = listOf(Content(parts = listOf(Part(text = "Tell me a haiku about coding.")))),
+                contents = arrayOf(Content(parts = arrayOf(Part(text = "Tell me a haiku about coding.")))),
             )
 
         val request2 =
             GenerateContentRequest(
-                contents = listOf(Content(parts = listOf(Part(text = "Tell me a haiku about coffee.")))),
+                contents = arrayOf(Content(parts = arrayOf(Part(text = "Tell me a haiku about coffee.")))),
             )
 
         // Create CreateBatchRequest using the DSL
@@ -56,7 +65,7 @@ object BatchSample {
 
         try {
             println("Creating batch job...")
-            val createdBatchJob = batchClient.createBatch("gemini-2.0-flash", createBatchRequest)
+            val createdBatchJob = client.createBatch("gemini-2.0-flash", createBatchRequest)
             println("Batch Job Created: ${createdBatchJob.name}")
             println("Initial State: ${createdBatchJob.metadata?.state}")
 
@@ -64,9 +73,13 @@ object BatchSample {
             var state = batchJob.metadata?.state
 
             println("Waiting for job completion...")
-            while (state != "BATCH_STATE_SUCCEEDED" && state != "BATCH_STATE_FAILED" && state != "BATCH_STATE_CANCELLED") {
+            while (
+                state != "BATCH_STATE_SUCCEEDED" &&
+                state != "BATCH_STATE_FAILED" &&
+                state != "BATCH_STATE_CANCELLED"
+            ) {
                 delay(10000) // Wait for 10 seconds
-                batchJob = batchClient.getBatch(batchJob.name)
+                batchJob = client.getBatch(batchJob.name)
                 state = batchJob.metadata?.state
                 println("Current State: $state")
             }
@@ -84,7 +97,7 @@ object BatchSample {
 
             // List batches
             println("\nListing recent batches...")
-            val batchesList = batchClient.listBatches(pageSize = 5)
+            val batchesList = client.listBatches(pageSize = 5)
             batchesList.operations?.forEach {
                 println("- ${it.name} (${it.metadata?.state})")
             }

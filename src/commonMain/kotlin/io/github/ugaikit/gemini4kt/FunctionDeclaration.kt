@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Describes a function, including its name, a description of its purpose or
@@ -14,6 +16,8 @@ import kotlinx.serialization.Serializable
  * of the parameters that the function accepts. This ensures that callers can
  * construct valid calls to the function by adhering to this schema.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class FunctionDeclaration(
     val name: String,
@@ -21,15 +25,37 @@ data class FunctionDeclaration(
     val parameters: Schema,
 )
 
+/**
+ * Represents the function declaration builder.
+ */
 class FunctionDeclarationBuilder {
+    /**
+     * Holds the name.
+     */
     lateinit var name: String
+
+    /**
+     * Holds the description.
+     */
     lateinit var description: String
+
+    /**
+     * Holds the parameters.
+     */
     private var parameters: Schema? = null
 
+    /**
+     * Handles parameters.
+     *
+     * @param init The init.
+     */
     fun parameters(init: SchemaBuilder.() -> Unit) {
         parameters = SchemaBuilder().apply(init).build()
     }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         FunctionDeclaration(
             name,
@@ -38,4 +64,9 @@ class FunctionDeclarationBuilder {
         )
 }
 
+/**
+ * Handles function declaration.
+ *
+ * @param init The init.
+ */
 fun functionDeclaration(init: FunctionDeclarationBuilder.() -> Unit): FunctionDeclaration = FunctionDeclarationBuilder().apply(init).build()

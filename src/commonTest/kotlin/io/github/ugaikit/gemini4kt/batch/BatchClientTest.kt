@@ -21,9 +21,20 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the batch client test.
+ */
 class BatchClientTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Handles create batch.
+     *
+     * @param handler The handler.
+     */
     private fun createBatch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): Batch {
         val client =
             HttpClient(MockEngine) {
@@ -37,8 +48,11 @@ class BatchClientTest {
         return Batch(apiKey = "api-key", client = client)
     }
 
+    /**
+     * Handles create batch sends correct request and parses response.
+     */
     @Test
-    fun `createBatch sends correct request and parses response`() =
+    fun createBatchSendsCorrectRequestAndParsesResponse() =
         runTest {
             val expectedResponse =
                 """
@@ -60,7 +74,7 @@ class BatchClientTest {
 
             val generateContentRequest =
                 GenerateContentRequest(
-                    contents = listOf(Content(parts = listOf(Part(text = "test")))),
+                    contents = arrayOf(Content(parts = arrayOf(Part(text = "test")))),
                 )
             val createBatchRequest =
                 CreateBatchRequest(
@@ -87,8 +101,11 @@ class BatchClientTest {
             assertEquals("JOB_STATE_PENDING", result.metadata?.state)
         }
 
+    /**
+     * Handles get batch parses response correctly.
+     */
     @Test
-    fun `getBatch parses response correctly`() =
+    fun getBatchParsesResponseCorrectly() =
         runTest {
             val expectedResponse =
                 """

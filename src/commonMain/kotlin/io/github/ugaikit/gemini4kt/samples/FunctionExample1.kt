@@ -9,24 +9,32 @@ import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
 import io.github.ugaikit.gemini4kt.getApiKey
 
+/**
+ * Represents the function example1.
+ */
 object FunctionExample1 {
-    suspend fun run() {
-        val gemini = Gemini(getApiKey())
+    /**
+     * Handles run.
+     *
+     * @param gemini The gemini.
+     */
+    suspend fun run(gemini: Gemini? = null) {
+        val client = gemini ?: Gemini(getApiKey())
 
         val exFunction =
             GenerateContentRequest(
                 contents =
-                    listOf(
+                    arrayOf(
                         Content(
                             role = "user",
                             parts =
-                                listOf(
+                                arrayOf(
                                     Part(text = "Which theaters in Mountain View show Barbie movie?"),
                                 ),
                         ),
                     ),
                 tools =
-                    listOf(
+                    arrayOf(
                         Tool(
                             functionDeclarations = getFunctionDeclarations(),
                         ),
@@ -34,7 +42,7 @@ object FunctionExample1 {
             )
 
         println(
-            gemini
+            client
                 .generateContent(
                     exFunction,
                     "gemini-2.5-flash-lite",
@@ -44,6 +52,9 @@ object FunctionExample1 {
         )
     }
 
+    /**
+     * Handles find movies function.
+     */
     private fun findMoviesFunction(): FunctionDeclaration =
         FunctionDeclaration(
             name = "find_movies",
@@ -72,6 +83,9 @@ object FunctionExample1 {
                 ),
         )
 
+    /**
+     * Handles find theaters function.
+     */
     private fun findTheatersFunction(): FunctionDeclaration =
         FunctionDeclaration(
             name = "find_theaters",
@@ -100,6 +114,9 @@ object FunctionExample1 {
                 ),
         )
 
+    /**
+     * Handles get showtimes function.
+     */
     private fun getShowtimesFunction(): FunctionDeclaration =
         FunctionDeclaration(
             name = "get_showtimes",
@@ -136,5 +153,13 @@ object FunctionExample1 {
                 ),
         )
 
-    private fun getFunctionDeclarations(): List<FunctionDeclaration> = listOf(findMoviesFunction(), findTheatersFunction(), getShowtimesFunction())
+    /**
+     * Handles get function declarations.
+     */
+    private fun getFunctionDeclarations(): Array<FunctionDeclaration> =
+        arrayOf(
+            findMoviesFunction(),
+            findTheatersFunction(),
+            getShowtimesFunction(),
+        )
 }

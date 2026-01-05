@@ -18,11 +18,30 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the file search test.
+ */
 class FileSearchTest {
+    /**
+     * Holds the file search.
+     */
     private lateinit var fileSearch: FileSearch
+
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Holds the b url.
+     */
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
 
+    /**
+     * Handles create file search.
+     *
+     * @param handler The handler.
+     */
     private fun createFileSearch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): FileSearch {
         val client =
             HttpClient(MockEngine) {
@@ -36,8 +55,11 @@ class FileSearchTest {
         return FileSearch(apiKey = "test-api-key", client = client)
     }
 
+    /**
+     * Tests test create file search store.
+     */
     @Test
-    fun `test createFileSearchStore`() =
+    fun testCreateFileSearchStore() =
         runTest {
             val request = FileSearchStore(displayName = "Test Store")
             val expectedResponse = FileSearchStore(name = "fileSearchStores/123", displayName = "Test Store")
@@ -55,8 +77,11 @@ class FileSearchTest {
             assertEquals(expectedResponse, result)
         }
 
+    /**
+     * Tests test get file search store.
+     */
     @Test
-    fun `test getFileSearchStore`() =
+    fun testGetFileSearchStore() =
         runTest {
             val storeName = "fileSearchStores/123"
             val expectedResponse = FileSearchStore(name = storeName, displayName = "Test Store")
@@ -74,8 +99,11 @@ class FileSearchTest {
             assertEquals(expectedResponse, result)
         }
 
+    /**
+     * Tests test list file search stores.
+     */
     @Test
-    fun `test listFileSearchStores`() =
+    fun testListFileSearchStores() =
         runTest {
             val expectedResponse =
                 ListFileSearchStoresResponse(
@@ -96,8 +124,11 @@ class FileSearchTest {
             assertEquals(expectedResponse, result)
         }
 
+    /**
+     * Tests test delete file search store.
+     */
     @Test
-    fun `test deleteFileSearchStore`() =
+    fun testDeleteFileSearchStore() =
         runTest {
             val storeName = "fileSearchStores/123"
 
@@ -111,8 +142,11 @@ class FileSearchTest {
             fileSearch.deleteFileSearchStore(storeName, force = true)
         }
 
+    /**
+     * Tests test import file to file search store.
+     */
     @Test
-    fun `test importFileToFileSearchStore`() =
+    fun testImportFileToFileSearchStore() =
         runTest {
             val storeName = "fileSearchStores/123"
             val request = ImportFileRequest(fileName = "files/abc")
@@ -131,8 +165,11 @@ class FileSearchTest {
             assertEquals(expectedResponse, result)
         }
 
+    /**
+     * Tests test get file search store operation.
+     */
     @Test
-    fun `test getFileSearchStoreOperation`() =
+    fun testGetFileSearchStoreOperation() =
         runTest {
             val opName = "operations/import-op"
             val expectedResponse = Operation(name = opName, done = true)

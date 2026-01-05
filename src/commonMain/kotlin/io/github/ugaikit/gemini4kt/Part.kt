@@ -1,6 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * Represents a part of content, which can be one of several types such as text, inline data,
@@ -19,6 +21,8 @@ import kotlinx.serialization.Serializable
  * @property executableCode Information about executable code associated with this part, if any.
  * @property codeExecutionResult Information about code execution result associated with this part, if any.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 @Serializable
 data class Part(
     val text: String? = null,
@@ -30,35 +34,120 @@ data class Part(
     val codeExecutionResult: CodeExecutionResult? = null,
 )
 
+/**
+ * Handles part.
+ *
+ * @param init The init.
+ */
 fun part(init: PartBuilder.() -> Unit): Part {
+    /**
+     * Holds the builder.
+     */
     val builder = PartBuilder()
     builder.init()
     return builder.build()
 }
 
+/**
+ * Represents the part builder.
+ */
 class PartBuilder {
+    /**
+     * Holds the text.
+     */
     private var text: String? = null
+
+    /**
+     * Holds the inline data.
+     */
     private var inlineData: InlineData? = null
+
+    /**
+     * Holds the function call.
+     */
     private var functionCall: FunctionCall? = null
+
+    /**
+     * Holds the function response.
+     */
     private var functionResponse: FunctionResponse? = null
+
+    /**
+     * Holds the file data.
+     */
     private var fileData: FileData? = null
+
+    /**
+     * Holds the executable code.
+     */
     private var executableCode: ExecutableCode? = null
+
+    /**
+     * Holds the code execution result.
+     */
     private var codeExecutionResult: CodeExecutionResult? = null
 
+    /**
+     * Handles text.
+     *
+     * @param init The init.
+     */
     fun text(init: () -> String?) = apply { text = init() }
 
-    fun inlineData(init: InlineDataBuilder.() -> Unit) = apply { inlineData = InlineDataBuilder().apply(init).build() }
+    /**
+     * Handles inline data.
+     *
+     * @param init The init.
+     */
+    fun inlineData(init: InlineDataBuilder.() -> Unit) =
+        apply {
+            inlineData = InlineDataBuilder().apply(init).build()
+        }
 
+    /**
+     * Handles function call.
+     *
+     * @param init The init.
+     */
     fun functionCall(init: FunctionCallBuilder.() -> Unit) = apply { functionCall = FunctionCallBuilder().apply(init).build() }
 
+    /**
+     * Handles function response.
+     *
+     * @param init The init.
+     */
     fun functionResponse(init: () -> FunctionResponse?) = apply { functionResponse = init() }
 
+    /**
+     * Handles file data.
+     *
+     * @param init The init.
+     */
     fun fileData(init: () -> FileData?) = apply { fileData = init() }
 
-    fun executableCode(init: ExecutableCodeBuilder.() -> Unit) = apply { executableCode = ExecutableCodeBuilder().apply(init).build() }
+    /**
+     * Handles executable code.
+     *
+     * @param init The init.
+     */
+    fun executableCode(init: ExecutableCodeBuilder.() -> Unit) =
+        apply {
+            executableCode = ExecutableCodeBuilder().apply(init).build()
+        }
 
-    fun codeExecutionResult(init: CodeExecutionResultBuilder.() -> Unit) = apply { codeExecutionResult = CodeExecutionResultBuilder().apply(init).build() }
+    /**
+     * Handles code execution result.
+     *
+     * @param init The init.
+     */
+    fun codeExecutionResult(init: CodeExecutionResultBuilder.() -> Unit) =
+        apply {
+            codeExecutionResult = CodeExecutionResultBuilder().apply(init).build()
+        }
 
+    /**
+     * Handles build.
+     */
     fun build() =
         Part(
             text = text,

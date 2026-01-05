@@ -12,6 +12,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.collect
 import kotlin.io.encoding.ExperimentalEncodingApi
 
+/**
+ * Represents the live sample.
+ */
 @OptIn(ExperimentalEncodingApi::class)
 object LiveSample {
     /**
@@ -23,18 +26,24 @@ object LiveSample {
     suspend fun run(
         inputAudioBase64: String?,
         onAudioData: (String) -> Unit,
+        gemini: Gemini? = null,
     ) {
         val apiKey = getApiKey()
 
         val liveModel = "gemini-2.5-flash-native-audio-preview-09-2025"
         val config =
             LiveConnectConfig(
-                responseModalities = listOf(Modality.AUDIO),
-                systemInstruction = content { part { text { "You are a helpful assistant and answer in a friendly tone." } } },
+                responseModalities = arrayOf(Modality.AUDIO),
+                systemInstruction =
+                    content {
+                        part {
+                            text { "You are a helpful assistant and answer in a friendly tone." }
+                        }
+                    },
             )
 
-        val gemini = Gemini(apiKey)
-        val liveClient = gemini.getLiveClient(liveModel, config)
+        val client = gemini ?: Gemini(apiKey)
+        val liveClient = client.getLiveClient(liveModel, config)
 
         try {
             val session = liveClient.connect()
@@ -68,9 +77,11 @@ object LiveSample {
             }
 
             session.close()
-        } catch (e: Exception) {
+        } catch (
+            @Suppress("TooGenericExceptionCaught") e: Exception,
+        ) {
             println("Error in LiveSample: ${e.message}")
-            // e.printStackTrace() not available in common
+            throw e
         }
     }
 }

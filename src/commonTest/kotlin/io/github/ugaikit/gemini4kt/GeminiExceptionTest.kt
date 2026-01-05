@@ -7,11 +7,20 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+/**
+ * Represents the gemini exception test.
+ */
 class GeminiExceptionTest {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
 
+    /**
+     * Tests test gemini exception initialization.
+     */
     @Test
-    fun `test GeminiException initialization`() {
+    fun testGeminiExceptionInitialization() {
         val error =
             GeminiError(
                 code = 400,
@@ -24,8 +33,11 @@ class GeminiExceptionTest {
         assertEquals(error, exception.error)
     }
 
+    /**
+     * Tests test gemini error response deserialization.
+     */
     @Test
-    fun `test GeminiErrorResponse deserialization`() {
+    fun testGeminiErrorResponseDeserialization() {
         val jsonString =
             """
             {
@@ -53,17 +65,21 @@ class GeminiExceptionTest {
         assertEquals("API key not valid. Please pass a valid API key.", response.error.message)
         assertEquals("INVALID_ARGUMENT", response.error.status)
         assertNotNull(response.error.details)
-        assertEquals(1, response.error.details?.size)
+        val details = checkNotNull(response.error.details)
+        assertEquals(1, details.size)
 
-        val detail = response.error.details!![0]
+        val detail = details[0]
         assertEquals("type.googleapis.com/google.rpc.ErrorInfo", detail.type)
         assertEquals("API_KEY_INVALID", detail.reason)
         assertEquals("googleapis.com", detail.domain)
         assertEquals("generativelanguage.googleapis.com", detail.metadata?.get("service"))
     }
 
+    /**
+     * Tests test gemini error serialization.
+     */
     @Test
-    fun `test GeminiError serialization`() {
+    fun testGeminiErrorSerialization() {
         val error =
             GeminiError(
                 code = 404,
@@ -84,8 +100,11 @@ class GeminiExceptionTest {
         assertEquals(error, decodedError)
     }
 
+    /**
+     * Tests test gemini error detail with multiple fields.
+     */
     @Test
-    fun `test GeminiErrorDetail with multiple fields`() {
+    fun testGeminiErrorDetailWithMultipleFields() {
         val detail =
             GeminiErrorDetail(
                 type = "type.googleapis.com/google.rpc.QuotaFailure",
@@ -122,8 +141,11 @@ class GeminiExceptionTest {
         assertEquals("https://console.cloud.google.com", decodedDetail.links?.get(0)?.url)
     }
 
+    /**
+     * Tests test gemini error detail empty.
+     */
     @Test
-    fun `test GeminiErrorDetail empty`() {
+    fun testGeminiErrorDetailEmpty() {
         val detail = GeminiErrorDetail()
         assertNull(detail.type)
         assertNull(detail.reason)

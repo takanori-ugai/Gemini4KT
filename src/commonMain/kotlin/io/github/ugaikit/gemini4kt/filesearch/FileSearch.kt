@@ -23,6 +23,9 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+/**
+ * Holds the logger.
+ */
 private val logger = KotlinLogging.logger {}
 
 /**
@@ -35,8 +38,19 @@ class FileSearch(
     private val client: HttpClient? = null,
     private val fileUploadProvider: FileUploadProvider = FileUploadProvider(apiKey),
 ) {
+    /**
+     * Holds the json.
+     */
     private val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Holds the http client.
+     */
     private val httpClient = client ?: createHttpClient(json)
+
+    /**
+     * Holds the b url.
+     */
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
 
     companion object {

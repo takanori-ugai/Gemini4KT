@@ -22,19 +22,47 @@ data class AttributionSourceId(
     val semanticRetrieverChunk: SemanticRetrieverChunk? = null,
 )
 
+/**
+ * Represents the attribution source id builder.
+ */
 class AttributionSourceIdBuilder {
+    /**
+     * Holds the grounding passage.
+     */
     var groundingPassage: GroundingPassageId? = null
+
+    /**
+     * Holds the semantic retriever chunk.
+     */
     var semanticRetrieverChunk: SemanticRetrieverChunk? = null
 
+    /**
+     * Handles grounding passage.
+     *
+     * @param init The init.
+     */
     fun groundingPassage(init: () -> GroundingPassageId?) {
         groundingPassage = init()
     }
 
+    /**
+     * Handles semantic retriever chunk.
+     *
+     * @param init The init.
+     */
     fun semanticRetrieverChunk(init: () -> SemanticRetrieverChunk?) {
         semanticRetrieverChunk = init()
     }
 
+    /**
+     * Handles build.
+     */
     fun build() = AttributionSourceId(groundingPassage, semanticRetrieverChunk)
 }
 
+/**
+ * Handles attribution source id.
+ *
+ * @param init The init.
+ */
 fun attributionSourceId(init: AttributionSourceIdBuilder.() -> Unit): AttributionSourceId = AttributionSourceIdBuilder().apply(init).build()

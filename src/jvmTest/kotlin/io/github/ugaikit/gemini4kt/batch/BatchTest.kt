@@ -19,12 +19,35 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.IOException
 
+/**
+ * Represents the batch test.
+ */
 class BatchTest {
+    /**
+     * Holds the batch.
+     */
     private lateinit var batch: Batch
+
+    /**
+     * Holds the api key.
+     */
     private val apiKey = "test-api-key"
+
+    /**
+     * Holds the b url.
+     */
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
+
+    /**
+     * Holds the base url.
+     */
     private val baseUrl = "$bUrl/models"
 
+    /**
+     * Handles create batch.
+     *
+     * @param handler The handler.
+     */
     private fun createBatch(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): Batch {
         val client =
             HttpClient(MockEngine) {
@@ -38,6 +61,9 @@ class BatchTest {
         return Batch(apiKey = apiKey, client = client)
     }
 
+    /**
+     * Handles create batch.
+     */
     @Test
     fun `createBatch calls getContent with correct parameters`() =
         runTest {
@@ -67,6 +93,9 @@ class BatchTest {
             assertEquals(false, result.done)
         }
 
+    /**
+     * Handles get batch.
+     */
     @Test
     fun `getBatch calls getContent with correct parameters`() =
         runTest {
@@ -86,6 +115,9 @@ class BatchTest {
             assertEquals(true, result.done)
         }
 
+    /**
+     * Handles cancel batch.
+     */
     @Test
     fun `cancelBatch calls getContent with correct parameters`() =
         runTest {
@@ -102,6 +134,9 @@ class BatchTest {
             batch.cancelBatch(name)
         }
 
+    /**
+     * Handles delete batch.
+     */
     @Test
     fun `deleteBatch calls deleteContent with correct parameters`() =
         runTest {
@@ -117,6 +152,9 @@ class BatchTest {
             batch.deleteBatch(name)
         }
 
+    /**
+     * Handles create batch embeddings.
+     */
     @Test
     fun `createBatchEmbeddings calls getContent with correct parameters`() =
         runTest {
@@ -146,6 +184,9 @@ class BatchTest {
             assertEquals(false, result.done)
         }
 
+    /**
+     * Handles list batches.
+     */
     @Test
     fun `listBatches calls getContent with correct parameters`() =
         runTest {
@@ -164,6 +205,9 @@ class BatchTest {
             assertEquals("batches/1", result.operations?.get(0)?.name)
         }
 
+    /**
+     * Handles api.
+     */
     @Test
     fun `API error handling throws GeminiException`() =
         runTest {
@@ -196,17 +240,16 @@ class BatchTest {
             }
         }
 
+    /**
+     * Handles ioexception.
+     */
     @Test
     fun `IOException handling returns empty JSON (or throws depending on impl)`() =
         runTest {
             batch = createBatch { throw IOException("Network error") }
 
-            // Same as original test, expects exception because "" is invalid JSON for BatchJob
-            try {
+            org.junit.jupiter.api.assertThrows<IOException> {
                 batch.getBatch("batches/123")
-                throw AssertionError("Expected Exception was not thrown")
-            } catch (e: Exception) {
-                // Expected
             }
         }
 }

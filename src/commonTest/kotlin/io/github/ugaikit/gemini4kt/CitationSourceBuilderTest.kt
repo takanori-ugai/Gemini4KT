@@ -3,9 +3,15 @@ package io.github.ugaikit.gemini4kt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * Represents the citation source builder test.
+ */
 class CitationSourceBuilderTest {
+    /**
+     * Tests test citation source builder.
+     */
     @Test
-    fun `test CitationSourceBuilder`() {
+    fun testCitationSourceBuilder() {
         val citationSource =
             citationSource {
                 startIndex = 0

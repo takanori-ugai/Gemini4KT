@@ -19,9 +19,20 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.File
 
+/**
+ * Represents the file upload provider impl test.
+ */
 class FileUploadProviderImplTest {
+    /**
+     * Holds the file upload provider.
+     */
     private lateinit var fileUploadProvider: FileUploadProvider
 
+    /**
+     * Handles create file upload provider.
+     *
+     * @param handler The handler.
+     */
     private fun createFileUploadProvider(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): FileUploadProvider {
         val client =
             HttpClient(MockEngine) {
@@ -35,6 +46,9 @@ class FileUploadProviderImplTest {
         return FileUploadProvider(apiKey = "test-api-key", client = client)
     }
 
+    /**
+     * Handles upload.
+     */
     @Test
     fun `upload returns file on success`() =
         runTest {

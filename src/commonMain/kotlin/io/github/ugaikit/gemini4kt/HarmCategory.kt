@@ -1,5 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
+
 /**
  * Enumerates categories of harm that content may be classified under, providing
  * a structured way to identify and categorize potentially harmful or sensitive
@@ -26,6 +29,8 @@ package io.github.ugaikit.gemini4kt
  * @property HARM_CATEGORY_DANGEROUS_CONTENT Categorizes content that is dangerous,
  * promoting activities or behaviors that could lead to harm.
  */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
 enum class HarmCategory {
     HARM_CATEGORY_UNSPECIFIED,
     HARM_CATEGORY_DEROGATORY,

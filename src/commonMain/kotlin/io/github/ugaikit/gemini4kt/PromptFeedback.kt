@@ -18,14 +18,33 @@ data class PromptFeedback(
     val safetyRatings: List<SafetyRating>,
 )
 
+/**
+ * Represents the prompt feedback builder.
+ */
 class PromptFeedbackBuilder {
+    /**
+     * Holds the safety ratings.
+     */
     private val safetyRatings: MutableList<SafetyRating> = mutableListOf()
 
+    /**
+     * Handles safety rating.
+     *
+     * @param init The init.
+     */
     fun safetyRating(init: SafetyRatingBuilder.() -> Unit) {
         safetyRatings.add(SafetyRatingBuilder().apply(init).build())
     }
 
+    /**
+     * Handles build.
+     */
     fun build() = PromptFeedback(safetyRatings)
 }
 
+/**
+ * Handles prompt feedback.
+ *
+ * @param init The init.
+ */
 fun promptFeedback(init: PromptFeedbackBuilder.() -> Unit): PromptFeedback = PromptFeedbackBuilder().apply(init).build()
