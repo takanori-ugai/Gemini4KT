@@ -23,11 +23,13 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 @OptIn(ExperimentalEncodingApi::class)
 object LiveSample {
     /**
-     * Runs the Live Sample.
+     * Executes an interactive live audio session with the Gemini live model.
      *
-     * @param inputAudioBase64 Base64 encoded input audio data (e.g. PCM 16kHz). If null, no audio input is sent.
-     * @param onAudioData Callback to handle received audio data (Base64 encoded string).
-     */
+     * Streams optional Base64-encoded input audio to the model, delivers server-produced inline audio parts to `onAudioData`, waits up to 30 seconds for the model turn to complete, and closes the session.
+     *
+     * @param inputAudioBase64 Base64-encoded input audio (e.g., PCM 16kHz). If `null`, no input audio is sent.
+     * @param onAudioData Callback invoked with Base64-encoded audio data received from the server.
+     * @param gemini Optional Gemini client instance; if `null`, a new client is created using the configured API key.
     suspend fun run(
         inputAudioBase64: String?,
         onAudioData: (String) -> Unit,

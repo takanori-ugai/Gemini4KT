@@ -31,6 +31,12 @@ data class LiveMusicOptions(
     val baseUrl: String = "https://generativelanguage.googleapis.com/",
 )
 
+/**
+ * Builds the WebSocket endpoint URL for the Live Music generative service.
+ *
+ * @param options Configuration containing the base URL and API version.
+ * @return The full WebSocket URL for the BidiGenerateMusic endpoint, including protocol and apiVersion.
+ */
 private fun buildWebSocketUrl(options: LiveMusicOptions): String {
     val baseWithoutSlash = if (options.baseUrl.endsWith("/")) options.baseUrl.dropLast(1) else options.baseUrl
     val wsBase =
@@ -43,6 +49,17 @@ private fun buildWebSocketUrl(options: LiveMusicOptions): String {
     return "$wsBase/ws/google.ai.generativelanguage.${options.apiVersion}.GenerativeService.BidiGenerateMusic"
 }
 
+/**
+ * Parse a received WebSocket text message, mark the handshake complete when a setupComplete
+ * message is received, and forward the parsed `LiveMusicServerMessage` to the incoming channel.
+ *
+ * @param text Raw JSON text received from the WebSocket.
+ * @param handshakeCompleted CompletableDeferred used to signal that the setup handshake has completed;
+ *        completed normally when a `setupComplete` message is observed, or completed exceptionally
+ *        if parsing fails before completion.
+ * @param incomingMessages Channel that receives the decoded `LiveMusicServerMessage`.
+ * @param json Json serializer used to decode the incoming message.
+ */
 private suspend fun processMessage(
     text: String,
     handshakeCompleted: CompletableDeferred<Unit>,
@@ -86,7 +103,11 @@ class LiveMusic(
     private val wsUrl = buildWebSocketUrl(options)
 
     /**
-     * Connects to the Live Music API and sends the initial setup message.
+     * Establishes a WebSocket connection to the Live Music API, sends the initial setup message, awaits handshake completion, and returns an active session.
+     *
+     * The method configures or creates an HttpClient with WebSockets, opens a WebSocket session with authentication headers, launches a listener to process incoming messages, sends the model setup payload, and waits for the server's setup-complete signal before returning.
+     *
+     * @return A LiveMusicSession representing the established WebSocket session and associated resources.
      */
     suspend fun connect(): LiveMusicSession {
         // Use provided client or create a new one.
@@ -257,7 +278,10 @@ class LiveMusicSession(
     fun receive(): Flow<LiveMusicServerMessage> = incomingMessages.receiveAsFlow()
 
     /**
-     * Closes the session.
+     * Closes the WebSocket session and cleans up session resources.
+     *
+     * Cancels the listener coroutine, closes the incoming message channel, and closes the associated
+     * HttpClient if this session owns it.
      */
     suspend fun close() {
         try {
