@@ -10,6 +10,7 @@ import io.github.ugaikit.gemini4kt.SpeechConfig
 import io.github.ugaikit.gemini4kt.Tool
 import io.github.ugaikit.gemini4kt.UrlContextMetadata
 import io.github.ugaikit.gemini4kt.UsageMetadata
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // --- Client Messages ---
@@ -46,6 +47,8 @@ data class BidiGenerateContentClientContent(
  */
 @Serializable
 data class BidiGenerateContentRealtimeInput(
+    @SerialName("media")
+    val media: Blob? = null,
     val mediaChunks: List<Blob>? = null,
     val audio: Blob? = null,
     val video: Blob? = null,

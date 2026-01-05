@@ -25,7 +25,12 @@ import kotlinx.serialization.json.Json
  */
 private val logger = KotlinLogging.logger {}
 
-private suspend fun processMessage(text: String, handshakeCompleted: CompletableDeferred<Unit>, incomingMessages: Channel<BidiGenerateContentServerMessage>, json: Json) {
+private suspend fun processMessage(
+    text: String,
+    handshakeCompleted: CompletableDeferred<Unit>,
+    incomingMessages: Channel<BidiGenerateContentServerMessage>,
+    json: Json,
+) {
     try {
         val message = json.decodeFromString<BidiGenerateContentServerMessage>(text)
 

@@ -43,7 +43,12 @@ private fun buildWebSocketUrl(options: LiveMusicOptions): String {
     return "$wsBase/ws/google.ai.generativelanguage.${options.apiVersion}.GenerativeService.BidiGenerateMusic"
 }
 
-private suspend fun processMessage(text: String, handshakeCompleted: CompletableDeferred<Unit>, incomingMessages: Channel<LiveMusicServerMessage>, json: Json) {
+private suspend fun processMessage(
+    text: String,
+    handshakeCompleted: CompletableDeferred<Unit>,
+    incomingMessages: Channel<LiveMusicServerMessage>,
+    json: Json,
+) {
     try {
         val message = json.decodeFromString<LiveMusicServerMessage>(text)
 
@@ -85,6 +90,7 @@ class LiveMusic(
      */
     suspend fun connect(): LiveMusicSession {
         // Use provided client or create a new one.
+        val ownsClient = client == null
         val httpClient =
             client?.config {
                 install(WebSockets)
@@ -112,22 +118,23 @@ class LiveMusic(
             // Launch a coroutine to listen for messages
             val listenerJob =
                 scope.launch {
-                                                            try {
-                                                                for (frame in session.incoming) {
-                                                                    logger.debug { "Received a frame: ${frame.frameType.name}" }
-                                                                    if (frame is Frame.Text) {
-                                                                        val text = frame.readText()
-                                                                        logger.debug { "Received message: $text" }
-                                                                        processMessage(text, handshakeCompleted, incomingMessages, json)
-                                                                    } else if (frame is Frame.Binary) {
-                                                                        val bytes = frame.data
-                                                                        val text = bytes.toString(Charsets.UTF_8)
-                                                                        logger.debug { "Received binary frame with size: ${bytes.size}" }
-                                                                        logger.debug { "Binary frame content as string: $text" }
-                                                                        processMessage(text, handshakeCompleted, incomingMessages, json)
-                                                                    }
-                                                                }
-                                                            } catch (e: Exception) {                        logger.error(e) { "WebSocket error" }
+                    try {
+                        for (frame in session.incoming) {
+                            logger.debug { "Received a frame: ${frame.frameType.name}" }
+                            if (frame is Frame.Text) {
+                                val text = frame.readText()
+                                logger.debug { "Received message: $text" }
+                                processMessage(text, handshakeCompleted, incomingMessages, json)
+                            } else if (frame is Frame.Binary) {
+                                val bytes = frame.data
+                                val text = bytes.toString(Charsets.UTF_8)
+                                logger.debug { "Received binary frame with size: ${bytes.size}" }
+                                logger.debug { "Binary frame content as string: $text" }
+                                processMessage(text, handshakeCompleted, incomingMessages, json)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        logger.error(e) { "WebSocket error" }
                         incomingMessages.close(e)
                         if (!handshakeCompleted.isCompleted) {
                             handshakeCompleted.completeExceptionally(e)
@@ -158,10 +165,13 @@ class LiveMusic(
                 throw e
             }
 
-            return LiveMusicSession(session, incomingMessages, json, listenerJob)
+            return LiveMusicSession(session, incomingMessages, json, listenerJob, httpClient, ownsClient)
         } catch (e: Exception) {
             logger.error(e) { "Error in connect method" }
             session?.close()
+            if (ownsClient) {
+                httpClient.close()
+            }
             throw e
         }
     }
@@ -175,6 +185,8 @@ class LiveMusicSession(
     private val incomingMessages: Channel<LiveMusicServerMessage>,
     private val json: Json,
     private val listenerJob: Job,
+    private val httpClient: HttpClient,
+    private val ownsClient: Boolean,
 ) {
     /**
      * Sets inputs to steer music generation. Updates the session's current weighted prompts.
@@ -248,8 +260,14 @@ class LiveMusicSession(
      * Closes the session.
      */
     suspend fun close() {
-        session.close()
-        listenerJob.cancel()
-        incomingMessages.close()
+        try {
+            session.close()
+        } finally {
+            listenerJob.cancel()
+            incomingMessages.close()
+            if (ownsClient) {
+                httpClient.close()
+            }
+        }
     }
 }

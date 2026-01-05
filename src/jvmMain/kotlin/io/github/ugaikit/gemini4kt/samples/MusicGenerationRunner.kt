@@ -32,7 +32,7 @@ object MusicGenerationRunner {
                 onAudioData = { base64Data ->
                     val decoded = Base64.getDecoder().decode(base64Data)
                     pcmData.write(decoded)
-                }
+                },
             )
 
             if (pcmData.size() > 0) {

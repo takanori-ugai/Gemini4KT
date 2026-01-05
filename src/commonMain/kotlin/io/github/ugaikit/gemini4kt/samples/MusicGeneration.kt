@@ -6,7 +6,6 @@ import io.github.ugaikit.gemini4kt.live.music.LiveMusicGenerationConfig
 import io.github.ugaikit.gemini4kt.live.music.LiveMusicSession
 import io.github.ugaikit.gemini4kt.live.music.WeightedPrompt
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -41,18 +40,20 @@ object MusicGeneration {
             println("Connected to Music API.")
 
             // 1. Set Weighted Prompts
-            val prompts = listOf(
-                WeightedPrompt("Upbeat electronic dance music with a driving beat.", 0.8),
-                WeightedPrompt("Hints of classical violin.", 0.2)
-            )
+            val prompts =
+                listOf(
+                    WeightedPrompt("Upbeat electronic dance music with a driving beat.", 0.8),
+                    WeightedPrompt("Hints of classical violin.", 0.2),
+                )
             session.setWeightedPrompts(prompts)
             println("Sent weighted prompts.")
 
             // 2. Set Configuration
-            val config = LiveMusicGenerationConfig(
-                temperature = 0.5,
-                bpm = 120
-            )
+            val config =
+                LiveMusicGenerationConfig(
+                    temperature = 0.5,
+                    bpm = 120,
+                )
             session.setMusicGenerationConfig(config)
             println("Sent generation config.")
 
@@ -91,10 +92,9 @@ object MusicGeneration {
                 session.close()
                 println("Session closed.")
             }
-
         } catch (e: Exception) {
             println("Error in MusicGeneration: ${e.message}")
-            e.printStackTrace()
+            println(e.stackTraceToString())
         }
     }
 }
