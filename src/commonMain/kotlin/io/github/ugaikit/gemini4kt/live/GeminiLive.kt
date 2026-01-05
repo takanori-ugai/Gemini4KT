@@ -14,6 +14,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -26,43 +27,6 @@ import kotlinx.serialization.json.Json
  * Holds the logger.
  */
 private val logger = KotlinLogging.logger {}
-
-/**
- * Parse incoming JSON into a BidiGenerateContentServerMessage, complete the handshake when a
- * `setupComplete` message arrives, and forward the parsed message to the provided channel.
- *
- * @param text Raw JSON text received from the WebSocket.
- * @param handshakeCompleted CompletableDeferred that signals completion of the initial setup
- * handshake; completed on `setupComplete` or exceptionally on parse errors before completion.
- * @param incomingMessages Channel that receives the decoded BidiGenerateContentServerMessage.
- * @param json Json serializer/deserializer used to decode the incoming text.
- */
-private suspend fun processMessage(
-    text: String,
-    handshakeCompleted: CompletableDeferred<Unit>,
-    incomingMessages: Channel<BidiGenerateContentServerMessage>,
-    json: Json,
-) {
-    try {
-        val message = json.decodeFromString<BidiGenerateContentServerMessage>(text)
-
-        // Check for handshake completion on the first relevant message
-        if (!handshakeCompleted.isCompleted) {
-            if (message.setupComplete != null) {
-                handshakeCompleted.complete(Unit)
-            } else {
-                logger.warn { "Received message before SetupComplete: $message" }
-            }
-        }
-
-        incomingMessages.send(message)
-    } catch (e: Exception) {
-        logger.error(e) { "Failed to parse message" }
-        if (!handshakeCompleted.isCompleted) {
-            handshakeCompleted.completeExceptionally(e)
-        }
-    }
-}
 
 /**
  * A client for interacting with the Gemini Live API via WebSockets.
@@ -135,13 +99,25 @@ class GeminiLive(
                             if (frame is Frame.Text) {
                                 val text = frame.readText()
                                 logger.debug { "Received message: $text" }
-                                processMessage(text, handshakeCompleted, incomingMessages, json)
+                                processHandshakeMessage(
+                                    text,
+                                    handshakeCompleted,
+                                    incomingMessages,
+                                    json,
+                                    logger,
+                                ) { message -> message.setupComplete != null }
                             } else if (frame is Frame.Binary) {
                                 val bytes = frame.data
                                 val text = bytes.decodeToString()
                                 logger.debug { "Received binary frame with size: ${bytes.size}" }
                                 logger.debug { "Binary frame content as string: $text" }
-                                processMessage(text, handshakeCompleted, incomingMessages, json)
+                                processHandshakeMessage(
+                                    text,
+                                    handshakeCompleted,
+                                    incomingMessages,
+                                    json,
+                                    logger,
+                                ) { message -> message.setupComplete != null }
                             }
                         }
                     } catch (e: Exception) {
@@ -273,7 +249,7 @@ class GeminiLiveSession(
      */
     suspend fun close() {
         session.close()
-        listenerJob.cancel()
+        listenerJob.cancelAndJoin()
         incomingMessages.close()
     }
 }

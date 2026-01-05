@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.live.music
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.ugaikit.gemini4kt.live.processHandshakeMessage
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
@@ -49,43 +50,6 @@ private fun buildWebSocketUrl(options: LiveMusicOptions): String {
             else -> "wss://$baseWithoutSlash"
         }
     return "$wsBase/ws/google.ai.generativelanguage.${options.apiVersion}.GenerativeService.BidiGenerateMusic"
-}
-
-/**
- * Parse a received WebSocket text message, mark the handshake complete when a setupComplete
- * message is received, and forward the parsed `LiveMusicServerMessage` to the incoming channel.
- *
- * @param text Raw JSON text received from the WebSocket.
- * @param handshakeCompleted CompletableDeferred used to signal that the setup handshake has completed;
- *        completed normally when a `setupComplete` message is observed, or completed exceptionally
- *        if parsing fails before completion.
- * @param incomingMessages Channel that receives the decoded `LiveMusicServerMessage`.
- * @param json Json serializer used to decode the incoming message.
- */
-private suspend fun processMessage(
-    text: String,
-    handshakeCompleted: CompletableDeferred<Unit>,
-    incomingMessages: Channel<LiveMusicServerMessage>,
-    json: Json,
-) {
-    try {
-        val message = json.decodeFromString<LiveMusicServerMessage>(text)
-
-        if (!handshakeCompleted.isCompleted) {
-            if (message.setupComplete != null) {
-                handshakeCompleted.complete(Unit)
-            } else {
-                logger.warn { "Received message before SetupComplete: $message" }
-            }
-        }
-
-        incomingMessages.send(message)
-    } catch (e: Exception) {
-        logger.error(e) { "Failed to parse message" }
-        if (!handshakeCompleted.isCompleted) {
-            handshakeCompleted.completeExceptionally(e)
-        }
-    }
 }
 
 /**
@@ -150,13 +114,29 @@ class LiveMusic(
                             if (frame is Frame.Text) {
                                 val text = frame.readText()
                                 logger.debug { "Received message: $text" }
-                                processMessage(text, handshakeCompleted, incomingMessages, json)
+                                processHandshakeMessage(
+                                    text,
+                                    handshakeCompleted,
+                                    incomingMessages,
+                                    json,
+                                    logger,
+                                ) { message: LiveMusicServerMessage ->
+                                    message.setupComplete != null
+                                }
                             } else if (frame is Frame.Binary) {
                                 val bytes = frame.data
                                 val text = bytes.decodeToString()
                                 logger.debug { "Received binary frame with size: ${bytes.size}" }
                                 logger.debug { "Binary frame content as string: $text" }
-                                processMessage(text, handshakeCompleted, incomingMessages, json)
+                                processHandshakeMessage(
+                                    text,
+                                    handshakeCompleted,
+                                    incomingMessages,
+                                    json,
+                                    logger,
+                                ) { message: LiveMusicServerMessage ->
+                                    message.setupComplete != null
+                                }
                             }
                         }
                     } catch (e: Exception) {

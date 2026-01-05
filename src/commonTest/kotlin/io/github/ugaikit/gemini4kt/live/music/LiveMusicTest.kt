@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
@@ -263,6 +264,6 @@ class LiveMusicTest {
 
             assertTrue(job.isCancelled)
             assertTrue(incoming.isClosedForSend)
-            assertTrue(!client.closed.isCompleted)
+            assertFalse(client.closed.isCompleted)
         }
 }

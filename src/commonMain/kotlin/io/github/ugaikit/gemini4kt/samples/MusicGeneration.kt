@@ -17,13 +17,15 @@ object MusicGeneration {
      *
      * @param onAudioData Callback to handle received audio data (Base64 encoded string).
      * @param liveMusicClient Optional LiveMusic client for testing.
+     * @param apiKey Optional API key override; when null, the platform API key lookup is used.
      */
     suspend fun run(
         onAudioData: (String) -> Unit,
         liveMusicClient: LiveMusic? = null,
+        apiKey: String? = null,
     ) {
-        val apiKey = getApiKey()
-        if (apiKey.isBlank()) {
+        val resolvedApiKey = apiKey ?: getApiKey()
+        if (resolvedApiKey.isBlank()) {
             println("GEMINI_API_KEY not found. Skipping API call.")
             return
         }
@@ -32,7 +34,7 @@ object MusicGeneration {
         // Assuming "models/lyria-realtime-exp" based on the TypeScript example.
         val musicModel = "lyria-realtime-exp"
 
-        val client = liveMusicClient ?: LiveMusic(apiKey, musicModel)
+        val client = liveMusicClient ?: LiveMusic(resolvedApiKey, musicModel)
 
         try {
             val session: LiveMusicSession = client.connect()

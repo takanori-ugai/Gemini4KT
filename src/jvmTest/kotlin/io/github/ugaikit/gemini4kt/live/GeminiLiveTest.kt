@@ -1,13 +1,11 @@
 package io.github.ugaikit.gemini4kt.live
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.reflect.full.callSuspend
-import kotlin.reflect.jvm.isAccessible
-import kotlin.reflect.jvm.kotlinFunction
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -18,6 +16,7 @@ class GeminiLiveTest {
             ignoreUnknownKeys = true
             encodeDefaults = true
         }
+    private val logger = KotlinLogging.logger {}
 
     @Test
     fun processMessageCompletesHandshakeOnSetupComplete() =
@@ -74,19 +73,12 @@ class GeminiLiveTest {
         handshakeCompleted: CompletableDeferred<Unit>,
         incoming: Channel<BidiGenerateContentServerMessage>,
     ) {
-        val clazz = Class.forName("io.github.ugaikit.gemini4kt.live.GeminiLiveKt")
-        val method =
-            clazz.getDeclaredMethod(
-                "processMessage",
-                String::class.java,
-                CompletableDeferred::class.java,
-                Channel::class.java,
-                Json::class.java,
-                kotlin.coroutines.Continuation::class.java,
-            )
-        method.isAccessible = true
-        val kfun = checkNotNull(method.kotlinFunction)
-        kfun.isAccessible = true
-        kfun.callSuspend(text, handshakeCompleted, incoming, json)
+        processHandshakeMessage(
+            text = text,
+            handshakeCompleted = handshakeCompleted,
+            incomingMessages = incoming,
+            json = json,
+            logger = logger,
+        ) { message -> message.setupComplete != null }
     }
 }
