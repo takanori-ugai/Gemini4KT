@@ -119,7 +119,7 @@ class LiveMusic(
                 install(WebSockets)
             }
 
-        val urlString = "$wsUrl?key=$apiKey"
+        val urlString = wsUrl
 
         logger.info { "Connecting to WebSocket at $urlString" }
 

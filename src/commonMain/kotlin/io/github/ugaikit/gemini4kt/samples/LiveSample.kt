@@ -11,8 +11,9 @@ import io.github.ugaikit.gemini4kt.live.Blob
 import io.github.ugaikit.gemini4kt.live.LiveConnectConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -30,108 +31,117 @@ object LiveSample {
      * @param inputAudioBase64 Base64-encoded input audio (e.g., PCM 16kHz). If `null`, no input audio is sent.
      * @param onAudioData Callback invoked with Base64-encoded audio data received from the server.
      * @param gemini Optional Gemini client instance; if `null`, a new client is created using the configured API key.
+     */
     suspend fun run(
         inputAudioBase64: String?,
         onAudioData: (String) -> Unit,
         gemini: Gemini? = null,
-    ) {
-        val apiKey = getApiKey()
+    ): Unit =
+        coroutineScope {
+            val apiKey = getApiKey()
 
-        val liveModel = "gemini-2.5-flash-native-audio-preview-12-2025"
-        val config =
-            LiveConnectConfig(
-                responseModalities = arrayOf(Modality.AUDIO),
-                systemInstruction =
-                    content {
-                        part {
-                            text { "You are a helpful assistant and answer in a friendly tone." }
-                        }
-                    },
-            )
-
-        val client = gemini ?: Gemini(apiKey)
-        val liveClient = client.getLiveClient(liveModel, config)
-
-        try {
-            val session = liveClient.connect()
-            val turnCompleted = CompletableDeferred<Unit>()
-
-            val receiveJob =
-                CoroutineScope(kotlinx.coroutines.Dispatchers.Default).launch {
-                    session.receive().collect { msg ->
-                        println(msg)
-                        msg.serverContent?.modelTurn?.parts?.forEach { part ->
-                            part.inlineData?.let {
-                                if (it.mimeType.startsWith("audio")) {
-                                    onAudioData(it.data)
-                                }
+            val liveModel = "gemini-2.5-flash-native-audio-preview-12-2025"
+            val config =
+                LiveConnectConfig(
+                    responseModalities = arrayOf(Modality.AUDIO),
+                    systemInstruction =
+                        content {
+                            part {
+                                text { "You are a helpful assistant and answer in a friendly tone." }
                             }
-                        }
-                        if (msg.serverContent?.turnComplete == true) {
-                            println("Turn complete")
-                            turnCompleted.complete(Unit)
-                        }
-                    }
-                }
+                        },
+                )
 
-            val audioProvided =
-                if (inputAudioBase64 != null) {
-                    session.sendRealtimeInput(
-                        BidiGenerateContentRealtimeInput(
-                            media =
-                                Blob(
-                                    data = inputAudioBase64,
-                                    mimeType = "audio/pcm;rate=16000",
-                                ),
-                        ),
-                    )
-                    true
-                } else {
-                    println("No input audio provided.")
-                    false
-                }
+            val client = gemini ?: Gemini(apiKey)
+            val liveClient = client.getLiveClient(liveModel, config)
 
-            // Let the server know audio streaming is finished, then close the turn so it can respond.
-            if (audioProvided) {
-                session.sendRealtimeInput(BidiGenerateContentRealtimeInput(audioStreamEnd = true))
-            }
-            session.sendClientContent(
-                BidiGenerateContentClientContent(
-                    turns =
-                        listOf(
-                            content {
-                                role = "user"
-                                part {
-                                    text {
-                                        if (audioProvided) {
-                                            "Audio provided; please respond."
-                                        } else {
-                                            "Hello! Please respond."
+            try {
+                val session = liveClient.connect()
+                try {
+                    val turnCompleted = CompletableDeferred<Unit>()
+
+                    val receiveJob =
+                        launch(Dispatchers.Default) {
+                            session.receive().collect { msg ->
+                                println(msg)
+                                msg.serverContent?.modelTurn?.parts?.forEach { part ->
+                                    part.inlineData?.let {
+                                        if (it.mimeType.startsWith("audio")) {
+                                            onAudioData(it.data)
                                         }
                                     }
                                 }
-                            },
-                        ),
-                    turnComplete = true,
-                ),
-            )
+                                if (msg.serverContent?.turnComplete == true) {
+                                    println("Turn complete")
+                                    turnCompleted.complete(Unit)
+                                }
+                            }
+                        }
 
-            val completed =
-                withTimeoutOrNull(30_000) {
-                    turnCompleted.await()
+                    val audioProvided =
+                        if (inputAudioBase64 != null) {
+                            session.sendRealtimeInput(
+                                BidiGenerateContentRealtimeInput(
+                                    media =
+                                        Blob(
+                                            data = inputAudioBase64,
+                                            mimeType = "audio/pcm;rate=16000",
+                                        ),
+                                ),
+                            )
+                            true
+                        } else {
+                            println("No input audio provided.")
+                            false
+                        }
+
+                    // Let the server know audio streaming is finished, then close the turn so it can respond.
+                    if (audioProvided) {
+                        session.sendRealtimeInput(BidiGenerateContentRealtimeInput(audioStreamEnd = true))
+                    }
+                    session.sendClientContent(
+                        BidiGenerateContentClientContent(
+                            turns =
+                                listOf(
+                                    content {
+                                        role = "user"
+                                        part {
+                                            text {
+                                                if (audioProvided) {
+                                                    "Audio provided; please respond."
+                                                } else {
+                                                    "Hello! Please respond."
+                                                }
+                                            }
+                                        }
+                                    },
+                                ),
+                            turnComplete = true,
+                        ),
+                    )
+
+                    val completed =
+                        withTimeoutOrNull(30_000) {
+                            turnCompleted.await()
+                        }
+                    if (completed == null) {
+                        println("Timed out waiting for server turnComplete; closing session.")
+                    }
+                    receiveJob.cancelAndJoin()
+                } catch (e: CancellationException) {
+                    println("LiveSample cancelled: ${e.message}")
+                    throw e
+                } catch (
+                    @Suppress("TooGenericExceptionCaught") e: Exception,
+                ) {
+                    println("Error in LiveSample: ${e.message}")
+                    throw e
+                } finally {
+                    session.close()
                 }
-            if (completed == null) {
-                println("Timed out waiting for server turnComplete; closing session.")
+            } catch (e: CancellationException) {
+                println("LiveSample cancelled: ${e.message}")
+                throw e
             }
-            receiveJob.cancelAndJoin()
-            session.close()
-        } catch (e: CancellationException) {
-            println("LiveSample cancelled: ${e.message}")
-        } catch (
-            @Suppress("TooGenericExceptionCaught") e: Exception,
-        ) {
-            println("Error in LiveSample: ${e.message}")
-            throw e
         }
-    }
 }

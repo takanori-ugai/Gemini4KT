@@ -5,6 +5,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.header
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
@@ -91,7 +92,7 @@ class GeminiLive(
      * If `setup` is null, a setup message is constructed from the instance `model` and `config` (including generationConfig, systemInstruction, and tools) and sent instead.
      *
      * @param setup Optional explicit setup message to send as the initial client payload; when omitted, a setup is derived from the instance configuration.
-     * @return A GeminiLiveSession representing the established WebSocket session, the incoming message channel, the JSON serializer, and the listener job. 
+     * @return A GeminiLiveSession representing the established WebSocket session, the incoming message channel, the JSON serializer, and the listener job.
      */
     suspend fun connect(setup: BidiGenerateContentSetup? = null): GeminiLiveSession {
         // Use provided client or create a new one.
@@ -102,13 +103,17 @@ class GeminiLive(
                 install(WebSockets)
             }
 
-        val urlString = "$wsUrl?key=$apiKey"
+        val urlString = wsUrl
 
         logger.info { "Connecting to WebSocket at $urlString" }
 
         var session: DefaultClientWebSocketSession? = null
         try {
-            session = httpClient.webSocketSession(urlString)
+            session =
+                httpClient.webSocketSession(urlString) {
+                    header("x-goog-api-key", apiKey)
+                    header("x-goog-api-client", "gemini4kt")
+                }
 
             val incomingMessages = Channel<BidiGenerateContentServerMessage>(Channel.UNLIMITED)
             val scope = CoroutineScope(Dispatchers.Default)
