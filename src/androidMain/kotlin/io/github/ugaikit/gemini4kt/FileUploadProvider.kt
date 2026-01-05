@@ -85,7 +85,15 @@ actual class FileUploadProvider actual constructor(
     ): Operation {
         val javaFile = File(file.toString())
         val baseUrl = "https://generativelanguage.googleapis.com"
-        val uploadUrl = getFileSearchStoreUploadUrl(baseUrl, apiKey, fileSearchStoreName, mimeType, javaFile.length(), uploadRequest)
+        val uploadUrl =
+            getFileSearchStoreUploadUrl(
+                baseUrl,
+                apiKey,
+                fileSearchStoreName,
+                mimeType,
+                javaFile.length(),
+                uploadRequest,
+            )
         return uploadFileToSearchStore(uploadUrl, javaFile, mimeType)
     }
 

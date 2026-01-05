@@ -24,7 +24,10 @@ class GeminiLiveTest {
         runTest {
             val handshakeCompleted = CompletableDeferred<Unit>()
             val incoming = Channel<BidiGenerateContentServerMessage>(1)
-            val msg = BidiGenerateContentServerMessage(setupComplete = BidiGenerateContentSetupComplete())
+            val msg =
+                BidiGenerateContentServerMessage(
+                    setupComplete = BidiGenerateContentSetupComplete(),
+                )
             val text = json.encodeToString(msg)
 
             callProcessMessage(text, handshakeCompleted, incoming)
@@ -39,7 +42,10 @@ class GeminiLiveTest {
         runTest {
             val handshakeCompleted = CompletableDeferred<Unit>()
             val incoming = Channel<BidiGenerateContentServerMessage>(1)
-            val msg = BidiGenerateContentServerMessage(serverContent = BidiGenerateContentServerContent(turnComplete = true))
+            val msg =
+                BidiGenerateContentServerMessage(
+                    serverContent = BidiGenerateContentServerContent(turnComplete = true),
+                )
             val text = json.encodeToString(msg)
 
             callProcessMessage(text, handshakeCompleted, incoming)

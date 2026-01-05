@@ -7,4 +7,7 @@ import kotlin.reflect.KFunction
  *
  * @param function The function.
  */
-actual fun buildFunctionDeclaration(function: KFunction<*>): FunctionDeclaration = throw UnsupportedOperationException("buildFunctionDeclaration is not supported in native")
+actual fun buildFunctionDeclaration(function: KFunction<*>): FunctionDeclaration =
+    throw UnsupportedOperationException(
+        "buildFunctionDeclaration is not supported in native",
+    )

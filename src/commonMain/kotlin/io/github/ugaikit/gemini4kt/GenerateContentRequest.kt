@@ -162,4 +162,7 @@ class GenerateContentRequestBuilder {
  *
  * @param init The init.
  */
-fun generateContentRequest(init: GenerateContentRequestBuilder.() -> Unit): GenerateContentRequest = GenerateContentRequestBuilder().apply(init).build()
+fun generateContentRequest(init: GenerateContentRequestBuilder.() -> Unit): GenerateContentRequest =
+    GenerateContentRequestBuilder()
+        .apply(init)
+        .build()

@@ -260,7 +260,9 @@ class MockWebSocketSession : WebSocketSession {
      *
      * @param reason The reason.
      */
-    suspend fun close(reason: io.ktor.websocket.CloseReason) { // Unused parameter fixed by removing or suppressing. But here we override a deprecated member?
+    suspend fun close(reason: io.ktor.websocket.CloseReason) {
+        // Unused parameter fixed by removing or suppressing. But here we override a deprecated
+        // member?
         // CloseReason is parameter name. If I change to `_`, it might clash if it's an interface override.
         // Wait, `WebSocketSession` inherits `WebSocketSession` -> `CoroutineScope`?
         // `WebSocketSession` interface has `close(reason: CloseReason)`?

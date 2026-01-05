@@ -28,10 +28,12 @@ import kotlinx.serialization.json.Json
 private val logger = KotlinLogging.logger {}
 
 /**
- * Parse an incoming JSON text into a BidiGenerateContentServerMessage, complete the setup handshake when a `setupComplete` message is seen, and forward the parsed message to the provided channel.
+ * Parse incoming JSON into a BidiGenerateContentServerMessage, complete the handshake when a
+ * `setupComplete` message arrives, and forward the parsed message to the provided channel.
  *
  * @param text Raw JSON text received from the WebSocket.
- * @param handshakeCompleted CompletableDeferred used to signal completion of the initial setup handshake; if the first relevant message contains `setupComplete`, this will be completed, and if a parse error occurs before handshake completion it will be completed exceptionally.
+ * @param handshakeCompleted CompletableDeferred that signals completion of the initial setup
+ * handshake; completed on `setupComplete` or exceptionally on parse errors before completion.
  * @param incomingMessages Channel that receives the decoded BidiGenerateContentServerMessage.
  * @param json Json serializer/deserializer used to decode the incoming text.
  */
@@ -85,15 +87,20 @@ class GeminiLive(
      * Holds the ws url.
      */
     private val wsUrl =
-        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent"
+        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha" +
+            ".GenerativeService.BidiGenerateContent"
 
     /**
-     * Opens a WebSocket connection to the Gemini Live API, sends the initial setup message, and establishes a session for ongoing bidirectional communication.
+     * Opens a WebSocket connection to the Gemini Live API, sends the initial setup message, and
+     * establishes a session for ongoing bidirectional communication.
      *
-     * If `setup` is null, a setup message is constructed from the instance `model` and `config` (including generationConfig, systemInstruction, and tools) and sent instead.
+     * If `setup` is null, a setup message is constructed from the instance `model` and `config`
+     * (including generationConfig, systemInstruction, and tools) and sent instead.
      *
-     * @param setup Optional explicit setup message to send as the initial client payload; when omitted, a setup is derived from the instance configuration.
-     * @return A GeminiLiveSession representing the established WebSocket session, the incoming message channel, the JSON serializer, and the listener job.
+     * @param setup Optional explicit setup message to send as the initial client payload; when
+     * omitted, a setup is derived from the instance configuration.
+     * @return A GeminiLiveSession representing the established WebSocket session, the incoming
+     * message channel, the JSON serializer, and the listener job.
      */
     suspend fun connect(setup: BidiGenerateContentSetup? = null): GeminiLiveSession {
         // Use provided client or create a new one.

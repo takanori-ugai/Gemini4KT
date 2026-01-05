@@ -25,7 +25,10 @@ class MusicGenerationJvmTest {
         runTest {
             val session = mockk<LiveMusicSession>(relaxed = true)
             val chunk = AudioChunk(data = "audio-data", mimeType = "audio/pcm")
-            val serverMessage = LiveMusicServerMessage(serverContent = LiveMusicServerContent(audioChunks = listOf(chunk)))
+            val serverMessage =
+                LiveMusicServerMessage(
+                    serverContent = LiveMusicServerContent(audioChunks = listOf(chunk)),
+                )
             coEvery { session.receive() } returns flowOf(serverMessage)
 
             val client = mockk<LiveMusic>()
@@ -33,7 +36,10 @@ class MusicGenerationJvmTest {
 
             val received = mutableListOf<String>()
 
-            MusicGeneration.run(onAudioData = { received.add(it) }, liveMusicClient = client)
+            MusicGeneration.run(
+                onAudioData = { received.add(it) },
+                liveMusicClient = client,
+            )
 
             assertEquals(listOf("audio-data"), received)
             coVerify(exactly = 1) { session.setWeightedPrompts(any()) }

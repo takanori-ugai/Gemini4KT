@@ -183,7 +183,8 @@ data class InteractionUsage(
     @SerialName("total_output_tokens") val totalOutputTokens: Int? = null,
     @SerialName("output_tokens_by_modality") val outputTokensByModality: Array<InteractionModalityTokenCount>? = null,
     @SerialName("total_tool_use_tokens") val totalToolUseTokens: Int? = null,
-    @SerialName("tool_use_tokens_by_modality") val toolUseTokensByModality: Array<InteractionModalityTokenCount>? = null,
+    @SerialName("tool_use_tokens_by_modality")
+    val toolUseTokensByModality: Array<InteractionModalityTokenCount>? = null,
     @SerialName("total_reasoning_tokens") val totalReasoningTokens: Int? = null,
     @SerialName("total_tokens") val totalTokens: Int? = null,
 ) {

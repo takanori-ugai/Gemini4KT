@@ -105,9 +105,12 @@ class LiveMusic(
     private val wsUrl = buildWebSocketUrl(options)
 
     /**
-     * Establishes a WebSocket connection to the Live Music API, sends the initial setup message, awaits handshake completion, and returns an active session.
+     * Establishes a WebSocket connection to the Live Music API, sends the initial setup message,
+     * awaits handshake completion, and returns an active session.
      *
-     * The method configures or creates an HttpClient with WebSockets, opens a WebSocket session with authentication headers, launches a listener to process incoming messages, sends the model setup payload, and waits for the server's setup-complete signal before returning.
+     * The method configures or creates an HttpClient with WebSockets, opens a WebSocket session
+     * with authentication headers, launches a listener to process incoming messages, sends the
+     * model setup payload, and waits for the server's setup-complete signal before returning.
      *
      * @return A LiveMusicSession representing the established WebSocket session and associated resources.
      */

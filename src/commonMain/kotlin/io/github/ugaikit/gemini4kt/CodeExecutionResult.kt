@@ -43,4 +43,7 @@ class CodeExecutionResultBuilder {
  *
  * @param init The init.
  */
-fun codeExecutionResult(init: CodeExecutionResultBuilder.() -> Unit): CodeExecutionResult = CodeExecutionResultBuilder().apply(init).build()
+fun codeExecutionResult(init: CodeExecutionResultBuilder.() -> Unit): CodeExecutionResult =
+    CodeExecutionResultBuilder()
+        .apply(init)
+        .build()

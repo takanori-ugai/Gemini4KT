@@ -65,4 +65,7 @@ class AttributionSourceIdBuilder {
  *
  * @param init The init.
  */
-fun attributionSourceId(init: AttributionSourceIdBuilder.() -> Unit): AttributionSourceId = AttributionSourceIdBuilder().apply(init).build()
+fun attributionSourceId(init: AttributionSourceIdBuilder.() -> Unit): AttributionSourceId =
+    AttributionSourceIdBuilder()
+        .apply(init)
+        .build()

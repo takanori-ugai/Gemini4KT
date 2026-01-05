@@ -46,4 +46,7 @@ class GroundingPassageIdBuilder {
  *
  * @param init The init.
  */
-fun groundingPassageId(init: GroundingPassageIdBuilder.() -> Unit): GroundingPassageId = GroundingPassageIdBuilder().apply(init).build()
+fun groundingPassageId(init: GroundingPassageIdBuilder.() -> Unit): GroundingPassageId =
+    GroundingPassageIdBuilder()
+        .apply(init)
+        .build()

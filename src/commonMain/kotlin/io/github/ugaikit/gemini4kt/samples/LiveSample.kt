@@ -41,7 +41,9 @@ object LiveSample {
     /**
      * Executes an interactive live audio session with the Gemini live model.
      *
-     * Streams optional Base64-encoded input audio to the model, delivers server-produced inline audio parts to `onAudioData`, waits up to 30 seconds for the model turn to complete, and closes the session.
+     * Streams optional Base64-encoded input audio to the model, delivers server-produced inline
+     * audio parts to `onAudioData`, waits up to 30 seconds for the model turn to complete, and
+     * closes the session.
      *
      * @param inputAudioBase64 Base64-encoded input audio (e.g., PCM 16kHz). If `null`, no input audio is sent.
      * @param onAudioData Callback invoked with Base64-encoded audio data received from the server.
