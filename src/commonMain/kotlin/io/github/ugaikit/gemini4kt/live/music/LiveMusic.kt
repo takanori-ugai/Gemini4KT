@@ -127,7 +127,7 @@ class LiveMusic(
                                 processMessage(text, handshakeCompleted, incomingMessages, json)
                             } else if (frame is Frame.Binary) {
                                 val bytes = frame.data
-                                val text = bytes.toString(Charsets.UTF_8)
+                                val text = bytes.decodeToString()
                                 logger.debug { "Received binary frame with size: ${bytes.size}" }
                                 logger.debug { "Binary frame content as string: $text" }
                                 processMessage(text, handshakeCompleted, incomingMessages, json)
