@@ -51,7 +51,7 @@ class GeminiLive(
      * Holds the ws url.
      */
     private val wsUrl =
-        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha" +
+        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta" +
             ".GenerativeService.BidiGenerateContent"
 
     /**
