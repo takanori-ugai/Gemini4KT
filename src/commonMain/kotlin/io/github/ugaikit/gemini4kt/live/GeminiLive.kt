@@ -2,6 +2,7 @@ package io.github.ugaikit.gemini4kt.live
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.ugaikit.gemini4kt.X_GOOG_API_CLIENT
+import io.github.ugaikit.gemini4kt.live.decodeBinaryFrame
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
@@ -107,14 +108,8 @@ class GeminiLive(
                                 when (frame) {
                                     is Frame.Text -> frame.readText()
                                     is Frame.Binary -> {
-                                        val bytes = frame.data
-                                        logger.debug { "Received binary frame with size: ${bytes.size}" }
-                                        try {
-                                            bytes.decodeToString()
-                                        } catch (e: Exception) {
-                                            logger.error(e) { "Failed to decode binary frame as UTF-8" }
-                                            continue
-                                        }
+                                        val decoded = decodeBinaryFrame(frame, logger) ?: continue
+                                        decoded
                                     }
                                     else -> continue
                                 }

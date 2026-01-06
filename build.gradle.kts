@@ -2,9 +2,9 @@ import com.vanniktech.maven.publish.SonatypeHost
 import io.gitlab.arturbosch.detekt.Detekt
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinAndroidTarget
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExec
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinAndroidTarget
 
 plugins {
     kotlin("multiplatform") version "2.3.0"
@@ -17,6 +17,7 @@ plugins {
     id("com.github.spotbugs") version "6.4.8"
     id("com.diffplug.spotless") version "8.1.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    id("com.github.gmazzo.buildconfig") version "5.5.0"
     jacoco
     // id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
     id("com.vanniktech.maven.publish") version "0.30.0"
@@ -128,6 +129,14 @@ kotlin {
                 implementation("io.ktor:ktor-client-logging:3.3.3")
                 implementation("io.ktor:ktor-client-websockets:3.3.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.2")
+            }
+            buildConfig {
+                packageName("io.github.ugaikit.gemini4kt")
+                useKotlinOutput {
+                    internalVisibility = true
+                    topLevelConstants = true
+                }
+                buildConfigField("String", "GEMINI4KT_VERSION", "\"${project.version}\"")
             }
         }
         val jvmCommonMain by creating {
@@ -338,7 +347,7 @@ mavenPublishing {
 
     signAllPublications()
 
-    coordinates("io.github.ugaikit", "gemini4kt", "0.8.0")
+    coordinates("io.github.ugaikit", "gemini4kt", version.toString())
 
     pom {
         name = "gemini4kt"
