@@ -78,7 +78,10 @@ class LiveMusic(
      *
      * @return A LiveMusicSession representing the established WebSocket session and associated resources.
      */
-    suspend fun connect(handshakeTimeoutMs: Long = 10_000): LiveMusicSession {
+    suspend fun connect(
+        handshakeTimeoutMs: Long = 10_000,
+        connectTimeoutMs: Long = 10_000,
+    ): LiveMusicSession {
         // Use provided client or create a new one.
         val ownsClient = client == null
         val httpClient =
@@ -95,9 +98,11 @@ class LiveMusic(
         var session: DefaultClientWebSocketSession? = null
         try {
             session =
-                httpClient.webSocketSession(urlString) {
-                    header("x-goog-api-key", apiKey)
-                    header("x-goog-api-client", "gemini4kt")
+                withTimeout(connectTimeoutMs) {
+                    httpClient.webSocketSession(urlString) {
+                        header("x-goog-api-key", apiKey)
+                        header("x-goog-api-client", "gemini4kt")
+                    }
                 }
             logger.info { "WebSocket session established." }
 

@@ -73,6 +73,7 @@ class GeminiLive(
         handshakeTimeoutMs: Long = 10_000,
     ): GeminiLiveSession {
         // Use provided client or create a new one.
+        val ownsClient = client == null
         val httpClient =
             client?.config {
                 install(WebSockets)
@@ -188,9 +189,15 @@ class GeminiLive(
                 throw e
             }
 
-            return GeminiLiveSession(session, incomingMessages, json, listenerJob)
+            return GeminiLiveSession(session, incomingMessages, json, listenerJob, httpClient, ownsClient)
         } catch (e: Exception) {
-            session?.close()
+            try {
+                session?.close()
+            } finally {
+                if (ownsClient) {
+                    httpClient.close()
+                }
+            }
             throw e
         }
     }
@@ -209,6 +216,8 @@ class GeminiLiveSession(
     private val incomingMessages: Channel<BidiGenerateContentServerMessage>,
     private val json: Json,
     private val listenerJob: Job,
+    private val httpClient: HttpClient,
+    private val ownsClient: Boolean,
 ) {
     /**
      * Sends a client content message.
@@ -254,8 +263,14 @@ class GeminiLiveSession(
      * Closes the session.
      */
     suspend fun close() {
-        session.close()
-        listenerJob.cancelAndJoin()
-        incomingMessages.close()
+        try {
+            session.close()
+        } finally {
+            listenerJob.cancelAndJoin()
+            incomingMessages.close()
+            if (ownsClient) {
+                httpClient.close()
+            }
+        }
     }
 }
