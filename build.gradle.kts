@@ -4,6 +4,7 @@ import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExec
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinAndroidTarget
 
 plugins {
     kotlin("multiplatform") version "2.3.0"
@@ -100,6 +101,7 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
     androidLibrary {
         namespace = "io.github.ugaikit.gemini4kt"
         compileSdk = 33
@@ -110,6 +112,9 @@ kotlin {
         withDeviceTestBuilder {
             sourceSetTreeName = "test"
         }
+    }
+    targets.withType<KotlinAndroidTarget>().configureEach {
+        publishLibraryVariants("release")
     }
     sourceSets {
         val commonMain by getting {

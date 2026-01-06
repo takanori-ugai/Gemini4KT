@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.live.music
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.ugaikit.gemini4kt.X_GOOG_API_CLIENT
 import io.github.ugaikit.gemini4kt.live.processHandshakeMessage
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
@@ -91,17 +92,15 @@ class LiveMusic(
                 install(WebSockets)
             }
 
-        val urlString = wsUrl
-
-        logger.info { "Connecting to WebSocket at $urlString" }
+        logger.info { "Connecting to WebSocket at $wsUrl" }
 
         var session: DefaultClientWebSocketSession? = null
         try {
             session =
                 withTimeout(connectTimeoutMs) {
-                    httpClient.webSocketSession(urlString) {
+                    httpClient.webSocketSession(wsUrl) {
                         header("x-goog-api-key", apiKey)
-                        header("x-goog-api-client", "gemini4kt")
+                        header("x-goog-api-client", X_GOOG_API_CLIENT)
                     }
                 }
             logger.info { "WebSocket session established." }

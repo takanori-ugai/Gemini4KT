@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.live
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.ugaikit.gemini4kt.X_GOOG_API_CLIENT
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
@@ -90,7 +91,7 @@ class GeminiLive(
             session =
                 httpClient.webSocketSession(urlString) {
                     header("x-goog-api-key", apiKey)
-                    header("x-goog-api-client", "gemini4kt")
+                    header("x-goog-api-client", X_GOOG_API_CLIENT)
                 }
 
             val incomingMessages = Channel<BidiGenerateContentServerMessage>(Channel.UNLIMITED)
