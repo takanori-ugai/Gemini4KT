@@ -12,7 +12,6 @@ import io.github.ugaikit.gemini4kt.live.Blob
 import io.github.ugaikit.gemini4kt.live.LiveConnectConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -81,7 +80,7 @@ object LiveSample {
                     val turnCompleted = CompletableDeferred<Unit>()
 
                     val receiveJob =
-                        launch(Dispatchers.Default) {
+                        launch {
                             session.receive().collect { msg ->
                                 println(msg)
                                 msg.serverContent?.modelTurn?.parts?.forEach { part ->
