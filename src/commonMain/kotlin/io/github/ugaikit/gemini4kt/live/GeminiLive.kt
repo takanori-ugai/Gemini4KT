@@ -63,10 +63,15 @@ class GeminiLive(
      *
      * @param setup Optional explicit setup message to send as the initial client payload; when
      * omitted, a setup is derived from the instance configuration.
+     * @param handshakeTimeoutMs Timeout in milliseconds to wait for the `setupComplete` message
+     * before treating the connection as failed.
      * @return A GeminiLiveSession representing the established WebSocket session, the incoming
      * message channel, the JSON serializer, and the listener job.
      */
-    suspend fun connect(setup: BidiGenerateContentSetup? = null): GeminiLiveSession {
+    suspend fun connect(
+        setup: BidiGenerateContentSetup? = null,
+        handshakeTimeoutMs: Long = 10_000,
+    ): GeminiLiveSession {
         // Use provided client or create a new one.
         val httpClient =
             client?.config {
@@ -96,29 +101,25 @@ class GeminiLive(
                 scope.launch {
                     try {
                         for (frame in session.incoming) {
-                            if (frame is Frame.Text) {
-                                val text = frame.readText()
-                                logger.debug { "Received message: $text" }
-                                processHandshakeMessage(
-                                    text,
-                                    handshakeCompleted,
-                                    incomingMessages,
-                                    json,
-                                    logger,
-                                ) { message -> message.setupComplete != null }
-                            } else if (frame is Frame.Binary) {
-                                val bytes = frame.data
-                                val text = bytes.decodeToString()
-                                logger.debug { "Received binary frame with size: ${bytes.size}" }
-                                logger.debug { "Binary frame content as string: $text" }
-                                processHandshakeMessage(
-                                    text,
-                                    handshakeCompleted,
-                                    incomingMessages,
-                                    json,
-                                    logger,
-                                ) { message -> message.setupComplete != null }
-                            }
+                            val text =
+                                when (frame) {
+                                    is Frame.Text -> frame.readText()
+                                    is Frame.Binary -> {
+                                        val bytes = frame.data
+                                        logger.debug { "Received binary frame with size: ${bytes.size}" }
+                                        bytes.decodeToString()
+                                    }
+                                    else -> continue
+                                }
+
+                            logger.debug { "Received message: $text" }
+                            processHandshakeMessage(
+                                text,
+                                handshakeCompleted,
+                                incomingMessages,
+                                json,
+                                logger,
+                            ) { message -> message.setupComplete != null }
                         }
                     } catch (e: Exception) {
                         logger.error(e) { "WebSocket error" }
@@ -171,13 +172,13 @@ class GeminiLive(
 
             // Wait for setup complete message
             try {
-                withTimeout(10_000) {
+                withTimeout(handshakeTimeoutMs) {
                     handshakeCompleted.await()
                 }
             } catch (e: Exception) {
                 logger.error(e) { "Error waiting for SetupComplete" }
                 // Close resources
-                listenerJob.cancel()
+                listenerJob.cancelAndJoin()
                 session.close()
                 throw e
             }

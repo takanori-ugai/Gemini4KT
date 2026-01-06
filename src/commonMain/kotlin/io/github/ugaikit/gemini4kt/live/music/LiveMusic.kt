@@ -111,32 +111,25 @@ class LiveMusic(
                     try {
                         for (frame in session.incoming) {
                             logger.debug { "Received a frame: ${frame.frameType.name}" }
-                            if (frame is Frame.Text) {
-                                val text = frame.readText()
-                                logger.debug { "Received message: $text" }
-                                processHandshakeMessage(
-                                    text,
-                                    handshakeCompleted,
-                                    incomingMessages,
-                                    json,
-                                    logger,
-                                ) { message: LiveMusicServerMessage ->
-                                    message.setupComplete != null
+                            val text =
+                                when (frame) {
+                                    is Frame.Text -> frame.readText()
+                                    is Frame.Binary -> {
+                                        val bytes = frame.data
+                                        logger.debug { "Received binary frame with size: ${bytes.size}" }
+                                        bytes.decodeToString()
+                                    }
+                                    else -> continue
                                 }
-                            } else if (frame is Frame.Binary) {
-                                val bytes = frame.data
-                                val text = bytes.decodeToString()
-                                logger.debug { "Received binary frame with size: ${bytes.size}" }
-                                logger.debug { "Binary frame content as string: $text" }
-                                processHandshakeMessage(
-                                    text,
-                                    handshakeCompleted,
-                                    incomingMessages,
-                                    json,
-                                    logger,
-                                ) { message: LiveMusicServerMessage ->
-                                    message.setupComplete != null
-                                }
+                            logger.debug { "Received message: $text" }
+                            processHandshakeMessage(
+                                text,
+                                handshakeCompleted,
+                                incomingMessages,
+                                json,
+                                logger,
+                            ) { message: LiveMusicServerMessage ->
+                                message.setupComplete != null
                             }
                         }
                     } catch (e: Exception) {
@@ -168,7 +161,7 @@ class LiveMusic(
             } catch (e: Exception) {
                 logger.error(e) { "Error waiting for SetupComplete" }
                 // Close resources
-                listenerJob.cancel()
+                listenerJob.cancelAndJoin()
                 session.close()
                 throw e
             }
