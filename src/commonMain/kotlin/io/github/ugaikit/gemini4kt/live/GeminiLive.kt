@@ -107,7 +107,12 @@ class GeminiLive(
                                     is Frame.Binary -> {
                                         val bytes = frame.data
                                         logger.debug { "Received binary frame with size: ${bytes.size}" }
-                                        bytes.decodeToString()
+                                        try {
+                                            bytes.decodeToString()
+                                        } catch (e: Exception) {
+                                            logger.error(e) { "Failed to decode binary frame as UTF-8" }
+                                            continue
+                                        }
                                     }
                                     else -> continue
                                 }

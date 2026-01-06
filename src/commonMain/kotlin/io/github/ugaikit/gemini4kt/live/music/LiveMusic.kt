@@ -78,7 +78,7 @@ class LiveMusic(
      *
      * @return A LiveMusicSession representing the established WebSocket session and associated resources.
      */
-    suspend fun connect(): LiveMusicSession {
+    suspend fun connect(handshakeTimeoutMs: Long = 10_000): LiveMusicSession {
         // Use provided client or create a new one.
         val ownsClient = client == null
         val httpClient =
@@ -117,7 +117,12 @@ class LiveMusic(
                                     is Frame.Binary -> {
                                         val bytes = frame.data
                                         logger.debug { "Received binary frame with size: ${bytes.size}" }
-                                        bytes.decodeToString()
+                                        try {
+                                            bytes.decodeToString()
+                                        } catch (e: Exception) {
+                                            logger.error(e) { "Failed to decode binary frame as UTF-8" }
+                                            continue
+                                        }
                                     }
                                     else -> continue
                                 }
@@ -155,7 +160,7 @@ class LiveMusic(
 
             // Wait for setup complete message
             try {
-                withTimeout(10_000) {
+                withTimeout(handshakeTimeoutMs) {
                     handshakeCompleted.await()
                 }
             } catch (e: Exception) {
@@ -169,9 +174,12 @@ class LiveMusic(
             return LiveMusicSession(session, incomingMessages, json, listenerJob, httpClient, ownsClient)
         } catch (e: Exception) {
             logger.error(e) { "Error in connect method" }
-            session?.close()
-            if (ownsClient) {
-                httpClient.close()
+            try {
+                session?.close()
+            } finally {
+                if (ownsClient) {
+                    httpClient.close()
+                }
             }
             throw e
         }
