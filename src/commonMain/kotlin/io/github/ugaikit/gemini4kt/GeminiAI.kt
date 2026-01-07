@@ -111,8 +111,4 @@ class GeminiAI(
         } catch (e: Exception) {
             GeminiError(statusCode, "Unknown error: $body", "UNKNOWN")
         }
-
-    companion object {
-        private const val INTERNAL_SERVER_ERROR = 500
-    }
 }

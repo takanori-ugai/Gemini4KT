@@ -109,7 +109,10 @@ class PartBuilder {
      *
      * @param init The init.
      */
-    fun functionCall(init: FunctionCallBuilder.() -> Unit) = apply { functionCall = FunctionCallBuilder().apply(init).build() }
+    fun functionCall(init: FunctionCallBuilder.() -> Unit) =
+        apply {
+            functionCall = FunctionCallBuilder().apply(init).build()
+        }
 
     /**
      * Handles function response.

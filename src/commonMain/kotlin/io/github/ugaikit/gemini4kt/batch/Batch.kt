@@ -56,7 +56,6 @@ class Batch(
     private val baseUrl = "$bUrl/models"
 
     companion object {
-        private const val HTTP_OK = 200
         private const val PREVIEW_LENGTH = 100
     }
 

@@ -14,11 +14,6 @@ import java.util.Base64
 import java.util.Properties
 
 /**
- * Holds the repeat count.
- */
-private const val REPEAT_COUNT = 10000
-
-/**
  * Holds the embed model.
  */
 private const val EMBED_MODEL = "text-embedding-004"
@@ -170,50 +165,6 @@ private suspend fun testModelsAndContent(gemini: Gemini) {
             ?.text
             ?.replace("\n\n", "\n"),
     )
-}
-
-/**
- * Tests test cached content.
- *
- * @param gemini The gemini.
- */
-private suspend fun testCachedContent(gemini: Gemini) {
-    println("--- testCachedContent ---")
-    /**
-     * Holds the str.
-     */
-    val str = "This is a pen".repeat(REPEAT_COUNT)
-
-    /**
-     * Holds the system instruction.
-     */
-    val systemInstruction =
-        Content(
-            parts = arrayOf(Part(text = "Hello, world!")),
-            role = "system",
-        )
-
-    /**
-     * Holds the cached content.
-     */
-    val cachedContent =
-        CachedContent(
-            contents = listOf(Content(parts = arrayOf(Part(text = str)), role = "user")),
-            model = "models/gemini-2.5-flash-lite",
-            systemInstruction = systemInstruction,
-        )
-
-    /**
-     * Holds the cache.
-     */
-    val cache = gemini.createCachedContent(cachedContent)
-    println(cache)
-    println(gemini.listCachedContent())
-    cache.name?.let {
-        println(gemini.getCachedContent(it))
-        gemini.deleteCachedContent(it)
-    }
-    println("Cached content deleted.")
 }
 
 /**

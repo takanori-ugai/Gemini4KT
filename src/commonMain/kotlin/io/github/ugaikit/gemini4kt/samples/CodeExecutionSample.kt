@@ -12,7 +12,8 @@ import io.github.ugaikit.gemini4kt.tool
  */
 object CodeExecutionSample {
     /**
-     * Sends a content-generation request asking for code to compute the sum of the first 50 prime numbers, prints the raw response, and processes execution-related parts.
+     * Sends a content-generation request asking for code to compute the sum of the first 50 prime numbers,
+     * prints the raw response, and processes execution-related parts.
      *
      * If `gemini` is null, a new Gemini client is created using `getApiKey()`.
      *
