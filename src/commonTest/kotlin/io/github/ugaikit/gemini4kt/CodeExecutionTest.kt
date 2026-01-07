@@ -60,8 +60,8 @@ class CodeExecutionTest {
         val part =
             part {
                 codeExecutionResult {
-                    outcome = "OUTCOME_OK"
-                    output = "hello"
+                    outcome { "OUTCOME_OK" }
+                    output { "hello" }
                 }
             }
         val encoded = json.encodeToString(part)
@@ -77,7 +77,7 @@ class CodeExecutionTest {
         val part =
             part {
                 codeExecutionResult {
-                    outcome = "OUTCOME_OK"
+                    outcome { "OUTCOME_OK" }
                     image {
                         mimeType { "image/png" }
                         data { "base64data" }
@@ -97,8 +97,8 @@ class CodeExecutionTest {
         val part =
             part {
                 codeExecutionResult {
-                    outcome = "OUTCOME_OK"
-                    output = "some text"
+                    outcome { "OUTCOME_OK" }
+                    output { "some text" }
                     image {
                         mimeType { "image/jpeg" }
                         data { "imgdata" }
@@ -121,8 +121,8 @@ class CodeExecutionTest {
             part {
                 text { "Result:" }
                 codeExecutionResult {
-                    outcome = "OUTCOME_OK"
-                    output = "hello"
+                    outcome { "OUTCOME_OK" }
+                    output { "hello" }
                 }
             }
         val encoded = json.encodeToString(part)

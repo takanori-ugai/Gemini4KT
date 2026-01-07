@@ -2,11 +2,7 @@ package io.github.ugaikit.gemini4kt
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -41,15 +37,22 @@ class FunctionResponseMultimodalTest {
             )
         val part = Part(functionResponse = functionResponse)
         val encoded = json.encodeToString(part)
-        val decoded: JsonElement = json.decodeFromString(encoded)
-        val decodedObject = decoded.jsonObject
-        val fn = decodedObject["functionResponse"]!!.jsonObject
-        assertEquals("get_image", fn["name"]!!.jsonPrimitive.content)
-        assertEquals("instrument.jpg", fn["response"]!!.jsonObject["\$ref"]!!.jsonPrimitive.content)
-        val inline = fn["parts"]!!.jsonArray[0].jsonObject["inlineData"]!!.jsonObject
-        assertEquals("image/jpeg", inline["mimeType"]!!.jsonPrimitive.content)
-        assertEquals("base64data", inline["data"]!!.jsonPrimitive.content)
-        assertEquals("instrument.jpg", inline["displayName"]!!.jsonPrimitive.content)
+        val decodedPart: Part = json.decodeFromString(encoded)
+        val fnResponse = decodedPart.functionResponse
+        requireNotNull(fnResponse)
+        assertEquals("get_image", fnResponse.name)
+        assertEquals(
+            buildJsonObject {
+                put("\$ref", "instrument.jpg")
+            },
+            fnResponse.response,
+        )
+
+        val inlineData = fnResponse.parts?.firstOrNull()?.inlineData
+        requireNotNull(inlineData)
+        assertEquals("image/jpeg", inlineData.mimeType)
+        assertEquals("base64data", inlineData.data)
+        assertEquals("instrument.jpg", inlineData.displayName)
     }
 
     @Test

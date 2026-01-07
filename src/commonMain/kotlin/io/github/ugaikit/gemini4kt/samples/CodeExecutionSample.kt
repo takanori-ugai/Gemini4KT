@@ -38,22 +38,6 @@ object CodeExecutionSample {
             )
 
         println(response)
-        response.candidates.get(0).content.parts?.forEach { part ->
-            if (part.text != null) {
-                println("Text: ${part.text}")
-            }
-            if (part.executableCode != null) {
-                println("Executable Code (${part.executableCode.language}):\n${part.executableCode.code}")
-            }
-            part.codeExecutionResult?.let { result ->
-                println("Execution Result (${result.outcome}):")
-                result.output?.let { println(it) }
-                result.image?.let { image ->
-                    val preview = image.data.take(60)
-                    val suffix = if (image.data.length > 60) "..." else ""
-                    println("Image Output (${image.mimeType}): $preview$suffix")
-                }
-            }
-        }
+        printExecutionParts(response.candidates[0].content.parts)
     }
 }

@@ -52,20 +52,11 @@ object CodeExecutionWithImageSample {
             )
 
         val response = client.generateContent(request, model = "gemini-3-flash-preview")
-        response.candidates.firstOrNull()?.content?.parts?.forEach { part ->
-            part.text?.let { println("Text: $it") }
-            part.executableCode?.let { executable ->
-                println("Executable Code (${executable.language}):\n${executable.code}")
-            }
-            part.codeExecutionResult?.let { result ->
-                println("Execution Result (${result.outcome}):")
-                result.output?.let { println(it) }
-                result.image?.let { image ->
-                    val preview = image.data.take(60)
-                    val suffix = if (image.data.length > 60) "..." else ""
-                    println("Image Output (${image.mimeType}): $preview$suffix")
-                }
-            }
-        }
+        printExecutionParts(
+            response.candidates
+                .firstOrNull()
+                ?.content
+                ?.parts,
+        )
     }
 }

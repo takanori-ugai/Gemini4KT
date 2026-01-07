@@ -27,17 +27,24 @@ class CodeExecutionResultBuilder {
     /**
      * Holds the outcome.
      */
-    var outcome: String = ""
+    private var outcome: String = ""
 
     /**
      * Holds the output.
      */
-    var output: String? = null
+    private var output: String? = null
 
     /**
      * Holds the image.
      */
     private var image: InlineData? = null
+
+    /**
+     * Handles outcome.
+     *
+     * @param init The init.
+     */
+    fun outcome(init: () -> String) = apply { outcome = init() }
 
     /**
      * Handles output.
