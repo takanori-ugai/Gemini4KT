@@ -15,6 +15,7 @@ import kotlin.js.JsExport
  * @property args A list of strings representing the values or arguments returned
  * by the function. These are typically the result of the function's execution,
  * formatted as strings for uniformity and ease of handling.
+ * @property parts Optional multimodal parts associated with the function response (Gemini 3+).
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -22,4 +23,5 @@ import kotlin.js.JsExport
 data class FunctionResponse(
     val name: String,
     val response: JsonObject,
+    val parts: Array<Part>? = null,
 )

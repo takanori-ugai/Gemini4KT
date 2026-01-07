@@ -153,6 +153,51 @@ class SamplesTest {
         }
 
     /**
+     * Tests code execution with image sample.
+     */
+    @Test
+    fun testCodeExecutionWithImageSample() =
+        runTest {
+            val gemini =
+                createMockGemini(
+                    """
+                    {
+                      "candidates": [
+                        {
+                          "content": {
+                            "parts": [
+                              {
+                                "text": "Here is the image analysis."
+                              },
+                              {
+                                "executableCode": {
+                                    "language": "PYTHON",
+                                    "code": "print('crop')"
+                                }
+                              },
+                              {
+                                "codeExecutionResult": {
+                                    "outcome": "OUTCOME_OK",
+                                    "output": "2 pedals detected",
+                                    "image": {
+                                        "mimeType": "image/jpeg",
+                                        "data": "base64img",
+                                        "displayName": "instrument.jpg"
+                                    }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    """.trimIndent(),
+                )
+
+            CodeExecutionWithImageSample.run(gemini, imageProvider = { "ignored" })
+        }
+
+    /**
      * Tests test count tokens sample.
      */
     @Test

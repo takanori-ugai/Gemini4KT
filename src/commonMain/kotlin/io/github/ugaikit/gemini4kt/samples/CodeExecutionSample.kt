@@ -12,9 +12,11 @@ import io.github.ugaikit.gemini4kt.tool
  */
 object CodeExecutionSample {
     /**
-     * Handles run.
+     * Sends a content-generation request asking for code to compute the sum of the first 50 prime numbers, prints the raw response, and processes execution-related parts.
      *
-     * @param gemini The gemini.
+     * If `gemini` is null, a new Gemini client is created using `getApiKey()`.
+     *
+     * @param gemini Optional Gemini client to use for the request; when null a client is constructed from `getApiKey()`.
      */
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())
@@ -38,16 +40,6 @@ object CodeExecutionSample {
             )
 
         println(response)
-        response.candidates.get(0).content.parts?.forEach { part ->
-            if (part.text != null) {
-                println("Text: ${part.text}")
-            }
-            if (part.executableCode != null) {
-                println("Executable Code (${part.executableCode.language}):\n${part.executableCode.code}")
-            }
-            if (part.codeExecutionResult != null) {
-                println("Execution Result (${part.codeExecutionResult.outcome}):\n${part.codeExecutionResult.output}")
-            }
-        }
+        printExecutionParts(response.candidates[0].content.parts)
     }
 }
