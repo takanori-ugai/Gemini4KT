@@ -45,8 +45,14 @@ object CodeExecutionSample {
             if (part.executableCode != null) {
                 println("Executable Code (${part.executableCode.language}):\n${part.executableCode.code}")
             }
-            if (part.codeExecutionResult != null) {
-                println("Execution Result (${part.codeExecutionResult.outcome}):\n${part.codeExecutionResult.output}")
+            part.codeExecutionResult?.let { result ->
+                println("Execution Result (${result.outcome}):")
+                result.output?.let { println(it) }
+                result.image?.let { image ->
+                    val preview = image.data.take(60)
+                    val suffix = if (image.data.length > 60) "..." else ""
+                    println("Image Output (${image.mimeType}): $preview$suffix")
+                }
             }
         }
     }

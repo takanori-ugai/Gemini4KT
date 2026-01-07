@@ -70,6 +70,48 @@ class CodeExecutionTest {
     }
 
     /**
+     * Tests code execution result serialization with image only.
+     */
+    @Test
+    fun testPartWithCodeExecutionResultImageSerialization() {
+        val part =
+            part {
+                codeExecutionResult {
+                    outcome = "OUTCOME_OK"
+                    image {
+                        mimeType { "image/png" }
+                        data { "base64data" }
+                    }
+                }
+            }
+        val encoded = json.encodeToString(part)
+        val expected = """{"codeExecutionResult":{"outcome":"OUTCOME_OK","image":{"mimeType":"image/png","data":"base64data"}}}"""
+        assertEquals(expected, encoded)
+    }
+
+    /**
+     * Tests code execution result serialization with image and output.
+     */
+    @Test
+    fun testPartWithCodeExecutionResultImageAndOutputSerialization() {
+        val part =
+            part {
+                codeExecutionResult {
+                    outcome = "OUTCOME_OK"
+                    output = "some text"
+                    image {
+                        mimeType { "image/jpeg" }
+                        data { "imgdata" }
+                    }
+                }
+            }
+        val encoded = json.encodeToString(part)
+        val expected =
+            """{"codeExecutionResult":{"outcome":"OUTCOME_OK","output":"some text","image":{"mimeType":"image/jpeg","data":"imgdata"}}}"""
+        assertEquals(expected, encoded)
+    }
+
+    /**
      * Tests test part with text and code execution result serialization.
      */
     @Test
