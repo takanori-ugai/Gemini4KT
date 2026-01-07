@@ -17,7 +17,7 @@ class InteractionSerializationTest {
         }
 
     @Test
-    fun interactionContentSerializesMimeTypeAndDisplayName() {
+    fun interactionContentSerializesCorrectly() {
         val content =
             InteractionContent(
                 type = "image",
