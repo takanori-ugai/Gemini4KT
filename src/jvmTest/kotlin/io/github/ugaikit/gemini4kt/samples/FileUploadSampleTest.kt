@@ -12,6 +12,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.files.Path
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -63,7 +64,7 @@ class FileUploadSampleTest {
                     )
                 }
 
-            coVerify { gemini.uploadFile(any(), "image/jpeg", "Scones") }
+            coVerify { gemini.uploadFile(Path("scones.jpg"), "image/jpeg", "Scones") }
             coVerify {
                 gemini.generateContent(
                     match { request ->

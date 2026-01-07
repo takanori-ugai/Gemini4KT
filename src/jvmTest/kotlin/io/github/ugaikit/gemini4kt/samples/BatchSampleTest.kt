@@ -53,7 +53,7 @@ class BatchSampleTest {
 
             val batch = mockk<Batch>(relaxed = true)
             coEvery { batch.createBatch(any(), any()) } returns pending
-            coEvery { batch.getBatch(pending.name) } returns succeeded
+            coEvery { batch.getBatch(pending.name) } returnsMany listOf(pending, succeeded)
             coEvery { batch.listBatches(pageSize = 5) } returns listResponse
 
             val output =
@@ -62,7 +62,7 @@ class BatchSampleTest {
                 }
 
             coVerify(exactly = 1) { batch.createBatch("gemini-2.0-flash", any()) }
-            coVerify(exactly = 1) { batch.getBatch(pending.name) }
+            coVerify(exactly = 2) { batch.getBatch(pending.name) }
             coVerify(exactly = 1) { batch.listBatches(pageSize = 5) }
             assertTrue(output.contains("Job succeeded"))
             assertTrue(output.contains("Metadata Key: haiku-coding"))
