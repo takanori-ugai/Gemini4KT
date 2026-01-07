@@ -10,6 +10,7 @@ import kotlin.js.JsExport
  * @property mime_type The MIME type of the content, indicating the type of media (e.g., "image/jpeg").
  * @property data The actual content data, encoded as a String. This is often base64 encoded data
  * for binary content like images.
+ * @property displayName Optional name that can be referenced from structured responses.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -17,6 +18,7 @@ import kotlin.js.JsExport
 data class InlineData(
     val mimeType: String,
     val data: String,
+    val displayName: String? = null,
 )
 
 /**
@@ -48,6 +50,11 @@ class InlineDataBuilder {
     private var data: String = ""
 
     /**
+     * Holds the display name.
+     */
+    private var displayName: String? = null
+
+    /**
      * Handles mime type.
      *
      * @param init The init.
@@ -62,11 +69,19 @@ class InlineDataBuilder {
     fun data(init: () -> String) = apply { data = init() }
 
     /**
+     * Handles display name.
+     *
+     * @param init The init.
+     */
+    fun displayName(init: () -> String?) = apply { displayName = init() }
+
+    /**
      * Handles build.
      */
     fun build() =
         InlineData(
             mimeType = mimeType,
             data = data,
+            displayName = displayName,
         )
 }
