@@ -4,6 +4,7 @@ import io.github.ugaikit.gemini4kt.Candidate
 import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.GenerateContentResponse
 import io.github.ugaikit.gemini4kt.Part
+import io.github.ugaikit.gemini4kt.TestUtils.captureStdout
 import io.github.ugaikit.gemini4kt.filesearch.FileSearch
 import io.github.ugaikit.gemini4kt.filesearch.FileSearchStore
 import io.github.ugaikit.gemini4kt.filesearch.Operation
@@ -70,16 +71,4 @@ class FileSearchSampleTest {
             assertTrue(output.contains("Upload complete."))
             assertTrue(output.contains("The fox says"))
         }
-
-    private inline fun captureStdout(block: () -> Unit): String {
-        val original = System.out
-        val buffer = java.io.ByteArrayOutputStream()
-        System.setOut(java.io.PrintStream(buffer))
-        return try {
-            block()
-            buffer.toString()
-        } finally {
-            System.setOut(original)
-        }
-    }
 }

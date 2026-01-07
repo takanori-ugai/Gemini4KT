@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt.samples
 
+import io.github.ugaikit.gemini4kt.TestUtils.captureStdout
 import io.github.ugaikit.gemini4kt.batch.Batch
 import io.github.ugaikit.gemini4kt.batch.BatchInlineResponse
 import io.github.ugaikit.gemini4kt.batch.BatchJob
@@ -66,16 +67,4 @@ class BatchSampleTest {
             assertTrue(output.contains("Job succeeded"))
             assertTrue(output.contains("Metadata Key: haiku-coding"))
         }
-
-    private inline fun captureStdout(block: () -> Unit): String {
-        val original = System.out
-        val buffer = java.io.ByteArrayOutputStream()
-        System.setOut(java.io.PrintStream(buffer))
-        return try {
-            block()
-            buffer.toString()
-        } finally {
-            System.setOut(original)
-        }
-    }
 }

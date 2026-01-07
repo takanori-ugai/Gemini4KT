@@ -7,6 +7,7 @@ import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.GeminiFile
 import io.github.ugaikit.gemini4kt.GenerateContentResponse
 import io.github.ugaikit.gemini4kt.Part
+import io.github.ugaikit.gemini4kt.TestUtils.captureStdout
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -77,16 +78,4 @@ class FileUploadSampleTest {
             assertTrue(output.contains("File uploaded successfully"))
             assertTrue(output.contains("Scones and cream"))
         }
-
-    private inline fun captureStdout(block: () -> Unit): String {
-        val original = System.out
-        val buffer = java.io.ByteArrayOutputStream()
-        System.setOut(java.io.PrintStream(buffer))
-        return try {
-            block()
-            buffer.toString()
-        } finally {
-            System.setOut(original)
-        }
-    }
 }
