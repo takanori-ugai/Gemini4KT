@@ -29,7 +29,8 @@ class GenerateContentRequestTest {
                         ),
                     ),
             )
-        val expectedJson = """{"contents":[{"parts":[{"text":"Hello"}],"role":"user"}],"tools":[],"safetySettings":[]}"""
+        val expectedJson =
+            """{"contents":[{"parts":[{"text":"Hello"}],"role":"user"}],"tools":[],"safetySettings":[]}"""
         val actualJson = json.encodeToString(request)
         assertEquals(json.parseToJsonElement(expectedJson), json.parseToJsonElement(actualJson))
     }

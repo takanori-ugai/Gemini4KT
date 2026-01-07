@@ -8,7 +8,10 @@ import kotlinx.serialization.json.encodeToJsonElement
 /**
  * A DSL for building [CreateBatchRequest] objects.
  */
-fun createBatchRequest(block: CreateBatchRequestBuilder.() -> Unit): CreateBatchRequest = CreateBatchRequestBuilder().apply(block).build()
+fun createBatchRequest(block: CreateBatchRequestBuilder.() -> Unit): CreateBatchRequest =
+    CreateBatchRequestBuilder()
+        .apply(block)
+        .build()
 
 /**
  * Represents the create batch request builder.
@@ -78,7 +81,10 @@ class BatchConfigBuilder {
 /**
  * A DSL for building [BatchInputConfig] objects.
  */
-fun batchInputConfig(block: BatchInputConfigBuilder.() -> Unit): BatchInputConfig = BatchInputConfigBuilder().apply(block).build()
+fun batchInputConfig(block: BatchInputConfigBuilder.() -> Unit): BatchInputConfig =
+    BatchInputConfigBuilder()
+        .apply(block)
+        .build()
 
 /**
  * Represents the batch input config builder.
@@ -110,7 +116,10 @@ class BatchInputConfigBuilder {
 /**
  * A DSL for building [BatchRequestInput] objects.
  */
-fun batchRequestInput(block: BatchRequestInputBuilder.() -> Unit): BatchRequestInput = BatchRequestInputBuilder().apply(block).build()
+fun batchRequestInput(block: BatchRequestInputBuilder.() -> Unit): BatchRequestInput =
+    BatchRequestInputBuilder()
+        .apply(block)
+        .build()
 
 /**
  * Represents the batch request input builder.
@@ -139,7 +148,10 @@ class BatchRequestInputBuilder {
 /**
  * A DSL for building [BatchItemRequest] objects.
  */
-fun batchItemRequest(block: BatchItemRequestBuilder.() -> Unit): BatchItemRequest = BatchItemRequestBuilder().apply(block).build()
+fun batchItemRequest(block: BatchItemRequestBuilder.() -> Unit): BatchItemRequest =
+    BatchItemRequestBuilder()
+        .apply(block)
+        .build()
 
 /**
  * Represents the batch item request builder.
@@ -190,7 +202,10 @@ class BatchItemRequestBuilder {
 /**
  * A DSL for building [ResponseMetadata] objects.
  */
-fun responseMetadata(block: ResponseMetadataBuilder.() -> Unit): ResponseMetadata = ResponseMetadataBuilder().apply(block).build()
+fun responseMetadata(block: ResponseMetadataBuilder.() -> Unit): ResponseMetadata =
+    ResponseMetadataBuilder()
+        .apply(block)
+        .build()
 
 /**
  * Represents the response metadata builder.

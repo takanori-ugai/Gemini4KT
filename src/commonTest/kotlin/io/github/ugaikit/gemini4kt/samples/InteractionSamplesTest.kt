@@ -39,10 +39,15 @@ class InteractionSamplesTest {
     @Test
     fun testRunSimple() =
         runTest {
-            val responseJson = """{"id": "v1_1", "status": "completed", "outputs": [{"type":"text", "text":"Hello"}]}"""
+            val responseJson =
+                """{"id": "v1_1", "status": "completed", "outputs": [{"type":"text", "text":"Hello"}]}"""
             val ai =
                 createGeminiAI {
-                    respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                    respond(
+                        responseJson,
+                        HttpStatusCode.OK,
+                        headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
                 }
             InteractionSamples.runSimple(ai)
         }
@@ -72,10 +77,15 @@ class InteractionSamplesTest {
     @Test
     fun testRunFunctionCalling() =
         runTest {
-            val responseJson = """{"id": "v1_4", "status": "requires_action", "outputs": [{"type":"function_call"}]}"""
+            val responseJson =
+                """{"id": "v1_4", "status": "requires_action", "outputs": [{"type":"function_call"}]}"""
             val ai =
                 createGeminiAI {
-                    respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                    respond(
+                        responseJson,
+                        HttpStatusCode.OK,
+                        headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
                 }
             InteractionSamples.runFunctionCalling(ai)
         }
@@ -83,10 +93,15 @@ class InteractionSamplesTest {
     @Test
     fun testRunDeepResearch() =
         runTest {
-            val responseJson = """{"id": "v1_5", "status": "completed", "outputs": [{"type":"text", "text":"Report"}]}"""
+            val responseJson =
+                """{"id": "v1_5", "status": "completed", "outputs": [{"type":"text", "text":"Report"}]}"""
             val ai =
                 createGeminiAI {
-                    respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                    respond(
+                        responseJson,
+                        HttpStatusCode.OK,
+                        headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
                 }
             InteractionSamples.runDeepResearch(ai)
         }

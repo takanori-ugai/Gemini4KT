@@ -162,4 +162,7 @@ class GenerationConfigBuilder {
  *
  * @param init The init.
  */
-fun generationConfig(init: GenerationConfigBuilder.() -> Unit): GenerationConfig = GenerationConfigBuilder().apply(init).build()
+fun generationConfig(init: GenerationConfigBuilder.() -> Unit): GenerationConfig =
+    GenerationConfigBuilder()
+        .apply(init)
+        .build()

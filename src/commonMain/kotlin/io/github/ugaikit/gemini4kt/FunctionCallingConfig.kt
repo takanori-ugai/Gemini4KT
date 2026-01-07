@@ -58,4 +58,7 @@ class FunctionCallingConfigBuilder {
  *
  * @param init The init.
  */
-fun functionCallingConfig(init: FunctionCallingConfigBuilder.() -> Unit): FunctionCallingConfig = FunctionCallingConfigBuilder().apply(init).build()
+fun functionCallingConfig(init: FunctionCallingConfigBuilder.() -> Unit): FunctionCallingConfig =
+    FunctionCallingConfigBuilder()
+        .apply(init)
+        .build()

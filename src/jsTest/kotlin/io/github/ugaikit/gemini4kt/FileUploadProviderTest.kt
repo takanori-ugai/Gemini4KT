@@ -76,11 +76,17 @@ class FileUploadProviderTest {
             val mockEngine =
                 MockEngine { request ->
                     val url = request.url.toString()
-                    if (url.contains("upload/v1beta/files") && request.headers["X-Goog-Upload-Command"] == "start") {
+                    if (
+                        url.contains("upload/v1beta/files") &&
+                        request.headers["X-Goog-Upload-Command"] == "start"
+                    ) {
                         respond(
                             content = "",
                             status = HttpStatusCode.OK,
-                            headers = headersOf("X-Goog-Upload-URL" to listOf("https://upload.example.com/upload")),
+                            headers =
+                                headersOf(
+                                    "X-Goog-Upload-URL" to listOf("https://upload.example.com/upload"),
+                                ),
                         )
                     } else if (url == "https://upload.example.com/upload") {
                         respond(
@@ -96,7 +102,11 @@ class FileUploadProviderTest {
                         "sizeBytes": 1024
                     } }""",
                             status = HttpStatusCode.OK,
-                            headers = headersOf(HttpHeaders.ContentType to listOf(ContentType.Application.Json.toString())),
+                            headers =
+                                headersOf(
+                                    HttpHeaders.ContentType to
+                                        listOf(ContentType.Application.Json.toString()),
+                                ),
                         )
                     } else {
                         respond("Error", HttpStatusCode.BadRequest)

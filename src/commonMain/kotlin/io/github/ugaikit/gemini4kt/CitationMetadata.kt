@@ -49,4 +49,7 @@ class CitationMetadataBuilder {
  *
  * @param init The init.
  */
-fun citationMetadata(init: CitationMetadataBuilder.() -> Unit): CitationMetadata = CitationMetadataBuilder().apply(init).build()
+fun citationMetadata(init: CitationMetadataBuilder.() -> Unit): CitationMetadata =
+    CitationMetadataBuilder()
+        .apply(init)
+        .build()

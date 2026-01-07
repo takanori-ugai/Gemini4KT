@@ -60,4 +60,7 @@ class GroundingAttributionBuilder {
  *
  * @param init The init.
  */
-fun groundingAttribution(init: GroundingAttributionBuilder.() -> Unit): GroundingAttribution = GroundingAttributionBuilder().apply(init).build()
+fun groundingAttribution(init: GroundingAttributionBuilder.() -> Unit): GroundingAttribution =
+    GroundingAttributionBuilder()
+        .apply(init)
+        .build()

@@ -84,8 +84,9 @@ class CodeExecutionTest {
                 }
             }
         val encoded = json.encodeToString(part)
-        // Order of keys might vary depending on serialization, but kotlin serialization usually preserves definition order
-        // defined in class: text, inlineData, functionCall, functionResponse, fileData, executableCode, codeExecutionResult
+        // Order of keys might vary depending on serialization, but kotlin serialization usually
+        // preserves definition order defined in class: text, inlineData, functionCall,
+        // functionResponse, fileData, executableCode, codeExecutionResult
         val expected = """{"text":"Result:","codeExecutionResult":{"outcome":"OUTCOME_OK","output":"hello"}}"""
         assertEquals(expected, encoded)
     }

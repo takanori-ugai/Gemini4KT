@@ -1,10 +1,13 @@
 package io.github.ugaikit.gemini4kt.live
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.ugaikit.gemini4kt.X_GOOG_API_CLIENT
+import io.github.ugaikit.gemini4kt.live.decodeBinaryFrame
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.header
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
@@ -13,10 +16,12 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -48,13 +53,29 @@ class GeminiLive(
      * Holds the ws url.
      */
     private val wsUrl =
-        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
+        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta" +
+            ".GenerativeService.BidiGenerateContent"
 
     /**
-     * Connects to the Live API and sends the initial setup message.
+     * Opens a WebSocket connection to the Gemini Live API, sends the initial setup message, and
+     * establishes a session for ongoing bidirectional communication.
+     *
+     * If `setup` is null, a setup message is constructed from the instance `model` and `config`
+     * (including generationConfig, systemInstruction, and tools) and sent instead.
+     *
+     * @param setup Optional explicit setup message to send as the initial client payload; when
+     * omitted, a setup is derived from the instance configuration.
+     * @param handshakeTimeoutMs Timeout in milliseconds to wait for the `setupComplete` message
+     * before treating the connection as failed.
+     * @return A GeminiLiveSession representing the established WebSocket session, the incoming
+     * message channel, the JSON serializer, and the listener job.
      */
-    suspend fun connect(setup: BidiGenerateContentSetup? = null): GeminiLiveSession {
+    suspend fun connect(
+        setup: BidiGenerateContentSetup? = null,
+        handshakeTimeoutMs: Long = 10_000,
+    ): GeminiLiveSession {
         // Use provided client or create a new one.
+        val ownsClient = client == null
         val httpClient =
             client?.config {
                 install(WebSockets)
@@ -62,13 +83,17 @@ class GeminiLive(
                 install(WebSockets)
             }
 
-        val urlString = "$wsUrl?key=$apiKey"
+        val urlString = wsUrl
 
         logger.info { "Connecting to WebSocket at $urlString" }
 
         var session: DefaultClientWebSocketSession? = null
         try {
-            session = httpClient.webSocketSession(urlString)
+            session =
+                httpClient.webSocketSession(urlString) {
+                    header("x-goog-api-key", apiKey)
+                    header("x-goog-api-client", X_GOOG_API_CLIENT)
+                }
 
             val incomingMessages = Channel<BidiGenerateContentServerMessage>(Channel.UNLIMITED)
             val scope = CoroutineScope(Dispatchers.Default)
@@ -79,40 +104,24 @@ class GeminiLive(
                 scope.launch {
                     try {
                         for (frame in session.incoming) {
-                            if (frame is Frame.Text) {
-                                val text = frame.readText()
-                                logger.debug { "Received message: $text" }
-                                try {
-                                    val message = json.decodeFromString<BidiGenerateContentServerMessage>(text)
-
-                                    // Check for handshake completion on the first relevant message
-                                    if (!handshakeCompleted.isCompleted) {
-                                        if (message.setupComplete != null) {
-                                            handshakeCompleted.complete(Unit)
-                                        } else {
-                                            // If we receive something else before SetupComplete,
-                                            // it might be an error or unexpected behavior.
-                                            // We log it, but we don't complete the handshake yet
-                                            // unless it's a fatal error?
-                                            // If it's a serverContent, maybe we should just allow it?
-                                            // But per protocol, SetupComplete should be first.
-                                            // If we get an error
-                                            // (e.g. standard HTTP error wrapped in WS?),
-                                            // we might want to fail.
-                                            // BidiGenerateContentServerMessage has `serverContent`, `toolCall`, etc.
-                                            // We will just forward it.
-                                            logger.warn { "Received message before SetupComplete: $message" }
-                                        }
+                            val text =
+                                when (frame) {
+                                    is Frame.Text -> frame.readText()
+                                    is Frame.Binary -> {
+                                        val decoded = decodeBinaryFrame(frame, logger) ?: continue
+                                        decoded
                                     }
-
-                                    incomingMessages.send(message)
-                                } catch (e: Exception) {
-                                    logger.error(e) { "Failed to parse message" }
-                                    if (!handshakeCompleted.isCompleted) {
-                                        handshakeCompleted.completeExceptionally(e)
-                                    }
+                                    else -> continue
                                 }
-                            }
+
+                            logger.debug { "Received message: $text" }
+                            processHandshakeMessage(
+                                text,
+                                handshakeCompleted,
+                                incomingMessages,
+                                json,
+                                logger,
+                            ) { message -> message.setupComplete != null }
                         }
                     } catch (e: Exception) {
                         logger.error(e) { "WebSocket error" }
@@ -165,24 +174,26 @@ class GeminiLive(
 
             // Wait for setup complete message
             try {
-                // Wait with timeout? The original code had 10s timeout.
-                // We can use withTimeout. But let's stick to simple wait for now or use the one from Coroutines.
-                // Since we don't want to block indefinitely.
-                // kotlinx.coroutines.withTimeout(10000) { handshakeCompleted.await() }
-                // But I need to import withTimeout.
-
-                handshakeCompleted.await()
+                withTimeout(handshakeTimeoutMs) {
+                    handshakeCompleted.await()
+                }
             } catch (e: Exception) {
                 logger.error(e) { "Error waiting for SetupComplete" }
                 // Close resources
-                listenerJob.cancel()
+                listenerJob.cancelAndJoin()
                 session.close()
                 throw e
             }
 
-            return GeminiLiveSession(session, incomingMessages, json, listenerJob)
+            return GeminiLiveSession(session, incomingMessages, json, listenerJob, httpClient, ownsClient)
         } catch (e: Exception) {
-            session?.close()
+            try {
+                session?.close()
+            } finally {
+                if (ownsClient) {
+                    httpClient.close()
+                }
+            }
             throw e
         }
     }
@@ -201,6 +212,8 @@ class GeminiLiveSession(
     private val incomingMessages: Channel<BidiGenerateContentServerMessage>,
     private val json: Json,
     private val listenerJob: Job,
+    private val httpClient: HttpClient,
+    private val ownsClient: Boolean,
 ) {
     /**
      * Sends a client content message.
@@ -246,8 +259,14 @@ class GeminiLiveSession(
      * Closes the session.
      */
     suspend fun close() {
-        session.close()
-        listenerJob.cancel()
-        incomingMessages.close()
+        try {
+            session.close()
+        } finally {
+            listenerJob.cancelAndJoin()
+            incomingMessages.close()
+            if (ownsClient) {
+                httpClient.close()
+            }
+        }
     }
 }

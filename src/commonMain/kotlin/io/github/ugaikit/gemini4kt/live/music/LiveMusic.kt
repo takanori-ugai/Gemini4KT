@@ -1,10 +1,14 @@
 package io.github.ugaikit.gemini4kt.live.music
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.ugaikit.gemini4kt.X_GOOG_API_CLIENT
+import io.github.ugaikit.gemini4kt.live.decodeBinaryFrame
+import io.github.ugaikit.gemini4kt.live.processHandshakeMessage
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.header
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
@@ -13,14 +17,42 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 private val logger = KotlinLogging.logger {}
+
+/**
+ * Options for configuring the LiveMusic WebSocket connection.
+ */
+data class LiveMusicOptions(
+    val apiVersion: String = "v1alpha",
+    val baseUrl: String = "https://generativelanguage.googleapis.com/",
+)
+
+/**
+ * Builds the WebSocket endpoint URL for the Live Music generative service.
+ *
+ * @param options Configuration containing the base URL and API version.
+ * @return The full WebSocket URL for the BidiGenerateMusic endpoint, including protocol and apiVersion.
+ */
+private fun buildWebSocketUrl(options: LiveMusicOptions): String {
+    val baseWithoutSlash = if (options.baseUrl.endsWith("/")) options.baseUrl.dropLast(1) else options.baseUrl
+    val wsBase =
+        when {
+            baseWithoutSlash.startsWith("http://") -> baseWithoutSlash.replaceFirst("http://", "ws://")
+            baseWithoutSlash.startsWith("https://") -> baseWithoutSlash.replaceFirst("https://", "wss://")
+            baseWithoutSlash.startsWith("ws://") || baseWithoutSlash.startsWith("wss://") -> baseWithoutSlash
+            else -> "wss://$baseWithoutSlash"
+        }
+    return "$wsBase/ws/google.ai.generativelanguage.${options.apiVersion}.GenerativeService.BidiGenerateMusic"
+}
 
 /**
  * A client for interacting with the Gemini Live Music API via WebSockets.
@@ -28,6 +60,7 @@ private val logger = KotlinLogging.logger {}
 class LiveMusic(
     private val apiKey: String,
     private val model: String,
+    private val options: LiveMusicOptions = LiveMusicOptions(),
     private val json: Json =
         Json {
             ignoreUnknownKeys = true
@@ -35,14 +68,24 @@ class LiveMusic(
         },
     private val client: HttpClient? = null,
 ) {
-    private val wsUrl =
-        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateMusic"
+    private val wsUrl = buildWebSocketUrl(options)
 
     /**
-     * Connects to the Live Music API and sends the initial setup message.
+     * Establishes a WebSocket connection to the Live Music API, sends the initial setup message,
+     * awaits handshake completion, and returns an active session.
+     *
+     * The method configures or creates an HttpClient with WebSockets, opens a WebSocket session
+     * with authentication headers, launches a listener to process incoming messages, sends the
+     * model setup payload, and waits for the server's setup-complete signal before returning.
+     *
+     * @return A LiveMusicSession representing the established WebSocket session and associated resources.
      */
-    suspend fun connect(): LiveMusicSession {
+    suspend fun connect(
+        handshakeTimeoutMs: Long = 10_000,
+        connectTimeoutMs: Long = 10_000,
+    ): LiveMusicSession {
         // Use provided client or create a new one.
+        val ownsClient = client == null
         val httpClient =
             client?.config {
                 install(WebSockets)
@@ -50,13 +93,18 @@ class LiveMusic(
                 install(WebSockets)
             }
 
-        val urlString = "$wsUrl?key=$apiKey"
-
-        logger.info { "Connecting to WebSocket at $urlString" }
+        logger.info { "Connecting to WebSocket at $wsUrl" }
 
         var session: DefaultClientWebSocketSession? = null
         try {
-            session = httpClient.webSocketSession(urlString)
+            session =
+                withTimeout(connectTimeoutMs) {
+                    httpClient.webSocketSession(wsUrl) {
+                        header("x-goog-api-key", apiKey)
+                        header("x-goog-api-client", X_GOOG_API_CLIENT)
+                    }
+                }
+            logger.info { "WebSocket session established." }
 
             val incomingMessages = Channel<LiveMusicServerMessage>(Channel.UNLIMITED)
             val scope = CoroutineScope(Dispatchers.Default)
@@ -67,27 +115,25 @@ class LiveMusic(
                 scope.launch {
                     try {
                         for (frame in session.incoming) {
-                            if (frame is Frame.Text) {
-                                val text = frame.readText()
-                                logger.debug { "Received message: $text" }
-                                try {
-                                    val message = json.decodeFromString<LiveMusicServerMessage>(text)
-
-                                    if (!handshakeCompleted.isCompleted) {
-                                        if (message.setupComplete != null) {
-                                            handshakeCompleted.complete(Unit)
-                                        } else {
-                                            logger.warn { "Received message before SetupComplete: $message" }
-                                        }
+                            logger.debug { "Received a frame: ${frame.frameType.name}" }
+                            val text =
+                                when (frame) {
+                                    is Frame.Text -> frame.readText()
+                                    is Frame.Binary -> {
+                                        val decoded = decodeBinaryFrame(frame, logger) ?: continue
+                                        decoded
                                     }
-
-                                    incomingMessages.send(message)
-                                } catch (e: Exception) {
-                                    logger.error(e) { "Failed to parse message" }
-                                    if (!handshakeCompleted.isCompleted) {
-                                        handshakeCompleted.completeExceptionally(e)
-                                    }
+                                    else -> continue
                                 }
+                            logger.debug { "Received message: $text" }
+                            processHandshakeMessage(
+                                text,
+                                handshakeCompleted,
+                                incomingMessages,
+                                json,
+                                logger,
+                            ) { message: LiveMusicServerMessage ->
+                                message.setupComplete != null
                             }
                         }
                     } catch (e: Exception) {
@@ -113,18 +159,27 @@ class LiveMusic(
 
             // Wait for setup complete message
             try {
-                handshakeCompleted.await()
+                withTimeout(handshakeTimeoutMs) {
+                    handshakeCompleted.await()
+                }
             } catch (e: Exception) {
                 logger.error(e) { "Error waiting for SetupComplete" }
                 // Close resources
-                listenerJob.cancel()
+                listenerJob.cancelAndJoin()
                 session.close()
                 throw e
             }
 
-            return LiveMusicSession(session, incomingMessages, json, listenerJob)
+            return LiveMusicSession(session, incomingMessages, json, listenerJob, httpClient, ownsClient)
         } catch (e: Exception) {
-            session?.close()
+            logger.error(e) { "Error in connect method" }
+            try {
+                session?.close()
+            } finally {
+                if (ownsClient) {
+                    httpClient.close()
+                }
+            }
             throw e
         }
     }
@@ -138,6 +193,8 @@ class LiveMusicSession(
     private val incomingMessages: Channel<LiveMusicServerMessage>,
     private val json: Json,
     private val listenerJob: Job,
+    private val httpClient: HttpClient,
+    private val ownsClient: Boolean,
 ) {
     /**
      * Sets inputs to steer music generation. Updates the session's current weighted prompts.
@@ -208,11 +265,20 @@ class LiveMusicSession(
     fun receive(): Flow<LiveMusicServerMessage> = incomingMessages.receiveAsFlow()
 
     /**
-     * Closes the session.
+     * Closes the WebSocket session and cleans up session resources.
+     *
+     * Cancels the listener coroutine, closes the incoming message channel, and closes the associated
+     * HttpClient if this session owns it.
      */
     suspend fun close() {
-        session.close()
-        listenerJob.cancel()
-        incomingMessages.close()
+        try {
+            session.close()
+        } finally {
+            listenerJob.cancelAndJoin()
+            incomingMessages.close()
+            if (ownsClient) {
+                httpClient.close()
+            }
+        }
     }
 }

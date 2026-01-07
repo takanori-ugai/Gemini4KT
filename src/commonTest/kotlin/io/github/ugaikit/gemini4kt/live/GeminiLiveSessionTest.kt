@@ -1,6 +1,9 @@
 package io.github.ugaikit.gemini4kt.live
 
 import io.github.ugaikit.gemini4kt.FunctionResponse
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respondOk
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketExtension
 import io.ktor.websocket.WebSocketSession
@@ -33,6 +36,13 @@ class GeminiLiveSessionTest {
             encodeDefaults = true
         }
 
+    private fun newTestHttpClient(): HttpClient =
+        HttpClient(MockEngine) {
+            engine {
+                addHandler { respondOk() }
+            }
+        }
+
     /**
      * Tests test send client content sends correct json.
      */
@@ -47,6 +57,8 @@ class GeminiLiveSessionTest {
                     incomingMessages = incoming,
                     json = json,
                     listenerJob = Job(),
+                    httpClient = newTestHttpClient(),
+                    ownsClient = false,
                 )
 
             val content = BidiGenerateContentClientContent(turnComplete = true)
@@ -74,6 +86,8 @@ class GeminiLiveSessionTest {
                     incomingMessages = incoming,
                     json = json,
                     listenerJob = Job(),
+                    httpClient = newTestHttpClient(),
+                    ownsClient = false,
                 )
 
             val input = BidiGenerateContentRealtimeInput(text = "Hello")
@@ -101,6 +115,8 @@ class GeminiLiveSessionTest {
                     incomingMessages = incoming,
                     json = json,
                     listenerJob = Job(),
+                    httpClient = newTestHttpClient(),
+                    ownsClient = false,
                 )
 
             val response =
@@ -138,6 +154,8 @@ class GeminiLiveSessionTest {
                     incomingMessages = incoming,
                     json = json,
                     listenerJob = Job(),
+                    httpClient = newTestHttpClient(),
+                    ownsClient = false,
                 )
 
             val msg = BidiGenerateContentServerMessage(setupComplete = BidiGenerateContentSetupComplete())
@@ -162,6 +180,8 @@ class GeminiLiveSessionTest {
                     incomingMessages = incoming,
                     json = json,
                     listenerJob = job,
+                    httpClient = newTestHttpClient(),
+                    ownsClient = true,
                 )
 
             session.close()
@@ -260,7 +280,9 @@ class MockWebSocketSession : WebSocketSession {
      *
      * @param reason The reason.
      */
-    suspend fun close(reason: io.ktor.websocket.CloseReason) { // Unused parameter fixed by removing or suppressing. But here we override a deprecated member?
+    suspend fun close(reason: io.ktor.websocket.CloseReason) {
+        // Unused parameter fixed by removing or suppressing. But here we override a deprecated
+        // member?
         // CloseReason is parameter name. If I change to `_`, it might clash if it's an interface override.
         // Wait, `WebSocketSession` inherits `WebSocketSession` -> `CoroutineScope`?
         // `WebSocketSession` interface has `close(reason: CloseReason)`?

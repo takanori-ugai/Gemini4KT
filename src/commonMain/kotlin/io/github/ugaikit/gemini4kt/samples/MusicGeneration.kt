@@ -6,7 +6,6 @@ import io.github.ugaikit.gemini4kt.live.music.LiveMusicGenerationConfig
 import io.github.ugaikit.gemini4kt.live.music.LiveMusicSession
 import io.github.ugaikit.gemini4kt.live.music.WeightedPrompt
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -18,13 +17,15 @@ object MusicGeneration {
      *
      * @param onAudioData Callback to handle received audio data (Base64 encoded string).
      * @param liveMusicClient Optional LiveMusic client for testing.
+     * @param apiKey Optional API key override; when null, the platform API key lookup is used.
      */
     suspend fun run(
         onAudioData: (String) -> Unit,
         liveMusicClient: LiveMusic? = null,
+        apiKey: String? = null,
     ) {
-        val apiKey = getApiKey()
-        if (apiKey.isBlank()) {
+        val resolvedApiKey = apiKey ?: getApiKey()
+        if (resolvedApiKey.isBlank()) {
             println("GEMINI_API_KEY not found. Skipping API call.")
             return
         }
@@ -33,7 +34,7 @@ object MusicGeneration {
         // Assuming "models/lyria-realtime-exp" based on the TypeScript example.
         val musicModel = "lyria-realtime-exp"
 
-        val client = liveMusicClient ?: LiveMusic(apiKey, musicModel)
+        val client = liveMusicClient ?: LiveMusic(resolvedApiKey, musicModel)
 
         try {
             val session: LiveMusicSession = client.connect()
@@ -41,18 +42,20 @@ object MusicGeneration {
             println("Connected to Music API.")
 
             // 1. Set Weighted Prompts
-            val prompts = listOf(
-                WeightedPrompt("Upbeat electronic dance music with a driving beat.", 0.8),
-                WeightedPrompt("Hints of classical violin.", 0.2)
-            )
+            val prompts =
+                listOf(
+                    WeightedPrompt("Upbeat electronic dance music with a driving beat.", 0.8),
+                    WeightedPrompt("Hints of classical violin.", 0.2),
+                )
             session.setWeightedPrompts(prompts)
             println("Sent weighted prompts.")
 
             // 2. Set Configuration
-            val config = LiveMusicGenerationConfig(
-                temperature = 0.5,
-                bpm = 120
-            )
+            val config =
+                LiveMusicGenerationConfig(
+                    temperature = 0.5,
+                    bpm = 120,
+                )
             session.setMusicGenerationConfig(config)
             println("Sent generation config.")
 
@@ -91,10 +94,9 @@ object MusicGeneration {
                 session.close()
                 println("Session closed.")
             }
-
         } catch (e: Exception) {
             println("Error in MusicGeneration: ${e.message}")
-            e.printStackTrace()
+            println(e.stackTraceToString())
         }
     }
 }
