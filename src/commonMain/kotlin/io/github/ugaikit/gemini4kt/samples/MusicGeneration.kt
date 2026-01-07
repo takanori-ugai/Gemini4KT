@@ -30,7 +30,8 @@ object MusicGeneration {
             return
         }
 
-        // Use a valid model for music generation, e.g., "lyria-realtime-exp" or similar if available/documented.
+        // Use a valid model for music generation, e.g., "lyria-realtime-exp" or similar if available
+        // or documented.
         // Assuming "models/lyria-realtime-exp" based on the TypeScript example.
         val musicModel = "lyria-realtime-exp"
 

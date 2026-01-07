@@ -2,7 +2,6 @@ package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.batch.Batch
-import io.github.ugaikit.gemini4kt.filesearch.FileSearch
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -33,24 +32,6 @@ class SamplesTest {
             }
         val client = HttpClient(mockEngine)
         return Gemini(apiKey = "test_key", client = client)
-    }
-
-    /**
-     * Handles create mock file search.
-     *
-     * @param responseText The response text.
-     */
-    private fun createMockFileSearch(responseText: String): FileSearch {
-        val mockEngine =
-            MockEngine { _ ->
-                respond(
-                    content = ByteReadChannel(responseText),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json"),
-                )
-            }
-        val client = HttpClient(mockEngine)
-        return FileSearch(apiKey = "test_key", client = client)
     }
 
     /**

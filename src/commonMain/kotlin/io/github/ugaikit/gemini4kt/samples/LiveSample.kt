@@ -14,6 +14,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -24,7 +25,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 @OptIn(ExperimentalEncodingApi::class)
 object LiveSample {
     interface Session {
-        fun receive(): kotlinx.coroutines.flow.Flow<BidiGenerateContentServerMessage>
+        fun receive(): Flow<BidiGenerateContentServerMessage>
 
         suspend fun sendRealtimeInput(input: BidiGenerateContentRealtimeInput)
 
@@ -170,7 +171,7 @@ private fun io.github.ugaikit.gemini4kt.live.GeminiLive.toLiveClient(): LiveSamp
         override suspend fun connect(): LiveSample.Session {
             val session = this@toLiveClient.connect()
             return object : LiveSample.Session {
-                override fun receive(): kotlinx.coroutines.flow.Flow<BidiGenerateContentServerMessage> = session.receive()
+                override fun receive(): Flow<BidiGenerateContentServerMessage> = session.receive()
 
                 override suspend fun sendRealtimeInput(input: BidiGenerateContentRealtimeInput) = session.sendRealtimeInput(input)
 

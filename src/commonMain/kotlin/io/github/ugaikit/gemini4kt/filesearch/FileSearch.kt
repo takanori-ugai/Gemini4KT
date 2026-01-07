@@ -54,7 +54,6 @@ class FileSearch(
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
 
     companion object {
-        private const val HTTP_OK = 200
         private const val PREVIEW_LENGTH = 100
     }
 
