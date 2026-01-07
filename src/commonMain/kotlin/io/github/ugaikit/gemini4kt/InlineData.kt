@@ -62,22 +62,26 @@ class InlineDataBuilder {
     fun mimeType(init: () -> String) = apply { mimeType = init() }
 
     /**
-     * Handles data.
-     *
-     * @param init The init.
-     */
+ * Set the inline content data for the builder.
+ *
+ * @param init A lambda that produces the content string (often base64-encoded).
+ * @return This builder instance for chaining.
+ */
     fun data(init: () -> String) = apply { data = init() }
 
     /**
-     * Handles display name.
-     *
-     * @param init The init.
-     */
+ * Set the builder's optional display name.
+ *
+ * @param init A supplier that returns the display name, or `null` to leave it unset.
+ * @return This builder instance for chaining.
+ */
     fun displayName(init: () -> String?) = apply { displayName = init() }
 
     /**
-     * Handles build.
-     */
+         * Constructs an InlineData instance from the builder's current values.
+         *
+         * @return An InlineData configured with the builder's `mimeType`, `data`, and `displayName`.
+         */
     fun build() =
         InlineData(
             mimeType = mimeType,

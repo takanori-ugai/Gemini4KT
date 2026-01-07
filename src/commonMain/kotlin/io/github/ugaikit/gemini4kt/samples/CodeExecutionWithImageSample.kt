@@ -14,10 +14,9 @@ import io.github.ugaikit.gemini4kt.tool
  */
 object CodeExecutionWithImageSample {
     /**
-     * Runs the sample.
+     * Generates content from a provided image using Gemini with code-execution enabled and prints the response parts.
      *
-     * @param gemini Optional shared client.
-     * @param imageProvider Supplies a base64-encoded image; defaults to the bundled sample.
+     * @param imageProvider Supplies a base64-encoded image string; defaults to the bundled sample image. 
      */
     suspend fun run(
         gemini: Gemini? = null,
