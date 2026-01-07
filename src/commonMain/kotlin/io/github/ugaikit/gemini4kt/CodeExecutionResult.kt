@@ -40,34 +40,34 @@ class CodeExecutionResultBuilder {
     private var image: InlineData? = null
 
     /**
- * Set the execution outcome using the provided lambda.
- *
- * @param init Lambda that produces the outcome string to store.
- * @return This builder instance for chaining.
- */
+     * Set the execution outcome using the provided lambda.
+     *
+     * @param init Lambda that produces the outcome string to store.
+     * @return This builder instance for chaining.
+     */
     fun outcome(init: () -> String) = apply { outcome = init() }
 
     /**
- * Sets the textual output for the result using the provided initializer.
- *
- * @param init Lambda that produces the output string, or `null` if there is no output.
- * @return This builder instance for chaining.
- */
+     * Sets the textual output for the result using the provided initializer.
+     *
+     * @param init Lambda that produces the output string, or `null` if there is no output.
+     * @return This builder instance for chaining.
+     */
     fun output(init: () -> String?) = apply { output = init() }
 
     /**
- * Sets the builder's image by configuring an InlineDataBuilder with the provided lambda.
- *
- * @param init Lambda used to configure the InlineDataBuilder that will produce the image.
- * @return The same builder instance for chaining.
- */
+     * Sets the builder's image by configuring an InlineDataBuilder with the provided lambda.
+     *
+     * @param init Lambda used to configure the InlineDataBuilder that will produce the image.
+     * @return The same builder instance for chaining.
+     */
     fun image(init: InlineDataBuilder.() -> Unit) = apply { image = InlineDataBuilder().apply(init).build() }
 
     /**
-         * Constructs a CodeExecutionResult from the builder's accumulated values.
-         *
-         * @return A CodeExecutionResult containing the builder's current `outcome`, `output`, and `image`.
-         */
+     * Constructs a CodeExecutionResult from the builder's accumulated values.
+     *
+     * @return A CodeExecutionResult containing the builder's current `outcome`, `output`, and `image`.
+     */
     fun build() =
         CodeExecutionResult(
             outcome = outcome,

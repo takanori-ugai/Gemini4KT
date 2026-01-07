@@ -16,7 +16,7 @@ object CodeExecutionWithImageSample {
     /**
      * Generates content from a provided image using Gemini with code-execution enabled and prints the response parts.
      *
-     * @param imageProvider Supplies a base64-encoded image string; defaults to the bundled sample image. 
+     * @param imageProvider Supplies a base64-encoded image string; defaults to the bundled sample image.
      */
     suspend fun run(
         gemini: Gemini? = null,
