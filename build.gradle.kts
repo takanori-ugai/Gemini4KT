@@ -11,13 +11,13 @@ plugins {
     kotlin("plugin.serialization") version "2.3.0"
     id("org.jetbrains.dokka") version "2.1.0"
 //    id("org.jetbrains.dokka-javadoc") version "2.1.0"
-    id("com.android.kotlin.multiplatform.library") version "8.13.2"
+    id("com.android.kotlin.multiplatform.library") version "9.0.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.0.1"
     id("com.github.spotbugs") version "6.4.8"
     id("com.diffplug.spotless") version "8.1.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
-    id("com.github.gmazzo.buildconfig") version "5.5.0"
+    id("com.github.gmazzo.buildconfig") version "6.0.7"
     jacoco
     // id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
     id("com.vanniktech.maven.publish") version "0.30.0"
@@ -155,7 +155,7 @@ kotlin {
         val jvmMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
-                runtimeOnly("ch.qos.logback:logback-classic:1.5.23")
+                runtimeOnly("ch.qos.logback:logback-classic:1.5.25")
                 implementation("io.ktor:ktor-client-cio:3.3.3")
             }
         }
