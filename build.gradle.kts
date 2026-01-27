@@ -15,7 +15,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.0.1"
     id("com.github.spotbugs") version "6.4.8"
-    id("com.diffplug.spotless") version "8.1.0"
+    id("com.diffplug.spotless") version "8.2.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("com.github.gmazzo.buildconfig") version "6.0.7"
     jacoco
@@ -123,7 +123,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
                 implementation("io.github.oshai:kotlin-logging:7.0.14")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-                implementation("io.ktor:ktor-client-core:3.3.3")
+                implementation("io.ktor:ktor-client-core:3.4.0")
                 implementation("io.ktor:ktor-client-content-negotiation:3.3.3")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.3.3")
                 implementation("io.ktor:ktor-client-logging:3.3.3")
@@ -155,8 +155,8 @@ kotlin {
         val jvmMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
-                runtimeOnly("ch.qos.logback:logback-classic:1.5.25")
-                implementation("io.ktor:ktor-client-cio:3.3.3")
+                runtimeOnly("ch.qos.logback:logback-classic:1.5.26")
+                implementation("io.ktor:ktor-client-cio:3.4.0")
             }
         }
         val jvmTest by getting {
@@ -174,17 +174,17 @@ kotlin {
         val jsTest by getting
         val iosMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-darwin:3.3.3")
+                implementation("io.ktor:ktor-client-darwin:3.4.0")
             }
         }
         val mingwX64Main by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-curl:3.3.3")
+                implementation("io.ktor:ktor-client-curl:3.4.0")
             }
         }
         val linuxX64Main by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-curl:3.3.3")
+                implementation("io.ktor:ktor-client-curl:3.4.0")
             }
         }
         val androidMain by getting {
