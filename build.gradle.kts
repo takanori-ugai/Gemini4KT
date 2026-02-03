@@ -124,10 +124,10 @@ kotlin {
                 implementation("io.github.oshai:kotlin-logging:7.0.14")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
                 implementation("io.ktor:ktor-client-core:3.4.0")
-                implementation("io.ktor:ktor-client-content-negotiation:3.3.3")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:3.3.3")
-                implementation("io.ktor:ktor-client-logging:3.3.3")
-                implementation("io.ktor:ktor-client-websockets:3.3.3")
+                implementation("io.ktor:ktor-client-content-negotiation:3.4.0")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.0")
+                implementation("io.ktor:ktor-client-logging:3.4.0")
+                implementation("io.ktor:ktor-client-websockets:3.4.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.2")
             }
             buildConfig {
@@ -148,7 +148,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("io.ktor:ktor-client-mock:3.3.3")
+                implementation("io.ktor:ktor-client-mock:3.4.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
             }
         }
@@ -190,7 +190,7 @@ kotlin {
         val androidMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
-                implementation("io.ktor:ktor-client-android:3.3.3")
+                implementation("io.ktor:ktor-client-android:3.4.0")
             }
         }
     }
