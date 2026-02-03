@@ -15,7 +15,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.0.1"
     id("com.github.spotbugs") version "6.4.8"
-    id("com.diffplug.spotless") version "8.2.0"
+    id("com.diffplug.spotless") version "8.2.1"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("com.github.gmazzo.buildconfig") version "6.0.7"
     jacoco
@@ -124,10 +124,10 @@ kotlin {
                 implementation("io.github.oshai:kotlin-logging:7.0.14")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
                 implementation("io.ktor:ktor-client-core:3.4.0")
-                implementation("io.ktor:ktor-client-content-negotiation:3.3.3")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:3.3.3")
-                implementation("io.ktor:ktor-client-logging:3.3.3")
-                implementation("io.ktor:ktor-client-websockets:3.3.3")
+                implementation("io.ktor:ktor-client-content-negotiation:3.4.0")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.0")
+                implementation("io.ktor:ktor-client-logging:3.4.0")
+                implementation("io.ktor:ktor-client-websockets:3.4.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.2")
             }
             buildConfig {
@@ -148,7 +148,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("io.ktor:ktor-client-mock:3.3.3")
+                implementation("io.ktor:ktor-client-mock:3.4.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
             }
         }
@@ -161,7 +161,7 @@ kotlin {
         }
         val jvmTest by getting {
             dependencies {
-                implementation("io.mockk:mockk:1.14.7")
+                implementation("io.mockk:mockk:1.14.9")
             }
         }
 //        val wasmJsMain by getting {
