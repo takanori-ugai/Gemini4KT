@@ -8,7 +8,7 @@ import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
     kotlin("multiplatform") version "2.3.0"
-    kotlin("plugin.serialization") version "2.3.0"
+    kotlin("plugin.serialization") version "2.3.10"
     id("org.jetbrains.dokka") version "2.1.0"
 //    id("org.jetbrains.dokka-javadoc") version "2.1.0"
     id("com.android.kotlin.multiplatform.library") version "9.0.0"
