@@ -142,7 +142,7 @@ kotlin {
         val jvmCommonMain by creating {
             dependsOn(commonMain)
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-reflect:2.3.0")
+                implementation("org.jetbrains.kotlin:kotlin-reflect:2.3.10")
             }
         }
         val commonTest by getting {
