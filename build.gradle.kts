@@ -190,7 +190,7 @@ kotlin {
         val androidMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
-                implementation("io.ktor:ktor-client-android:3.3.3")
+                implementation("io.ktor:ktor-client-android:3.4.0")
             }
         }
     }
