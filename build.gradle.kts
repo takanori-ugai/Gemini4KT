@@ -121,7 +121,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
-                implementation("io.github.oshai:kotlin-logging:7.0.14")
+                implementation("io.github.oshai:kotlin-logging:8.0.01")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
                 implementation("io.ktor:ktor-client-core:3.4.0")
                 implementation("io.ktor:ktor-client-content-negotiation:3.4.0")
