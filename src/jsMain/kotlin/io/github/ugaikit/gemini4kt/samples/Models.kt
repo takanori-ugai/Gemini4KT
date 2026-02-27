@@ -29,7 +29,7 @@ fun main(args: Array<String>) {
     val target = targetArgs[0].lowercase()
     val action = sampleActions[target]
     if (action == null) {
-        println("不明なターゲット: ${args[0]}")
+        println("不明なターゲット: $target")
         return
     }
 

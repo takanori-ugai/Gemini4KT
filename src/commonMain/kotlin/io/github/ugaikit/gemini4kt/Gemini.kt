@@ -75,12 +75,12 @@ class Gemini(
      * Generates content based on the provided input JSON using a specified model.
      *
      * @param inputJson The request payload for content generation.
-     * @param model The model to be used for content generation. Defaults to "gemini-pro".
+     * @param model The model to be used for content generation. Defaults to "gemini-flash-lite-latest".
      * @return The response from the Gemini API as a [GenerateContentResponse] object.
      */
     suspend fun generateContent(
         inputJson: GenerateContentRequest,
-        model: String = "gemini-pro",
+        model: String = "gemini-flash-lite-latest",
     ): GenerateContentResponse {
         val urlString = "$baseUrl/$model:generateContent"
         return json.decodeFromString<GenerateContentResponse>(
@@ -92,12 +92,12 @@ class Gemini(
      * Generates content stream based on the provided input JSON using a specified model.
      *
      * @param inputJson The request payload for content generation.
-     * @param model The model to be used for content generation. Defaults to "gemini-pro".
+     * @param model The model to be used for content generation. Defaults to "gemini-flash-lite-latest".
      * @return The response from the Gemini API as a [Flow] of [GenerateContentResponse] object.
      */
     fun streamGenerateContent(
         inputJson: GenerateContentRequest,
-        model: String = "gemini-pro",
+        model: String = "gemini-flash-lite-latest",
     ): Flow<GenerateContentResponse> =
         flow {
             val urlString = "$baseUrl/$model:streamGenerateContent?alt=sse"
@@ -383,7 +383,7 @@ class GeminiJsExport(
      */
     suspend fun generateContent(
         request: GenerateContentRequest,
-        model: String = "gemini-pro",
+        model: String = "gemini-flash-lite-latest",
     ): String {
         val response = delegate.generateContent(request, model)
         return jsonHelper.encodeToString(response)

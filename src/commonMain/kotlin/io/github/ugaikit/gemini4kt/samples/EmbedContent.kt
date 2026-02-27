@@ -22,18 +22,18 @@ object EmbedContent {
         val embedRequest =
             EmbedContentRequest(
                 content = Content(arrayOf(Part(text))),
-                model = "models/text-embedding-004",
+                model = "models/gemini-embedding-001",
             )
-        println(client.embedContent(embedRequest, model = "text-embedding-004"))
+        println(client.embedContent(embedRequest, model = "gemini-embedding-001"))
         val batchEmbedRequest =
             BatchEmbedRequest(
                 listOf(
                     EmbedContentRequest(
                         content = Content(arrayOf(Part(text))),
-                        model = "models/text-embedding-004",
+                        model = "models/gemini-embedding-001",
                     ),
                 ),
             )
-        println(client.batchEmbedContents(batchEmbedRequest, model = "text-embedding-004"))
+        println(client.batchEmbedContents(batchEmbedRequest, model = "gemini-embedding-001"))
     }
 }

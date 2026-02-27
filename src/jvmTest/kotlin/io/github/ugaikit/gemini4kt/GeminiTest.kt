@@ -97,7 +97,10 @@ class GeminiTest {
             gemini =
                 createGemini { request ->
                     assertEquals(HttpMethod.Post, request.method)
-                    assertEquals("$baseUrl/models/gemini-pro:streamGenerateContent?alt=sse", request.url.toString())
+                    assertEquals(
+                        "$baseUrl/models/gemini-flash-lite-latest:streamGenerateContent?alt=sse",
+                        request.url.toString(),
+                    )
                     respond(
                         content = sseStream,
                         status = HttpStatusCode.OK,
@@ -220,7 +223,7 @@ class GeminiTest {
             val responseJson = """{"candidates": []}"""
             gemini =
                 createGemini { request ->
-                    assertEquals("$baseUrl/models/gemini-pro:generateContent", request.url.toString())
+                    assertEquals("$baseUrl/models/gemini-flash-lite-latest:generateContent", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
             val request = GenerateContentRequest(contents = emptyArray())
