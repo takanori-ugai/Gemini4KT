@@ -15,7 +15,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.1.1"
     id("com.github.spotbugs") version "6.4.8"
-    id("com.diffplug.spotless") version "8.2.1"
+    id("com.diffplug.spotless") version "8.3.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("com.github.gmazzo.buildconfig") version "6.0.7"
     jacoco
