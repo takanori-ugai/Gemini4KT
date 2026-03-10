@@ -103,7 +103,7 @@ kotlin {
     iosSimulatorArm64()
 
     @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
-    androidLibrary {
+    android {
         namespace = "io.github.ugaikit.gemini4kt"
         compileSdk = 33
         minSdk = 24
