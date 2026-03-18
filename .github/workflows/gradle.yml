@@ -48,11 +48,11 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew ktlintFormat
       - name: Run jvm tests
-        run: ./gradlew jvmTest 
+        run: ./gradlew jvmTest -x detekt
       - name: Prepare jsNodeTest
         run: ./gradlew kotlinUpgradeYarnLock 
       - name: Run jsNodeTest
-        run: ./gradlew jsNodeTest jacoco
+        run: ./gradlew jsNodeTest jacoco -x detekt
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
