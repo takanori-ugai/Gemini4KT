@@ -16,7 +16,7 @@ plugins {
     id("com.github.jk1.dependency-license-report") version "3.1.1"
     id("com.github.spotbugs") version "6.4.8"
     id("com.diffplug.spotless") version "8.3.0"
-    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("com.github.gmazzo.buildconfig") version "6.0.9"
     jacoco
     // id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
