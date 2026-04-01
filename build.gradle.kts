@@ -1,4 +1,3 @@
-import com.vanniktech.maven.publish.SonatypeHost
 import io.gitlab.arturbosch.detekt.Detekt
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -20,7 +19,7 @@ plugins {
     id("com.github.gmazzo.buildconfig") version "6.0.9"
     jacoco
     // id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
-    id("com.vanniktech.maven.publish") version "0.30.0"
+    id("com.vanniktech.maven.publish") version "0.35.0"
 }
 
 group = "io.github.ugaikit"
@@ -343,7 +342,8 @@ tasks.named<NodeJsExec>("jsNodeProductionRun") {
 }
 
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    // Maven Central に公開する場合の設定
+    publishToMavenCentral()
 
     signAllPublications()
 
