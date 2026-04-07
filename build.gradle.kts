@@ -19,7 +19,7 @@ plugins {
     id("com.github.gmazzo.buildconfig") version "6.0.9"
     jacoco
     // id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
-    id("com.vanniktech.maven.publish") version "0.35.0"
+    id("com.vanniktech.maven.publish") version "0.36.0"
 }
 
 group = "io.github.ugaikit"
