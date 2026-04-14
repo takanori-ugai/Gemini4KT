@@ -15,12 +15,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
-import kotlin.js.ExperimentalJsExport
-import kotlin.js.JsExport
 import kotlin.js.JsName
 
-@OptIn(ExperimentalJsExport::class)
-@JsExport
 class GeminiAI(
     private val client: HttpClient? = null,
     private val apiKey: String? = null,

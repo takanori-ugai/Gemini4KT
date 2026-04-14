@@ -21,8 +21,6 @@ import kotlinx.io.files.Path
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.js.ExperimentalJsExport
-import kotlin.js.JsExport
 import kotlin.js.JsName
 
 /**
@@ -359,8 +357,6 @@ class Gemini(
 /**
  * Represents the gemini js export.
  */
-@OptIn(ExperimentalJsExport::class)
-@JsExport
 @JsName("Gemini")
 class GeminiJsExport(
     apiKey: String,
