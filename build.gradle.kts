@@ -13,7 +13,7 @@ plugins {
     id("com.android.kotlin.multiplatform.library") version "9.1.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.1.2"
-    id("com.github.spotbugs") version "6.4.8"
+    id("com.github.spotbugs") version "6.5.0"
     id("com.diffplug.spotless") version "8.4.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("com.github.gmazzo.buildconfig") version "6.0.9"
