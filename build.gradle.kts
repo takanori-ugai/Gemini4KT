@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExec
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("multiplatform") version "2.3.20"
+    kotlin("multiplatform") version "2.3.21"
     kotlin("plugin.serialization") version "2.3.20"
     id("org.jetbrains.dokka") version "2.2.0"
 //    id("org.jetbrains.dokka-javadoc") version "2.1.0"
