@@ -121,7 +121,7 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
                 implementation("io.github.oshai:kotlin-logging:8.0.02")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
                 implementation("io.ktor:ktor-client-core:3.4.3")
                 implementation("io.ktor:ktor-client-content-negotiation:3.4.3")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.3")
@@ -148,7 +148,7 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
                 implementation("io.ktor:ktor-client-mock:3.4.3")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
             }
         }
         val jvmMain by getting {
