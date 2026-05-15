@@ -104,7 +104,7 @@ kotlin {
     @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
     android {
         namespace = "io.github.ugaikit.gemini4kt"
-        compileSdk = 33
+        compileSdk = 37
         minSdk = 24
 
         withJava() // enable java compilation support
@@ -311,7 +311,7 @@ detekt {
 }
 
 jacoco {
-    toolVersion = "0.8.13"
+    toolVersion = "0.8.14"
 }
 
 spotbugs {
