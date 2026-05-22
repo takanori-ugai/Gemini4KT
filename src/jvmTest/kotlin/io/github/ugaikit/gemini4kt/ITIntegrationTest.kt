@@ -183,7 +183,11 @@ class ITIntegrationTest {
 
             try {
                 val response = gemini.generateContent(firstTurnRequest, model)
-                val parts = response.candidates.firstOrNull()?.content?.parts
+                val parts =
+                    response.candidates
+                        .firstOrNull()
+                        ?.content
+                        ?.parts
                 assertTrue(!parts.isNullOrEmpty())
             } catch (error: GeminiException) {
                 handleQuotaError(error)
@@ -264,7 +268,11 @@ class ITIntegrationTest {
                     )
 
                 val secondTurnResponse = gemini.generateContent(secondTurnRequest, model)
-                val parts = secondTurnResponse.candidates.firstOrNull()?.content?.parts
+                val parts =
+                    secondTurnResponse.candidates
+                        .firstOrNull()
+                        ?.content
+                        ?.parts
                 assertTrue(!parts.isNullOrEmpty())
             } catch (error: GeminiException) {
                 handleQuotaError(error)

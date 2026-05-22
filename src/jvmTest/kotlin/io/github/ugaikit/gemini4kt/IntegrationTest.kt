@@ -9,6 +9,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -18,7 +19,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
-import java.io.File
 import java.util.Base64
 import java.util.Properties
 import javax.sound.sampled.AudioFileFormat
@@ -37,6 +37,26 @@ class IntegrationTest {
     private val httpTooManyRequests = 429
     private val liveAudioSampleRate = 24000.0f
     private val liveAudioSampleSizeInBits = 16
+
+    private fun isSkippableLiveApiError(error: Throwable): Boolean {
+        var current: Throwable? = error
+        while (current != null) {
+            if (current is TimeoutCancellationException) {
+                return true
+            }
+            val message = current.message.orEmpty()
+            if (
+                message.contains("Timed out", ignoreCase = true) ||
+                message.contains("SetupComplete", ignoreCase = true) ||
+                message.contains("too_many_requests", ignoreCase = true) ||
+                message.contains("RESOURCE_EXHAUSTED", ignoreCase = true)
+            ) {
+                return true
+            }
+            current = current.cause
+        }
+        return false
+    }
 
     private fun getApiKey(): String? {
         var apiKey = System.getenv("GEMINI_API_KEY")
@@ -230,7 +250,13 @@ class IntegrationTest {
                 }
 
                 if (audioBytes.size() > 0) {
-                    val outputFile = File("live_audio_response.wav")
+                    val outputFile =
+                        kotlin.io.path
+                            .createTempFile(
+                                prefix = "live_audio_response_",
+                                suffix = ".wav",
+                            ).toFile()
+                            .apply { deleteOnExit() }
                     try {
                         val channels = 1
                         val signed = true
@@ -253,11 +279,24 @@ class IntegrationTest {
                         println("Error saving WAV file: ${e.message}")
                     }
                 }
+            } catch (e: TimeoutCancellationException) {
+                Assumptions.assumeTrue(false, "Skipping unstable Live API integration test: ${e.message}")
+                throw e
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 println("Live API test failed: ${e.message}")
                 e.printStackTrace()
+                val quotaExceeded =
+                    e is GeminiException &&
+                        (
+                            e.error.code == httpTooManyRequests ||
+                                e.error.status == "RESOURCE_EXHAUSTED" ||
+                                e.message?.contains("too_many_requests", ignoreCase = true) == true
+                        )
+                if (quotaExceeded || isSkippableLiveApiError(e)) {
+                    Assumptions.assumeTrue(false, "Skipping unstable Live API integration test: ${e.message}")
+                }
                 throw e
             }
         }
