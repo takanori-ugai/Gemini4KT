@@ -17,6 +17,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 import java.io.File
 import java.util.Base64
 import java.util.Properties
@@ -29,6 +30,7 @@ import kotlin.test.Test
 /**
  * Integration tests for the Gemini4KT library running against live API endpoints.
  */
+@DisabledIfEnvironmentVariable(named = "GITHUB_ACTIONS", matches = "true")
 class IntegrationTest {
     private val liveModel = "gemini-3.1-flash-live-preview"
     private val liveTimeoutMs = 20000L
