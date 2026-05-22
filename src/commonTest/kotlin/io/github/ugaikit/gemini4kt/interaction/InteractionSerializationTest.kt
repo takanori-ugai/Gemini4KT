@@ -9,6 +9,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class InteractionSerializationTest {
     private val json =
@@ -114,6 +115,76 @@ class InteractionSerializationTest {
         val encoded = json.encodeToString(interaction)
         val decoded = json.decodeFromString<Interaction>(encoded)
         assertEquals(interaction, decoded)
+    }
+
+    @Test
+    fun interactionGenerationConfigCoversThinkingEnumsAndArrayEquality() {
+        val left =
+            InteractionGenerationConfig(
+                stopSequences = arrayOf("END"),
+                thinkingLevel = ThinkingLevel.HIGH,
+                thinkingSummaries = ThinkingSummaries.AUTO,
+                maxOutputTokens = 128,
+            )
+        val right =
+            InteractionGenerationConfig(
+                stopSequences = arrayOf("END"),
+                thinkingLevel = ThinkingLevel.HIGH,
+                thinkingSummaries = ThinkingSummaries.AUTO,
+                maxOutputTokens = 128,
+            )
+
+        assertEquals(left, right)
+        assertEquals(left.hashCode(), right.hashCode())
+        val encoded = json.encodeToString(left)
+        assertTrue(encoded.contains("\"thinking_level\":\"high\""))
+        assertTrue(encoded.contains("\"thinking_summaries\":\"auto\""))
+    }
+
+    @Test
+    fun interactionContentRoundTripWithSummaryUrlsAndAnnotations() {
+        val content =
+            InteractionContent(
+                type = "tool_result",
+                text = "ok",
+                urls = arrayOf("https://example.com"),
+                summary =
+                    InteractionThoughtSummary(
+                        content = InteractionContent(type = "text", text = "reasoning"),
+                    ),
+                annotations =
+                    arrayOf(
+                        InteractionAnnotation(startIndex = 0, endIndex = 2, source = "unit-test"),
+                    ),
+            )
+
+        val encoded = json.encodeToString(content)
+        val decoded = json.decodeFromString<InteractionContent>(encoded)
+        assertEquals(content, decoded)
+        assertEquals(content.hashCode(), decoded.hashCode())
+    }
+
+    @Test
+    fun interactionAgentConfigSerializesThinkingSummaries() {
+        val config =
+            InteractionAgentConfig(
+                type = "remote",
+                thinkingSummaries = ThinkingSummaries.NONE,
+            )
+
+        val encoded = json.encodeToString(config)
+        assertTrue(encoded.contains("\"thinking_summaries\":\"none\""))
+    }
+
+    @Test
+    fun interactionModalityTokenCountConstructs() {
+        val count =
+            InteractionModalityTokenCount(
+                modality = InteractionResponseModality.TEXT,
+                tokens = 42,
+            )
+        assertEquals(42, count.tokens)
+        assertEquals(InteractionResponseModality.TEXT, count.modality)
     }
 
     @Test

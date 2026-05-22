@@ -152,4 +152,49 @@ class LiveTypesTest {
         assertEquals(1, calls.size)
         assertEquals("get_weather", calls[0].name)
     }
+
+    @Test
+    fun testServerMessageDeserializesTranscriptionAndControlFields() {
+        val raw =
+            """
+            {
+              "toolCallCancellation": {"ids": ["call-1"]},
+              "goAway": {"timeLeft": "10s"},
+              "sessionResumptionUpdate": {"newHandle": "h1", "resumable": true},
+              "serverContent": {
+                "inputTranscription": {"text": "input"},
+                "outputTranscription": {"text": "output"}
+              }
+            }
+            """.trimIndent()
+
+        val decoded = json.decodeFromString<BidiGenerateContentServerMessage>(raw)
+        assertEquals(listOf("call-1"), decoded.toolCallCancellation?.ids)
+        assertEquals("10s", decoded.goAway?.timeLeft)
+        assertEquals("h1", decoded.sessionResumptionUpdate?.newHandle)
+        assertEquals(true, decoded.sessionResumptionUpdate?.resumable)
+        assertEquals("input", decoded.serverContent?.inputTranscription?.text)
+        assertEquals("output", decoded.serverContent?.outputTranscription?.text)
+    }
+
+    @Test
+    fun testSetupSerializesResumptionCompressionAndProactivity() {
+        val setup =
+            BidiGenerateContentSetup(
+                model = "models/gemini-2.5-flash",
+                sessionResumption = SessionResumptionConfig(handle = "resume-1"),
+                contextWindowCompression =
+                    ContextWindowCompressionConfig(
+                        slidingWindow = SlidingWindow(targetTokens = 512L),
+                        triggerTokens = 1024L,
+                    ),
+                proactivity = ProactivityConfig(proactiveAudio = true),
+            )
+
+        val encoded = json.encodeToString(setup)
+        assertTrue(encoded.contains("\"sessionResumption\""))
+        assertTrue(encoded.contains("\"contextWindowCompression\""))
+        assertTrue(encoded.contains("\"targetTokens\":512"))
+        assertTrue(encoded.contains("\"proactivity\""))
+    }
 }
