@@ -138,4 +138,25 @@ class PartTest {
         val actualJson = json.encodeToString(part)
         assertEquals(json.parseToJsonElement(expectedJson), json.parseToJsonElement(actualJson))
     }
+
+    /**
+     * Handles serialization with thought signature.
+     */
+    @Test
+    fun serializationWithThoughtSignature() {
+        val part = Part(thoughtSignature = "opaque-token-123")
+        val expectedJson = """{"thoughtSignature":"opaque-token-123"}"""
+        val actualJson = json.encodeToString(part)
+        assertEquals(json.parseToJsonElement(expectedJson), json.parseToJsonElement(actualJson))
+    }
+
+    /**
+     * Handles deserialization with snake_case thought_signature.
+     */
+    @Test
+    fun deserializationWithThoughtSignatureSnakeCase() {
+        val jsonStr = """{"thought_signature":"opaque-token-123"}"""
+        val part = json.decodeFromString<Part>(jsonStr)
+        assertEquals("opaque-token-123", part.thoughtSignature)
+    }
 }

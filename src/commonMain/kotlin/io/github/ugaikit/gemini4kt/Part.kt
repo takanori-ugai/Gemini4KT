@@ -32,6 +32,8 @@ data class Part(
     val fileData: FileData? = null,
     val executableCode: ExecutableCode? = null,
     val codeExecutionResult: CodeExecutionResult? = null,
+    @kotlinx.serialization.json.JsonNames("thought_signature")
+    val thoughtSignature: String? = null,
 )
 
 /**
@@ -86,6 +88,11 @@ class PartBuilder {
      * Holds the code execution result.
      */
     private var codeExecutionResult: CodeExecutionResult? = null
+
+    /**
+     * Holds the thought signature.
+     */
+    private var thoughtSignature: String? = null
 
     /**
      * Handles text.
@@ -149,6 +156,13 @@ class PartBuilder {
         }
 
     /**
+     * Handles thought signature.
+     *
+     * @param init The init.
+     */
+    fun thoughtSignature(init: () -> String?) = apply { thoughtSignature = init() }
+
+    /**
      * Handles build.
      */
     fun build() =
@@ -160,5 +174,6 @@ class PartBuilder {
             fileData = fileData,
             executableCode = executableCode,
             codeExecutionResult = codeExecutionResult,
+            thoughtSignature = thoughtSignature,
         )
 }
