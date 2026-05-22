@@ -87,9 +87,10 @@ class GeminiAI(
                         val channel = response.bodyAsChannel()
                         while (!channel.isClosedForRead) {
                             val line = channel.readLine() ?: break
-                            if (line.startsWith("data: ")) {
-                                val jsonStr = line.substring(6)
-                                val result = json.decodeFromString<JsonElement>(jsonStr)
+                            if (line.startsWith("data:")) {
+                                val payload = line.removePrefix("data:").trimStart()
+                                if (payload.isBlank() || payload == "[DONE]") continue
+                                val result = json.decodeFromString<JsonElement>(payload)
                                 send(result)
                             }
                         }

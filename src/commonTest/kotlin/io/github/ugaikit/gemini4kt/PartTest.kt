@@ -180,4 +180,15 @@ class PartTest {
         val part = json.decodeFromString<Part>(jsonStr)
         assertEquals(true, part.thought)
     }
+
+    /**
+     * Handles serialization with thought from builder path.
+     */
+    @Test
+    fun serializationWithThoughtFromBuilder() {
+        val part = part { thought { true } }
+        val expectedJson = """{"thought":true}"""
+        val actualJson = json.encodeToString(part)
+        assertEquals(json.parseToJsonElement(expectedJson), json.parseToJsonElement(actualJson))
+    }
 }

@@ -398,6 +398,66 @@ class GeminiAITest {
         }
 
     @Test
+    fun testStreamInteractionDataPrefixWithoutSpace() =
+        runTest {
+            val responseSSE =
+                """
+                data:{"id":"v1_123","status":"in_progress"}
+                data:{"id":"v1_123","status":"completed"}
+                """.trimIndent() + "\n"
+
+            val geminiAI =
+                createGeminiAI { _ ->
+                    respond(
+                        content = responseSSE,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Text.EventStream.toString()),
+                    )
+                }
+
+            val request =
+                CreateInteractionRequest(
+                    model = "gemini-2.5-flash",
+                    input = JsonPrimitive("Hello"),
+                )
+            val events = geminiAI.streamInteraction(request).toList()
+
+            assertEquals(2, events.size)
+            assertEquals("in_progress", events[0].jsonObject["status"]?.jsonPrimitive?.content)
+            assertEquals("completed", events[1].jsonObject["status"]?.jsonPrimitive?.content)
+        }
+
+    @Test
+    fun testStreamInteractionSkipsBlankAndDoneFrames() =
+        runTest {
+            val responseSSE =
+                """
+                data:
+                data: [DONE]
+                data: {"id":"v1_123","status":"completed"}
+                """.trimIndent() + "\n"
+
+            val geminiAI =
+                createGeminiAI { _ ->
+                    respond(
+                        content = responseSSE,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Text.EventStream.toString()),
+                    )
+                }
+
+            val request =
+                CreateInteractionRequest(
+                    model = "gemini-2.5-flash",
+                    input = JsonPrimitive("Hello"),
+                )
+            val events = geminiAI.streamInteraction(request).toList()
+
+            assertEquals(1, events.size)
+            assertEquals("completed", events[0].jsonObject["status"]?.jsonPrimitive?.content)
+        }
+
+    @Test
     fun testDownloadEnvironmentFilesError() =
         runTest {
             val responseJson =
