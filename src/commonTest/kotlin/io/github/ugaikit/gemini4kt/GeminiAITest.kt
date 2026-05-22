@@ -23,10 +23,15 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class GeminiAITest {
+    companion object {
+        private const val EXPECTED_API_REVISION = "2026-05-20"
+    }
+
     private fun createGeminiAI(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): GeminiAI {
         val client =
             HttpClient(MockEngine) {
@@ -173,7 +178,7 @@ class GeminiAITest {
                     assertEquals(HttpMethod.Post, request.method)
                     assertTrue(request.url.toString().contains("v1beta/interactions"))
                     assertTrue(request.url.toString().contains("alt=sse"))
-                    assertEquals("2026-05-20", request.headers["Api-Revision"])
+                    assertEquals(EXPECTED_API_REVISION, request.headers["Api-Revision"])
                     respond(
                         content = responseSSE,
                         status = HttpStatusCode.OK,
@@ -202,7 +207,7 @@ class GeminiAITest {
                 createGeminiAI { request ->
                     assertEquals(HttpMethod.Get, request.method)
                     assertTrue(request.url.toString().contains("v1beta/files/env_123"))
-                    assertEquals("2026-05-20", request.headers["Api-Revision"])
+                    assertEquals(EXPECTED_API_REVISION, request.headers["Api-Revision"])
                     respond(
                         content = responseBytes,
                         status = HttpStatusCode.OK,
@@ -211,7 +216,7 @@ class GeminiAITest {
                 }
 
             val result = geminiAI.downloadEnvironmentFiles("env_123")
-            assertTrue(responseBytes.contentEquals(result))
+            assertContentEquals(responseBytes, result)
         }
 
     @Test
@@ -229,7 +234,7 @@ class GeminiAITest {
                 createGeminiAI { request ->
                     assertEquals(HttpMethod.Post, request.method)
                     assertTrue(request.url.toString().contains("v1beta/agents"))
-                    assertEquals("2026-05-20", request.headers["Api-Revision"])
+                    assertEquals(EXPECTED_API_REVISION, request.headers["Api-Revision"])
                     respond(
                         content = responseJson,
                         status = HttpStatusCode.OK,
@@ -258,7 +263,7 @@ class GeminiAITest {
                 createGeminiAI { request ->
                     assertEquals(HttpMethod.Get, request.method)
                     assertTrue(request.url.toString().contains("v1beta/agents/fibonacci-analyst"))
-                    assertEquals("2026-05-20", request.headers["Api-Revision"])
+                    assertEquals(EXPECTED_API_REVISION, request.headers["Api-Revision"])
                     respond(
                         content = responseJson,
                         status = HttpStatusCode.OK,
@@ -277,7 +282,7 @@ class GeminiAITest {
                 createGeminiAI { request ->
                     assertEquals(HttpMethod.Delete, request.method)
                     assertTrue(request.url.toString().contains("v1beta/agents/fibonacci-analyst"))
-                    assertEquals("2026-05-20", request.headers["Api-Revision"])
+                    assertEquals(EXPECTED_API_REVISION, request.headers["Api-Revision"])
                     respond(
                         content = "",
                         status = HttpStatusCode.OK,
@@ -309,7 +314,7 @@ class GeminiAITest {
                     assertTrue(request.url.toString().contains("v1beta/agents"))
                     assertTrue(request.url.toString().contains("pageSize=5"))
                     assertTrue(request.url.toString().contains("pageToken=start"))
-                    assertEquals("2026-05-20", request.headers["Api-Revision"])
+                    assertEquals(EXPECTED_API_REVISION, request.headers["Api-Revision"])
                     respond(
                         content = responseJson,
                         status = HttpStatusCode.OK,
@@ -321,5 +326,264 @@ class GeminiAITest {
             assertEquals(1, result.agents.size)
             assertEquals("fibonacci-analyst", result.agents[0].id)
             assertEquals("token123", result.nextPageToken)
+        }
+
+    @Test
+    fun testStreamInteractionError() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "error": {
+                    "code": 400,
+                    "message": "Invalid request",
+                    "status": "INVALID_ARGUMENT"
+                  }
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.BadRequest,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            val request =
+                CreateInteractionRequest(
+                    model = "gemini-2.5-flash",
+                    input = JsonPrimitive("Hello"),
+                )
+
+            try {
+                geminiAI.streamInteraction(request).toList()
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(400, e.error.code)
+                assertEquals("Invalid request", e.error.message)
+            }
+        }
+
+    @Test
+    fun testStreamInteractionNonDataLine() =
+        runTest {
+            val responseSSE =
+                """
+                
+                : this is a comment/ping line
+                data: {"id": "v1_123", "status": "completed"}
+                
+                """.trimIndent() + "\n"
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseSSE,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Text.EventStream.toString()),
+                    )
+                }
+
+            val request =
+                CreateInteractionRequest(
+                    model = "gemini-2.5-flash",
+                    input = JsonPrimitive("Hello"),
+                )
+            val events = geminiAI.streamInteraction(request).toList()
+
+            assertEquals(1, events.size)
+            assertEquals("v1_123", events[0].jsonObject["id"]?.jsonPrimitive?.content)
+        }
+
+    @Test
+    fun testDownloadEnvironmentFilesError() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "error": {
+                    "code": 404,
+                    "message": "Files not found",
+                    "status": "NOT_FOUND"
+                  }
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.NotFound,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            try {
+                geminiAI.downloadEnvironmentFiles("env_notFound")
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(404, e.error.code)
+                assertEquals("Files not found", e.error.message)
+            }
+        }
+
+    @Test
+    fun testCreateAgentError() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "error": {
+                    "code": 400,
+                    "message": "Missing environment",
+                    "status": "INVALID_ARGUMENT"
+                  }
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.BadRequest,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            val request = CreateAgentRequest(id = "fibonacci-analyst", baseAgent = "antigravity-preview-05-2026")
+            try {
+                geminiAI.createAgent(request)
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(400, e.error.code)
+                assertEquals("Missing environment", e.error.message)
+            }
+        }
+
+    @Test
+    fun testGetAgentError() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "error": {
+                    "code": 404,
+                    "message": "Agent not found",
+                    "status": "NOT_FOUND"
+                  }
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.NotFound,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            try {
+                geminiAI.getAgent("non-existent")
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(404, e.error.code)
+                assertEquals("Agent not found", e.error.message)
+            }
+        }
+
+    @Test
+    fun testDeleteAgentError() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "error": {
+                    "code": 403,
+                    "message": "Permission denied",
+                    "status": "PERMISSION_DENIED"
+                  }
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.Forbidden,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            try {
+                geminiAI.deleteAgent("unauthorized")
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(403, e.error.code)
+                assertEquals("Permission denied", e.error.message)
+            }
+        }
+
+    @Test
+    fun testListAgentsError() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "error": {
+                    "code": 500,
+                    "message": "Internal error",
+                    "status": "INTERNAL"
+                  }
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.InternalServerError,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            try {
+                geminiAI.listAgents()
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(500, e.error.code)
+                assertEquals("Internal error", e.error.message)
+            }
+        }
+
+    @Test
+    fun testListAgentsDefaultPageToken() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "agents": [],
+                  "nextPageToken": ""
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    assertEquals(HttpMethod.Get, request.method)
+                    assertTrue(request.url.toString().contains("v1beta/agents"))
+                    assertTrue(request.url.toString().contains("pageSize=10"))
+                    val queryParams = request.url.parameters
+                    assertTrue(!queryParams.contains("pageToken"))
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            val result = geminiAI.listAgents()
+            assertEquals(0, result.agents.size)
         }
 }

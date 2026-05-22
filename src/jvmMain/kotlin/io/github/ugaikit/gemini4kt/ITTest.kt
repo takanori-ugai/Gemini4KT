@@ -420,9 +420,11 @@ private suspend fun testAgentAPI(apiKey: String) {
             systemInstruction = "You are a math analysis agent. Generate the Fibonacci sequence.",
         )
 
+    var created = false
     try {
         println("Creating agent: $agentId...")
         val createdAgent = geminiAI.createAgent(request)
+        created = true
         println("Created Agent: $createdAgent")
 
         println("Getting agent: $agentId...")
@@ -438,19 +440,26 @@ private suspend fun testAgentAPI(apiKey: String) {
             CreateInteractionRequest(
                 agent = agentId,
                 input = JsonPrimitive("Generate the first 5 Fibonacci numbers."),
-                environment = JsonPrimitive("remote"),
+                environment = buildJsonObject { put("type", "remote") },
                 stream = false,
             )
         val interaction = geminiAI.createInteraction(interactionRequest)
         println("Interaction output text: ${interaction.outputText}")
         println("Interaction status: ${interaction.status}")
-
-        println("Deleting agent: $agentId...")
-        geminiAI.deleteAgent(agentId)
-        println("Deleted agent successfully.")
     } catch (e: Exception) {
         println("Agent API test failed: ${e.message}")
         e.printStackTrace()
+        throw e
+    } finally {
+        if (created) {
+            try {
+                println("Deleting agent: $agentId...")
+                geminiAI.deleteAgent(agentId)
+                println("Deleted agent successfully.")
+            } catch (cleanupError: Exception) {
+                println("Agent cleanup failed: ${cleanupError.message}")
+            }
+        }
     }
 }
 
@@ -482,7 +491,7 @@ fun main() =
         testFunctionCallingFirstTurn(gemini, tools)
         testFunctionCallingSecondTurn(gemini, tools)
         testPartBuilder()
-//        testAgentAPI(apiKey)
+        testAgentAPI(apiKey)
     }
 
 /**
