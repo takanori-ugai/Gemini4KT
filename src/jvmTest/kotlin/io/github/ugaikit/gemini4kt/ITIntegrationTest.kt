@@ -7,6 +7,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 import java.io.File
 import java.util.Base64
 import java.util.Properties
@@ -17,6 +18,7 @@ import kotlin.test.assertTrue
 /**
  * Live integration coverage migrated from the old JVM main runner.
  */
+@DisabledIfEnvironmentVariable(named = "GITHUB_ACTIONS", matches = "true")
 class ITIntegrationTest {
     private val model = "gemini-3.1-flash-lite"
     private val embedModel = "gemini-embedding-2"
