@@ -586,4 +586,133 @@ class GeminiAITest {
             val result = geminiAI.listAgents()
             assertEquals(0, result.agents.size)
         }
+
+    @Test
+    fun testCreateInteractionError() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "error": {
+                    "code": 400,
+                    "message": "Invalid model",
+                    "status": "INVALID_ARGUMENT"
+                  }
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.BadRequest,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            val request = CreateInteractionRequest(model = "invalid-model", input = JsonPrimitive("Hello"))
+            try {
+                geminiAI.createInteraction(request)
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(400, e.error.code)
+                assertEquals("Invalid model", e.error.message)
+            }
+        }
+
+    @Test
+    fun testGetInteractionError() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "error": {
+                    "code": 404,
+                    "message": "Interaction not found",
+                    "status": "NOT_FOUND"
+                  }
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.NotFound,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            try {
+                geminiAI.getInteraction("nonexistent-interaction")
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(404, e.error.code)
+                assertEquals("Interaction not found", e.error.message)
+            }
+        }
+
+    @Test
+    fun testCancelInteractionError() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "error": {
+                    "code": 409,
+                    "message": "Interaction already completed",
+                    "status": "FAILED_PRECONDITION"
+                  }
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.Conflict,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            try {
+                geminiAI.cancelInteraction("completed-interaction")
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(409, e.error.code)
+                assertEquals("Interaction already completed", e.error.message)
+            }
+        }
+
+    @Test
+    fun testDeleteInteractionError() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "error": {
+                    "code": 403,
+                    "message": "Permission denied to delete interaction",
+                    "status": "PERMISSION_DENIED"
+                  }
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.Forbidden,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            try {
+                geminiAI.deleteInteraction("some-interaction")
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(403, e.error.code)
+                assertEquals("Permission denied to delete interaction", e.error.message)
+            }
+        }
 }
