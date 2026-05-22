@@ -34,6 +34,7 @@ data class Part(
     val codeExecutionResult: CodeExecutionResult? = null,
     @kotlinx.serialization.json.JsonNames("thought_signature")
     val thoughtSignature: String? = null,
+    val thought: Boolean? = null,
 )
 
 /**
@@ -93,6 +94,11 @@ class PartBuilder {
      * Holds the thought signature.
      */
     private var thoughtSignature: String? = null
+
+    /**
+     * Holds the thought flag.
+     */
+    private var thought: Boolean? = null
 
     /**
      * Handles text.
@@ -163,6 +169,13 @@ class PartBuilder {
     fun thoughtSignature(init: () -> String?) = apply { thoughtSignature = init() }
 
     /**
+     * Handles thought flag.
+     *
+     * @param init The init.
+     */
+    fun thought(init: () -> Boolean?) = apply { thought = init() }
+
+    /**
      * Handles build.
      */
     fun build() =
@@ -175,5 +188,6 @@ class PartBuilder {
             executableCode = executableCode,
             codeExecutionResult = codeExecutionResult,
             thoughtSignature = thoughtSignature,
+            thought = thought,
         )
 }

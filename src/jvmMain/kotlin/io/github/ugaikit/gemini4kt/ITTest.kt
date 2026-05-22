@@ -35,16 +35,6 @@ import javax.sound.sampled.AudioSystem
 private const val EMBED_MODEL = "gemini-embedding-2"
 
 /**
- * Holds the flash model.
- */
-private const val FLASH_MODEL = "gemini-3.1-flash-lite"
-
-/**
- * Holds the pro model.
- */
-private const val PRO_MODEL = "gemini-3.1-flash-lite"
-
-/**
  * Holds the live model.
  */
 private const val LIVE_MODEL = "gemini-3.1-flash-live-preview"
@@ -73,8 +63,12 @@ private const val LIVE_AUDIO_SAMPLE_SIZE_IN_BITS = 16
  * Tests test content generation.
  *
  * @param gemini The gemini.
+ * @param model The model.
  */
-private suspend fun testContentGeneration(gemini: Gemini) {
+private suspend fun testContentGeneration(
+    gemini: Gemini,
+    model: String,
+) {
     println("--- testGenerateContent ---")
     /**
      * Holds the text.
@@ -96,13 +90,24 @@ private suspend fun testContentGeneration(gemini: Gemini) {
     /**
      * Holds the response.
      */
-    val response = gemini.generateContent(inputJson, model = FLASH_MODEL)
-    println(
+    val response = gemini.generateContent(inputJson, model = model)
+    val thoughtPart =
         response.candidates
             .firstOrNull()
             ?.content
             ?.parts
-            ?.firstOrNull()
+            ?.firstOrNull { it.thought == true }
+    if (thoughtPart != null) {
+        println("[Thought/Reasoning]:\n${thoughtPart.text}")
+    }
+    val textPart =
+        response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull { it.text != null && it.thought != true }
+    println(
+        textPart
             ?.text
             ?.replace("\n\n", "\n"),
     )
@@ -115,7 +120,7 @@ private suspend fun testContentGeneration(gemini: Gemini) {
         CountTokensRequest(
             contents = listOf(Content(parts = arrayOf(Part(text)))),
         )
-    println(gemini.countTokens(inputJson2))
+    println(gemini.countTokens(inputJson2, model = model))
 
     println("--- testEmbedContent ---")
     /**
@@ -149,8 +154,12 @@ private suspend fun testContentGeneration(gemini: Gemini) {
  * Tests test models and content.
  *
  * @param gemini The gemini.
+ * @param model The model.
  */
-private suspend fun testModelsAndContent(gemini: Gemini) {
+private suspend fun testModelsAndContent(
+    gemini: Gemini,
+    model: String,
+) {
     println("--- testGetModels ---")
     println(gemini.getModels())
 
@@ -196,13 +205,24 @@ private suspend fun testModelsAndContent(gemini: Gemini) {
     /**
      * Holds the response.
      */
-    val response = gemini.generateContent(inputWithImage, PRO_MODEL)
-    println(
+    val response = gemini.generateContent(inputWithImage, model)
+    val thoughtPart =
         response.candidates
             .firstOrNull()
             ?.content
             ?.parts
-            ?.firstOrNull()
+            ?.firstOrNull { it.thought == true }
+    if (thoughtPart != null) {
+        println("[Thought/Reasoning]:\n${thoughtPart.text}")
+    }
+    val textPart =
+        response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull { it.text != null && it.thought != true }
+    println(
+        textPart
             ?.text
             ?.replace("\n\n", "\n"),
     )
@@ -309,10 +329,12 @@ private fun defineFunctionTools(): Array<Tool> =
  *
  * @param gemini The gemini.
  * @param tools The tools.
+ * @param model The model.
  */
 private suspend fun testFunctionCallingFirstTurn(
     gemini: Gemini,
     tools: Array<Tool>,
+    model: String,
 ) {
     println("--- testFunctionCallingFirstTurn ---")
     /**
@@ -334,15 +356,14 @@ private suspend fun testFunctionCallingFirstTurn(
             tools = tools,
         )
 
-    println(
-        gemini
-            .generateContent(exFunction, PRO_MODEL)
-            .candidates
-            .firstOrNull()
-            ?.content
-            ?.parts
-            ?.firstOrNull(),
-    )
+    val firstTurnResponse = gemini.generateContent(exFunction, model)
+    firstTurnResponse.candidates.firstOrNull()?.content?.parts?.forEach { part ->
+        if (part.thought == true) {
+            println("[Thought]: ${part.text}")
+        } else {
+            println("[Part]: $part")
+        }
+    }
 }
 
 /**
@@ -350,10 +371,12 @@ private suspend fun testFunctionCallingFirstTurn(
  *
  * @param gemini The gemini.
  * @param tools The tools.
+ * @param model The model.
  */
 private suspend fun testFunctionCallingSecondTurn(
     gemini: Gemini,
     tools: Array<Tool>,
+    model: String,
 ) {
     println("--- testFunctionCallingSecondTurn ---")
     /**
@@ -388,13 +411,12 @@ private suspend fun testFunctionCallingSecondTurn(
                 ),
             tools = tools,
         )
-    val firstTurnResponse = gemini.generateContent(exFunction, PRO_MODEL)
-    val modelPart =
+    val firstTurnResponse = gemini.generateContent(exFunction, model)
+    val modelParts =
         firstTurnResponse.candidates
             .firstOrNull()
             ?.content
             ?.parts
-            ?.firstOrNull()
             ?: error("Model response or parts are null in the first turn.")
 
     /**
@@ -409,7 +431,7 @@ private suspend fun testFunctionCallingSecondTurn(
                         part { text { "Which theaters in Mountain View show Barbie movie?" } }
                     },
                     Content(
-                        parts = arrayOf(modelPart),
+                        parts = modelParts,
                         role = "model",
                     ),
                     content {
@@ -427,15 +449,14 @@ private suspend fun testFunctionCallingSecondTurn(
             tools = tools,
         )
 
-    println(
-        gemini
-            .generateContent(exFunction2, PRO_MODEL)
-            .candidates
-            .firstOrNull()
-            ?.content
-            ?.parts
-            ?.firstOrNull(),
-    )
+    val secondTurnResponse = gemini.generateContent(exFunction2, model)
+    secondTurnResponse.candidates.firstOrNull()?.content?.parts?.forEach { part ->
+        if (part.thought == true) {
+            println("[Thought]: ${part.text}")
+        } else {
+            println("[Part]: $part")
+        }
+    }
 }
 
 /**
@@ -680,11 +701,32 @@ fun main() =
         val gemini = Gemini(apiKey)
         val tools = defineFunctionTools()
 
-        testContentGeneration(gemini)
-        testModelsAndContent(gemini)
-//    testCachedContent(gemini)
-        testFunctionCallingFirstTurn(gemini, tools)
-        testFunctionCallingSecondTurn(gemini, tools)
+        val models = listOf("gemini-3.1-flash-lite", "gemma-4-31b-it")
+        for (model in models) {
+            println("\n========================================")
+            println("Testing with model: $model")
+            println("========================================")
+            try {
+                testContentGeneration(gemini, model)
+            } catch (e: Exception) {
+                println("testContentGeneration failed for $model: ${e.message}")
+            }
+            try {
+                testModelsAndContent(gemini, model)
+            } catch (e: Exception) {
+                println("testModelsAndContent failed for $model: ${e.message}")
+            }
+            try {
+                testFunctionCallingFirstTurn(gemini, tools, model)
+            } catch (e: Exception) {
+                println("testFunctionCallingFirstTurn failed for $model: ${e.message}")
+            }
+            try {
+                testFunctionCallingSecondTurn(gemini, tools, model)
+            } catch (e: Exception) {
+                println("testFunctionCallingSecondTurn failed for $model: ${e.message}")
+            }
+        }
         testPartBuilder()
         testAgentAPI(apiKey)
         testLiveAPI(apiKey)
