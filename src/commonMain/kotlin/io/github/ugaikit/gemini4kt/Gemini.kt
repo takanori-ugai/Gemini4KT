@@ -14,7 +14,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.utils.io.readUTF8Line
+import io.ktor.utils.io.readLine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.io.files.Path
@@ -124,7 +124,7 @@ class Gemini(
                 } else {
                     val channel = response.bodyAsChannel()
                     while (!channel.isClosedForRead) {
-                        val line = channel.readUTF8Line() ?: break
+                        val line = channel.readLine() ?: break
                         if (line.startsWith("data: ")) {
                             val jsonStr = line.substring(6)
                             try {

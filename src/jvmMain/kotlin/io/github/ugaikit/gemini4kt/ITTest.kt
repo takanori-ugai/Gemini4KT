@@ -2,6 +2,8 @@
 
 package io.github.ugaikit.gemini4kt
 
+import io.github.ugaikit.gemini4kt.agent.CreateAgentRequest
+import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
@@ -16,7 +18,7 @@ import java.util.Properties
 /**
  * Holds the embed model.
  */
-private const val EMBED_MODEL = "text-embedding-004"
+private const val EMBED_MODEL = "gemini-embedding-2"
 
 /**
  * Holds the flash model.
@@ -403,6 +405,56 @@ private fun testPartBuilder() {
 }
 
 /**
+ * Tests the Agent API.
+ *
+ * @param apiKey The API key.
+ */
+private suspend fun testAgentAPI(apiKey: String) {
+    println("--- testAgentAPI ---")
+    val geminiAI = GeminiAI(apiKey = apiKey)
+    val agentId = "fibonacci-analyst-jvm-${System.currentTimeMillis()}"
+    val request =
+        CreateAgentRequest(
+            id = agentId,
+            baseAgent = "antigravity-preview-05-2026",
+            systemInstruction = "You are a math analysis agent. Generate the Fibonacci sequence.",
+        )
+
+    try {
+        println("Creating agent: $agentId...")
+        val createdAgent = geminiAI.createAgent(request)
+        println("Created Agent: $createdAgent")
+
+        println("Getting agent: $agentId...")
+        val retrievedAgent = geminiAI.getAgent(agentId)
+        println("Retrieved Agent: $retrievedAgent")
+
+        println("Listing agents...")
+        val listResponse = geminiAI.listAgents(pageSize = 5)
+        println("Listed agents (first page): ${listResponse.agents.joinToString { it.id }}")
+
+        println("Creating interaction with agent: $agentId...")
+        val interactionRequest =
+            CreateInteractionRequest(
+                agent = agentId,
+                input = JsonPrimitive("Generate the first 5 Fibonacci numbers."),
+                environment = JsonPrimitive("remote"),
+                stream = false,
+            )
+        val interaction = geminiAI.createInteraction(interactionRequest)
+        println("Interaction output text: ${interaction.outputText}")
+        println("Interaction status: ${interaction.status}")
+
+        println("Deleting agent: $agentId...")
+        geminiAI.deleteAgent(agentId)
+        println("Deleted agent successfully.")
+    } catch (e: Exception) {
+        println("Agent API test failed: ${e.message}")
+        e.printStackTrace()
+    }
+}
+
+/**
  * Handles main.
  */
 fun main() =
@@ -430,6 +482,7 @@ fun main() =
         testFunctionCallingFirstTurn(gemini, tools)
         testFunctionCallingSecondTurn(gemini, tools)
         testPartBuilder()
+//        testAgentAPI(apiKey)
     }
 
 /**
