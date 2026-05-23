@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import kotlin.reflect.full.memberFunctions
 
 /**
  * Tests test function.
@@ -29,6 +30,34 @@ fun functionWithoutAnnotation(
     str: String,
     int: Int,
 ) {
+}
+
+@GeminiFunction(description = "Collection parameter function")
+@Suppress("EmptyFunctionBlock", "UnusedParameter")
+fun functionWithCollections(
+    @GeminiParameter(description = "Integer list") values: List<Int>,
+    @GeminiParameter(description = "String map") tags: Map<String, String>,
+) {
+}
+
+@GeminiFunction(description = "Function with optional argument")
+@Suppress("EmptyFunctionBlock", "UnusedParameter")
+fun functionWithOptional(
+    @GeminiParameter(description = "Required value") required: String,
+    @GeminiParameter(description = "Optional value") optional: String = "default",
+) {
+}
+
+object OverloadedFunctions {
+    @GeminiFunction(description = "Overloaded by int")
+    fun sameName(
+        @GeminiParameter(description = "number") value: Int,
+    ): String = value.toString()
+
+    @GeminiFunction(description = "Overloaded by string")
+    fun sameName(
+        @GeminiParameter(description = "text") value: String,
+    ): String = value
 }
 
 /**
@@ -66,5 +95,43 @@ class FunctionDslTest {
         assertThrows<IllegalArgumentException> {
             buildFunctionDeclaration(::functionWithoutAnnotation)
         }
+    }
+
+    @Test
+    fun `buildFunctionDeclaration supports list and map parameter types`() {
+        val declaration = buildFunctionDeclaration(::functionWithCollections)
+        val parameters = declaration.parameters
+
+        val valuesParam = parameters.properties["values"]!!
+        assertEquals("array", valuesParam.type)
+        assertEquals("integer", valuesParam.items?.type)
+
+        val tagsParam = parameters.properties["tags"]!!
+        assertEquals("object", tagsParam.type)
+    }
+
+    @Test
+    fun `buildFunctionDeclaration excludes optional parameters from required list`() {
+        val declaration = buildFunctionDeclaration(::functionWithOptional)
+
+        assertEquals(listOf("required"), declaration.parameters.required)
+    }
+
+    @Test
+    fun `buildAutomaticFunctionBinding rejects duplicate function names`() {
+        val overloadedFunctions =
+            OverloadedFunctions::class
+                .memberFunctions
+                .filter { it.name == "sameName" }
+                .toTypedArray()
+
+        val exception =
+            assertThrows<IllegalArgumentException> {
+                buildAutomaticFunctionBinding(overloadedFunctions)
+            }
+        assertEquals(
+            "Function names must be unique for automatic binding: sameName.",
+            exception.message,
+        )
     }
 }

@@ -6,13 +6,17 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.float
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
@@ -36,6 +40,15 @@ fun buildFunctionTools(vararg functions: KFunction<*>): Array<Tool> {
  */
 actual fun buildAutomaticFunctionBinding(functions: Array<out KFunction<*>>): AutomaticFunctionBinding {
     require(functions.isNotEmpty()) { "At least one function is required." }
+    val duplicateNames =
+        functions
+            .groupingBy { it.name }
+            .eachCount()
+            .filterValues { it > 1 }
+            .keys
+    require(duplicateNames.isEmpty()) {
+        "Function names must be unique for automatic binding: ${duplicateNames.joinToString(", ")}."
+    }
     val tools = buildFunctionTools(*functions)
     val handlers =
         functions.associate { function ->
@@ -111,12 +124,58 @@ private fun jsonElementToKotlinValue(
         Double::class -> element.jsonPrimitive.double
         Float::class -> element.jsonPrimitive.float
         Boolean::class -> element.jsonPrimitive.boolean
+        List::class, MutableList::class, Collection::class, Iterable::class -> {
+            val itemType =
+                type.arguments.firstOrNull()?.type
+                    ?: throw IllegalArgumentException("Collection parameter type must declare an element type: $type")
+            val array = element as? JsonArray ?: throw IllegalArgumentException("Expected JsonArray but got $element")
+            array.map { item -> jsonElementToKotlinValue(item, itemType) }
+        }
+        Set::class, MutableSet::class -> {
+            val itemType =
+                type.arguments.firstOrNull()?.type
+                    ?: throw IllegalArgumentException("Set parameter type must declare an element type: $type")
+            val array = element as? JsonArray ?: throw IllegalArgumentException("Expected JsonArray but got $element")
+            array.mapTo(linkedSetOf()) { item -> jsonElementToKotlinValue(item, itemType) }
+        }
+        Map::class, MutableMap::class -> {
+            val keyType = type.arguments.getOrNull(0)?.type
+            if (keyType?.classifier != String::class) {
+                throw IllegalArgumentException("Map parameter keys must be String for automatic binding: $type")
+            }
+            val valueType = type.arguments.getOrNull(1)?.type
+            val jsonObject = element as? JsonObject ?: throw IllegalArgumentException("Expected JsonObject but got $element")
+            jsonObject.mapValues { (_, value) ->
+                if (valueType == null) {
+                    jsonElementToUntypedKotlinValue(value)
+                } else {
+                    jsonElementToKotlinValue(value, valueType)
+                }
+            }
+        }
         JsonElement::class -> element
-        JsonObject::class -> element as? JsonObject ?: error("Expected JsonObject but got $element")
-        JsonArray::class -> element as? JsonArray ?: error("Expected JsonArray but got $element")
+        JsonObject::class -> element as? JsonObject ?: throw IllegalArgumentException("Expected JsonObject but got $element")
+        JsonArray::class -> element as? JsonArray ?: throw IllegalArgumentException("Expected JsonArray but got $element")
         else -> throw IllegalArgumentException("Unsupported parameter type for automatic binding: $type")
     }
 }
+
+private fun jsonElementToUntypedKotlinValue(element: JsonElement): Any? =
+    when (element) {
+        is JsonNull -> null
+        is JsonObject ->
+            element.mapValues { (_, value) ->
+                jsonElementToUntypedKotlinValue(value)
+            }
+        is JsonArray -> element.map { item -> jsonElementToUntypedKotlinValue(item) }
+        is JsonPrimitive -> {
+            if (element.isString) {
+                element.content
+            } else {
+                element.booleanOrNull ?: element.longOrNull ?: element.doubleOrNull ?: element.contentOrNull
+            }
+        }
+    }
 
 private fun anyToJsonElement(value: Any?): JsonElement =
     when (value) {
@@ -143,5 +202,5 @@ private fun anyToJsonElement(value: Any?): JsonElement =
             buildJsonArray {
                 value.forEach { add(anyToJsonElement(it)) }
             }
-        else -> JsonPrimitive(value.toString())
+        else -> throw IllegalArgumentException("Unsupported return type for automatic binding: ${value::class}")
     }

@@ -62,12 +62,7 @@ object FunctionExample4 {
             )
 
         val firstCandidate = response.candidates.firstOrNull()
-        val finalText =
-            firstCandidate
-                ?.content
-                ?.parts
-                ?.firstOrNull()
-                ?.text
+        val finalText = response.getText()
         if (finalText != null) {
             println("Final response: $finalText")
         } else {
