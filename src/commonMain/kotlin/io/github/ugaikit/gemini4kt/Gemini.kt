@@ -22,6 +22,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.js.JsName
+import kotlin.reflect.KFunction
 
 /**
  * A logger for logging messages. Uses KotlinLogging library for simplified logging.
@@ -40,6 +41,90 @@ class Gemini(
     private val client: HttpClient? = null,
     private val fileUploadProvider: FileUploadProvider? = null,
 ) {
+    /**
+     * Executes Gemini function-calling turns automatically until the model
+     * returns a non-function-call response.
+     *
+     * The first candidate is used for function-call extraction on each turn.
+     *
+     * @param request Initial request containing user contents and tool declarations.
+     * @param functionHandlers Map of function name to handler implementation.
+     * @param model The model to use.
+     * @param maxIterations Maximum number of tool turns before failing.
+     * @return Final [GenerateContentResponse] produced by the model.
+     * @throws IllegalArgumentException If `maxIterations` is not positive or a handler is missing.
+     * @throws IllegalStateException If function-calling does not finish within `maxIterations`.
+     */
+    suspend fun generateContent(
+        request: GenerateContentRequest,
+        functionHandlers: Map<String, suspend (FunctionCall) -> FunctionResponse>,
+        model: String = "gemini-flash-lite-latest",
+        maxIterations: Int = 8,
+    ): GenerateContentResponse {
+        require(maxIterations > 0) { "maxIterations must be greater than 0." }
+
+        var currentRequest = request
+        repeat(maxIterations) {
+            val response = generateContent(currentRequest, model)
+            val candidate = response.candidates.firstOrNull() ?: return response
+            val modelParts: Array<Part> = candidate.content.parts ?: emptyArray()
+            val functionCalls = modelParts.mapNotNull { it.functionCall }
+
+            if (functionCalls.isEmpty()) {
+                return response
+            }
+
+            val functionResponseParts =
+                functionCalls.map { functionCall ->
+                    val handler =
+                        functionHandlers[functionCall.name]
+                            ?: throw IllegalArgumentException(
+                                "No function handler registered for '${functionCall.name}'.",
+                            )
+                    val functionResponse = handler(functionCall)
+                    Part(functionResponse = functionResponse)
+                }
+
+            val modelContent = Content(role = "model", parts = modelParts)
+            val functionContent =
+                Content(
+                    role = "function",
+                    parts = functionResponseParts.toTypedArray(),
+                )
+
+            currentRequest =
+                currentRequest.copy(
+                    contents = currentRequest.contents + arrayOf(modelContent, functionContent),
+                )
+        }
+
+        throw IllegalStateException(
+            "Automatic function calling exceeded maxIterations=$maxIterations.",
+        )
+    }
+
+    /**
+     * Executes automatic function calling using direct Kotlin function references.
+     *
+     * This is currently supported on JVM/Android targets.
+     */
+    suspend fun generateContent(
+        request: GenerateContentRequest,
+        vararg functions: KFunction<*>,
+        model: String = "gemini-flash-lite-latest",
+        maxIterations: Int = 8,
+    ): GenerateContentResponse {
+        require(functions.isNotEmpty()) { "At least one function is required." }
+        val binding = buildAutomaticFunctionBinding(functions)
+        val mergedRequest = request.copy(tools = request.tools + binding.tools)
+        return generateContent(
+            request = mergedRequest,
+            functionHandlers = binding.handlers,
+            model = model,
+            maxIterations = maxIterations,
+        )
+    }
+
     /**
      * JSON configuration setup to ignore unknown keys during deserialization.
      */

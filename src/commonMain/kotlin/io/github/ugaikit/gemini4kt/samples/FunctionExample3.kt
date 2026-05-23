@@ -50,7 +50,7 @@ object FunctionExample3 {
         val userPrompt = "What is 123 plus 456?"
         val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
         val firstRequest = GenerateContentRequest(contents = arrayOf(initialContent), tools = tools)
-        val firstResponse = client.generateContent(firstRequest, "gemini-2.5-flash-lite")
+        val firstResponse = client.generateContent(firstRequest, "gemma-4-31b-it")
 
         val modelResponsePart =
             firstResponse.candidates[0]
@@ -90,7 +90,7 @@ object FunctionExample3 {
                 )
 
             val secondRequest = GenerateContentRequest(contents = conversationHistory, tools = tools)
-            val secondResponse = client.generateContent(secondRequest, "gemini-2.5-flash-lite")
+            val secondResponse = client.generateContent(secondRequest, "gemma-4-31b-it")
             val firstCandidate = secondResponse.candidates.firstOrNull()
             val finalText =
                 firstCandidate

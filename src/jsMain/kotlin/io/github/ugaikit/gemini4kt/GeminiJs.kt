@@ -91,7 +91,7 @@ class GeminiJsClient(
 suspend fun runSample1(
     apiKey: String,
     prompt: String = "Write a story about a magic backpack.",
-    model: String = "gemini-2.5-flash-lite",
+    model: String = "gemma-4-31b-it",
 ): String {
     /**
      * Holds the client.

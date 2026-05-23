@@ -10,6 +10,7 @@ import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.mockk.coEvery
@@ -19,11 +20,22 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
+
+@GeminiFunction(description = "Adds two integers")
+private fun add_direct(
+    @GeminiParameter(description = "first number") a: Int,
+    @GeminiParameter(description = "second number") b: Int,
+): Int = a + b
 
 /**
  * Represents the gemini test.
@@ -405,5 +417,230 @@ class GeminiTest {
 
             assertEquals(expectedFile, result)
             coVerify { fileUploadProvider.upload(path, mimeType, displayName) }
+        }
+
+    @Test
+    fun `generateContentWithAutomaticFunctionCalls executes function and returns final response`() =
+        runTest {
+            var callCount = 0
+            gemini =
+                createGemini { request ->
+                    callCount += 1
+
+                    if (callCount == 2) {
+                        val body = (request.body as TextContent).text
+                        assertTrue(body.contains("\"functionResponse\""))
+                        assertTrue(body.contains("\"result\":579"))
+                    }
+
+                    val responseJson =
+                        if (callCount == 1) {
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "functionCall": {
+                                          "name": "add",
+                                          "args": { "a": 123, "b": 456 }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent()
+                        } else {
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "text": "The sum is 579."
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent()
+                        }
+
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val request =
+                GenerateContentRequest(
+                    contents = arrayOf(Content(role = "user", parts = arrayOf(Part(text = "What is 123 plus 456?")))),
+                    tools = emptyArray(),
+                )
+
+            val handlers =
+                mapOf<String, suspend (FunctionCall) -> FunctionResponse>(
+                    "add" to { functionCall ->
+                        val a = functionCall.args["a"]?.jsonPrimitive?.int ?: 0
+                        val b = functionCall.args["b"]?.jsonPrimitive?.int ?: 0
+                        FunctionResponse(
+                            name = "add",
+                            response = buildJsonObject { put("result", a + b) },
+                        )
+                    },
+                )
+
+            val response = gemini.generateContent(request, handlers)
+
+            assertEquals(2, callCount)
+            assertEquals(
+                "The sum is 579.",
+                response.candidates
+                    .first()
+                    .content.parts
+                    ?.firstOrNull()
+                    ?.text,
+            )
+        }
+
+    @Test
+    fun `generateContentWithAutomaticFunctionCalls throws when function handler is missing`() =
+        runTest {
+            gemini =
+                createGemini {
+                    respond(
+                        content =
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "functionCall": {
+                                          "name": "unknown_function",
+                                          "args": {}
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent(),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val request =
+                GenerateContentRequest(
+                    contents = arrayOf(Content(role = "user", parts = arrayOf(Part(text = "Do something")))),
+                )
+
+            val exception =
+                try {
+                    gemini.generateContent(request, emptyMap())
+                    null
+                } catch (e: IllegalArgumentException) {
+                    e
+                }
+
+            assertNotNull(exception)
+            assertEquals(
+                "No function handler registered for 'unknown_function'.",
+                exception?.message,
+            )
+        }
+
+    @Test
+    fun `generateContentWithAutomaticFunctionCalls supports direct kotlin function binding`() =
+        runTest {
+            var callCount = 0
+            gemini =
+                createGemini { request ->
+                    callCount += 1
+                    val body = (request.body as TextContent).text
+
+                    if (callCount == 1) {
+                        assertTrue(body.contains("\"functionDeclarations\""))
+                        assertTrue(body.contains("\"name\":\"add_direct\""))
+                    }
+                    if (callCount == 2) {
+                        assertTrue(body.contains("\"functionResponse\""))
+                        assertTrue(body.contains("\"result\":579"))
+                    }
+
+                    val responseJson =
+                        if (callCount == 1) {
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "functionCall": {
+                                          "name": "add_direct",
+                                          "args": { "a": 123, "b": 456 }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent()
+                        } else {
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "text": "The sum is 579."
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent()
+                        }
+
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val request =
+                GenerateContentRequest(
+                    contents = arrayOf(Content(role = "user", parts = arrayOf(Part(text = "What is 123 plus 456?")))),
+                )
+
+            val response =
+                gemini.generateContent(
+                    request,
+                    ::add_direct,
+                )
+
+            assertEquals(2, callCount)
+            assertEquals(
+                "The sum is 579.",
+                response.candidates
+                    .first()
+                    .content.parts
+                    ?.firstOrNull()
+                    ?.text,
+            )
         }
 }

@@ -48,7 +48,7 @@ object InputWithImage {
             client
                 .generateContent(
                     inputWithImage,
-                    "gemini-2.5-flash-lite",
+                    "gemma-4-31b-it",
                 ).candidates[0]
                 .content.parts!!
                 .get(0)

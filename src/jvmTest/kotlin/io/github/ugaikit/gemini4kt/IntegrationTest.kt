@@ -5,6 +5,7 @@ import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.live.AudioTranscriptionConfig
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentClientContent
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentSetup
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -128,6 +129,9 @@ class IntegrationTest {
             } catch (e: Exception) {
                 println("Agent API test failed: ${e.message}")
                 e.printStackTrace()
+                if (e is HttpRequestTimeoutException) {
+                    Assumptions.assumeTrue(false, "Skipping unstable Agent API integration test: ${e.message}")
+                }
                 throw e
             } finally {
                 if (created) {

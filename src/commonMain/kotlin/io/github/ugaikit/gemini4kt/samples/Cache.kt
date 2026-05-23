@@ -30,7 +30,7 @@ object Cache {
         val cachedContent =
             CachedContent(
                 contents = listOf(Content(arrayOf(Part(text = str)), "user")),
-                model = "models/gemini-2.5-flash-lite",
+                model = "models/gemma-4-31b-it",
                 systemInstruction = Content(arrayOf(Part(text = "Hello, world!")), "system"),
             )
         val cache = client.createCachedContent(cachedContent)
@@ -57,7 +57,7 @@ object Cache {
             client
                 .generateContent(
                     inputJson,
-                    model = "gemini-2.5-flash-lite",
+                    model = "gemma-4-31b-it",
                 ).candidates[0]
                 .content.parts!!
                 .get(0)

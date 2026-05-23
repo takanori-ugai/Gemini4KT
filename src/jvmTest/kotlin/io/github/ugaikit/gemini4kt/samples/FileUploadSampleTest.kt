@@ -72,7 +72,7 @@ class FileUploadSampleTest {
                             part.fileData == FileData(mimeType = "image/jpeg", fileUri = "files/123")
                         } == true
                     },
-                    model = "gemini-2.5-flash-lite",
+                    model = "gemma-4-31b-it",
                 )
             }
             assertTrue(output.contains("Uploading file"))

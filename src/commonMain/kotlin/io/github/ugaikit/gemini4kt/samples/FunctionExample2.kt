@@ -85,7 +85,7 @@ object FunctionExample2 {
     ): GenerateContentResponse {
         val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
         val firstRequest = GenerateContentRequest(contents = arrayOf(initialContent), tools = tools)
-        return gemini.generateContent(firstRequest, "gemini-2.5-flash-lite")
+        return gemini.generateContent(firstRequest, "gemma-4-31b-it")
     }
 
     /**
@@ -129,7 +129,7 @@ object FunctionExample2 {
                 )
 
             val secondRequest = GenerateContentRequest(contents = conversationHistory, tools = tools)
-            val secondResponse = gemini.generateContent(secondRequest, "gemini-2.5-flash-lite")
+            val secondResponse = gemini.generateContent(secondRequest, "gemma-4-31b-it")
             println("Final response: ${secondResponse.candidates[0].content.parts!!.get(0).text}")
         }
     }

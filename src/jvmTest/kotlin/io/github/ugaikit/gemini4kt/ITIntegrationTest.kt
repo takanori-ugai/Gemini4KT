@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt
 
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -42,6 +43,11 @@ class ITIntegrationTest {
         if (error.error.code == httpTooManyRequests || error.error.status == "RESOURCE_EXHAUSTED") {
             Assumptions.assumeTrue(false, "Skipping integration test due to quota exhaustion: ${error.error.message}")
         }
+        throw error
+    }
+
+    private fun handleRequestTimeout(error: HttpRequestTimeoutException): Nothing {
+        Assumptions.assumeTrue(false, "Skipping integration test due to request timeout: ${error.message}")
         throw error
     }
 
@@ -105,6 +111,8 @@ class ITIntegrationTest {
                 assertTrue(batchEmbedResponse.embeddings.isNotEmpty())
             } catch (error: GeminiException) {
                 handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
             }
         }
 
@@ -154,6 +162,8 @@ class ITIntegrationTest {
                 assertNotNull(textPart?.text)
             } catch (error: GeminiException) {
                 handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
             }
         }
 
@@ -191,6 +201,8 @@ class ITIntegrationTest {
                 assertTrue(!parts.isNullOrEmpty())
             } catch (error: GeminiException) {
                 handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
             }
         }
 
@@ -276,6 +288,8 @@ class ITIntegrationTest {
                 assertTrue(!parts.isNullOrEmpty())
             } catch (error: GeminiException) {
                 handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
             }
         }
 

@@ -55,7 +55,7 @@ object FileUploadSample {
 
         println("Generating content from file...")
         try {
-            val response = client.generateContent(request, model = "gemini-2.5-flash-lite")
+            val response = client.generateContent(request, model = "gemma-4-31b-it")
             response.candidates.forEach { candidate ->
                 candidate.content.parts?.forEach { part ->
                     println(part.text)
