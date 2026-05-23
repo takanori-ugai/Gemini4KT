@@ -109,4 +109,95 @@ class GroundingMetadataTest {
         assertEquals(0, groundingMetadata.groundingChunks.size)
         assertEquals(0, groundingMetadata.groundingSupports.size)
     }
+
+    /**
+     * Tests grounding-related model serialization and enum reachability.
+     */
+    @Test
+    fun testGroundingRelatedModelSerializationAndEnums() {
+        val metadata =
+            GroundingMetadata(
+                groundingChunks =
+                    listOf(
+                        GroundingChunk(
+                            image =
+                                Image(
+                                    sourceUri = "https://source.example.com",
+                                    imageUri = "https://img.example.com/1.png",
+                                    title = "Image title",
+                                    domain = "example.com",
+                                ),
+                            retrievedContext =
+                                RetrievedContext(
+                                    customMetadata =
+                                        listOf(
+                                            CustomMetadata(
+                                                key = "tags",
+                                                stringListValue = StringList(values = arrayOf("kotlin", "sdk")),
+                                            ),
+                                        ),
+                                    uri = "gs://doc/1",
+                                    title = "Doc title",
+                                    text = "Doc text",
+                                    fileSearchStore = "store-a",
+                                ),
+                            maps =
+                                Maps(
+                                    uri = "https://maps.example.com/place",
+                                    title = "Cafe",
+                                    text = "Open now",
+                                    placeId = "places/123",
+                                    placeAnswerSources =
+                                        PlaceAnswerSources(
+                                            reviewSnippets =
+                                                listOf(
+                                                    ReviewSnippet(
+                                                        reviewId = "r-1",
+                                                        googleMapsUri = "https://maps.google.com/review/r-1",
+                                                        title = "Great place",
+                                                    ),
+                                                ),
+                                        ),
+                                ),
+                        ),
+                    ),
+                retrievalMetadata = RetrievalMetadata(googleSearchDynamicRetrievalScore = 0.77),
+            )
+        val status =
+            ModelStatus(
+                modelStage = ModelStage.STABLE,
+                retirementTime = "2099-01-01T00:00:00Z",
+                message = "Stable model",
+            )
+
+        val metadataEncoded = json.encodeToString(metadata)
+        val metadataDecoded = json.decodeFromString<GroundingMetadata>(metadataEncoded)
+        val statusEncoded = json.encodeToString(status)
+        val statusDecoded = json.decodeFromString<ModelStatus>(statusEncoded)
+
+        assertEquals(
+            "kotlin",
+            metadataDecoded.groundingChunks[0]
+                .retrievedContext
+                ?.customMetadata
+                ?.first()
+                ?.stringListValue
+                ?.values
+                ?.first(),
+        )
+        assertEquals(
+            "r-1",
+            metadataDecoded.groundingChunks[0]
+                .maps
+                ?.placeAnswerSources
+                ?.reviewSnippets
+                ?.first()
+                ?.reviewId,
+        )
+        assertEquals(0.77, metadataDecoded.retrievalMetadata?.googleSearchDynamicRetrievalScore)
+        assertEquals(ModelStage.STABLE, statusDecoded.modelStage)
+        assertEquals(true, ToolType.entries.isNotEmpty())
+        assertEquals(true, ThinkingLevel.entries.isNotEmpty())
+        assertEquals(true, Environment.entries.isNotEmpty())
+    }
 }

@@ -1,5 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -8,6 +10,8 @@ import kotlin.test.assertNotNull
  * Represents the tool builder test.
  */
 class ToolBuilderTest {
+    private val json = Json { ignoreUnknownKeys = true }
+
     /**
      * Tests the `ToolBuilder` with a single function declaration.
      *
@@ -121,5 +125,67 @@ class ToolBuilderTest {
                 googleSearch()
             }
         assertNotNull(tool.googleSearch)
+    }
+
+    @Test
+    fun testToolBuilderWithAdvancedNestedConfigurations() {
+        val builtGoogleSearch =
+            googleSearch {
+                timeRangeFilter = Interval(startTime = "2026-01-01T00:00:00Z", endTime = "2026-01-31T00:00:00Z")
+                searchTypes = SearchTypes(webSearch = WebSearch(), imageSearch = ImageSearch())
+            }
+
+        val tool =
+            tool {
+                googleSearch {
+                    timeRangeFilter = builtGoogleSearch.timeRangeFilter
+                    searchTypes = builtGoogleSearch.searchTypes
+                }
+                fileSearch {
+                    fileSearchStoreName("store-a")
+                    metadataFilter("author=alice")
+                }
+                googleSearchRetrieval(
+                    GoogleSearchRetrieval(
+                        dynamicRetrievalConfig =
+                            DynamicRetrievalConfig(
+                                mode = DynamicRetrievalMode.MODE_DYNAMIC,
+                                dynamicThreshold = 0.5,
+                            ),
+                    ),
+                )
+                computerUse(
+                    ComputerUse(
+                        environment = Environment.ENVIRONMENT_BROWSER,
+                        excludedPredefinedFunctions = arrayOf("CLICK"),
+                    ),
+                )
+                mcpServer(
+                    McpServer(
+                        name = "mcp-server",
+                        streamableHttpTransport =
+                            StreamableHttpTransport(
+                                url = "https://mcp.example.com",
+                                headers = mapOf("Authorization" to "Bearer token"),
+                                timeout = "30s",
+                                sseReadTimeout = "120s",
+                                terminateOnClose = true,
+                            ),
+                    ),
+                )
+                googleMaps(GoogleMaps(enableWidget = true))
+            }
+
+        val encoded = json.encodeToString(tool)
+        val decoded = json.decodeFromString<Tool>(encoded)
+
+        assertNotNull(decoded.googleSearch)
+        assertEquals("author=alice", decoded.fileSearch?.metadataFilter)
+        assertEquals("store-a", decoded.fileSearch?.fileSearchStoreNames?.first())
+        assertEquals(DynamicRetrievalMode.MODE_DYNAMIC, decoded.googleSearchRetrieval?.dynamicRetrievalConfig?.mode)
+        assertEquals(Environment.ENVIRONMENT_BROWSER, decoded.computerUse?.environment)
+        assertEquals("CLICK", decoded.computerUse?.excludedPredefinedFunctions?.first())
+        assertEquals("mcp-server", decoded.mcpServers?.first()?.name)
+        assertEquals(true, decoded.googleMaps?.enableWidget)
     }
 }

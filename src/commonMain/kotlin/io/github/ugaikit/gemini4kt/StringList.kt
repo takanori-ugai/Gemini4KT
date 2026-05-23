@@ -13,5 +13,18 @@ import kotlin.js.JsExport
 @JsExport
 @Serializable
 data class StringList(
-    val values: List<String> = emptyList(),
-)
+    val values: Array<String> = emptyArray(),
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as StringList
+
+        if (!values.contentEquals(other.values)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int = values.contentHashCode()
+}

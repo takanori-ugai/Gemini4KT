@@ -191,4 +191,57 @@ class PartTest {
         val actualJson = json.encodeToString(part)
         assertEquals(json.parseToJsonElement(expectedJson), json.parseToJsonElement(actualJson))
     }
+
+    /**
+     * Handles serialization with tool call/response and video metadata.
+     */
+    @Test
+    fun serializationWithToolCallResponseAndVideoMetadata() {
+        val part =
+            part {
+                text { "assistant output" }
+                partMetadata {
+                    buildMap {
+                        put("origin", Json.parseToJsonElement("\"unit-test\""))
+                    }
+                }
+                mediaResolution { MediaResolution(level = MediaResolutionLevel.MEDIA_RESOLUTION_MEDIUM) }
+                toolCall {
+                    ToolCall(
+                        id = "call-1",
+                        toolType = ToolType.GOOGLE_SEARCH_WEB,
+                        args = mapOf("query" to Json.parseToJsonElement("\"kotlin\"")),
+                    )
+                }
+                toolResponse {
+                    ToolResponse(
+                        id = "call-1",
+                        toolType = ToolType.GOOGLE_SEARCH_WEB,
+                        response = mapOf("answer" to Json.parseToJsonElement("\"ok\"")),
+                    )
+                }
+                videoMetadata {
+                    VideoMetadata(
+                        startOffset = "0s",
+                        endOffset = "1.5s",
+                        fps = 24.0,
+                    )
+                }
+            }
+
+        val encoded = json.encodeToString(part)
+        val decoded = json.decodeFromString<Part>(encoded)
+
+        assertEquals(ToolType.GOOGLE_SEARCH_WEB, decoded.toolCall?.toolType)
+        assertEquals(
+            "ok",
+            decoded.toolResponse
+                ?.response
+                ?.get("answer")
+                ?.toString()
+                ?.trim('"'),
+        )
+        assertEquals(MediaResolutionLevel.MEDIA_RESOLUTION_MEDIUM, decoded.mediaResolution?.level)
+        assertEquals(24.0, decoded.videoMetadata?.fps)
+    }
 }

@@ -28,7 +28,7 @@ data class GroundingMetadata(
  * Google search entry point.
  *
  * @property renderedContent Optional. Web content snippet that can be embedded in a web page or an app webview.
- * @property sdkBlob Optional. Base64 encoded JSON representing array of <search term, search url> tuple.
+ * @property sdkBlob Optional. Base64 encoded JSON representing array of &lt;search term, search url&gt; tuple.
  */
 @Serializable
 data class SearchEntryPoint(

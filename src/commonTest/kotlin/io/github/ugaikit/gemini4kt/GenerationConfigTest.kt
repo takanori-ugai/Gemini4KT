@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -67,5 +68,44 @@ class GenerationConfigTest {
         assertTrue(jsonString.contains("\"imageConfig\":"))
         assertTrue(jsonString.contains("\"aspectRatio\": \"16:9\""))
         assertTrue(jsonString.contains("\"imageSize\": \"2K\""))
+    }
+
+    @Test
+    fun testGenerationConfigBuilderCoversExtendedFields() {
+        val config =
+            generationConfig {
+                stopSequence("END")
+                temperature = 0.6
+                maxOutputTokens = 256
+                topP = 0.9
+                topK = 20
+                responseMimeType = "application/json"
+                responseModality(Modality.TEXT)
+                thinkingConfig =
+                    ThinkingConfig(
+                        thinkingBudget = 64,
+                        thinkingLevel = ThinkingLevel.MEDIUM,
+                        includeThoughts = true,
+                    )
+                responseJsonSchema = Json.parseToJsonElement("""{"type":"object"}""")
+                underscoreResponseJsonSchema = Json.parseToJsonElement("""{"type":"array"}""")
+                seed = 42
+                presencePenalty = 0.2
+                frequencyPenalty = 0.1
+                responseLogprobs = true
+                logprobs = 3
+                enableEnhancedCivicAnswers = true
+                mediaResolution = MediaResolutionLevel.MEDIA_RESOLUTION_HIGH
+            }
+
+        assertEquals("END", config.stopSequences?.first())
+        assertEquals(Modality.TEXT, config.responseModalities?.first())
+        assertEquals(42, config.seed)
+        assertEquals(MediaResolutionLevel.MEDIA_RESOLUTION_HIGH, config.mediaResolution)
+
+        val encoded = json.encodeToString(config)
+        assertTrue(encoded.contains("\"response_json_schema\""))
+        assertTrue(encoded.contains("\"_responseJsonSchema\""))
+        assertTrue(encoded.contains("\"MEDIA_RESOLUTION_HIGH\""))
     }
 }
