@@ -31,6 +31,9 @@ data class Interaction(
     val input: JsonElement? = null,
     @SerialName("generation_config") val generationConfig: InteractionGenerationConfig? = null,
     @SerialName("agent_config") val agentConfig: InteractionAgentConfig? = null,
+    @SerialName("environment_id") val environmentId: String? = null,
+    @SerialName("output_text") val outputText: String? = null,
+    val steps: Array<JsonElement>? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -72,6 +75,14 @@ data class Interaction(
         if (input != other.input) return false
         if (generationConfig != other.generationConfig) return false
         if (agentConfig != other.agentConfig) return false
+        if (environmentId != other.environmentId) return false
+        if (outputText != other.outputText) return false
+        if (steps != null) {
+            if (other.steps == null) return false
+            if (!steps.contentEquals(other.steps)) return false
+        } else if (other.steps != null) {
+            return false
+        }
 
         return true
     }
@@ -96,6 +107,9 @@ data class Interaction(
         result = 31 * result + (input?.hashCode() ?: 0)
         result = 31 * result + (generationConfig?.hashCode() ?: 0)
         result = 31 * result + (agentConfig?.hashCode() ?: 0)
+        result = 31 * result + (environmentId?.hashCode() ?: 0)
+        result = 31 * result + (outputText?.hashCode() ?: 0)
+        result = 31 * result + (steps?.contentHashCode() ?: 0)
         return result
     }
 }
@@ -118,6 +132,7 @@ data class CreateInteractionRequest(
     @SerialName("agent_config") val agentConfig: InteractionAgentConfig? = null,
     @SerialName("response_modalities") val responseModalities: Array<InteractionResponseModality>? = null,
     @SerialName("previous_interaction_id") val previousInteractionId: String? = null,
+    val environment: JsonElement? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -149,6 +164,7 @@ data class CreateInteractionRequest(
             return false
         }
         if (previousInteractionId != other.previousInteractionId) return false
+        if (environment != other.environment) return false
 
         return true
     }
@@ -168,6 +184,7 @@ data class CreateInteractionRequest(
         result = 31 * result + (agentConfig?.hashCode() ?: 0)
         result = 31 * result + (responseModalities?.contentHashCode() ?: 0)
         result = 31 * result + (previousInteractionId?.hashCode() ?: 0)
+        result = 31 * result + (environment?.hashCode() ?: 0)
         return result
     }
 }

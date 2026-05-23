@@ -58,7 +58,8 @@ kotlin {
         }
         @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
         mainRun {
-            mainClass.set("io.github.ugaikit.gemini4kt.ITTestKt")
+            val targetClass = (project.findProperty("mainClass") as? String) ?: "io.github.ugaikit.gemini4kt.ITTestKt"
+            mainClass.set(targetClass)
         }
     }
 //    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)

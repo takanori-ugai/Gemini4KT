@@ -167,4 +167,30 @@ class BatchDataClassesTest {
         assertEquals("batches/1", deserialized.operations?.get(0)?.name)
         assertEquals("token-123", deserialized.nextPageToken)
     }
+
+    /**
+     * Handles batchjob metadata with nested output deserialization.
+     */
+    @Test
+    fun batchjobMetadataDeserializesNestedOutput() {
+        val jsonString =
+            """
+            {
+              "name": "operations/123",
+              "metadata": {
+                "output": {
+                  "inlinedResponses": {
+                    "inlinedResponses": []
+                  }
+                }
+              },
+              "done": false
+            }
+            """.trimIndent()
+
+        val deserialized = json.decodeFromString<BatchJob>(jsonString)
+        assertEquals("operations/123", deserialized.name)
+        assertEquals(false, deserialized.done)
+        assertNotNull(deserialized.metadata?.output?.inlinedResponses)
+    }
 }

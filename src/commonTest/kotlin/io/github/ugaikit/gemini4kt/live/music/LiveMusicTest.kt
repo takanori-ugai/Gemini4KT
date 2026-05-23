@@ -266,4 +266,45 @@ class LiveMusicTest {
             assertTrue(incoming.isClosedForSend)
             assertFalse(client.closed.isCompleted)
         }
+
+    @Test
+    fun testServerMessageRoundTripsMetadataAndFilteredPrompt() {
+        val message =
+            LiveMusicServerMessage(
+                serverContent =
+                    LiveMusicServerContent(
+                        audioChunks =
+                            listOf(
+                                AudioChunk(
+                                    data = "ZGF0YQ==",
+                                    mimeType = "audio/pcm",
+                                    sourceMetadata =
+                                        LiveMusicSourceMetadata(
+                                            clientContent =
+                                                LiveMusicClientContent(weightedPrompts = emptyList()),
+                                            musicGenerationConfig = LiveMusicGenerationConfig(bpm = 120),
+                                        ),
+                                ),
+                            ),
+                    ),
+                filteredPrompt =
+                    LiveMusicFilteredPrompt(
+                        text = "prompt",
+                        filteredReason = "policy",
+                    ),
+            )
+
+        val encoded = json.encodeToString(message)
+        val decoded = json.decodeFromString<LiveMusicServerMessage>(encoded)
+        assertEquals("policy", decoded.filteredPrompt?.filteredReason)
+        assertEquals(
+            120,
+            decoded.serverContent
+                ?.audioChunks
+                ?.first()
+                ?.sourceMetadata
+                ?.musicGenerationConfig
+                ?.bpm,
+        )
+    }
 }
