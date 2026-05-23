@@ -6,15 +6,15 @@ import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExec
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("multiplatform") version "2.3.20"
-    kotlin("plugin.serialization") version "2.3.20"
+    kotlin("multiplatform") version "2.3.21"
+    kotlin("plugin.serialization") version "2.3.21"
     id("org.jetbrains.dokka") version "2.2.0"
 //    id("org.jetbrains.dokka-javadoc") version "2.1.0"
-    id("com.android.kotlin.multiplatform.library") version "9.1.1"
+    id("com.android.kotlin.multiplatform.library") version "9.2.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.1.2"
-    id("com.github.spotbugs") version "6.4.8"
-    id("com.diffplug.spotless") version "8.4.0"
+    id("com.github.spotbugs") version "6.5.4"
+    id("com.diffplug.spotless") version "8.5.1"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("com.github.gmazzo.buildconfig") version "6.0.9"
     jacoco
@@ -105,7 +105,7 @@ kotlin {
     @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
     android {
         namespace = "io.github.ugaikit.gemini4kt"
-        compileSdk = 33
+        compileSdk = 37
         minSdk = 24
 
         withJava() // enable java compilation support
@@ -121,13 +121,13 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-                implementation("io.github.oshai:kotlin-logging:8.0.01")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-                implementation("io.ktor:ktor-client-core:3.4.2")
-                implementation("io.ktor:ktor-client-content-negotiation:3.4.2")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.2")
-                implementation("io.ktor:ktor-client-logging:3.4.2")
-                implementation("io.ktor:ktor-client-websockets:3.4.2")
+                implementation("io.github.oshai:kotlin-logging:8.0.02")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+                implementation("io.ktor:ktor-client-core:3.5.0")
+                implementation("io.ktor:ktor-client-content-negotiation:3.5.0")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:3.5.0")
+                implementation("io.ktor:ktor-client-logging:3.5.0")
+                implementation("io.ktor:ktor-client-websockets:3.5.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.9.0")
             }
             buildConfig {
@@ -142,21 +142,21 @@ kotlin {
         val jvmCommonMain by creating {
             dependsOn(commonMain)
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-reflect:2.3.20")
+                implementation("org.jetbrains.kotlin:kotlin-reflect:2.3.21")
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("io.ktor:ktor-client-mock:3.4.2")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+                implementation("io.ktor:ktor-client-mock:3.5.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
             }
         }
         val jvmMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
                 runtimeOnly("ch.qos.logback:logback-classic:1.5.32")
-                implementation("io.ktor:ktor-client-cio:3.4.2")
+                implementation("io.ktor:ktor-client-cio:3.5.0")
             }
         }
         val jvmTest by getting {
@@ -174,23 +174,23 @@ kotlin {
         val jsTest by getting
         val iosMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-darwin:3.4.2")
+                implementation("io.ktor:ktor-client-darwin:3.5.0")
             }
         }
         val mingwX64Main by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-curl:3.4.2")
+                implementation("io.ktor:ktor-client-curl:3.5.0")
             }
         }
         val linuxX64Main by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-curl:3.4.2")
+                implementation("io.ktor:ktor-client-curl:3.5.0")
             }
         }
         val androidMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
-                implementation("io.ktor:ktor-client-android:3.4.2")
+                implementation("io.ktor:ktor-client-android:3.5.0")
             }
         }
     }
@@ -312,7 +312,7 @@ detekt {
 }
 
 jacoco {
-    toolVersion = "0.8.13"
+    toolVersion = "0.8.14"
 }
 
 spotbugs {
