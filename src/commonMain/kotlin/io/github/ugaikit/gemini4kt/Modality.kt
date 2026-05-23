@@ -10,6 +10,8 @@ import kotlin.js.JsExport
  * @property TEXT Indicates the model should return text.
  * @property IMAGE Indicates the model should return images.
  * @property AUDIO Indicates the model should return audio.
+ * @property VIDEO Indicates the model should return video.
+ * @property DOCUMENT Indicates the model should return document.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -18,4 +20,6 @@ enum class Modality {
     TEXT,
     IMAGE,
     AUDIO,
+    VIDEO,
+    DOCUMENT,
 }

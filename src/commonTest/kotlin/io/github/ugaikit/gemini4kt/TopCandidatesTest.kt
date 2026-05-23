@@ -19,9 +19,10 @@ class TopCandidatesTest {
             TopCandidates(
                 candidates =
                     listOf(
-                        Candidate(
-                            content = Content(parts = arrayOf(Part(text = "hello"))),
-                            index = 0,
+                        LogprobCandidate(
+                            token = "hello",
+                            tokenId = 123,
+                            logProbability = -0.5,
                         ),
                     ),
             )
@@ -33,9 +34,7 @@ class TopCandidatesTest {
             "hello",
             decoded.candidates
                 .first()
-                .content.parts
-                ?.first()
-                ?.text,
+                .token,
         )
     }
 }

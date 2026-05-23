@@ -11,25 +11,26 @@ import kotlin.js.JsExport
  * generated content.
  *
  * @property stopSequences A list of strings that, when generated, will signal the
- * model to stop generating further content. This can be used to define natural
- * endpoints or boundaries for generated content.
- * @property temperature A double value controlling the randomness of the
- * generation. Higher values increase creativity and diversity, while lower values
- * make the output more deterministic.
- * @property maxOutputTokens An integer specifying the maximum number of tokens
- * that can be generated. This serves as a hard limit on the size of the generated
-
- * content.
- * @property topP A double value for nucleus sampling, a stochastic decoding method
- * that focuses generation on the most likely next tokens with cumulative
- * probability above this threshold.
- * @property topK An integer that limits the model to consider only the top-k most
- * likely next tokens for each step of generation, enhancing control over the
- * randomness and relevance of the output.
- * @property responseMimeType An optional string specifying the MIME type of the
- * response. This is particularly relevant for specialized applications like
- * Gemini 1.5 pro, where "application/json" might be required. It is nullable to
- * accommodate different or default response formats.
+ * model to stop generating further content.
+ * @property temperature A double value controlling the randomness of the generation.
+ * @property maxOutputTokens An integer specifying the maximum number of tokens that can be generated.
+ * @property topP A double value for nucleus sampling.
+ * @property topK An integer that limits the model to consider only the top-k most likely next tokens.
+ * @property responseMimeType An optional string specifying the MIME type of the response.
+ * @property responseModalities Array of modalities allowed in the response.
+ * @property thinkingConfig Thinking configuration for budgeting model thought processes.
+ * @property imageConfig Image generation configurations.
+ * @property speechConfig Speech configuration for audio output.
+ * @property responseSchema Structure schema of the output response.
+ * @property responseJsonSchema Json element representation of the response schema.
+ * @property underscoreResponseJsonSchema Backward compatibility response json schema.
+ * @property seed Random seed configuration for deterministic sampling.
+ * @property presencePenalty Penalty for repeating topics.
+ * @property frequencyPenalty Penalty for repeating tokens.
+ * @property responseLogprobs True if logprobs should be returned.
+ * @property logprobs Number of top logprob candidates to return.
+ * @property enableEnhancedCivicAnswers True to enable enhanced civic answers.
+ * @property mediaResolution Media resolution level.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -47,6 +48,18 @@ data class GenerationConfig(
     val thinkingConfig: ThinkingConfig? = null,
     val imageConfig: ImageConfig? = null,
     val speechConfig: SpeechConfig? = null,
+    val responseSchema: Schema? = null,
+    @SerialName("response_json_schema")
+    val responseJsonSchema: kotlinx.serialization.json.JsonElement? = null,
+    @SerialName("_responseJsonSchema")
+    val underscoreResponseJsonSchema: kotlinx.serialization.json.JsonElement? = null,
+    val seed: Int? = null,
+    val presencePenalty: Double? = null,
+    val frequencyPenalty: Double? = null,
+    val responseLogprobs: Boolean? = null,
+    val logprobs: Int? = null,
+    val enableEnhancedCivicAnswers: Boolean? = null,
+    val mediaResolution: MediaResolutionLevel? = null,
 )
 
 /**
@@ -104,6 +117,56 @@ class GenerationConfigBuilder {
     var speechConfig: SpeechConfig? = null
 
     /**
+     * Holds the response schema.
+     */
+    var responseSchema: Schema? = null
+
+    /**
+     * Holds the response json schema.
+     */
+    var responseJsonSchema: kotlinx.serialization.json.JsonElement? = null
+
+    /**
+     * Holds the underscore response json schema.
+     */
+    var underscoreResponseJsonSchema: kotlinx.serialization.json.JsonElement? = null
+
+    /**
+     * Holds the seed.
+     */
+    var seed: Int? = null
+
+    /**
+     * Holds the presence penalty.
+     */
+    var presencePenalty: Double? = null
+
+    /**
+     * Holds the frequency penalty.
+     */
+    var frequencyPenalty: Double? = null
+
+    /**
+     * Holds the response logprobs flag.
+     */
+    var responseLogprobs: Boolean? = null
+
+    /**
+     * Holds the logprobs value.
+     */
+    var logprobs: Int? = null
+
+    /**
+     * Holds the enable enhanced civic answers flag.
+     */
+    var enableEnhancedCivicAnswers: Boolean? = null
+
+    /**
+     * Holds the media resolution.
+     */
+    var mediaResolution: MediaResolutionLevel? = null
+
+    /**
      * Handles stop sequence.
      *
      * @param sequence The sequence.
@@ -140,6 +203,15 @@ class GenerationConfigBuilder {
     }
 
     /**
+     * Handles response schema.
+     *
+     * @param init The init.
+     */
+    fun responseSchema(init: SchemaBuilder.() -> Unit) {
+        responseSchema = SchemaBuilder().apply(init).build()
+    }
+
+    /**
      * Handles build.
      */
     fun build() =
@@ -154,6 +226,16 @@ class GenerationConfigBuilder {
             thinkingConfig = thinkingConfig,
             imageConfig = imageConfig,
             speechConfig = speechConfig,
+            responseSchema = responseSchema,
+            responseJsonSchema = responseJsonSchema,
+            underscoreResponseJsonSchema = underscoreResponseJsonSchema,
+            seed = seed,
+            presencePenalty = presencePenalty,
+            frequencyPenalty = frequencyPenalty,
+            responseLogprobs = responseLogprobs,
+            logprobs = logprobs,
+            enableEnhancedCivicAnswers = enableEnhancedCivicAnswers,
+            mediaResolution = mediaResolution,
         )
 }
 

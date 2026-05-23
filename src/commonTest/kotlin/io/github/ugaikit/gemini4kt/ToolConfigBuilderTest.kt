@@ -2,7 +2,6 @@ package io.github.ugaikit.gemini4kt
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -77,11 +76,11 @@ class ToolConfigBuilderTest {
     }
 
     /**
-     * Handles build without function calling config throws exception.
+     * Handles build without function calling config does not throw.
      */
     @Test
-    fun buildWithoutFunctionCallingConfigThrowsException() {
-        assertFailsWith<IllegalStateException> {
+    fun buildWithoutFunctionCallingConfigDoesNotThrow() {
+        val toolConfig =
             toolConfig {
                 retrievalConfig =
                     RetrievalConfig(
@@ -89,6 +88,7 @@ class ToolConfigBuilderTest {
                         languageCode = "en-US",
                     )
             }
-        }
+        assertNull(toolConfig.functionCallingConfig)
+        assertNotNull(toolConfig.retrievalConfig)
     }
 }

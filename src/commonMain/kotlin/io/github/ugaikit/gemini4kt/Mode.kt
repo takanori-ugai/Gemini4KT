@@ -15,6 +15,7 @@ import kotlin.js.JsExport
  * flexibility in operation or configuration.
  * @property NONE Specifies that no particular mode is to be applied, possibly
  * disabling the functionality or leaving it in a neutral state.
+ * @property VALIDATED Indicates that only validated functions can be called.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -23,4 +24,5 @@ enum class Mode {
     AUTO,
     ANY,
     NONE,
+    VALIDATED,
 }

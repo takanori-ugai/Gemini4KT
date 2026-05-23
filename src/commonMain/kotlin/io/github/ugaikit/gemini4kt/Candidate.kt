@@ -11,6 +11,14 @@ import kotlinx.serialization.Serializable
  * @property index The index of this candidate in a sequence or batch, indicating its order or position.
  * @property safetyRatings A list of [io.github.ugaikit.gemini4kt.SafetyRating] objects,
  * each representing a safety rating assigned to this candidate's content.
+ * @property citationMetadata Citation sources details for the content.
+ * @property tokenCount Token count of the candidate's generated content.
+ * @property avgLogprobs Average log probability of the candidate.
+ * @property logprobsResult Log probability details per token.
+ * @property groundingAttributions List of grounding attributions.
+ * @property groundingMetadata Grounding metadata returned by tools like Search.
+ * @property urlContextMetadata Metadata of extracted URL contexts.
+ * @property finishMessage An optional message explaining the finish reason.
  */
 @Serializable
 data class Candidate(
@@ -25,6 +33,7 @@ data class Candidate(
     val groundingAttributions: List<GroundingAttribution> = emptyList(),
     val groundingMetadata: GroundingMetadata? = null,
     val urlContextMetadata: UrlContextMetadata? = null,
+    val finishMessage: String? = null,
 )
 
 /**
@@ -87,6 +96,11 @@ class CandidateBuilder {
     var urlContextMetadata: UrlContextMetadata? = null
 
     /**
+     * Holds the finish message.
+     */
+    var finishMessage: String? = null
+
+    /**
      * Handles content.
      *
      * @param init The init.
@@ -131,6 +145,7 @@ class CandidateBuilder {
             groundingAttributions,
             groundingMetadata,
             urlContextMetadata,
+            finishMessage,
         )
 }
 

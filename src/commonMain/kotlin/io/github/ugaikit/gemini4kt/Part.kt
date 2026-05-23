@@ -20,8 +20,15 @@ import kotlin.js.JsExport
  * any. Null if this part does not include file data.
  * @property executableCode Information about executable code associated with this part, if any.
  * @property codeExecutionResult Information about code execution result associated with this part, if any.
+ * @property thoughtSignature The signature/hash of the thought.
+ * @property thought True if this part represents a model's internal reasoning or thought processes.
+ * @property partMetadata Key-value metadata dictionary for the part.
+ * @property mediaResolution Media resolution configurations.
+ * @property toolCall Predicted server-side tool call details.
+ * @property toolResponse Execution response of a predicted server-side tool call.
+ * @property videoMetadata Video start/end offset config.
  */
-@OptIn(ExperimentalJsExport::class)
+@OptIn(ExperimentalJsExport::class, kotlinx.serialization.ExperimentalSerializationApi::class)
 @JsExport
 @Serializable
 data class Part(
@@ -35,6 +42,11 @@ data class Part(
     @kotlinx.serialization.json.JsonNames("thought_signature")
     val thoughtSignature: String? = null,
     val thought: Boolean? = null,
+    val partMetadata: Map<String, kotlinx.serialization.json.JsonElement>? = null,
+    val mediaResolution: MediaResolution? = null,
+    val toolCall: ToolCall? = null,
+    val toolResponse: ToolResponse? = null,
+    val videoMetadata: VideoMetadata? = null,
 )
 
 /**
@@ -99,6 +111,31 @@ class PartBuilder {
      * Holds the thought flag.
      */
     private var thought: Boolean? = null
+
+    /**
+     * Holds the part metadata.
+     */
+    private var partMetadata: Map<String, kotlinx.serialization.json.JsonElement>? = null
+
+    /**
+     * Holds the media resolution.
+     */
+    private var mediaResolution: MediaResolution? = null
+
+    /**
+     * Holds the tool call.
+     */
+    private var toolCall: ToolCall? = null
+
+    /**
+     * Holds the tool response.
+     */
+    private var toolResponse: ToolResponse? = null
+
+    /**
+     * Holds the video metadata.
+     */
+    private var videoMetadata: VideoMetadata? = null
 
     /**
      * Handles text.
@@ -176,6 +213,41 @@ class PartBuilder {
     fun thought(init: () -> Boolean?) = apply { thought = init() }
 
     /**
+     * Handles part metadata.
+     *
+     * @param init The init.
+     */
+    fun partMetadata(init: () -> Map<String, kotlinx.serialization.json.JsonElement>?) = apply { partMetadata = init() }
+
+    /**
+     * Handles media resolution.
+     *
+     * @param init The init.
+     */
+    fun mediaResolution(init: () -> MediaResolution?) = apply { mediaResolution = init() }
+
+    /**
+     * Handles tool call.
+     *
+     * @param init The init.
+     */
+    fun toolCall(init: () -> ToolCall?) = apply { toolCall = init() }
+
+    /**
+     * Handles tool response.
+     *
+     * @param init The init.
+     */
+    fun toolResponse(init: () -> ToolResponse?) = apply { toolResponse = init() }
+
+    /**
+     * Handles video metadata.
+     *
+     * @param init The init.
+     */
+    fun videoMetadata(init: () -> VideoMetadata?) = apply { videoMetadata = init() }
+
+    /**
      * Handles build.
      */
     fun build() =
@@ -189,5 +261,10 @@ class PartBuilder {
             codeExecutionResult = codeExecutionResult,
             thoughtSignature = thoughtSignature,
             thought = thought,
+            partMetadata = partMetadata,
+            mediaResolution = mediaResolution,
+            toolCall = toolCall,
+            toolResponse = toolResponse,
+            videoMetadata = videoMetadata,
         )
 }
