@@ -29,6 +29,13 @@ class TopCandidatesTest {
         val encoded = json.encodeToString(topCandidates)
         assertTrue(encoded.contains("candidates"))
         val decoded = json.decodeFromString<TopCandidates>(encoded)
-        assertEquals("hello", decoded.candidates.first().content.parts?.first()?.text)
+        assertEquals(
+            "hello",
+            decoded.candidates
+                .first()
+                .content.parts
+                ?.first()
+                ?.text,
+        )
     }
 }

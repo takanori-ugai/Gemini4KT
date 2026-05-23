@@ -297,6 +297,14 @@ class LiveMusicTest {
         val encoded = json.encodeToString(message)
         val decoded = json.decodeFromString<LiveMusicServerMessage>(encoded)
         assertEquals("policy", decoded.filteredPrompt?.filteredReason)
-        assertEquals(120, decoded.serverContent?.audioChunks?.first()?.sourceMetadata?.musicGenerationConfig?.bpm)
+        assertEquals(
+            120,
+            decoded.serverContent
+                ?.audioChunks
+                ?.first()
+                ?.sourceMetadata
+                ?.musicGenerationConfig
+                ?.bpm,
+        )
     }
 }
