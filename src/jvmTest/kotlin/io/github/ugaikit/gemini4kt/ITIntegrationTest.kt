@@ -19,9 +19,8 @@ import kotlin.test.assertTrue
 /**
  * Live integration coverage migrated from the old JVM main runner.
  */
-@DisabledIfEnvironmentVariable(named = "GITHUB_ACTIONS", matches = "true")
 class ITIntegrationTest {
-    private val model = "gemini-3.1-flash-lite"
+    private val model = "gemma-4-31b-it"
     private val embedModel = "gemini-embedding-2"
     private val httpTooManyRequests = 429
 
