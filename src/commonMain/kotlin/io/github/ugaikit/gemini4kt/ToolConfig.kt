@@ -5,18 +5,19 @@ import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
 /**
- * Represents a tool that encapsulates function declarations, providing a structured
- * way to access the functionalities declared.
+ * Represents the configuration of tools for the model.
  *
- * @property functionDeclarations A [FunctionDeclaration] object containing the
- * details of the functions declared by this tool.
+ * @property functionCallingConfig Configuration for function calling.
+ * @property retrievalConfig Configuration for retrieval.
+ * @property includeServerSideToolInvocations True if the model should return server side tool invocations.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
 data class ToolConfig(
-    val functionCallingConfig: FunctionCallingConfig,
+    val functionCallingConfig: FunctionCallingConfig? = null,
     val retrievalConfig: RetrievalConfig? = null,
+    val includeServerSideToolInvocations: Boolean? = null,
 )
 
 /**
@@ -34,6 +35,11 @@ class ToolConfigBuilder {
     var retrievalConfig: RetrievalConfig? = null
 
     /**
+     * Holds the include server side tool invocations flag.
+     */
+    var includeServerSideToolInvocations: Boolean? = null
+
+    /**
      * Handles function calling config.
      *
      * @param init The init.
@@ -47,8 +53,9 @@ class ToolConfigBuilder {
      */
     fun build() =
         ToolConfig(
-            functionCallingConfig = functionCallingConfig ?: error("FunctionCallingConfig must be initialized"),
+            functionCallingConfig = functionCallingConfig,
             retrievalConfig = retrievalConfig,
+            includeServerSideToolInvocations = includeServerSideToolInvocations,
         )
 }
 

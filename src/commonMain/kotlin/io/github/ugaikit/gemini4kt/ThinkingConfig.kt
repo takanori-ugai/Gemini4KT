@@ -23,7 +23,7 @@ data class ThinkingConfig(
     @SerialName("thinking_budget")
     val thinkingBudget: Int = 1024,
     @SerialName("thinking_level")
-    val thinkingLevel: String? = null,
+    val thinkingLevel: ThinkingLevel? = null,
     @SerialName("include_thoughts")
     val includeThoughts: Boolean? = null,
 )

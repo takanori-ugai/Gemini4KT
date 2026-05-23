@@ -15,6 +15,10 @@ import kotlin.js.JsExport
  * @property codeExecution A [CodeExecution] object representing a code execution tool.
  * @property urlContext A [UrlContext] object representing a url context tool.
  * @property fileSearch A [FileSearchTool] object representing a file search tool.
+ * @property googleSearchRetrieval A [GoogleSearchRetrieval] object representing Google Search grounding.
+ * @property computerUse A [ComputerUse] object representing computer use capability.
+ * @property mcpServers An array of [McpServer] configurations.
+ * @property googleMaps A [GoogleMaps] tool configuration.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -29,6 +33,10 @@ data class Tool(
     val urlContext: UrlContext? = null,
     @SerialName("file_search")
     val fileSearch: FileSearchTool? = null,
+    val googleSearchRetrieval: GoogleSearchRetrieval? = null,
+    val computerUse: ComputerUse? = null,
+    val mcpServers: Array<McpServer>? = null,
+    val googleMaps: GoogleMaps? = null,
 )
 
 /**
@@ -61,6 +69,26 @@ class ToolBuilder {
     private var fileSearch: FileSearchTool? = null
 
     /**
+     * Holds the google search retrieval.
+     */
+    private var googleSearchRetrieval: GoogleSearchRetrieval? = null
+
+    /**
+     * Holds the computer use config.
+     */
+    private var computerUse: ComputerUse? = null
+
+    /**
+     * Holds the mcp servers list.
+     */
+    private val mcpServers: MutableList<McpServer> = mutableListOf()
+
+    /**
+     * Holds the google maps config.
+     */
+    private var googleMaps: GoogleMaps? = null
+
+    /**
      * Handles function declaration.
      *
      * @param init The init.
@@ -72,8 +100,8 @@ class ToolBuilder {
     /**
      * Handles google search.
      */
-    fun googleSearch() {
-        this.googleSearch = GoogleSearch()
+    fun googleSearch(init: (GoogleSearchBuilder.() -> Unit)? = null) {
+        this.googleSearch = if (init != null) GoogleSearchBuilder().apply(init).build() else GoogleSearch()
     }
 
     /**
@@ -100,6 +128,42 @@ class ToolBuilder {
     }
 
     /**
+     * Handles google search retrieval.
+     *
+     * @param retrieval Grounding retrieval config.
+     */
+    fun googleSearchRetrieval(retrieval: GoogleSearchRetrieval) {
+        this.googleSearchRetrieval = retrieval
+    }
+
+    /**
+     * Handles computer use.
+     *
+     * @param computerUse The computer use config.
+     */
+    fun computerUse(computerUse: ComputerUse) {
+        this.computerUse = computerUse
+    }
+
+    /**
+     * Handles adding an MCP server.
+     *
+     * @param mcpServer The mcp server.
+     */
+    fun mcpServer(mcpServer: McpServer) {
+        mcpServers.add(mcpServer)
+    }
+
+    /**
+     * Handles google maps.
+     *
+     * @param googleMaps The google maps config.
+     */
+    fun googleMaps(googleMaps: GoogleMaps) {
+        this.googleMaps = googleMaps
+    }
+
+    /**
      * Handles build.
      */
     fun build() =
@@ -109,6 +173,10 @@ class ToolBuilder {
             codeExecution = codeExecution,
             urlContext = urlContext,
             fileSearch = fileSearch,
+            googleSearchRetrieval = googleSearchRetrieval,
+            computerUse = computerUse,
+            mcpServers = if (mcpServers.isEmpty()) null else mcpServers.toTypedArray(),
+            googleMaps = googleMaps,
         )
 }
 

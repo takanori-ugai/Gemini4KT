@@ -81,7 +81,7 @@ class GenerateContentRequestBuilderTest {
         )
         assertNotNull(request.toolConfig)
         val toolConfig = checkNotNull(request.toolConfig)
-        assertEquals(Mode.ANY, toolConfig.functionCallingConfig.mode)
+        assertEquals(Mode.ANY, toolConfig.functionCallingConfig?.mode)
         assertEquals(1, request.safetySettings.size)
         assertEquals(HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, request.safetySettings[0].category)
         assertNotNull(request.systemInstruction)

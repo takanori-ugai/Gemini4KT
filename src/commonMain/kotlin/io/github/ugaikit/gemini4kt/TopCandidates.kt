@@ -9,5 +9,5 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class TopCandidates(
-    val candidates: List<Candidate>,
+    val candidates: List<LogprobCandidate>,
 )

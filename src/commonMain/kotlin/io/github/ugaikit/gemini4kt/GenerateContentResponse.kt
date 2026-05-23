@@ -13,6 +13,10 @@ import kotlinx.serialization.Serializable
  *                      of the generated or analyzed content.
  * @property promptFeedback A [PromptFeedback] object providing safety ratings for the prompt,
  *                          offering insights into its adherence to content safety standards.
+ * @property usageMetadata Metadata concerning token usage and stats for this request.
+ * @property modelVersion The version of the model used to generate the content.
+ * @property responseId The unique ID of the generation response.
+ * @property modelStatus The status/error details of the model execution.
  */
 @Serializable
 data class GenerateContentResponse(
@@ -21,4 +25,5 @@ data class GenerateContentResponse(
     val usageMetadata: UsageMetadata? = null,
     val modelVersion: String = "",
     val responseId: String = "",
+    val modelStatus: ModelStatus? = null,
 )

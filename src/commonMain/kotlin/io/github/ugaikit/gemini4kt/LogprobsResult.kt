@@ -7,9 +7,11 @@ import kotlinx.serialization.Serializable
  *
  * @property topCandidates The top candidates.
  * @property chosenCandidates The chosen candidates.
+ * @property logProbabilitySum Optional. The sum of the chosen candidates' log probabilities.
  */
 @Serializable
 data class LogprobsResult(
     val topCandidates: List<TopCandidates>,
-    val chosenCandidates: List<Candidate>,
+    val chosenCandidates: List<LogprobCandidate>,
+    val logProbabilitySum: Double? = null,
 )
