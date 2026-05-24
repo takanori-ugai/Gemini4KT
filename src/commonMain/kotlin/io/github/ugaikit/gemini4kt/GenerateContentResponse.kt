@@ -26,4 +26,26 @@ data class GenerateContentResponse(
     val modelVersion: String = "",
     val responseId: String = "",
     val modelStatus: ModelStatus? = null,
-)
+) {
+    /**
+     * Returns the first non-thought text part from the first candidate, if present.
+     */
+    fun getText(): String? =
+        candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull { it.text != null && it.thought != true }
+            ?.text
+
+    /**
+     * Returns the first thought text part from the first candidate, if present.
+     */
+    fun getThought(): String? =
+        candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull { it.text != null && it.thought == true }
+            ?.text
+}

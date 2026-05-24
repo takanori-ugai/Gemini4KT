@@ -586,7 +586,7 @@ class SamplesTest {
                                 """
                     {
                       "name": "cachedContents/123",
-                      "model": "models/gemini-2.5-flash-lite",
+                      "model": "models/gemma-4-31b-it",
                       "createTime": "2024-01-01T00:00:00Z",
                       "updateTime": "2024-01-01T00:00:00Z",
                       "expireTime": "2024-01-02T00:00:00Z"
@@ -605,7 +605,7 @@ class SamplesTest {
                                     """
                         {
                           "name": "cachedContents/123",
-                          "model": "models/gemini-2.5-flash-lite"
+                          "model": "models/gemma-4-31b-it"
                         }
                         """
                                 }

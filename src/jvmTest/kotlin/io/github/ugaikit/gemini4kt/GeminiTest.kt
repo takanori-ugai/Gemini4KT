@@ -10,6 +10,7 @@ import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.mockk.coEvery
@@ -19,11 +20,79 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
+
+@GeminiFunction(description = "Adds two integers")
+private fun addDirect(
+    @GeminiParameter(description = "first number") a: Int,
+    @GeminiParameter(description = "second number") b: Int,
+): Int = a + b
+
+@GeminiFunction(description = "Uses multiple scalar types")
+private fun typed_scalars(
+    @GeminiParameter(description = "long value") l: Long,
+    @GeminiParameter(description = "double value") d: Double,
+    @GeminiParameter(description = "float value") f: Float,
+    @GeminiParameter(description = "boolean value") b: Boolean,
+): String = "$l|$d|$f|$b"
+
+@GeminiFunction(description = "Supports nullable input")
+private fun nullable_text(
+    @GeminiParameter(description = "nullable text") text: String?,
+): String = text ?: "null"
+
+@GeminiFunction(description = "Supports optional argument")
+private fun optional_text(
+    @GeminiParameter(description = "required text") text: String,
+    @GeminiParameter(description = "suffix text") suffix: String = "!",
+): String = "$text$suffix"
+
+@GeminiFunction(description = "Returns FunctionResponse directly")
+private fun direct_response(
+    @GeminiParameter(description = "value") value: Int,
+): FunctionResponse =
+    FunctionResponse(
+        name = "direct_response",
+        response = buildJsonObject { put("value", value) },
+    )
+
+@GeminiFunction(description = "Returns nested map result")
+private fun map_result(
+    @GeminiParameter(description = "value") value: Int,
+): Map<String, Any> =
+    mapOf(
+        "value" to value,
+        "meta" to mapOf("ok" to true),
+    )
+
+@GeminiFunction(description = "Consumes list and map parameters")
+private fun list_and_map(
+    @GeminiParameter(description = "numbers") numbers: List<Int>,
+    @GeminiParameter(description = "labels") labels: Map<String, String>,
+): String = "${numbers.sum()}-${labels["mode"] ?: "unknown"}"
+
+@GeminiFunction(description = "Unsupported parameter type for declaration")
+private fun unsupported_pair(
+    @GeminiParameter(description = "pair") items: Pair<Int, Int>,
+): String = "${items.first},${items.second}"
+
+private data class UnsupportedReturnType(
+    val value: Int,
+)
+
+@GeminiFunction(description = "Unsupported return type for automatic binding")
+private fun unsupported_return(
+    @GeminiParameter(description = "value") value: Int,
+): UnsupportedReturnType = UnsupportedReturnType(value)
 
 /**
  * Represents the gemini test.
@@ -405,5 +474,540 @@ class GeminiTest {
 
             assertEquals(expectedFile, result)
             coVerify { fileUploadProvider.upload(path, mimeType, displayName) }
+        }
+
+    @Test
+    fun `generateContentWithAutomaticFunctionCalls executes function and returns final response`() =
+        runTest {
+            var callCount = 0
+            gemini =
+                createGemini { request ->
+                    callCount += 1
+
+                    if (callCount == 2) {
+                        val body = (request.body as TextContent).text
+                        assertTrue(body.contains("\"functionResponse\""))
+                        assertTrue(body.contains("\"result\":579"))
+                    }
+
+                    val responseJson =
+                        if (callCount == 1) {
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "functionCall": {
+                                          "name": "add",
+                                          "args": { "a": 123, "b": 456 }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent()
+                        } else {
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "text": "The sum is 579."
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent()
+                        }
+
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val request =
+                GenerateContentRequest(
+                    contents = arrayOf(Content(role = "user", parts = arrayOf(Part(text = "What is 123 plus 456?")))),
+                    tools = emptyArray(),
+                )
+
+            val handlers =
+                mapOf<String, suspend (FunctionCall) -> FunctionResponse>(
+                    "add" to { functionCall ->
+                        val a = functionCall.args["a"]?.jsonPrimitive?.int ?: 0
+                        val b = functionCall.args["b"]?.jsonPrimitive?.int ?: 0
+                        FunctionResponse(
+                            name = "add",
+                            response = buildJsonObject { put("result", a + b) },
+                        )
+                    },
+                )
+
+            val response = gemini.generateContent(request, handlers)
+
+            assertEquals(2, callCount)
+            assertEquals(
+                "The sum is 579.",
+                response.candidates
+                    .first()
+                    .content.parts
+                    ?.firstOrNull()
+                    ?.text,
+            )
+        }
+
+    @Test
+    fun `generateContentWithAutomaticFunctionCalls throws when function handler is missing`() =
+        runTest {
+            gemini =
+                createGemini {
+                    respond(
+                        content =
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "functionCall": {
+                                          "name": "unknown_function",
+                                          "args": {}
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent(),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val request =
+                GenerateContentRequest(
+                    contents = arrayOf(Content(role = "user", parts = arrayOf(Part(text = "Do something")))),
+                )
+
+            val exception =
+                try {
+                    gemini.generateContent(request, emptyMap())
+                    null
+                } catch (e: IllegalArgumentException) {
+                    e
+                }
+
+            assertNotNull(exception)
+            assertEquals(
+                "No function handler registered for 'unknown_function'.",
+                exception?.message,
+            )
+        }
+
+    @Test
+    fun `generateContentWithAutomaticFunctionCalls supports direct kotlin function binding`() =
+        runTest {
+            var callCount = 0
+            gemini =
+                createGemini { request ->
+                    callCount += 1
+                    val body = (request.body as TextContent).text
+
+                    if (callCount == 1) {
+                        assertTrue(body.contains("\"functionDeclarations\""))
+                        assertTrue(body.contains("\"name\":\"addDirect\""))
+                    }
+                    if (callCount == 2) {
+                        assertTrue(body.contains("\"functionResponse\""))
+                        assertTrue(body.contains("\"result\":579"))
+                    }
+
+                    val responseJson =
+                        if (callCount == 1) {
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "functionCall": {
+                                          "name": "addDirect",
+                                          "args": { "a": 123, "b": 456 }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent()
+                        } else {
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "text": "The sum is 579."
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent()
+                        }
+
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val request =
+                GenerateContentRequest(
+                    contents = arrayOf(Content(role = "user", parts = arrayOf(Part(text = "What is 123 plus 456?")))),
+                )
+
+            val response =
+                gemini.generateContent(
+                    request,
+                    ::addDirect,
+                )
+
+            assertEquals(2, callCount)
+            assertEquals(
+                "The sum is 579.",
+                response.candidates
+                    .first()
+                    .content.parts
+                    ?.firstOrNull()
+                    ?.text,
+            )
+        }
+
+    @Test
+    fun `generateContent with handlers returns immediately when candidates are empty`() =
+        runTest {
+            gemini =
+                createGemini {
+                    respond(
+                        content = """{"candidates": []}""",
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val response =
+                gemini.generateContent(
+                    request = GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "hi"))))),
+                    functionHandlers = emptyMap(),
+                )
+
+            assertTrue(response.candidates.isEmpty())
+        }
+
+    @Test
+    fun `generateContent with handlers throws when maxIterations exceeded`() =
+        runTest {
+            gemini =
+                createGemini {
+                    respond(
+                        content =
+                            """
+                            {
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "functionCall": {
+                                          "name": "loop",
+                                          "args": {}
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """.trimIndent(),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val exception =
+                try {
+                    gemini.generateContent(
+                        request = GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "loop"))))),
+                        functionHandlers =
+                            mapOf(
+                                "loop" to {
+                                    FunctionResponse(name = "loop", response = buildJsonObject { put("ok", true) })
+                                },
+                            ),
+                        maxIterations = 1,
+                    )
+                    null
+                } catch (e: IllegalStateException) {
+                    e
+                }
+
+            assertNotNull(exception)
+            assertEquals("Automatic function calling exceeded maxIterations=1.", exception!!.message)
+        }
+
+    @Test
+    fun `generateContent with handlers validates positive maxIterations`() =
+        runTest {
+            gemini = createGemini { respond("""{"candidates": []}""", HttpStatusCode.OK) }
+            val exception =
+                try {
+                    gemini.generateContent(
+                        request = GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "x"))))),
+                        functionHandlers = emptyMap(),
+                        maxIterations = 0,
+                    )
+                    null
+                } catch (e: IllegalArgumentException) {
+                    e
+                }
+            assertNotNull(exception)
+            assertEquals("maxIterations must be greater than 0.", exception!!.message)
+        }
+
+    @Test
+    fun `generateContent with direct binding handles typed scalar args`() =
+        runTest {
+            var callCount = 0
+            gemini =
+                createGemini {
+                    callCount++
+                    val responseJson =
+                        if (callCount == 1) {
+                            """
+                            {
+                              "candidates":[{"content":{"parts":[{"functionCall":{"name":"typed_scalars","args":{"l":1234567890123,"d":1.25,"f":2.5,"b":true}}}]}}]
+                            }
+                            """.trimIndent()
+                        } else {
+                            """{"candidates":[{"content":{"parts":[{"text":"done"}]}}]}"""
+                        }
+                    respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val response =
+                gemini.generateContent(
+                    GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "go"))))),
+                    ::typed_scalars,
+                )
+
+            assertEquals(
+                "done",
+                response.candidates
+                    .first()
+                    .content.parts
+                    ?.firstOrNull()
+                    ?.text,
+            )
+        }
+
+    @Test
+    fun `generateContent with direct binding supports nullable and optional args`() =
+        runTest {
+            var callCount = 0
+            gemini =
+                createGemini {
+                    callCount++
+                    val responseJson =
+                        when (callCount) {
+                            1 ->
+                                """
+                                {"candidates":[{"content":{"parts":[{"functionCall":{"name":"nullable_text","args":{"text":null}}}]}}]}
+                                """.trimIndent()
+                            2 ->
+                                """
+                                {"candidates":[{"content":{"parts":[{"functionCall":{"name":"optional_text","args":{"text":"Hi"}}}]}}]}
+                                """.trimIndent()
+                            else -> """{"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}"""
+                        }
+                    respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val response =
+                gemini.generateContent(
+                    GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "go"))))),
+                    ::nullable_text,
+                    ::optional_text,
+                    maxIterations = 3,
+                )
+
+            assertEquals(
+                "ok",
+                response.candidates
+                    .first()
+                    .content.parts
+                    ?.firstOrNull()
+                    ?.text,
+            )
+        }
+
+    @Test
+    fun `generateContent with direct binding supports list and map args`() =
+        runTest {
+            var callCount = 0
+            var secondRequestBody = ""
+            gemini =
+                createGemini { request ->
+                    callCount++
+                    if (callCount == 2) {
+                        secondRequestBody = (request.body as TextContent).text
+                    }
+                    val responseJson =
+                        if (callCount == 1) {
+                            """
+                            {
+                              "candidates":[{"content":{"parts":[
+                                {"functionCall":{"name":"list_and_map","args":{"numbers":[1,2,3],"labels":{"mode":"party"}}}}
+                              ]}}]
+                            }
+                            """.trimIndent()
+                        } else {
+                            """{"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}"""
+                        }
+                    respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val response =
+                gemini.generateContent(
+                    GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "go"))))),
+                    ::list_and_map,
+                )
+
+            assertEquals(
+                "ok",
+                response.candidates
+                    .first()
+                    .content.parts
+                    ?.firstOrNull()
+                    ?.text,
+            )
+            assertTrue(secondRequestBody.contains("\"result\":\"6-party\""))
+        }
+
+    @Test
+    fun `generateContent with direct binding supports FunctionResponse and map return types`() =
+        runTest {
+            var callCount = 0
+            var secondRequestBody = ""
+            gemini =
+                createGemini { request ->
+                    callCount++
+                    if (callCount == 2) {
+                        secondRequestBody = (request.body as TextContent).text
+                    }
+                    val responseJson =
+                        if (callCount == 1) {
+                            """
+                            {
+                              "candidates":[{"content":{"parts":[
+                                {"functionCall":{"name":"map_result","args":{"value":7}}},
+                                {"functionCall":{"name":"direct_response","args":{"value":7}}}
+                              ]}}]
+                            }
+                            """.trimIndent()
+                        } else {
+                            """{"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}"""
+                        }
+                    respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val response =
+                gemini.generateContent(
+                    GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "go"))))),
+                    ::map_result,
+                    ::direct_response,
+                )
+
+            assertEquals(
+                "ok",
+                response.candidates
+                    .first()
+                    .content.parts
+                    ?.firstOrNull()
+                    ?.text,
+            )
+            assertTrue(secondRequestBody.contains("\"name\":\"map_result\""))
+            assertTrue(secondRequestBody.contains("\"name\":\"direct_response\""))
+            assertTrue(secondRequestBody.contains("\"meta\":{\"ok\":true}"))
+            assertTrue(secondRequestBody.contains("\"value\":7"))
+        }
+
+    @Test
+    fun `generateContent with direct binding rejects unsupported parameter types`() =
+        runTest {
+            gemini = createGemini { respond("""{"candidates": []}""", HttpStatusCode.OK) }
+
+            val exception =
+                try {
+                    gemini.generateContent(
+                        GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "x"))))),
+                        ::unsupported_pair,
+                    )
+                    null
+                } catch (e: IllegalArgumentException) {
+                    e
+                }
+
+            assertNotNull(exception)
+            assertTrue(exception!!.message?.contains("Unsupported parameter type") == true)
+        }
+
+    @Test
+    fun `generateContent with direct binding rejects unsupported return types`() =
+        runTest {
+            gemini =
+                createGemini {
+                    respond(
+                        content =
+                            """
+                            {
+                              "candidates":[{"content":{"parts":[{"functionCall":{"name":"unsupported_return","args":{"value":7}}}]}}]
+                            }
+                            """.trimIndent(),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val exception =
+                try {
+                    gemini.generateContent(
+                        GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "x"))))),
+                        ::unsupported_return,
+                    )
+                    null
+                } catch (e: IllegalArgumentException) {
+                    e
+                }
+
+            assertNotNull(exception)
+            assertTrue(exception!!.message?.contains("Unsupported return type for automatic binding") == true)
         }
 }

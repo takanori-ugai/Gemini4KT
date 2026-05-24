@@ -66,7 +66,7 @@ class FileSearchSampleTest {
             coVerify { fileSearch.getFileSearchStoreOperation(initialUpload.name!!) }
             coVerify { fileSearch.deleteFileSearchStore(store.name!!, force = true) }
             coVerify {
-                gemini.generateContent(any(), model = "gemini-2.5-flash")
+                gemini.generateContent(any(), model = "gemma-4-31b-it")
             }
             assertTrue(output.contains("Upload complete."))
             assertTrue(output.contains("The fox says"))

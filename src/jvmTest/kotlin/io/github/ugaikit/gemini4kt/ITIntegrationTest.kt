@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt
 
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -7,7 +8,6 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 import java.io.File
 import java.util.Base64
 import java.util.Properties
@@ -18,9 +18,8 @@ import kotlin.test.assertTrue
 /**
  * Live integration coverage migrated from the old JVM main runner.
  */
-@DisabledIfEnvironmentVariable(named = "GITHUB_ACTIONS", matches = "true")
 class ITIntegrationTest {
-    private val model = "gemini-3.1-flash-lite"
+    private val model = "gemma-4-31b-it"
     private val embedModel = "gemini-embedding-2"
     private val httpTooManyRequests = 429
 
@@ -42,6 +41,11 @@ class ITIntegrationTest {
         if (error.error.code == httpTooManyRequests || error.error.status == "RESOURCE_EXHAUSTED") {
             Assumptions.assumeTrue(false, "Skipping integration test due to quota exhaustion: ${error.error.message}")
         }
+        throw error
+    }
+
+    private fun handleRequestTimeout(error: HttpRequestTimeoutException): Nothing {
+        Assumptions.assumeTrue(false, "Skipping integration test due to request timeout: ${error.message}")
         throw error
     }
 
@@ -105,6 +109,8 @@ class ITIntegrationTest {
                 assertTrue(batchEmbedResponse.embeddings.isNotEmpty())
             } catch (error: GeminiException) {
                 handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
             }
         }
 
@@ -154,6 +160,8 @@ class ITIntegrationTest {
                 assertNotNull(textPart?.text)
             } catch (error: GeminiException) {
                 handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
             }
         }
 
@@ -191,6 +199,8 @@ class ITIntegrationTest {
                 assertTrue(!parts.isNullOrEmpty())
             } catch (error: GeminiException) {
                 handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
             }
         }
 
@@ -276,6 +286,8 @@ class ITIntegrationTest {
                 assertTrue(!parts.isNullOrEmpty())
             } catch (error: GeminiException) {
                 handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
             }
         }
 

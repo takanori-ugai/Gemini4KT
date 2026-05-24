@@ -62,7 +62,7 @@ object FileSearchSample {
 
             val response =
                 gemini.generateContent(
-                    model = "gemini-2.5-flash",
+                    model = "gemma-4-31b-it",
                     inputJson = generateContentRequest,
                 )
 

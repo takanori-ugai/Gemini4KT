@@ -43,7 +43,7 @@ object Samples1 {
             client
                 .generateContent(
                     inputJson,
-                    model = "gemini-2.5-flash-lite",
+                    model = "gemma-4-31b-it",
                 ).candidates[0]
                 .content.parts!!
                 .get(0)

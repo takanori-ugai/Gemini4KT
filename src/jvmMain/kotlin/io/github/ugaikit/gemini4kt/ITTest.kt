@@ -121,6 +121,15 @@ private suspend fun testContentGeneration(
             contents = listOf(Content(parts = arrayOf(Part(text)))),
         )
     println(gemini.countTokens(inputJson2, model = model))
+}
+
+/**
+ * Tests embedding APIs once (outside the model loop).
+ *
+ * @param gemini The gemini.
+ */
+private suspend fun testEmbeddingApis(gemini: Gemini) {
+    val text = "Write a story about a magic backpack."
 
     println("--- testEmbedContent ---")
     /**
@@ -309,6 +318,77 @@ private fun getShowtimesFunction(): FunctionDeclaration =
             ),
     )
 
+@GeminiFunction(
+    description = "find movie titles currently playing in theaters based on description and location",
+)
+private fun findMoviesAuto(
+    @GeminiParameter(description = "The city and state, e.g. Mountain View, CA")
+    location: String,
+    @GeminiParameter(description = "Any kind of description including category or genre")
+    description: String,
+): Map<String, Any> =
+    mapOf(
+        "location" to location,
+        "description" to description,
+        "movies" to listOf("Barbie"),
+    )
+
+@GeminiFunction(
+    description = "find theaters based on location and optionally movie title",
+)
+private fun findTheatersAuto(
+    @GeminiParameter(description = "The city and state, e.g. Mountain View, CA")
+    location: String,
+    @GeminiParameter(description = "Any movie title")
+    movie: String,
+): Map<String, Any> =
+    mapOf(
+        "location" to location,
+        "movie" to movie,
+        "theaters" to
+            listOf(
+                mapOf(
+                    "name" to "AMC Mountain View 16",
+                    "address" to "2000 W El Camino Real, Mountain View, CA 94040",
+                ),
+                mapOf(
+                    "name" to "Regal Edwards 14",
+                    "address" to "245 Castro St, Mountain View, CA 94040",
+                ),
+            ),
+    )
+
+@GeminiFunction(
+    description = "find showtimes for a given movie, location, theater and date",
+)
+private fun getShowtimesAuto(
+    @GeminiParameter(description = "The city and state")
+    location: String,
+    @GeminiParameter(description = "Any movie title")
+    movie: String,
+    @GeminiParameter(description = "Name of the theater")
+    theater: String,
+    @GeminiParameter(description = "Date for requested showtime")
+    date: String,
+): Map<String, Any> =
+    mapOf(
+        "location" to location,
+        "movie" to movie,
+        "theater" to theater,
+        "date" to date,
+        "showtimes" to listOf("18:30", "20:10", "21:45"),
+    )
+
+@GeminiFunction(
+    description = "add two integers",
+)
+private fun addDirect(
+    @GeminiParameter(description = "first number")
+    a: Int,
+    @GeminiParameter(description = "second number")
+    b: Int,
+): Int = a + b
+
 /**
  * Handles define function tools.
  */
@@ -456,6 +536,108 @@ private suspend fun testFunctionCallingSecondTurn(
         } else {
             println("[Part]: $part")
         }
+    }
+}
+
+/**
+ * Tests direct function calling with a Kotlin function reference.
+ *
+ * @param gemini The gemini.
+ * @param model The model.
+ */
+private suspend fun testDirectFunctionCall(
+    gemini: Gemini,
+    model: String,
+) {
+    println("--- testDirectFunctionCall ---")
+
+    val request =
+        GenerateContentRequest(
+            contents =
+                arrayOf(
+                    content {
+                        role = "user"
+                        part { text { "What is 123 plus 456?" } }
+                    },
+                ),
+        )
+
+    val response =
+        gemini.generateContent(
+            request,
+            ::addDirect,
+            model = model,
+            maxIterations = 4,
+        )
+
+    val textPart =
+        response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull { it.text != null && it.thought != true }
+            ?.text
+    if (textPart == null) {
+        println("No final text response returned. Raw response: $response")
+    } else {
+        println(textPart)
+    }
+}
+
+/**
+ * Tests automatic function calling end-to-end.
+ *
+ * @param gemini The gemini.
+ * @param model The model.
+ */
+private suspend fun testAutomaticFunctionCalling(
+    gemini: Gemini,
+    model: String,
+) {
+    println("--- testAutomaticFunctionCalling ---")
+
+    val request =
+        GenerateContentRequest(
+            contents =
+                arrayOf(
+                    content {
+                        role = "user"
+                        part { text { "Which theaters in Mountain View show Barbie movie and when can I watch it tonight?" } }
+                    },
+                ),
+        )
+
+    val response =
+        gemini.generateContent(
+            request,
+            ::findMoviesAuto,
+            ::findTheatersAuto,
+            ::getShowtimesAuto,
+            model = model,
+            maxIterations = 6,
+        )
+
+    val thoughtPart =
+        response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull { it.thought == true }
+    if (thoughtPart != null) {
+        println("[Thought]: ${thoughtPart.text}")
+    }
+
+    val textPart =
+        response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull { it.text != null && it.thought != true }
+            ?.text
+    if (textPart == null) {
+        println("No final text response returned. Raw response: $response")
+    } else {
+        println(textPart)
     }
 }
 
@@ -726,6 +908,21 @@ fun main() =
             } catch (e: Exception) {
                 println("testFunctionCallingSecondTurn failed for $model: ${e.message}")
             }
+            try {
+                testAutomaticFunctionCalling(gemini, model)
+            } catch (e: Exception) {
+                println("testAutomaticFunctionCalling failed for $model: ${e.message}")
+            }
+            try {
+                testDirectFunctionCall(gemini, model)
+            } catch (e: Exception) {
+                println("testDirectFunctionCall failed for $model: ${e.message}")
+            }
+        }
+        try {
+            testEmbeddingApis(gemini)
+        } catch (e: Exception) {
+            println("testEmbeddingApis failed: ${e.message}")
         }
         testPartBuilder()
         testAgentAPI(apiKey)
