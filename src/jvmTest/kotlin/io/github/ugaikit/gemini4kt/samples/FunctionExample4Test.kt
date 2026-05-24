@@ -115,4 +115,38 @@ class FunctionExample4Test {
             assertTrue(output.contains("Final response:"))
             assertTrue(output.contains("disco ball"))
         }
+
+    @Test
+    fun runPrintsCandidateContentWhenNonThoughtTextIsMissing() =
+        runTest {
+            val mockEngine =
+                MockEngine { _ ->
+                    respond(
+                        content =
+                            ByteReadChannel(
+                                """
+                                {
+                                  "candidates": [
+                                    {
+                                      "content": {
+                                        "parts": [
+                                          { "text": "thinking...", "thought": true }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                                """.trimIndent(),
+                            ),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            val gemini = Gemini(apiKey = "test_key", client = HttpClient(mockEngine))
+            val output = captureStdout { FunctionExample4.run(gemini) }
+
+            assertTrue(output.contains("Final candidate content:"))
+            assertTrue(output.contains("thinking"))
+        }
 }
