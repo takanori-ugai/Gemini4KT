@@ -16,8 +16,20 @@ import kotlinx.serialization.Serializable
 // --- Client Messages ---
 
 /**
- * Message to be sent in the first (and only in the first) BidiGenerateContentClientMessage.
- * Contains configuration that will apply for the duration of the streaming RPC.
+ * Initial setup payload for a Live API session.
+ *
+ * This message is sent in the first client frame and configures the model and session behavior.
+ *
+ * @property model Model resource name, usually in `models/{model}` format.
+ * @property generationConfig Optional generation configuration for the session.
+ * @property systemInstruction Optional system instruction applied to the session.
+ * @property tools Optional tool definitions available to the model.
+ * @property realtimeInputConfig Optional realtime input handling configuration.
+ * @property sessionResumption Optional configuration for resumable sessions.
+ * @property contextWindowCompression Optional context-window compression settings.
+ * @property inputAudioTranscription Optional transcription configuration for input audio.
+ * @property outputAudioTranscription Optional transcription configuration for output audio.
+ * @property proactivity Optional proactive interaction behavior settings.
  */
 @Serializable
 data class BidiGenerateContentSetup(
@@ -34,7 +46,10 @@ data class BidiGenerateContentSetup(
 )
 
 /**
- * Incremental update of the current conversation delivered from the client.
+ * Incremental conversation content sent by the client.
+ *
+ * @property turns Optional turn list to append to the running conversation state.
+ * @property turnComplete Optional flag indicating that the current user turn is complete.
  */
 @Serializable
 data class BidiGenerateContentClientContent(
@@ -43,7 +58,16 @@ data class BidiGenerateContentClientContent(
 )
 
 /**
- * User input that is sent in real time.
+ * Realtime input payload sent during a live session.
+ *
+ * @property media Optional generic media blob.
+ * @property mediaChunks Optional chunked media payload.
+ * @property audio Optional audio blob.
+ * @property video Optional video blob.
+ * @property activityStart Optional marker indicating user activity start.
+ * @property activityEnd Optional marker indicating user activity end.
+ * @property audioStreamEnd Optional marker that audio streaming has ended.
+ * @property text Optional text input.
  */
 @Serializable
 data class BidiGenerateContentRealtimeInput(
@@ -59,7 +83,9 @@ data class BidiGenerateContentRealtimeInput(
 )
 
 /**
- * Client generated response to a ToolCall received from the server.
+ * Tool-call result payload sent by the client.
+ *
+ * @property functionResponses Optional list of tool/function responses.
  */
 @Serializable
 data class BidiGenerateContentToolResponse(
@@ -67,8 +93,14 @@ data class BidiGenerateContentToolResponse(
 )
 
 /**
- * Wrapper for all client messages.
- * The JSON object must have exactly one of the fields.
+ * Client message envelope for Live API communication.
+ *
+ * Exactly one field should be set per message.
+ *
+ * @property setup Optional setup message for the initial handshake.
+ * @property clientContent Optional conversational content update.
+ * @property realtimeInput Optional realtime media/text input.
+ * @property toolResponse Optional response to a model-issued tool call.
  */
 @Serializable
 data class BidiGenerateContentClientMessage(
@@ -81,7 +113,15 @@ data class BidiGenerateContentClientMessage(
 // --- Server Messages ---
 
 /**
- * Response message for the BidiGenerateContent call.
+ * Server message envelope returned by the Live API.
+ *
+ * @property usageMetadata Optional token and usage metadata.
+ * @property setupComplete Optional setup-complete marker for handshake success.
+ * @property serverContent Optional model output content.
+ * @property toolCall Optional tool call requested by the model.
+ * @property toolCallCancellation Optional cancellation request for prior tool calls.
+ * @property goAway Optional advisory message indicating session shutdown timing.
+ * @property sessionResumptionUpdate Optional update containing session-resumption state.
  */
 @Serializable
 data class BidiGenerateContentServerMessage(
@@ -95,22 +135,22 @@ data class BidiGenerateContentServerMessage(
 )
 
 /**
- * Represents the bidi generate content setup complete.
+ * Marker payload indicating successful Live API setup.
  */
 @Serializable
 class BidiGenerateContentSetupComplete
 
 /**
- * Represents the bidi generate content server content.
+ * Model content update returned during a live generation turn.
  *
- * @property generationComplete The generation complete.
- * @property turnComplete The turn complete.
- * @property interrupted The interrupted.
- * @property groundingMetadata The grounding metadata.
- * @property inputTranscription The input transcription.
- * @property outputTranscription The output transcription.
- * @property urlContextMetadata The url context metadata.
- * @property modelTurn The model turn.
+ * @property generationComplete Indicates model generation has completed.
+ * @property turnComplete Indicates the current response turn has completed.
+ * @property interrupted Indicates generation was interrupted.
+ * @property groundingMetadata Optional grounding metadata associated with the output.
+ * @property inputTranscription Optional transcript for input audio.
+ * @property outputTranscription Optional transcript for model output audio.
+ * @property urlContextMetadata Optional metadata for URL-context tools.
+ * @property modelTurn Optional model turn content.
  */
 @Serializable
 data class BidiGenerateContentServerContent(
@@ -125,9 +165,9 @@ data class BidiGenerateContentServerContent(
 )
 
 /**
- * Represents the bidi generate content tool call.
+ * Tool call request emitted by the model.
  *
- * @property functionCalls The function calls.
+ * @property functionCalls Optional function call list.
  */
 @Serializable
 data class BidiGenerateContentToolCall(
@@ -135,9 +175,9 @@ data class BidiGenerateContentToolCall(
 )
 
 /**
- * Represents the bidi generate content tool call cancellation.
+ * Cancellation request for in-flight tool calls.
  *
- * @property ids The ids.
+ * @property ids Optional list of call IDs to cancel.
  */
 @Serializable
 data class BidiGenerateContentToolCallCancellation(
@@ -145,23 +185,20 @@ data class BidiGenerateContentToolCallCancellation(
 )
 
 /**
- * Represents the go away.
+ * Advisory message indicating planned connection shutdown timing.
  *
- * @property timeLeft The time left.
+ * @property timeLeft Remaining time until shutdown, for example `"10s"`.
  */
 @Serializable
 data class GoAway(
-    /**
-     * Holds the time left.
-     */
-    val timeLeft: String? = null, // Using String for Duration, e.g., "10s"
+    val timeLeft: String? = null,
 )
 
 /**
- * Represents the session resumption update.
+ * Update payload for session resumption state.
  *
- * @property newHandle The new handle.
- * @property resumable The resumable.
+ * @property newHandle New handle that can be used to resume the session.
+ * @property resumable Indicates whether the current session is resumable.
  */
 @Serializable
 data class SessionResumptionUpdate(
@@ -172,11 +209,11 @@ data class SessionResumptionUpdate(
 // --- Helper Types ---
 
 /**
- * Represents the realtime input config.
+ * Realtime input behavior configuration.
  *
- * @property automaticActivityDetection The automatic activity detection.
- * @property activityHandling The activity handling.
- * @property turnCoverage The turn coverage.
+ * @property automaticActivityDetection Optional automatic activity detection settings.
+ * @property activityHandling Optional activity interrupt behavior.
+ * @property turnCoverage Optional rule for what input contributes to a turn.
  */
 @Serializable
 data class RealtimeInputConfig(
@@ -186,13 +223,13 @@ data class RealtimeInputConfig(
 )
 
 /**
- * Represents the automatic activity detection.
+ * Automatic speech-activity detection settings.
  *
- * @property disabled The disabled.
- * @property startOfSpeechSensitivity The start of speech sensitivity.
- * @property prefixPaddingMs The prefix padding ms.
- * @property endOfSpeechSensitivity The end of speech sensitivity.
- * @property silenceDurationMs The silence duration ms.
+ * @property disabled Disables automatic activity detection when true.
+ * @property startOfSpeechSensitivity Start-of-speech detection sensitivity.
+ * @property prefixPaddingMs Milliseconds of pre-roll audio to retain.
+ * @property endOfSpeechSensitivity End-of-speech detection sensitivity.
+ * @property silenceDurationMs Silence duration threshold in milliseconds.
  */
 @Serializable
 data class AutomaticActivityDetection(
@@ -204,7 +241,7 @@ data class AutomaticActivityDetection(
 )
 
 /**
- * Represents the activity handling.
+ * Defines how detected user activity affects model generation.
  */
 @Serializable
 enum class ActivityHandling {
@@ -214,7 +251,7 @@ enum class ActivityHandling {
 }
 
 /**
- * Represents the turn coverage.
+ * Defines which inputs are included in a completed turn.
  */
 @Serializable
 enum class TurnCoverage {
@@ -224,7 +261,7 @@ enum class TurnCoverage {
 }
 
 /**
- * Represents the start sensitivity.
+ * Start-of-speech detection sensitivity presets.
  */
 @Serializable
 enum class StartSensitivity {
@@ -234,7 +271,7 @@ enum class StartSensitivity {
 }
 
 /**
- * Represents the end sensitivity.
+ * End-of-speech detection sensitivity presets.
  */
 @Serializable
 enum class EndSensitivity {
@@ -244,36 +281,33 @@ enum class EndSensitivity {
 }
 
 /**
- * Represents the blob.
+ * Binary payload encoded for JSON transport.
  *
- * @property mimeType The mime type.
- * @property data The data.
+ * @property mimeType MIME type for the payload.
+ * @property data Base64-encoded payload bytes.
  */
 @Serializable
 data class Blob(
     val mimeType: String,
-    /**
-     * Holds the data.
-     */
-    val data: String, // Base64 encoded bytes
+    val data: String,
 )
 
 /**
- * Represents the activity start.
+ * Marker payload indicating start of user activity.
  */
 @Serializable
 class ActivityStart
 
 /**
- * Represents the activity end.
+ * Marker payload indicating end of user activity.
  */
 @Serializable
 class ActivityEnd
 
 /**
- * Represents the session resumption config.
+ * Session resumption configuration used in setup.
  *
- * @property handle The handle.
+ * @property handle Optional prior handle to resume from.
  */
 @Serializable
 data class SessionResumptionConfig(
@@ -281,10 +315,10 @@ data class SessionResumptionConfig(
 )
 
 /**
- * Represents the context window compression config.
+ * Context-window compression configuration.
  *
- * @property slidingWindow The sliding window.
- * @property triggerTokens The trigger tokens.
+ * @property slidingWindow Optional sliding-window token target.
+ * @property triggerTokens Optional token threshold that triggers compression.
  */
 @Serializable
 data class ContextWindowCompressionConfig(
@@ -293,9 +327,9 @@ data class ContextWindowCompressionConfig(
 )
 
 /**
- * Represents the sliding window.
+ * Sliding-window compression settings.
  *
- * @property targetTokens The target tokens.
+ * @property targetTokens Target token count after compression.
  */
 @Serializable
 data class SlidingWindow(
@@ -303,15 +337,15 @@ data class SlidingWindow(
 )
 
 /**
- * Represents the audio transcription config.
+ * Marker configuration enabling audio transcription.
  */
 @Serializable
 class AudioTranscriptionConfig
 
 /**
- * Represents the proactivity config.
+ * Proactivity configuration for live interactions.
  *
- * @property proactiveAudio The proactive audio.
+ * @property proactiveAudio Enables proactive audio behavior when true.
  */
 @Serializable
 data class ProactivityConfig(
@@ -319,9 +353,9 @@ data class ProactivityConfig(
 )
 
 /**
- * Represents the bidi generate content transcription.
+ * Transcription payload for input or output audio.
  *
- * @property text The text.
+ * @property text Transcribed text.
  */
 @Serializable
 data class BidiGenerateContentTranscription(
@@ -329,14 +363,14 @@ data class BidiGenerateContentTranscription(
 )
 
 /**
- * Represents the live connect config.
+ * Client-side defaults used when establishing a `GeminiLive` connection.
  *
- * @property responseModalities The response modalities.
- * @property speechConfig The speech config.
- * @property systemInstruction The system instruction.
- * @property tools The tools.
- * @property generationConfig The generation config.
- * @property enableAffectiveDialog The enable affective dialog.
+ * @property responseModalities Optional response modality preferences.
+ * @property speechConfig Optional speech generation configuration.
+ * @property systemInstruction Optional system instruction.
+ * @property tools Optional tools to register for model use.
+ * @property generationConfig Optional generation configuration.
+ * @property enableAffectiveDialog Optional helper flag for API variants that support it.
  */
 @Serializable
 data class LiveConnectConfig(
@@ -345,8 +379,5 @@ data class LiveConnectConfig(
     val systemInstruction: Content? = null,
     val tools: Array<Tool>? = null,
     val generationConfig: GenerationConfig? = null,
-    /**
-     * Holds the enable affective dialog.
-     */
-    val enableAffectiveDialog: Boolean? = null, // Helper for API v1alpha if needed, but not in main Setup struct
+    val enableAffectiveDialog: Boolean? = null,
 )

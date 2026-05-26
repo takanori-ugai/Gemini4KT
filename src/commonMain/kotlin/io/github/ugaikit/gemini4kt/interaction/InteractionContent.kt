@@ -6,6 +6,32 @@ import kotlinx.serialization.json.JsonElement
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
+/**
+ * Content item produced or consumed by the Interaction API.
+ *
+ * @property type Content type identifier.
+ * @property text Optional plain text content.
+ * @property data Optional inline encoded data.
+ * @property uri Optional URI reference for external content.
+ * @property mimeType Optional MIME type for `data` or `uri` content.
+ * @property resolution Optional resolution descriptor for media content.
+ * @property signature Optional signature or integrity metadata.
+ * @property summary Optional thought summary content.
+ * @property name Optional function or tool name associated with this item.
+ * @property arguments Optional JSON arguments for a function/tool call.
+ * @property isError Indicates whether this content represents an error.
+ * @property result Optional JSON result payload.
+ * @property callId Optional tool/function call ID.
+ * @property language Optional language tag for code/text content.
+ * @property code Optional source code payload.
+ * @property urls Optional URL list associated with the content.
+ * @property status Optional status value for tool/content execution.
+ * @property title Optional title text.
+ * @property renderedContent Optional pre-rendered rich content.
+ * @property serverName Optional server identifier for remote tool content.
+ * @property fileSearchStore Optional file search store name.
+ * @property annotations Optional annotations attached to this content.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -102,6 +128,11 @@ data class InteractionContent(
     }
 }
 
+/**
+ * Optional summary wrapper for interaction thought content.
+ *
+ * @property content Summary content payload.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -109,6 +140,13 @@ data class InteractionThoughtSummary(
     val content: InteractionContent? = null,
 )
 
+/**
+ * Annotation range and source metadata for interaction content.
+ *
+ * @property startIndex Optional inclusive start index in the associated content.
+ * @property endIndex Optional exclusive end index in the associated content.
+ * @property source Optional source identifier.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable

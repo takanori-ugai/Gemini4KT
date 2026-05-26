@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
+/**
+ * Lifecycle status values for an interaction.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -25,6 +28,9 @@ enum class InteractionStatus {
     CANCELLED,
 }
 
+/**
+ * Reasoning depth presets for model thinking.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -42,6 +48,9 @@ enum class ThinkingLevel {
     HIGH,
 }
 
+/**
+ * Controls whether and how model reasoning summaries are returned.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -53,6 +62,9 @@ enum class ThinkingSummaries {
     NONE,
 }
 
+/**
+ * Output modality types supported by interaction responses.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable

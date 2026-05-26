@@ -32,7 +32,15 @@ import kotlinx.serialization.json.Json
 private val logger = KotlinLogging.logger {}
 
 /**
- * A client for interacting with the Gemini Live API via WebSockets.
+ * Client for interacting with the Gemini Live API over WebSockets.
+ *
+ * @param apiKey API key used for authentication.
+ * @param model Model name or resource name to use for the session.
+ * @param config Optional default setup configuration applied when `connect` is called without an
+ * explicit setup object.
+ * @param json JSON serializer used for request and response payloads.
+ * @param client Optional externally managed HTTP client. When omitted, a client is created and
+ * owned by each session.
  */
 class GeminiLive(
     private val apiKey: String,
@@ -68,8 +76,7 @@ class GeminiLive(
      * omitted, a setup is derived from the instance configuration.
      * @param handshakeTimeoutMs Timeout in milliseconds to wait for the `setupComplete` message
      * before treating the connection as failed.
-     * @return A GeminiLiveSession representing the established WebSocket session, the incoming
-     * message channel, the JSON serializer, and the listener job.
+     * @return Active [GeminiLiveSession] for sending client messages and receiving server events.
      */
     suspend fun connect(
         setup: BidiGenerateContentSetup? = null,
@@ -203,12 +210,14 @@ class GeminiLive(
 }
 
 /**
- * Represents the gemini live session.
+ * Active Gemini Live session returned by [GeminiLive.connect].
  *
- * @property session The session.
- * @property incomingMessages The incoming messages.
- * @property json The json.
- * @property listenerJob The listener job.
+ * @param session Underlying WebSocket session.
+ * @param incomingMessages Channel of decoded server messages.
+ * @param json JSON serializer used for outbound payloads.
+ * @param listenerJob Background job that reads and decodes incoming frames.
+ * @param httpClient HTTP client associated with the session.
+ * @param ownsClient Whether this session is responsible for closing [httpClient].
  */
 class GeminiLiveSession(
     private val session: WebSocketSession,
@@ -219,7 +228,9 @@ class GeminiLiveSession(
     private val ownsClient: Boolean,
 ) {
     /**
-     * Sends a client content message.
+     * Sends a client content update message.
+     *
+     * @param content Client content payload to send.
      */
     suspend fun sendClientContent(content: BidiGenerateContentClientContent) {
         val msg = BidiGenerateContentClientMessage(clientContent = content)
@@ -228,6 +239,8 @@ class GeminiLiveSession(
 
     /**
      * Sends a realtime input message.
+     *
+     * @param input Realtime input payload.
      */
     suspend fun sendRealtimeInput(input: BidiGenerateContentRealtimeInput) {
         val msg = BidiGenerateContentClientMessage(realtimeInput = input)
@@ -236,6 +249,8 @@ class GeminiLiveSession(
 
     /**
      * Sends a tool response message.
+     *
+     * @param response Tool response payload.
      */
     suspend fun sendToolResponse(response: BidiGenerateContentToolResponse) {
         val msg = BidiGenerateContentClientMessage(toolResponse = response)
@@ -254,12 +269,12 @@ class GeminiLiveSession(
     }
 
     /**
-     * Receives messages from the server.
+     * Returns a cold [Flow] view of decoded server messages for this session.
      */
     fun receive(): Flow<BidiGenerateContentServerMessage> = incomingMessages.receiveAsFlow()
 
     /**
-     * Closes the session.
+     * Closes the WebSocket session and releases associated resources.
      */
     suspend fun close() {
         try {
