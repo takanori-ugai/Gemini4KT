@@ -111,9 +111,7 @@ private fun jsonElementToKotlinValue(
     type: KType,
 ): Any? {
     if (element is JsonNull) {
-        if (!type.isMarkedNullable) {
-            throw IllegalArgumentException("Non-null parameter received null for type $type")
-        }
+        require(type.isMarkedNullable) { "Non-null parameter received null for type $type" }
         return null
     }
 
@@ -140,8 +138,8 @@ private fun jsonElementToKotlinValue(
         }
         Map::class, MutableMap::class -> {
             val keyType = type.arguments.getOrNull(0)?.type
-            if (keyType?.classifier != String::class) {
-                throw IllegalArgumentException("Map parameter keys must be String for automatic binding: $type")
+            require(keyType?.classifier == String::class) {
+                "Map parameter keys must be String for automatic binding: $type"
             }
             val valueType = type.arguments.getOrNull(1)?.type
             val jsonObject = element as? JsonObject ?: throw IllegalArgumentException("Expected JsonObject but got $element")

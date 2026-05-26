@@ -26,8 +26,8 @@ private fun buildTypeSchema(type: KType): Schema {
             }
             Map::class, MutableMap::class -> {
                 val keyType = type.arguments.getOrNull(0)?.type
-                if (keyType?.classifier != String::class) {
-                    throw IllegalArgumentException("Map parameter keys must be String for automatic binding: $type")
+                require(keyType?.classifier == String::class) {
+                    "Map parameter keys must be String for automatic binding: $type"
                 }
                 // Current Schema model has no additionalProperties field.
                 Schema(type = "object")

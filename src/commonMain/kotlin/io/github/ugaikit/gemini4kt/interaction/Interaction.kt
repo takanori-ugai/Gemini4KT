@@ -7,6 +7,32 @@ import kotlinx.serialization.json.JsonElement
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
+/**
+ * Persisted interaction object returned by the Interaction API.
+ *
+ * @property id Interaction identifier.
+ * @property created Optional creation timestamp.
+ * @property updated Optional last-updated timestamp.
+ * @property model Optional model name used by the interaction.
+ * @property agent Optional agent name or ID.
+ * @property role Optional role associated with the interaction output.
+ * @property status Current interaction status.
+ * @property outputs Optional output content items.
+ * @property usage Optional token usage metrics.
+ * @property systemInstruction Optional system instruction text.
+ * @property tools Optional tool configuration associated with the interaction.
+ * @property background Optional background execution flag.
+ * @property responseModalities Optional response modalities requested.
+ * @property responseFormat Optional structured response format descriptor.
+ * @property responseMimeType Optional MIME type for response payloads.
+ * @property previousInteractionId Optional previous interaction ID for continuity.
+ * @property input Optional raw input payload.
+ * @property generationConfig Optional generation configuration.
+ * @property agentConfig Optional agent runtime configuration.
+ * @property environmentId Optional execution environment ID.
+ * @property outputText Optional plain-text aggregate output.
+ * @property steps Optional step-level execution details.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -114,6 +140,25 @@ data class Interaction(
     }
 }
 
+/**
+ * Request payload for creating a new interaction.
+ *
+ * @property model Optional model name.
+ * @property agent Optional agent name or ID.
+ * @property input Optional input payload.
+ * @property systemInstruction Optional system instruction text.
+ * @property tools Optional tool configuration.
+ * @property responseFormat Optional structured response format descriptor.
+ * @property responseMimeType Optional MIME type for response payloads.
+ * @property stream Optional streaming response flag.
+ * @property store Optional persistence flag.
+ * @property background Optional background execution flag.
+ * @property generationConfig Optional generation configuration.
+ * @property agentConfig Optional agent runtime configuration.
+ * @property responseModalities Optional response modalities requested.
+ * @property previousInteractionId Optional prior interaction ID for continuity.
+ * @property environment Optional environment payload.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -189,6 +234,20 @@ data class CreateInteractionRequest(
     }
 }
 
+/**
+ * Token usage metrics for an interaction.
+ *
+ * @property totalInputTokens Total input tokens.
+ * @property inputTokensByModality Input token totals grouped by modality.
+ * @property totalCachedTokens Total cached tokens.
+ * @property cachedTokensByModality Cached token totals grouped by modality.
+ * @property totalOutputTokens Total output tokens.
+ * @property outputTokensByModality Output token totals grouped by modality.
+ * @property totalToolUseTokens Total tool-use tokens.
+ * @property toolUseTokensByModality Tool-use token totals grouped by modality.
+ * @property totalReasoningTokens Total reasoning tokens.
+ * @property totalTokens Total tokens across all categories.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -260,6 +319,12 @@ data class InteractionUsage(
     }
 }
 
+/**
+ * Token count for a specific output/input modality.
+ *
+ * @property modality Modality associated with the token count.
+ * @property tokens Token count.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -268,6 +333,19 @@ data class InteractionModalityTokenCount(
     val tokens: Int,
 )
 
+/**
+ * Generation settings for interaction responses.
+ *
+ * @property temperature Sampling temperature.
+ * @property topP Nucleus sampling threshold.
+ * @property seed Optional random seed.
+ * @property stopSequences Optional stop sequences.
+ * @property toolChoice Optional tool selection policy.
+ * @property thinkingLevel Optional reasoning depth preset.
+ * @property thinkingSummaries Optional reasoning summary mode.
+ * @property maxOutputTokens Optional output token limit.
+ * @property speechConfig Optional speech configuration.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -325,6 +403,12 @@ data class InteractionGenerationConfig(
     }
 }
 
+/**
+ * Agent execution configuration for an interaction.
+ *
+ * @property type Agent type identifier.
+ * @property thinkingSummaries Optional reasoning summary mode for the agent.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -333,6 +417,12 @@ data class InteractionAgentConfig(
     @SerialName("thinking_summaries") val thinkingSummaries: ThinkingSummaries? = null,
 )
 
+/**
+ * Turn payload representing a role-tagged content item.
+ *
+ * @property role Role name for the turn.
+ * @property content Turn content payload.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable

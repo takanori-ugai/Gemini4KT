@@ -30,6 +30,9 @@ private val logger = KotlinLogging.logger {}
 
 /**
  * Options for configuring the LiveMusic WebSocket connection.
+ *
+ * @property apiVersion API version used in the WebSocket endpoint path.
+ * @property baseUrl Base URL used to construct the Live Music endpoint.
  */
 data class LiveMusicOptions(
     val apiVersion: String = "v1alpha",
@@ -55,7 +58,14 @@ private fun buildWebSocketUrl(options: LiveMusicOptions): String {
 }
 
 /**
- * A client for interacting with the Gemini Live Music API via WebSockets.
+ * Client for interacting with the Gemini Live Music API over WebSockets.
+ *
+ * @param apiKey API key used for authentication.
+ * @param model Model name or resource name used for live music generation.
+ * @param options Connection options used to build the endpoint URL.
+ * @param json JSON serializer used for request and response payloads.
+ * @param client Optional externally managed HTTP client. When omitted, a client is created and
+ * owned by each session.
  */
 class LiveMusic(
     private val apiKey: String,
@@ -78,7 +88,9 @@ class LiveMusic(
      * with authentication headers, launches a listener to process incoming messages, sends the
      * model setup payload, and waits for the server's setup-complete signal before returning.
      *
-     * @return A LiveMusicSession representing the established WebSocket session and associated resources.
+     * @param handshakeTimeoutMs Timeout in milliseconds for handshake completion.
+     * @param connectTimeoutMs Timeout in milliseconds for establishing the WebSocket connection.
+     * @return Active [LiveMusicSession] for controlling playback and receiving server events.
      */
     suspend fun connect(
         handshakeTimeoutMs: Long = 10_000,
@@ -186,7 +198,14 @@ class LiveMusic(
 }
 
 /**
- * Represents the live music session.
+ * Active Live Music session returned by [LiveMusic.connect].
+ *
+ * @param session Underlying WebSocket session.
+ * @param incomingMessages Channel of decoded server messages.
+ * @param json JSON serializer used for outbound payloads.
+ * @param listenerJob Background job that reads and decodes incoming frames.
+ * @param httpClient HTTP client associated with the session.
+ * @param ownsClient Whether this session is responsible for closing [httpClient].
  */
 class LiveMusicSession(
     private val session: WebSocketSession,
@@ -198,10 +217,12 @@ class LiveMusicSession(
 ) {
     /**
      * Sets inputs to steer music generation. Updates the session's current weighted prompts.
+     *
+     * @param weightedPrompts Prompt list with relative weights.
      */
     suspend fun setWeightedPrompts(weightedPrompts: List<WeightedPrompt>) {
-        if (weightedPrompts.isEmpty()) {
-            throw IllegalArgumentException("Weighted prompts must contain at least one entry.")
+        require(weightedPrompts.isNotEmpty()) {
+            "Weighted prompts must contain at least one entry."
         }
         val clientContent = LiveMusicClientContent(weightedPrompts = weightedPrompts)
         val msg = LiveMusicClientMessage(clientContent = clientContent)
@@ -210,6 +231,8 @@ class LiveMusicSession(
 
     /**
      * Sets a configuration to the model. Updates the session's current music generation config.
+     *
+     * @param config Generation configuration values to apply.
      */
     suspend fun setMusicGenerationConfig(config: LiveMusicGenerationConfig) {
         val msg = LiveMusicClientMessage(musicGenerationConfig = config)
@@ -260,7 +283,7 @@ class LiveMusicSession(
     }
 
     /**
-     * Receives messages from the server.
+     * Returns a cold [Flow] view of decoded server messages for this session.
      */
     fun receive(): Flow<LiveMusicServerMessage> = incomingMessages.receiveAsFlow()
 

@@ -6,6 +6,22 @@ import kotlinx.serialization.json.JsonElement
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
+/**
+ * Tool descriptor used by the Interaction API.
+ *
+ * @property type Tool type identifier.
+ * @property name Optional tool name.
+ * @property description Optional tool description.
+ * @property parameters Optional JSON schema-like parameter definition.
+ * @property environment Optional environment target name.
+ * @property excludedPredefinedFunctions Optional predefined function names to exclude.
+ * @property url Optional endpoint URL for remote tools.
+ * @property headers Optional request headers for remote tools.
+ * @property allowedTools Optional allowlist and mode for tool usage.
+ * @property fileSearchStoreNames Optional file search stores associated with this tool.
+ * @property topK Optional top-k retrieval value.
+ * @property metadataFilter Optional metadata filter expression.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -77,6 +93,12 @@ data class InteractionTool(
     }
 }
 
+/**
+ * Tool allowlist configuration.
+ *
+ * @property mode Optional allowlist mode.
+ * @property tools Optional tool-name allowlist.
+ */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
