@@ -155,7 +155,7 @@ kotlin {
         val jvmMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
-                runtimeOnly("ch.qos.logback:logback-classic:1.5.32")
+                runtimeOnly("ch.qos.logback:logback-classic:1.5.34")
                 implementation("io.ktor:ktor-client-cio:3.5.0")
             }
         }
