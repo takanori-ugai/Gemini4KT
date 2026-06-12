@@ -16,7 +16,7 @@ plugins {
     id("com.github.spotbugs") version "6.5.5"
     id("com.diffplug.spotless") version "8.5.1"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
-    id("com.github.gmazzo.buildconfig") version "6.0.9"
+    id("com.github.gmazzo.buildconfig") version "6.0.10"
     jacoco
     // id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
     id("com.vanniktech.maven.publish") version "0.36.0"
