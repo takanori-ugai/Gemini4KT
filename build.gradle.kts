@@ -68,7 +68,7 @@ kotlin {
 //        nodejs {}
 //    }
 
-    js(IR) {
+    js {
         binaries.library()
         binaries.executable()
         generateTypeScriptDefinitions()
