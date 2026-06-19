@@ -6,17 +6,17 @@ import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExec
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("multiplatform") version "2.3.21"
-    kotlin("plugin.serialization") version "2.3.21"
+    kotlin("multiplatform") version "2.4.0"
+    kotlin("plugin.serialization") version "2.4.0"
     id("org.jetbrains.dokka") version "2.2.0"
 //    id("org.jetbrains.dokka-javadoc") version "2.1.0"
     id("com.android.kotlin.multiplatform.library") version "9.2.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    id("com.github.jk1.dependency-license-report") version "3.1.2"
-    id("com.github.spotbugs") version "6.5.4"
-    id("com.diffplug.spotless") version "8.5.1"
+    id("com.github.jk1.dependency-license-report") version "3.1.4"
+    id("com.github.spotbugs") version "6.5.6"
+    id("com.diffplug.spotless") version "8.6.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
-    id("com.github.gmazzo.buildconfig") version "6.0.9"
+    id("com.github.gmazzo.buildconfig") version "6.0.10"
     jacoco
     // id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
     id("com.vanniktech.maven.publish") version "0.36.0"
@@ -121,7 +121,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-                implementation("io.github.oshai:kotlin-logging:8.0.02")
+                implementation("io.github.oshai:kotlin-logging:8.0.4")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
                 implementation("io.ktor:ktor-client-core:3.5.0")
                 implementation("io.ktor:ktor-client-content-negotiation:3.5.0")
@@ -142,7 +142,7 @@ kotlin {
         val jvmCommonMain by creating {
             dependsOn(commonMain)
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-reflect:2.3.21")
+                implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.0")
             }
         }
         val commonTest by getting {
@@ -155,13 +155,13 @@ kotlin {
         val jvmMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
-                runtimeOnly("ch.qos.logback:logback-classic:1.5.32")
+                runtimeOnly("ch.qos.logback:logback-classic:1.5.34")
                 implementation("io.ktor:ktor-client-cio:3.5.0")
             }
         }
         val jvmTest by getting {
             dependencies {
-                implementation("io.mockk:mockk:1.14.9")
+                implementation("io.mockk:mockk:1.14.11")
             }
         }
 //        val wasmJsMain by getting {
