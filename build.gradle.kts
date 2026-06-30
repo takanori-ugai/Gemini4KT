@@ -73,9 +73,6 @@ kotlin {
         binaries.executable()
         generateTypeScriptDefinitions()
         nodejs {}
-        compilerOptions {
-            freeCompilerArgs.add("-Xenable-suspend-function-exporting")
-        }
     }
 
     linuxX64 {
