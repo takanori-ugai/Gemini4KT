@@ -33,26 +33,6 @@ private data class FileWrapper(
 )
 
 /**
- * Represents the upload file request.
- *
- * @property file The file.
- */
-@Serializable
-private data class UploadFileRequest(
-    val file: FileInput,
-)
-
-/**
- * Represents the file input.
- *
- * @property displayName The display name.
- */
-@Serializable
-private data class FileInput(
-    val displayName: String,
-)
-
-/**
  * Represents the file upload provider.
  *
  * @property apiKey The api key.
@@ -99,7 +79,7 @@ actual class FileUploadProvider actual constructor(
                 mimeType,
                 fileSize,
                 "upload/v1beta/files",
-                json.encodeToString(UploadFileRequest(FileInput(displayName))),
+                json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))),
             )
         return uploadFile(uploadUrl, file, mimeType, fileSize)
     }

@@ -12,10 +12,12 @@ package io.github.ugaikit.gemini4kt
  * @return An empty string as a placeholder for the image.
  */
 internal actual fun getApiKey(): String {
-    // Environment variables are not directly accessible in JS in the same way.
-    // In a Node.js environment, we could use process.env, but for now returning empty string
-    // to match WasmJs implementation or simple default.
-    return js("process.env[\"GEMINI_API_KEY\"]")
+    val nodeApiKey =
+        js("(typeof process !== 'undefined' && process.env && process.env['GEMINI_API_KEY']) ? process.env['GEMINI_API_KEY'] : null") as String?
+    return requireNonBlankCredential(
+        nodeApiKey,
+        "GEMINI_API_KEY environment variable on JS",
+    )
 }
 
 /**

@@ -1,12 +1,11 @@
 package io.github.ugaikit.gemini4kt.filesearch
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.ugaikit.gemini4kt.FileUploadProvider
+import io.github.ugaikit.gemini4kt.GeminiError
 import io.github.ugaikit.gemini4kt.GeminiErrorResponse
 import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.createHttpClient
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -15,18 +14,12 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlinx.io.IOException
+import io.ktor.http.isSuccess
 import kotlinx.io.files.Path
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-
-/**
- * Holds the logger.
- */
-private val logger = KotlinLogging.logger {}
 
 /**
  * Client for interacting with the Google File Search API.
@@ -38,6 +31,10 @@ class FileSearch(
     private val client: HttpClient? = null,
     private val fileUploadProvider: FileUploadProvider = FileUploadProvider(apiKey),
 ) {
+    init {
+        require(apiKey.isNotBlank()) { "apiKey must not be blank." }
+    }
+
     /**
      * Holds the json.
      */
@@ -52,10 +49,6 @@ class FileSearch(
      * Holds the b url.
      */
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
-
-    companion object {
-        private const val PREVIEW_LENGTH = 100
-    }
 
     /**
      * Creates a new FileSearchStore.
@@ -178,51 +171,25 @@ class FileSearch(
         urlStr: String,
         inputJson: String? = null,
     ): String =
-        try {
-            logger.info { inputJson }
+        with(httpClient) {
             val response: HttpResponse =
                 if (inputJson == null) {
-                    httpClient.get(urlStr) {
+                    get(urlStr) {
                         header("x-goog-api-key", apiKey)
                         header("Content-Type", "application/json")
                     }
                 } else {
-                    httpClient.post(urlStr) {
+                    post(urlStr) {
                         header("x-goog-api-key", apiKey)
                         contentType(ContentType.Application.Json)
                         setBody(inputJson)
                     }
                 }
 
-            if (response.status != HttpStatusCode.OK) {
-                logger.error { "Error: ${response.status}" }
-                val errorMsg = response.bodyAsText()
-                logger.error { "Error Message: $errorMsg" }
-                try {
-                    val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
-                    throw GeminiException(errorResponse.error)
-                } catch (e: GeminiException) {
-                    throw e
-                } catch (e: SerializationException) {
-                    logger.error { "Failed to parse error message: ${e.message}" }
-                } catch (e: IllegalArgumentException) {
-                    logger.error { "Failed to parse error message: ${e.message}" }
-                }
-                "{}"
-            } else {
-                logger.info { "GenerateContentResponse Code: ${response.status}" }
-                val txt = response.bodyAsText()
-                logger.debug { "Content length: ${txt.length}" }
-                logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
-                logger.debug { txt }
-                txt
+            if (!response.status.isSuccess()) {
+                throwApiException(response)
             }
-        } catch (e: IOException) {
-            logger.error { e.stackTraceToString() }
-            ""
-        } catch (e: ClientRequestException) {
-            logger.error { "Client Request Exception: ${e.message}" }
-            throw e
+            response.bodyAsText()
         }
 
     /**
@@ -231,19 +198,36 @@ class FileSearch(
      * @param urlStr The URL string where the DELETE request is sent.
      */
     private suspend fun deleteContent(urlStr: String) {
-        try {
-            val response =
-                httpClient.delete(urlStr) {
-                    header("x-goog-api-key", apiKey)
-                }
-            if (response.status != HttpStatusCode.OK) {
-                logger.error { "Error: ${response.status}" }
-                val msg = response.bodyAsText()
-                logger.error { "Error Message: $msg" }
+        val response =
+            httpClient.delete(urlStr) {
+                header("x-goog-api-key", apiKey)
             }
-            logger.info { "GenerateContentResponse Code: ${response.status}" }
-        } catch (e: IOException) {
-            logger.error { e.stackTraceToString() }
+        if (!response.status.isSuccess()) {
+            throwApiException(response)
         }
     }
+
+    private suspend fun throwApiException(response: HttpResponse): Nothing {
+        val errorMsg = response.bodyAsText()
+        try {
+            val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
+            throw GeminiException(errorResponse.error)
+        } catch (e: GeminiException) {
+            throw e
+        } catch (_: SerializationException) {
+            throw GeminiException(fallbackError(response, errorMsg))
+        } catch (_: IllegalArgumentException) {
+            throw GeminiException(fallbackError(response, errorMsg))
+        }
+    }
+
+    private fun fallbackError(
+        response: HttpResponse,
+        errorMsg: String,
+    ): GeminiError =
+        GeminiError(
+            code = response.status.value,
+            message = errorMsg.ifBlank { response.status.description },
+            status = response.status.description.ifBlank { response.status.value.toString() },
+        )
 }

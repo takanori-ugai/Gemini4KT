@@ -35,7 +35,11 @@ actual fun createHttpClient(json: Json): HttpClient =
  *
  * @return The API key as a [String].
  */
-internal actual fun getApiKey(): String = getenv("GEMINI_API_KEY")?.toKString() ?: ""
+internal actual fun getApiKey(): String =
+    requireNonBlankCredential(
+        getenv("GEMINI_API_KEY")?.toKString(),
+        "GEMINI_API_KEY environment variable on native",
+    )
 
 /**
  * Retrieves an image as a base64 encoded string for the native platform.

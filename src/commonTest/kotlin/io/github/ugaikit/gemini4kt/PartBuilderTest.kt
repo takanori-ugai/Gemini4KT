@@ -4,6 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -106,5 +107,18 @@ class PartBuilderTest {
         assertNotNull(part.fileData)
         val fileData = checkNotNull(part.fileData)
         assertEquals("image/png", fileData.mimeType)
+    }
+
+    @Test
+    fun buildRejectsMultiplePrimaryPayloads() {
+        assertFailsWith<IllegalArgumentException> {
+            part {
+                text { "Hello" }
+                functionCall {
+                    name = "get_weather"
+                    arg("city", Json.parseToJsonElement("\"New York\""))
+                }
+            }
+        }
     }
 }

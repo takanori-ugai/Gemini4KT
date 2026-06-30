@@ -5,7 +5,7 @@ async function main() {
   const apiKey = process.env.GEMINI_API_KEY;
   const cliArgs = process.argv.slice(2);
   const prompt = cliArgs.join(" ").trim() || "Write a story about a magic backpack.";
-  const model = "gemini-2.5-flash-lite";
+  const model = "gemini-3.1-flash-lite";
 
   const { runSample1 } = pkg.io?.github?.ugaikit?.gemini4kt ?? {};
   if (typeof runSample1 !== "function") {

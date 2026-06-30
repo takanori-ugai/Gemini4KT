@@ -279,8 +279,9 @@ class GeminiTest {
                     )
                 }
 
-            gemini.deleteContent("http://localhost")
-            // Should log error but not throw
+            org.junit.jupiter.api.assertThrows<GeminiException> {
+                gemini.deleteContent("http://localhost")
+            }
         }
 
     /**

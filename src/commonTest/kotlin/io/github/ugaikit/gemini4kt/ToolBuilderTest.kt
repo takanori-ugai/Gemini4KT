@@ -4,6 +4,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 /**
@@ -128,18 +129,12 @@ class ToolBuilderTest {
     }
 
     @Test
-    fun testToolBuilderWithAdvancedNestedConfigurations() {
-        val builtGoogleSearch =
-            googleSearch {
-                timeRangeFilter = Interval(startTime = "2026-01-01T00:00:00Z", endTime = "2026-01-31T00:00:00Z")
-                searchTypes = SearchTypes(webSearch = WebSearch(), imageSearch = ImageSearch())
-            }
-
-        val tool =
+    fun testToolBuilderRejectsMultiplePrimaryConfigurations() {
+        assertFailsWith<IllegalArgumentException> {
             tool {
                 googleSearch {
-                    timeRangeFilter = builtGoogleSearch.timeRangeFilter
-                    searchTypes = builtGoogleSearch.searchTypes
+                    timeRangeFilter = Interval(startTime = "2026-01-01T00:00:00Z", endTime = "2026-01-31T00:00:00Z")
+                    searchTypes = SearchTypes(webSearch = WebSearch(), imageSearch = ImageSearch())
                 }
                 fileSearch {
                     fileSearchStoreName("store-a")
@@ -173,20 +168,31 @@ class ToolBuilderTest {
                 )
                 googleMaps(GoogleMaps(enableWidget = true))
             }
+        }
+    }
+
+    @Test
+    fun testToolBuilderWithNestedGoogleSearchConfiguration() {
+        val builtGoogleSearch =
+            googleSearch {
+                timeRangeFilter = Interval(startTime = "2026-01-01T00:00:00Z", endTime = "2026-01-31T00:00:00Z")
+                searchTypes = SearchTypes(webSearch = WebSearch(), imageSearch = ImageSearch())
+            }
+
+        val tool =
+            tool {
+                googleSearch {
+                    timeRangeFilter = builtGoogleSearch.timeRangeFilter
+                    searchTypes = builtGoogleSearch.searchTypes
+                }
+            }
 
         val encoded = json.encodeToString(tool)
         val decoded = json.decodeFromString<Tool>(encoded)
 
         assertNotNull(decoded.googleSearch)
-        assertEquals("author=alice", decoded.fileSearch?.metadataFilter)
-        assertEquals("store-a", decoded.fileSearch?.fileSearchStoreNames?.first())
-        assertEquals(DynamicRetrievalMode.MODE_DYNAMIC, decoded.googleSearchRetrieval?.dynamicRetrievalConfig?.mode)
-        assertEquals(Environment.ENVIRONMENT_BROWSER, decoded.computerUse?.environment)
-        assertEquals("CLICK", decoded.computerUse?.excludedPredefinedFunctions?.first())
-        assertEquals("mcp-server", decoded.mcpServers?.first()?.name)
-        assertEquals(true, decoded.googleMaps?.enableWidget)
-        assertEquals(true, encoded.contains("\"computer_use\""))
-        assertEquals(true, encoded.contains("\"excluded_predefined_functions\""))
+        assertEquals("2026-01-01T00:00:00Z", decoded.googleSearch?.timeRangeFilter?.startTime)
+        assertEquals("2026-01-31T00:00:00Z", decoded.googleSearch?.timeRangeFilter?.endTime)
     }
 
     @Test

@@ -35,6 +35,18 @@ private fun arrayResult(
     @GeminiParameter(description = "base") base: Int,
 ): Array<Int> = arrayOf(base, base + 1)
 
+@GeminiFunction(description = "Returns Unit")
+private fun unitResult(
+    @GeminiParameter(description = "message") message: String,
+) {
+    message.length
+}
+
+@GeminiFunction(description = "Extension function")
+private fun String.extensionEcho(
+    @GeminiParameter(description = "suffix") suffix: String,
+): String = this + suffix
+
 private class MemberFunctionFixture {
     @GeminiFunction(description = "Member function")
     fun memberEcho(
@@ -85,6 +97,23 @@ class AutomaticFunctionCallingJvmTest {
                     )
                 }
             assertTrue(exception.message?.contains("Only top-level or bound functions are supported") == true)
+        }
+
+    @Test
+    fun handlerRejectsExtensionFunctionInvocation() =
+        runTest {
+            val binding = buildAutomaticFunctionBinding(arrayOf(String::extensionEcho))
+            val handler = binding.handlers.getValue("extensionEcho")
+            val exception =
+                assertFailsWith<IllegalArgumentException> {
+                    handler(
+                        FunctionCall(
+                            name = "extensionEcho",
+                            args = mapOf("suffix" to JsonPrimitive("x")),
+                        ),
+                    )
+                }
+            assertTrue(exception.message?.isNotBlank() == true)
         }
 
     @Test
@@ -148,5 +177,21 @@ class AutomaticFunctionCallingJvmTest {
             assertEquals(2, resultArray?.size)
             assertEquals(5, resultArray?.get(0)?.jsonPrimitive?.int)
             assertEquals(6, resultArray?.get(1)?.jsonPrimitive?.int)
+        }
+
+    @Test
+    fun handlerSerializesUnitReturnAsEmptyObject() =
+        runTest {
+            val binding = buildAutomaticFunctionBinding(arrayOf(::unitResult))
+            val handler = binding.handlers.getValue("unitResult")
+            val response =
+                handler(
+                    FunctionCall(
+                        name = "unitResult",
+                        args = mapOf("message" to JsonPrimitive("hello")),
+                    ),
+                )
+
+            assertTrue(response.response["result"]?.toString() == "{}")
         }
 }

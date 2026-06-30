@@ -4,6 +4,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * Represents the speech config test.
@@ -144,5 +145,28 @@ class SpeechConfigTest {
         val parsedExpected = json.parseToJsonElement(expectedJson)
 
         assertEquals(parsedExpected, parsedActual)
+    }
+
+    @Test
+    fun testSpeechConfigRejectsMultiplePrimaryModes() {
+        assertFailsWith<IllegalArgumentException> {
+            speechConfig {
+                voiceConfig {
+                    prebuiltVoiceConfig {
+                        voiceName { "Kore" }
+                    }
+                }
+                multiSpeakerVoiceConfig {
+                    speakerVoiceConfig {
+                        speaker { "Joe" }
+                        voiceConfig {
+                            prebuiltVoiceConfig {
+                                voiceName { "Puck" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

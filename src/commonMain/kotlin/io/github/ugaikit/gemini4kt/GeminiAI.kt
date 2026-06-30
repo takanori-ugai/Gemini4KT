@@ -31,6 +31,10 @@ class GeminiAI(
     private val client: HttpClient? = null,
     private val apiKey: String? = null,
 ) {
+    init {
+        require(apiKey == null || apiKey.isNotBlank()) { "apiKey must not be blank." }
+    }
+
     companion object {
         private const val API_REVISION = "2026-05-20"
     }
@@ -47,8 +51,11 @@ class GeminiAI(
     private val baseUrl = "https://generativelanguage.googleapis.com/v1beta"
 
     private suspend fun getApiKey(): String =
-        apiKey ?: io.github.ugaikit.gemini4kt
-            .getApiKey()
+        requireNonBlankCredential(
+            apiKey ?: io.github.ugaikit.gemini4kt
+                .getApiKey(),
+            "GeminiAI apiKey",
+        )
 
     @JsName("createInteraction")
     suspend fun createInteraction(request: CreateInteractionRequest): Interaction {

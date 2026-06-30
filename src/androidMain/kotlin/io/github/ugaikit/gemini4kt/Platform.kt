@@ -8,7 +8,11 @@ package io.github.ugaikit.gemini4kt
  *
  * @return The API key as a [String].
  */
-internal actual fun getApiKey(): String = System.getenv("GEMINI_API_KEY") ?: ""
+internal actual fun getApiKey(): String =
+    requireNonBlankCredential(
+        System.getenv("GEMINI_API_KEY"),
+        "GEMINI_API_KEY environment variable on Android",
+    )
 
 /**
  * Retrieves an image as a base64 encoded string for the Android platform.

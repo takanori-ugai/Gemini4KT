@@ -198,36 +198,31 @@ class PartTest {
     @Test
     fun serializationWithToolCallResponseAndVideoMetadata() {
         val part =
-            part {
-                text { "assistant output" }
-                partMetadata {
-                    buildMap {
-                        put("origin", Json.parseToJsonElement("\"unit-test\""))
-                    }
-                }
-                mediaResolution { MediaResolution(level = MediaResolutionLevel.MEDIA_RESOLUTION_MEDIUM) }
-                toolCall {
+            Part(
+                toolCall =
                     ToolCall(
                         id = "call-1",
                         toolType = ToolType.GOOGLE_SEARCH_WEB,
                         args = mapOf("query" to Json.parseToJsonElement("\"kotlin\"")),
-                    )
-                }
-                toolResponse {
+                    ),
+                toolResponse =
                     ToolResponse(
                         id = "call-1",
                         toolType = ToolType.GOOGLE_SEARCH_WEB,
                         response = mapOf("answer" to Json.parseToJsonElement("\"ok\"")),
-                    )
-                }
-                videoMetadata {
+                    ),
+                partMetadata =
+                    buildMap {
+                        put("origin", Json.parseToJsonElement("\"unit-test\""))
+                    },
+                mediaResolution = MediaResolution(level = MediaResolutionLevel.MEDIA_RESOLUTION_MEDIUM),
+                videoMetadata =
                     VideoMetadata(
                         startOffset = "0s",
                         endOffset = "1.5s",
                         fps = 24.0,
-                    )
-                }
-            }
+                    ),
+            )
 
         val encoded = json.encodeToString(part)
         val decoded = json.decodeFromString<Part>(encoded)

@@ -3,7 +3,7 @@
  */
 package io.github.ugaikit.gemini4kt
 
-import java.io.File
+import java.io.InputStream
 import java.util.Base64
 import java.util.Properties
 
@@ -15,7 +15,7 @@ import java.util.Properties
 internal actual fun getApiKey(): String {
     val envKey = System.getenv("GEMINI_API_KEY")
     if (!envKey.isNullOrBlank()) {
-        return envKey
+        return requireNonBlankCredential(envKey, "GEMINI_API_KEY environment variable on JVM")
     }
     val stream = Gemini::class.java.getResourceAsStream("/prop.properties")
     if (stream != null) {
@@ -24,6 +24,7 @@ internal actual fun getApiKey(): String {
                 .apply {
                     load(inputStream)
                 }.getProperty("apiKey")
+                .let { requireNonBlankCredential(it, "apiKey in /prop.properties on JVM") }
         }
     }
     throw RuntimeException("GEMINI_API_KEY environment variable not set and prop.properties not found.")
@@ -37,9 +38,10 @@ internal actual fun getApiKey(): String {
  * @return The base64 encoded image as a [String] for the JVM platform.
  */
 internal actual fun getImage(): String {
-    /**
-     * Holds the image.
-     */
-    val image = File(Gemini::class.java.getResource("/scones.jpg").toURI())
-    return Base64.getEncoder().encodeToString(image.readBytes())
+    val resourceStream: InputStream =
+        Gemini::class.java.getResourceAsStream("/scones.jpg")
+            ?: throw RuntimeException("Resource /scones.jpg not found.")
+    return resourceStream.use { inputStream ->
+        Base64.getEncoder().encodeToString(inputStream.readBytes())
+    }
 }
