@@ -76,6 +76,9 @@ private suspend fun invokeBoundFunction(
     require(function.instanceParameter == null) {
         "Only top-level or bound functions are supported: '${function.name}'."
     }
+    require(!hasExtensionReceiver(function)) {
+        "Extension functions are not supported for automatic binding: '${function.name}'."
+    }
 
     val arguments = mutableMapOf<KParameter, Any?>()
     function.valueParameters.forEach { parameter ->

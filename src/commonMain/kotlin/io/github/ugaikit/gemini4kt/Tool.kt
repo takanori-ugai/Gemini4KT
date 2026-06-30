@@ -187,7 +187,23 @@ class ToolBuilder {
             computerUse = computerUse,
             mcpServers = if (mcpServers.isEmpty()) null else mcpServers.toTypedArray(),
             googleMaps = googleMaps,
-        )
+        ).also {
+            val activeToolCount =
+                listOfNotNull(
+                    if (functionDeclarations.isEmpty()) null else functionDeclarations,
+                    googleSearch,
+                    codeExecution,
+                    urlContext,
+                    fileSearch,
+                    googleSearchRetrieval,
+                    computerUse,
+                    if (mcpServers.isEmpty()) null else mcpServers,
+                    googleMaps,
+                ).size
+            require(activeToolCount <= 1) {
+                "Tool builders support only one primary tool configuration at a time."
+            }
+        }
 }
 
 /**
