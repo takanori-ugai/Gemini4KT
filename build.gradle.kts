@@ -123,12 +123,12 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
                 implementation("io.github.oshai:kotlin-logging:8.0.4")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
-                implementation("io.ktor:ktor-client-core:3.5.0")
-                implementation("io.ktor:ktor-client-content-negotiation:3.5.0")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:3.5.0")
-                implementation("io.ktor:ktor-client-logging:3.5.0")
-                implementation("io.ktor:ktor-client-websockets:3.5.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.9.0")
+                implementation("io.ktor:ktor-client-core:3.5.1")
+                implementation("io.ktor:ktor-client-content-negotiation:3.5.1")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:3.5.1")
+                implementation("io.ktor:ktor-client-logging:3.5.1")
+                implementation("io.ktor:ktor-client-websockets:3.5.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.9.1")
             }
             buildConfig {
                 packageName("io.github.ugaikit.gemini4kt")
@@ -148,7 +148,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("io.ktor:ktor-client-mock:3.5.0")
+                implementation("io.ktor:ktor-client-mock:3.5.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
             }
         }
@@ -156,7 +156,7 @@ kotlin {
             dependsOn(jvmCommonMain)
             dependencies {
                 runtimeOnly("ch.qos.logback:logback-classic:1.5.34")
-                implementation("io.ktor:ktor-client-cio:3.5.0")
+                implementation("io.ktor:ktor-client-cio:3.5.1")
             }
         }
         val jvmTest by getting {
@@ -174,23 +174,23 @@ kotlin {
         val jsTest by getting
         val iosMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-darwin:3.5.0")
+                implementation("io.ktor:ktor-client-darwin:3.5.1")
             }
         }
         val mingwX64Main by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-curl:3.5.0")
+                implementation("io.ktor:ktor-client-curl:3.5.1")
             }
         }
         val linuxX64Main by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-curl:3.5.0")
+                implementation("io.ktor:ktor-client-curl:3.5.1")
             }
         }
         val androidMain by getting {
             dependsOn(jvmCommonMain)
             dependencies {
-                implementation("io.ktor:ktor-client-android:3.5.0")
+                implementation("io.ktor:ktor-client-android:3.5.1")
             }
         }
     }
