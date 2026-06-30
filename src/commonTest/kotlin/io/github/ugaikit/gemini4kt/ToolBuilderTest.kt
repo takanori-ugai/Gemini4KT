@@ -154,12 +154,10 @@ class ToolBuilderTest {
                             ),
                     ),
                 )
-                computerUse(
-                    ComputerUse(
-                        environment = Environment.ENVIRONMENT_BROWSER,
-                        excludedPredefinedFunctions = arrayOf("CLICK"),
-                    ),
-                )
+                computerUse {
+                    environment = Environment.ENVIRONMENT_BROWSER
+                    excludedPredefinedFunction("CLICK")
+                }
                 mcpServer(
                     McpServer(
                         name = "mcp-server",
@@ -187,5 +185,21 @@ class ToolBuilderTest {
         assertEquals("CLICK", decoded.computerUse?.excludedPredefinedFunctions?.first())
         assertEquals("mcp-server", decoded.mcpServers?.first()?.name)
         assertEquals(true, decoded.googleMaps?.enableWidget)
+        assertEquals(true, encoded.contains("\"computer_use\""))
+        assertEquals(true, encoded.contains("\"excluded_predefined_functions\""))
+    }
+
+    @Test
+    fun testComputerUseBuilder() {
+        val computerUse =
+            computerUse {
+                environment = Environment.ENVIRONMENT_BROWSER
+                excludedPredefinedFunctions("CLICK", "TYPE")
+            }
+
+        assertEquals(Environment.ENVIRONMENT_BROWSER, computerUse.environment)
+        assertEquals(2, computerUse.excludedPredefinedFunctions?.size)
+        assertEquals("CLICK", computerUse.excludedPredefinedFunctions?.first())
+        assertEquals("TYPE", computerUse.excludedPredefinedFunctions?.last())
     }
 }

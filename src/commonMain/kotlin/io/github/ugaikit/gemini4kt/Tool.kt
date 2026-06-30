@@ -34,6 +34,7 @@ data class Tool(
     @SerialName("file_search")
     val fileSearch: FileSearchTool? = null,
     val googleSearchRetrieval: GoogleSearchRetrieval? = null,
+    @SerialName("computer_use")
     val computerUse: ComputerUse? = null,
     val mcpServers: Array<McpServer>? = null,
     val googleMaps: GoogleMaps? = null,
@@ -143,6 +144,15 @@ class ToolBuilder {
      */
     fun computerUse(computerUse: ComputerUse) {
         this.computerUse = computerUse
+    }
+
+    /**
+     * Handles computer use.
+     *
+     * @param init The init.
+     */
+    fun computerUse(init: ComputerUseBuilder.() -> Unit) {
+        this.computerUse = ComputerUseBuilder().apply(init).build()
     }
 
     /**

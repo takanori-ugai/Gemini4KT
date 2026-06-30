@@ -31,6 +31,7 @@ data class InteractionTool(
     val description: String? = null,
     val parameters: JsonElement? = null,
     val environment: String? = null,
+    @SerialName("excluded_predefined_functions")
     val excludedPredefinedFunctions: Array<String>? = null,
     val url: String? = null,
     val headers: JsonElement? = null,
