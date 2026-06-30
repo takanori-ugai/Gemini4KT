@@ -32,7 +32,7 @@ data class InteractionTool(
     val parameters: JsonElement? = null,
     val environment: String? = null,
     @SerialName("excluded_predefined_functions")
-    val excludedPredefinedFunctions: List<String>? = null,
+    val excludedPredefinedFunctions: Array<String>? = null,
     val url: String? = null,
     val headers: JsonElement? = null,
     @SerialName("allowed_tools") val allowedTools: Array<InteractionAllowedTools>? = null,
@@ -51,7 +51,12 @@ data class InteractionTool(
         if (description != other.description) return false
         if (parameters != other.parameters) return false
         if (environment != other.environment) return false
-        if (excludedPredefinedFunctions != other.excludedPredefinedFunctions) return false
+        if (excludedPredefinedFunctions != null) {
+            if (other.excludedPredefinedFunctions == null) return false
+            if (!excludedPredefinedFunctions.contentEquals(other.excludedPredefinedFunctions)) return false
+        } else if (other.excludedPredefinedFunctions != null) {
+            return false
+        }
         if (url != other.url) return false
         if (headers != other.headers) return false
         if (allowedTools != null) {
@@ -78,7 +83,7 @@ data class InteractionTool(
         result = 31 * result + (description?.hashCode() ?: 0)
         result = 31 * result + (parameters?.hashCode() ?: 0)
         result = 31 * result + (environment?.hashCode() ?: 0)
-        result = 31 * result + (excludedPredefinedFunctions?.hashCode() ?: 0)
+        result = 31 * result + (excludedPredefinedFunctions?.contentHashCode() ?: 0)
         result = 31 * result + (url?.hashCode() ?: 0)
         result = 31 * result + (headers?.hashCode() ?: 0)
         result = 31 * result + (allowedTools?.contentHashCode() ?: 0)
