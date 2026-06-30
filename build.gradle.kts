@@ -118,81 +118,90 @@ kotlin {
         publishLibraryVariants("release")
     }
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-                implementation("io.github.oshai:kotlin-logging:8.0.4")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
-                implementation("io.ktor:ktor-client-core:3.5.1")
-                implementation("io.ktor:ktor-client-content-negotiation:3.5.1")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:3.5.1")
-                implementation("io.ktor:ktor-client-logging:3.5.1")
-                implementation("io.ktor:ktor-client-websockets:3.5.1")
-                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.9.1")
-            }
-            buildConfig {
-                packageName("io.github.ugaikit.gemini4kt")
-                useKotlinOutput {
-                    internalVisibility = true
-                    topLevelConstants = true
+        val commonMain =
+            getByName("commonMain") {
+                dependencies {
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+                    implementation("io.github.oshai:kotlin-logging:8.0.4")
+                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+                    implementation("io.ktor:ktor-client-core:3.5.1")
+                    implementation("io.ktor:ktor-client-content-negotiation:3.5.1")
+                    implementation("io.ktor:ktor-serialization-kotlinx-json:3.5.1")
+                    implementation("io.ktor:ktor-client-logging:3.5.1")
+                    implementation("io.ktor:ktor-client-websockets:3.5.1")
+                    implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.9.1")
                 }
-                buildConfigField("String", "GEMINI4KT_VERSION", "\"${project.version}\"")
+                buildConfig {
+                    packageName("io.github.ugaikit.gemini4kt")
+                    useKotlinOutput {
+                        internalVisibility = true
+                        topLevelConstants = true
+                    }
+                    buildConfigField("String", "GEMINI4KT_VERSION", "\"${project.version}\"")
+                }
             }
-        }
-        val jvmCommonMain by creating {
-            dependsOn(commonMain)
-            dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.0")
+        val jvmCommonMain =
+            create("jvmCommonMain") {
+                dependsOn(commonMain)
+                dependencies {
+                    implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.0")
+                }
             }
-        }
-        val commonTest by getting {
-            dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test")
-                implementation("io.ktor:ktor-client-mock:3.5.1")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+        val commonTest =
+            getByName("commonTest") {
+                dependencies {
+                    implementation("org.jetbrains.kotlin:kotlin-test")
+                    implementation("io.ktor:ktor-client-mock:3.5.1")
+                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+                }
             }
-        }
-        val jvmMain by getting {
-            dependsOn(jvmCommonMain)
-            dependencies {
-                runtimeOnly("ch.qos.logback:logback-classic:1.5.34")
-                implementation("io.ktor:ktor-client-cio:3.5.1")
+        val jvmMain =
+            getByName("jvmMain") {
+                dependsOn(jvmCommonMain)
+                dependencies {
+                    runtimeOnly("ch.qos.logback:logback-classic:1.5.34")
+                    implementation("io.ktor:ktor-client-cio:3.5.1")
+                }
             }
-        }
-        val jvmTest by getting {
-            dependencies {
-                implementation("io.mockk:mockk:1.14.11")
+        val jvmTest =
+            getByName("jvmTest") {
+                dependencies {
+                    implementation("io.mockk:mockk:1.14.11")
+                }
             }
-        }
 //        val wasmJsMain by getting {
 //            dependencies {
 //                // implementation("io.ktor:ktor-client-core:3.0.3") // Already in commonMain
 //            }
 //        }
 
-        val jsMain by getting
-        val jsTest by getting
-        val iosMain by getting {
-            dependencies {
-                implementation("io.ktor:ktor-client-darwin:3.5.1")
+        val jsMain = getByName("jsMain")
+        val jsTest = getByName("jsTest")
+        val iosMain =
+            getByName("iosMain") {
+                dependencies {
+                    implementation("io.ktor:ktor-client-darwin:3.5.1")
+                }
             }
-        }
-        val mingwX64Main by getting {
-            dependencies {
-                implementation("io.ktor:ktor-client-curl:3.5.1")
+        val mingwX64Main =
+            getByName("mingwX64Main") {
+                dependencies {
+                    implementation("io.ktor:ktor-client-curl:3.5.1")
+                }
             }
-        }
-        val linuxX64Main by getting {
-            dependencies {
-                implementation("io.ktor:ktor-client-curl:3.5.1")
+        val linuxX64Main =
+            getByName("linuxX64Main") {
+                dependencies {
+                    implementation("io.ktor:ktor-client-curl:3.5.1")
+                }
             }
-        }
-        val androidMain by getting {
-            dependsOn(jvmCommonMain)
-            dependencies {
-                implementation("io.ktor:ktor-client-android:3.5.1")
+        val androidMain =
+            getByName("androidMain") {
+                dependsOn(jvmCommonMain)
+                dependencies {
+                    implementation("io.ktor:ktor-client-android:3.5.1")
+                }
             }
-        }
     }
 }
 

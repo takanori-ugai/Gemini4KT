@@ -17,7 +17,8 @@ object CodeExecutionSample {
      *
      * If `gemini` is null, a new Gemini client is created using `getApiKey()`.
      *
-     * @param gemini Optional Gemini client to use for the request; when null a client is constructed from `getApiKey()`.
+     * @param gemini Optional Gemini client to use for the request; when null a client
+     *   is constructed from `getApiKey()`.
      */
     suspend fun run(gemini: Gemini? = null) {
         val client = gemini ?: Gemini(getApiKey())

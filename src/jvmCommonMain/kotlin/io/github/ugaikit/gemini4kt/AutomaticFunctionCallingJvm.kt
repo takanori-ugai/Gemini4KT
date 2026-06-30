@@ -142,7 +142,9 @@ private fun jsonElementToKotlinValue(
                 "Map parameter keys must be String for automatic binding: $type"
             }
             val valueType = type.arguments.getOrNull(1)?.type
-            val jsonObject = element as? JsonObject ?: throw IllegalArgumentException("Expected JsonObject but got $element")
+            val jsonObject =
+                element as? JsonObject
+                    ?: throw IllegalArgumentException("Expected JsonObject but got $element")
             jsonObject.mapValues { (_, value) ->
                 if (valueType == null) {
                     jsonElementToUntypedKotlinValue(value)
@@ -152,8 +154,12 @@ private fun jsonElementToKotlinValue(
             }
         }
         JsonElement::class -> element
-        JsonObject::class -> element as? JsonObject ?: throw IllegalArgumentException("Expected JsonObject but got $element")
-        JsonArray::class -> element as? JsonArray ?: throw IllegalArgumentException("Expected JsonArray but got $element")
+        JsonObject::class ->
+            element as? JsonObject
+                ?: throw IllegalArgumentException("Expected JsonObject but got $element")
+        JsonArray::class ->
+            element as? JsonArray
+                ?: throw IllegalArgumentException("Expected JsonArray but got $element")
         else -> throw IllegalArgumentException("Unsupported parameter type for automatic binding: $type")
     }
 }

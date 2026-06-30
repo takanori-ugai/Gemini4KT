@@ -21,15 +21,18 @@ class LiveMusicUrlTest {
         fun invoke(options: LiveMusicOptions): String = buildUrl.invoke(null, options) as String
 
         assertEquals(
-            "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateMusic",
+            "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage." +
+                "v1alpha.GenerativeService.BidiGenerateMusic",
             invoke(LiveMusicOptions()),
         )
         assertEquals(
-            "ws://localhost:8080/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateMusic",
+            "ws://localhost:8080/ws/google.ai.generativelanguage." +
+                "v1beta.GenerativeService.BidiGenerateMusic",
             invoke(LiveMusicOptions(apiVersion = "v1beta", baseUrl = "http://localhost:8080")),
         )
         assertEquals(
-            "wss://custom-host/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateMusic",
+            "wss://custom-host/ws/google.ai.generativelanguage." +
+                "v1alpha.GenerativeService.BidiGenerateMusic",
             invoke(LiveMusicOptions(baseUrl = "custom-host/")),
         )
     }

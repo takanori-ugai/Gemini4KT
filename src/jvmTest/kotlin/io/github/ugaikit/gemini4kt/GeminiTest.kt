@@ -755,7 +755,10 @@ class GeminiTest {
             val exception =
                 try {
                     gemini.generateContent(
-                        request = GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "loop"))))),
+                        request =
+                            GenerateContentRequest(
+                                contents = arrayOf(Content(parts = arrayOf(Part(text = "loop")))),
+                            ),
                         functionHandlers =
                             mapOf(
                                 "loop" to {
@@ -780,7 +783,10 @@ class GeminiTest {
             val exception =
                 try {
                     gemini.generateContent(
-                        request = GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "x"))))),
+                        request =
+                            GenerateContentRequest(
+                                contents = arrayOf(Content(parts = arrayOf(Part(text = "x")))),
+                            ),
                         functionHandlers = emptyMap(),
                         maxIterations = 0,
                     )
@@ -803,7 +809,25 @@ class GeminiTest {
                         if (callCount == 1) {
                             """
                             {
-                              "candidates":[{"content":{"parts":[{"functionCall":{"name":"typed_scalars","args":{"l":1234567890123,"d":1.25,"f":2.5,"b":true}}}]}}]
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "functionCall": {
+                                          "name": "typed_scalars",
+                                          "args": {
+                                            "l": 1234567890123,
+                                            "d": 1.25,
+                                            "f": 2.5,
+                                            "b": true
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
                             }
                             """.trimIndent()
                         } else {
@@ -839,11 +863,45 @@ class GeminiTest {
                         when (callCount) {
                             1 ->
                                 """
-                                {"candidates":[{"content":{"parts":[{"functionCall":{"name":"nullable_text","args":{"text":null}}}]}}]}
+                                {
+                                  "candidates": [
+                                    {
+                                      "content": {
+                                        "parts": [
+                                          {
+                                            "functionCall": {
+                                              "name": "nullable_text",
+                                              "args": {
+                                                "text": null
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
                                 """.trimIndent()
                             2 ->
                                 """
-                                {"candidates":[{"content":{"parts":[{"functionCall":{"name":"optional_text","args":{"text":"Hi"}}}]}}]}
+                                {
+                                  "candidates": [
+                                    {
+                                      "content": {
+                                        "parts": [
+                                          {
+                                            "functionCall": {
+                                              "name": "optional_text",
+                                              "args": {
+                                                "text": "Hi"
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
                                 """.trimIndent()
                             else -> """{"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}"""
                         }
@@ -883,9 +941,25 @@ class GeminiTest {
                         if (callCount == 1) {
                             """
                             {
-                              "candidates":[{"content":{"parts":[
-                                {"functionCall":{"name":"list_and_map","args":{"numbers":[1,2,3],"labels":{"mode":"party"}}}}
-                              ]}}]
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "functionCall": {
+                                          "name": "list_and_map",
+                                          "args": {
+                                            "numbers": [1, 2, 3],
+                                            "labels": {
+                                              "mode": "party"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
                             }
                             """.trimIndent()
                         } else {
@@ -988,7 +1062,22 @@ class GeminiTest {
                         content =
                             """
                             {
-                              "candidates":[{"content":{"parts":[{"functionCall":{"name":"unsupported_return","args":{"value":7}}}]}}]
+                              "candidates": [
+                                {
+                                  "content": {
+                                    "parts": [
+                                      {
+                                        "functionCall": {
+                                          "name": "unsupported_return",
+                                          "args": {
+                                            "value": 7
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
                             }
                             """.trimIndent(),
                         status = HttpStatusCode.OK,

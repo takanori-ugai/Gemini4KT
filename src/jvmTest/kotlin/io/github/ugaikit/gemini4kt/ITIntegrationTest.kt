@@ -294,7 +294,9 @@ class ITIntegrationTest {
     private fun findMoviesFunction(): FunctionDeclaration =
         functionDeclaration {
             name = "find_movies"
-            description = "find movie titles currently playing in theaters based on any description, genre, title words, etc."
+            description =
+                "find movie titles currently playing in theaters based on any description, genre, " +
+                "title words, etc."
             parameters {
                 type = "object"
                 property("location") {
@@ -312,7 +314,9 @@ class ITIntegrationTest {
     private fun findTheatersFunction(): FunctionDeclaration =
         functionDeclaration {
             name = "find_theaters"
-            description = "find theaters based on location and optionally movie title which is currently playing in theaters"
+            description =
+                "find theaters based on location and optionally movie title which is currently " +
+                "playing in theaters"
             parameters {
                 type = "object"
                 property("location") {

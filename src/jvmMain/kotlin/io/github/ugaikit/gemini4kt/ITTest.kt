@@ -602,7 +602,12 @@ private suspend fun testAutomaticFunctionCalling(
                 arrayOf(
                     content {
                         role = "user"
-                        part { text { "Which theaters in Mountain View show Barbie movie and when can I watch it tonight?" } }
+                        part {
+                            text {
+                                "Which theaters in Mountain View show Barbie movie " +
+                                    "and when can I watch it tonight?"
+                            }
+                        }
                     },
                 ),
         )

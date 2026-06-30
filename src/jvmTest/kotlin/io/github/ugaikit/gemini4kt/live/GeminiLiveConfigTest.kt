@@ -24,7 +24,8 @@ class GeminiLiveConfigTest {
         val wsUrl = wsUrlProperty.get(instance) as String
 
         assertEquals(
-            "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent",
+            "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage." +
+                "v1beta.GenerativeService.BidiGenerateContent",
             wsUrl,
         )
     }

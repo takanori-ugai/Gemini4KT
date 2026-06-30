@@ -21,7 +21,9 @@ private fun buildTypeSchema(type: KType): Schema {
             List::class, MutableList::class, Set::class, MutableSet::class, Collection::class, Iterable::class -> {
                 val elementType =
                     type.arguments.firstOrNull()?.type
-                        ?: throw IllegalArgumentException("Collection parameter type must declare an element type: $type")
+                        ?: throw IllegalArgumentException(
+                            "Collection parameter type must declare an element type: $type",
+                        )
                 Schema(type = "array", items = buildTypeSchema(elementType))
             }
             Map::class, MutableMap::class -> {

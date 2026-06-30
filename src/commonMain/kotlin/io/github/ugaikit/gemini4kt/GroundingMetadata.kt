@@ -68,7 +68,8 @@ data class Web(
  * Grounding support.
  *
  * @property segment Optional. Segment of the content.
- * @property groundingChunkIndices Optional. A list of indices (into 'grounding_chunk') specifying the grounding sources that support the Claim.
+ * @property groundingChunkIndices Optional. A list of indices (into 'grounding_chunk')
+ *   specifying the grounding sources that support the Claim.
  * @property confidenceScores Optional. Confidence score of the support references.
  * @property renderedParts Optional. Indices into the parts field of the candidate's content.
  */

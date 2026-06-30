@@ -26,7 +26,8 @@ private fun summarizePayload(
 ): String {
     val nested = payload["nested"] as Map<*, *>
     val list = payload["list"] as List<*>
-    return "${payload["name"]}|${payload["count"]}|${payload["enabled"]}|${nested["k"]}|${list.size}|${payload["nothing"] == null}"
+    return "${payload["name"]}|${payload["count"]}|${payload["enabled"]}|${nested["k"]}|" +
+        "${list.size}|${payload["nothing"] == null}"
 }
 
 @GeminiFunction(description = "Returns an int array")

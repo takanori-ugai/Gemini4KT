@@ -85,7 +85,9 @@ class CodeExecutionTest {
                 }
             }
         val encoded = json.encodeToString(part)
-        val expected = """{"codeExecutionResult":{"outcome":"OUTCOME_OK","image":{"mimeType":"image/png","data":"base64data"}}}"""
+        val expected =
+            "{\"codeExecutionResult\":{\"outcome\":\"OUTCOME_OK\",\"image\":{\"mimeType\":\"image/png\"," +
+                "\"data\":\"base64data\"}}}"
         assertEquals(expected, encoded)
     }
 
@@ -107,7 +109,8 @@ class CodeExecutionTest {
             }
         val encoded = json.encodeToString(part)
         val expected =
-            """{"codeExecutionResult":{"outcome":"OUTCOME_OK","output":"some text","image":{"mimeType":"image/jpeg","data":"imgdata"}}}"""
+            "{\"codeExecutionResult\":{\"outcome\":\"OUTCOME_OK\",\"output\":\"some text\"," +
+                "\"image\":{\"mimeType\":\"image/jpeg\",\"data\":\"imgdata\"}}}"
         assertEquals(expected, encoded)
     }
 
