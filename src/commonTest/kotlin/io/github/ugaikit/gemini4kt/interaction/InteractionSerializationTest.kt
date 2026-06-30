@@ -79,6 +79,24 @@ class InteractionSerializationTest {
     }
 
     @Test
+    fun interactionToolSerializesComputerUseConfig() {
+        val tool =
+            InteractionTool(
+                type = "computer_use",
+                environment = "browser",
+                excludedPredefinedFunctions = arrayOf("CLICK", "TYPE"),
+            )
+
+        val encoded = json.encodeToString(tool)
+
+        assertTrue(encoded.contains("\"computer_use\""))
+        assertTrue(encoded.contains("\"excluded_predefined_functions\""))
+
+        val decoded = json.decodeFromString<InteractionTool>(encoded)
+        assertEquals(tool, decoded)
+    }
+
+    @Test
     fun interactionEnumSerializesToSnakeCase() {
         val statusJson = json.encodeToString(InteractionStatus.IN_PROGRESS)
         assertEquals("\"in_progress\"", statusJson)
