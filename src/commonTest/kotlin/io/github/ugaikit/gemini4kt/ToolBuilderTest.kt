@@ -168,16 +168,55 @@ class ToolBuilderTest {
                     timeRangeFilter = builtGoogleSearch.timeRangeFilter
                     searchTypes = builtGoogleSearch.searchTypes
                 }
+                fileSearch {
+                    fileSearchStoreName("store-a")
+                    metadataFilter("author=alice")
+                }
+                googleSearchRetrieval(
+                    GoogleSearchRetrieval(
+                        dynamicRetrievalConfig =
+                            DynamicRetrievalConfig(
+                                mode = DynamicRetrievalMode.MODE_DYNAMIC,
+                                dynamicThreshold = 0.5,
+                            ),
+                    ),
+                )
+                computerUse {
+                    environment = Environment.ENVIRONMENT_BROWSER
+                    excludedPredefinedFunction("CLICK")
+                }
+                mcpServer(
+                    McpServer(
+                        name = "mcp-server",
+                        streamableHttpTransport =
+                            StreamableHttpTransport(
+                                url = "https://mcp.example.com",
+                                headers = mapOf("Authorization" to "Bearer token"),
+                                timeout = "30s",
+                                sseReadTimeout = "120s",
+                                terminateOnClose = true,
+                            ),
+                ),
+                )
+                googleMaps(GoogleMaps(enableWidget = true))
             }
 
         val encoded = json.encodeToString(tool)
         val decoded = json.decodeFromString<Tool>(encoded)
-        val googleSearch = checkNotNull(decoded.googleSearch)
-
-        assertEquals("2026-01-01T00:00:00Z", googleSearch.timeRangeFilter?.startTime)
-        assertEquals("2026-01-31T00:00:00Z", googleSearch.timeRangeFilter?.endTime)
-        assertNotNull(googleSearch.searchTypes?.webSearch)
-        assertNotNull(googleSearch.searchTypes.imageSearch)
+        assertNotNull(decoded.googleSearch)
+        assertEquals("author=alice", decoded.fileSearch?.metadataFilter)
+        assertEquals("store-a", decoded.fileSearch?.fileSearchStoreNames?.first())
+        assertEquals(DynamicRetrievalMode.MODE_DYNAMIC, decoded.googleSearchRetrieval?.dynamicRetrievalConfig?.mode)
+        assertEquals(Environment.ENVIRONMENT_BROWSER, decoded.computerUse?.environment)
+        assertEquals("CLICK", decoded.computerUse?.excludedPredefinedFunctions?.first())
+        assertEquals("mcp-server", decoded.mcpServers?.first()?.name)
+        assertEquals(true, decoded.googleMaps?.enableWidget)
+        assertEquals(true, encoded.contains("\"computer_use\""))
+        assertEquals(true, encoded.contains("\"excluded_predefined_functions\""))
+        assertEquals("2026-01-01T00:00:00Z", decoded.googleSearch?.timeRangeFilter?.startTime)
+        assertEquals("2026-01-31T00:00:00Z", decoded.googleSearch?.timeRangeFilter?.endTime)
+        assertNotNull(decoded.googleSearch?.searchTypes?.webSearch)
+        assertNotNull(decoded.googleSearch?.searchTypes?.imageSearch)
     }
 
     @Test

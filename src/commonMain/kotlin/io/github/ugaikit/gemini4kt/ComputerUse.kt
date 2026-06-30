@@ -17,8 +17,31 @@ import kotlin.js.JsExport
 data class ComputerUse(
     val environment: Environment? = null,
     @SerialName("excluded_predefined_functions")
-    val excludedPredefinedFunctions: List<String>? = null,
-)
+    val excludedPredefinedFunctions: Array<String>? = null,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as ComputerUse
+
+        if (environment != other.environment) return false
+        if (excludedPredefinedFunctions != null) {
+            if (other.excludedPredefinedFunctions == null) return false
+            if (!excludedPredefinedFunctions.contentEquals(other.excludedPredefinedFunctions)) return false
+        } else if (other.excludedPredefinedFunctions != null) {
+            return false
+        }
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = environment?.hashCode() ?: 0
+        result = 31 * result + (excludedPredefinedFunctions?.contentHashCode() ?: 0)
+        return result
+    }
+}
 
 /**
  * Represents the computer use builder.
@@ -62,7 +85,7 @@ class ComputerUseBuilder {
                 if (excludedPredefinedFunctions.isEmpty()) {
                     null
                 } else {
-                    excludedPredefinedFunctions.toList()
+                    excludedPredefinedFunctions.toTypedArray()
                 },
         )
 }
