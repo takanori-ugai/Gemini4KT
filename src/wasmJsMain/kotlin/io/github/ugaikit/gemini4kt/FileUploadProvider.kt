@@ -12,67 +12,18 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.io.IOException
 import kotlinx.io.files.Path
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.js.JsAny
 
 /**
  * Represents the file wrapper.
  *
  * @property file The file.
  */
-@Serializable
+@kotlinx.serialization.Serializable
 private data class FileWrapper(
     val file: GeminiFile,
 )
-
-/**
- * Represents the node fs.
- */
-@kotlin.js.JsModule("fs")
-external object NodeFs {
-    /**
-     * Handles stat sync.
-     *
-     * @param path The path.
-     */
-    fun statSync(path: String): NodeStats
-
-    /**
-     * Handles read file sync.
-     *
-     * @param path The path.
-     */
-    fun readFileSync(path: String): Uint8Array
-}
-
-/**
- * Represents the node stats.
- */
-external interface NodeStats : JsAny {
-    /**
-     * Holds the size.
-     */
-    val size: Double
-}
-
-/**
- * Represents the uint8 array.
- */
-external class Uint8Array : JsAny {
-    /**
-     * Holds the length.
-     */
-    val length: Int
-
-    /**
-     * Handles get.
-     *
-     * @param index The index.
-     */
-    operator fun get(index: Int): Byte
-}
 
 /**
  * Represents the file upload provider.
@@ -86,10 +37,19 @@ actual class FileUploadProvider actual constructor(
     private val client: HttpClient?,
     private val json: Json,
 ) {
+    init {
+        require(apiKey.isNotBlank()) { "apiKey must not be blank." }
+    }
+
     /**
      * Holds the http client.
      */
     private val httpClient = client ?: createHttpClient(json)
+
+    /**
+     * Holds the fs module.
+     */
+    private val fs: dynamic by lazy { loadNodeFs() }
 
     /**
      * Handles upload.
@@ -140,13 +100,24 @@ actual class FileUploadProvider actual constructor(
     }
 
     /**
+     * Loads Node.js fs when available.
+     */
+    private fun loadNodeFs(): dynamic {
+        val module = js("(typeof require !== 'undefined' && require) ? require('fs') : null")
+        if (module == null) {
+            throw IOException("File upload is only supported in a Node.js environment.")
+        }
+        return module
+    }
+
+    /**
      * Handles get file size.
      *
      * @param path The path.
      */
     private fun getFileSize(path: String): Long {
         try {
-            val stats = NodeFs.statSync(path)
+            val stats = fs.statSync(path)
             return stats.size.toLong()
         } catch (e: dynamic) {
             throw IOException("Failed to get file size for $path", e)
@@ -160,13 +131,8 @@ actual class FileUploadProvider actual constructor(
      */
     private fun readFile(path: String): ByteArray {
         try {
-            val uint8Array = NodeFs.readFileSync(path)
-            val length = uint8Array.length
-            val byteArray = ByteArray(length)
-            for (i in 0 until length) {
-                byteArray[i] = uint8Array[i]
-            }
-            return byteArray
+            val source = fs.readFileSync(path)
+            return source.unsafeCast<ByteArray>()
         } catch (e: dynamic) {
             throw IOException("Failed to read file $path", e)
         }
@@ -196,7 +162,7 @@ actual class FileUploadProvider actual constructor(
                 header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
                 header("X-Goog-Upload-Header-Content-Type", mimeType)
                 contentType(ContentType.Application.Json)
-                setBody("""{ "file" : { "displayName" : "$displayName" }}""")
+                setBody(json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))))
             }
 
         if (response.status != HttpStatusCode.OK) {

@@ -2,6 +2,7 @@ package io.github.ugaikit.gemini4kt
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -48,7 +49,7 @@ class AttributionSourceIdBuilderTest {
      */
     @Test
     fun buildWithBothProperties() {
-        val attributionSourceId =
+        assertFailsWith<IllegalArgumentException> {
             attributionSourceId {
                 groundingPassage {
                     GroundingPassageId(passageId = "passage123", partIndex = 1)
@@ -57,8 +58,7 @@ class AttributionSourceIdBuilderTest {
                     SemanticRetrieverChunk(source = "source123", chunk = "chunk content")
                 }
             }
-        assertNotNull(attributionSourceId.groundingPassage)
-        assertNotNull(attributionSourceId.semanticRetrieverChunk)
+        }
     }
 
     /**

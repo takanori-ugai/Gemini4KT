@@ -12,18 +12,15 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.io.IOException
 import kotlinx.io.files.Path
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.khronos.webgl.Int8Array
-import org.khronos.webgl.Uint8Array
 
 /**
  * Represents the file wrapper.
  *
  * @property file The file.
  */
-@Serializable
+@kotlinx.serialization.Serializable
 private data class FileWrapper(
     val file: GeminiFile,
 )
@@ -40,23 +37,19 @@ actual class FileUploadProvider actual constructor(
     private val client: HttpClient?,
     private val json: Json,
 ) {
+    init {
+        require(apiKey.isNotBlank()) { "apiKey must not be blank." }
+    }
+
     /**
      * Holds the http client.
      */
     private val httpClient = client ?: createHttpClient(json)
 
-    // Lazy load fs to avoid issues if not in Node (though the target is Node)
-
     /**
      * Holds the fs.
      */
-    private val fs: dynamic by lazy {
-        try {
-            js("require('fs')")
-        } catch (e: dynamic) {
-            throw IOException("Module 'fs' not found. File upload is only supported in Node.js environment.")
-        }
-    }
+    private val fs: dynamic by lazy { loadNodeFs() }
 
     /**
      * Handles upload.
@@ -114,7 +107,6 @@ actual class FileUploadProvider actual constructor(
     private fun getFileSize(path: String): Long {
         try {
             val stats = fs.statSync(path)
-            // stats.size is a Number
             return (stats.size as Number).toLong()
         } catch (e: dynamic) {
             throw IOException("Failed to get file size for $path: $e")
@@ -129,14 +121,24 @@ actual class FileUploadProvider actual constructor(
     private fun readFile(path: String): ByteArray {
         try {
             val buffer = fs.readFileSync(path)
-            // Convert Node Buffer to ByteArray (Int8Array)
-            // Buffer is a Uint8Array in modern Node.js
-            val uint8Array = buffer.unsafeCast<Uint8Array>()
-            val int8Array = Int8Array(uint8Array.buffer, uint8Array.byteOffset, uint8Array.length)
-            return int8Array.unsafeCast<ByteArray>()
+            val length = buffer.length as Int
+            return ByteArray(length) { index ->
+                (buffer[index] as Int).toByte()
+            }
         } catch (e: dynamic) {
             throw IOException("Failed to read file $path: $e")
         }
+    }
+
+    /**
+     * Loads the Node.js fs module when available.
+     */
+    private fun loadNodeFs(): dynamic {
+        val module = js("(typeof require !== 'undefined' && require) ? require('fs') : null")
+        if (module == null) {
+            throw IOException("File upload is only supported in a Node.js environment.")
+        }
+        return module
     }
 
     /**
@@ -163,7 +165,7 @@ actual class FileUploadProvider actual constructor(
                 header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
                 header("X-Goog-Upload-Header-Content-Type", mimeType)
                 contentType(ContentType.Application.Json)
-                setBody("""{ "file" : { "displayName" : "$displayName" }}""")
+                setBody(json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))))
             }
 
         if (response.status != HttpStatusCode.OK) {

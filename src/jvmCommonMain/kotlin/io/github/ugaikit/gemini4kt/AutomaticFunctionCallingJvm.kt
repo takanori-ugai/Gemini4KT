@@ -20,6 +20,7 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
+import kotlin.reflect.KParameter.Kind
 import kotlin.reflect.KType
 import kotlin.reflect.full.callSuspendBy
 import kotlin.reflect.full.instanceParameter
@@ -70,6 +71,9 @@ private suspend fun invokeBoundFunction(
     }
     require(function.instanceParameter == null) {
         "Only top-level or bound functions are supported: '${function.name}'."
+    }
+    require(!hasExtensionReceiver(function)) {
+        "Extension functions are not supported for automatic binding: '${function.name}'."
     }
 
     val arguments = mutableMapOf<KParameter, Any?>()
@@ -184,6 +188,7 @@ private fun jsonElementToUntypedKotlinValue(element: JsonElement): Any? =
 private fun anyToJsonElement(value: Any?): JsonElement =
     when (value) {
         null -> JsonNull
+        Unit -> buildJsonObject { }
         is JsonElement -> value
         is String -> JsonPrimitive(value)
         is Int -> JsonPrimitive(value)
@@ -208,3 +213,5 @@ private fun anyToJsonElement(value: Any?): JsonElement =
             }
         else -> throw IllegalArgumentException("Unsupported return type for automatic binding: ${value::class}")
     }
+
+private fun hasExtensionReceiver(function: KFunction<*>): Boolean = function.parameters.any { it.kind == Kind.EXTENSION_RECEIVER }

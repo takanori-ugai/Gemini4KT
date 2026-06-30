@@ -1,123 +1,153 @@
-# Risk Bugs
+# Risk Bugs (Investigated)
 
-Static review of `src/` found the following potential risks and bugs.
+Investigation date: 2026-06-30  
+Scope: reviewed all 30 listed risks against current `src/` code. Fixed items have been removed from this document.
 
-1. **High: API-key resolution is unsafe and inconsistent across targets.**  
-   `GeminiAI` falls back to platform `getApiKey()` when no key is passed (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GeminiAI.kt:49-51`). The platform implementations behave very differently: JVM throws when the key is missing, but Android and native return `""`, wasm returns `""`, and JS directly evaluates `process.env["GEMINI_API_KEY"]` (`src/androidMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt:11`, `src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt:38`, `src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt:14-18`, `src/jsMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt:14-18`). On JS browser targets, `process` may not exist at runtime, and on the other non-JVM targets callers can silently send empty auth headers instead of getting a clear configuration error.
-   Fix policy: require an explicit API key or fail fast with a platform-specific exception when the key is unavailable. Keep the resolution path consistent across targets, and never return an empty string as a valid credential value. On JS, guard access to Node-only globals or route key injection through user-provided configuration.
+Status keys:
+- `Confirmed`: behavior exists in current code.
+- `Partially confirmed`: risk exists, but original wording/details were outdated.
+- `Confirmed in code (API-dependent impact)`: strict model shape is real; runtime break depends on API response variants.
 
-2. **High: Several HTTP helpers swallow real failures or replace them with placeholder JSON.**  
-   `Gemini.getContent()` returns `"{}"` when error parsing fails, `Batch.getContent()` also returns `"{}"` or `""` on exceptions, and `FileSearch.getContent()` returns `""` on `IOException` (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt:370-417`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/batch/Batch.kt:159-226`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/filesearch/FileSearch.kt:177-247`). The delete helpers also log failures without throwing (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt:424-438`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/batch/Batch.kt:215-229`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/filesearch/FileSearch.kt:233-247`). This can turn a server or network failure into a misleading deserialization error or make a failed delete look successful.
-   Fix policy: do not substitute fake payloads for failed requests. Re-throw the original exception or wrap it in a domain-specific failure that preserves status code and body. Delete operations should either return a success/failure result or throw on any non-2xx response.
+---
 
-3. **High: Request and response payloads are logged or printed directly.**  
-   `Gemini.countTokens()` prints the full request object to stdout (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt:296-305`). The shared HTTP helpers also log raw request JSON and full response bodies in `Gemini`, `Batch`, and `FileSearch` (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt:370-410`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/batch/Batch.kt:159-199`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/filesearch/FileSearch.kt:177-217`). That is a privacy and security risk because prompts, file metadata, cache contents, and model outputs can end up in logs.
-   Fix policy: remove unconditional stdout prints from library code and reduce logging to sanitized summaries. If request visibility is needed for debugging, gate it behind an explicit debug flag and redact or truncate sensitive fields by default.
+4. **Medium - SSE parser too strict / line-based assumptions**  
+   Status: `Confirmed`  
+   Evidence: [Gemini.kt:211-221](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L211-L221), [GeminiAI.kt:88-95](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GeminiAI.kt#L88-L95)  
+   Finding: `Gemini.streamGenerateContent()` only accepts lines starting with exactly `"data: "` (requires trailing space) and decodes each line independently. `GeminiAI.streamInteraction()` accepts `"data:"` but still processes JSON line-by-line. If a single JSON payload spans multiple lines, or if the server sends multi-line events or additional event metadata, parsing will fail or skip chunks.  
+   Recommendation: Parse full Server-Sent Events (SSE) properly by aggregating multi-line data fields and delimiting events on blank lines.
 
-4. **Medium: Streaming SSE parsing is too strict and can drop valid chunks.**  
-   `Gemini.streamGenerateContent()` only accepts lines that start with `"data: "` and treats each line as a complete JSON payload (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt:181-228`). Real SSE streams can emit `data:` without a trailing space and can split a single event over multiple lines. Those messages would be ignored or fail to decode silently. `GeminiAI.streamInteraction()` is slightly more tolerant, but it still assumes one JSON object per line (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GeminiAI.kt:72-99`).
-   Fix policy: parse SSE as an event stream, not as one JSON object per line. Accumulate `data:` lines until the blank separator, accept both `data:` and `data: ` forms, and emit a controlled error when the payload cannot be decoded instead of silently skipping it.
+5. **Medium - Live WebSocket queues unbounded; post-handshake decode errors dropped**  
+   Status: `Confirmed`  
+   Evidence: [GeminiLive.kt:106](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/GeminiLive.kt#L106), [LiveMusic.kt:121](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/music/LiveMusic.kt#L121), [MessageProcessor.kt:33-38](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/MessageProcessor.kt#L33-L38)  
+   Finding: Both live WebSocket clients initialize incoming queues with `Channel.UNLIMITED`, introducing memory exhaustion (OOM) risks if incoming packets arrive faster than they are consumed. Furthermore, in `MessageProcessor`, any JSON deserialization exception thrown after the handshake has successfully completed is logged but swallowed, leaving the caller unaware of corrupted payloads.  
+   Recommendation: Implement bounded channels with explicit backpressure strategies, and route post-handshake deserialization failures to the session's error flow.
 
-5. **Medium: Live WebSocket queues are unbounded, and post-handshake decode errors are swallowed.**  
-   Both `GeminiLive` and `LiveMusic` use `Channel.UNLIMITED` for incoming messages (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/GeminiLive.kt:106-145`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/music/LiveMusic.kt:121-160`). If the consumer slows down or disconnects, memory can grow without bound. In addition, `processHandshakeMessage()` logs JSON decode failures but only fails the handshake before `setupComplete`; after that, malformed messages are dropped on the floor (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/MessageProcessor.kt:12-38`). That can leave the session apparently healthy while events are being lost.
-   Fix policy: replace unbounded channels with a bounded buffer and a documented backpressure strategy. Surface decode failures to the caller or session state, and decide whether to terminate the session or deliver an error event instead of dropping malformed frames silently.
+6. **Medium - Non-JVM `getImage()` returns empty sample payload**  
+   Status: `Confirmed`  
+   Evidence: [Platform.kt:20 (Android)](file:///home/ugai/Gemini4KT/src/androidMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L20), [Platform.kt:28 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L28), [Platform.kt:28 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L28), [Platform.kt:47 (Native)](file:///home/ugai/Gemini4KT/src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L47), [InputWithImage.kt:25-41](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/InputWithImage.kt#L25-L41), [InteractionSamples.kt:57-69](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/InteractionSamples.kt#L57-L69), [CodeExecutionWithImageSample.kt:21-39](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/CodeExecutionWithImageSample.kt#L21-L39)  
+   Finding: On Android, JS, Wasm, and Native targets, `getImage()` is hardcoded to return `""`, causing image-reliant samples to send empty payloads and fail at runtime.  
+   Recommendation: Require callers to supply image data explicitly or fail-fast with target limitation errors.
 
-6. **Medium: Image-based samples default to empty image data on non-JVM targets.**  
-   All non-JVM `getImage()` implementations return an empty string (`src/androidMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt:20`, `src/jsMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt:28`, `src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt:28`, `src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt:47`). The common samples `InputWithImage`, `InteractionSamples.runImageInput`, and `CodeExecutionWithImageSample` use that default provider (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/InputWithImage.kt:19-49`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/InteractionSamples.kt:49-71`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/CodeExecutionWithImageSample.kt:15-45`). On those targets the sample requests will send invalid empty image payloads instead of failing fast or explaining that image provisioning is unsupported.
-   Fix policy: make image provisioning explicit per sample and fail fast when no image source is available. If a target cannot support the bundled demo asset, the sample should report that limitation instead of sending empty content.
+7. **Low - Automatic binding rejects member functions; message implies support**  
+   Status: `Confirmed`  
+   Evidence: [AutomaticFunctionCallingJvm.kt:71-73](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L71-L73), [AutomaticFunctionCallingJvmTest.kt:70-88](file:///home/ugai/Gemini4KT/src/jvmTest/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvmTest.kt#L70-L88)  
+   Finding: The binding logic checks `require(function.instanceParameter == null)` and throws an error saying only top-level or bound functions are supported. However, class member functions cannot be registered even if bound, and the message confuses developers.  
+   Recommendation: Add class instance binding support or rewrite the exception message to state that member functions are unsupported.
 
-7. **Low: Automatic function binding rejects member functions despite the error text implying otherwise.**  
-   The JVM/Android binder explicitly requires `function.instanceParameter == null` (`src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt:63-73`), so bound instance methods are rejected even though the exception message says “top-level or bound functions.” This is a usability bug and a documentation mismatch that will confuse callers trying to bind class methods.
-   Fix policy: either support bound receivers in the invocation path or update the API and error message to say only top-level/static functions are supported. Keep the implementation and documentation aligned so callers can predict what will work before runtime.
+11. **Low - Public builders allow malformed payloads**  
+    Status: `Confirmed`  
+    Evidence: [GenerateContentRequest.kt:59-157](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentRequest.kt#L59-L157), [InlineData.kt:45-90](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/InlineData.kt#L45-L90), [FileData.kt:33-45](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/FileData.kt#L33-L45)  
+    Finding: The builders lack constraints on required properties. E.g., `FileDataBuilder` leaves `mimeType` and `fileUri` as uninitialized `lateinit var`, leading to `UninitializedPropertyAccessException` crashes on build. `InlineDataBuilder` defaults required fields to `""`, resulting in malformed requests at runtime.  
+    Recommendation: Add property checks inside `build()` to assert required properties and provide clear error messages.
 
-8. **High: File-upload metadata bodies are built with raw string interpolation.**  
-   The upload-start requests on JVM, Android, and JS interpolate `displayName` directly into JSON (`src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/GeminiExtensions.kt:109-129`, `src/androidMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt:109-129`, `src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt:151-174`). If the display name contains quotes, backslashes, or control characters, the request body becomes invalid JSON and upload creation fails. This is also a general injection risk because the payload is not serialized by a JSON encoder.
-   Fix policy: always build request bodies with `Json.encodeToString(...)` or a typed request object. Never interpolate user-controlled strings into JSON literals.
+12. **Medium - Non-JVM uploads buffer full file in memory**  
+    Status: `Partially confirmed`  
+    Evidence: [FileUploadProvider.kt:129-139,228-237,261-270 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L129-L139), [FileUploadProvider.kt:161-170,261-270,294-303 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L161-L170), [FileUploadProvider.kt:183-190 (Native)](file:///home/ugai/Gemini4KT/src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L183-L190)  
+    Finding: JS and Wasm targets buffer full files in memory as `ByteArray` via Node `fs.readFileSync(path)`. The risk is partially confirmed because it also affects the Native target (Okio `fs.source(file).buffered().readByteArray()`), making it a platform-wide issue for non-JVM environments.  
+    Recommendation: Stream file uploads where possible, or document and enforce maximum file size limits.
 
-9. **Medium: Success handling is too narrow and rejects valid 2xx responses.**  
-   Multiple helpers treat only `HttpStatusCode.OK` as success, including upload initiation and upload finalization on all platforms (`src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/GeminiExtensions.kt:124-129,166-171,196-201,226-231`, `src/androidMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt:124-129,162-167,192-197,222-227`, `src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt:169-174,206-211,240-244,273-277`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt:390-411`). If the API returns a different successful 2xx code such as `201 Created`, `202 Accepted`, or `204 No Content`, these methods will misreport the operation as a failure.
-   Fix policy: accept the documented success codes for each endpoint, or use the generic `isSuccess()` check when any 2xx response is valid. Reserve strict status matching for endpoints that truly require a single code.
+13. **Low - Automatic binding/schema supports narrow type subset**  
+    Status: `Confirmed`  
+    Evidence: [AutomaticFunctionCallingJvm.kt:118-164](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L118-L164), [FunctionDsl.kt:16-38](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/FunctionDsl.kt#L16-L38)  
+    Finding: Automatic schemas and reflection binders only support primitives, collections, maps with String keys, and raw JsonElements. Complex types, enums, or nested data structures fail with an `IllegalArgumentException` during function registration.  
+    Recommendation: Support enums and nested serialization or document supported signatures.
 
-10. **Medium: Streaming failures can be swallowed and converted into an empty flow.**  
-    In `Gemini.streamGenerateContent()`, a non-OK response that fails error-body parsing only logs the problem and then exits the flow without throwing (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt:195-223`). That means the caller can receive an apparently successful but empty stream instead of a failure signal. This is worse than a hard error because consumers may continue operating on missing data without noticing.
-    Fix policy: if the response is not successful, always throw a structured exception. Parsing the error body should enrich the exception, not decide whether the request failed.
+14. **High - One-of protocol shapes not enforced in builders**  
+    Status: `Confirmed`  
+    Evidence: [Part.kt:69-269](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Part.kt#L69-L269), [Tool.kt:46-190](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Tool.kt#L46-L190), [SpeechConfig.kt:74-110](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/SpeechConfig.kt#L74-L110), [AttributionSourceId.kt:28-60](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/AttributionSourceId.kt#L28-L60)  
+    Finding: Models representing mutually exclusive one-of properties (like `Part` and `Tool`) allow setting multiple or zero fields in their builders. The API will subsequently reject these requests.  
+    Recommendation: Validate one-of invariants in `build()` and throw descriptive errors when violated.
 
-11. **Low: Public DSL builders can emit malformed payloads without validation.**  
-    `GenerateContentRequestBuilder` will happily build a request with empty `contents`, while `InlineDataBuilder` and `FileDataBuilder` let required fields stay empty or uninitialized (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentRequest.kt:55-168`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/InlineData.kt:41-90`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/FileData.kt:29-45`). These malformed objects are only rejected much later by the API or via runtime exceptions, which makes failures harder to debug.
-    Fix policy: validate required builder fields in `build()` and fail fast with explicit messages. For request builders, enforce minimal shape constraints such as non-empty contents when the API requires them.
+15. **Medium - `GenerateContentResponse` strictness + first-candidate helpers**  
+    Status: `Confirmed in code (API-dependent impact)`  
+    Evidence: [GenerateContentResponse.kt:22-29](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentResponse.kt#L22-L29), [GenerateContentResponse.kt:33-50](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentResponse.kt#L33-L50)  
+    Finding: `candidates` is non-nullable and required. If the server response omits the candidates field (e.g. if the entire response is blocked due to safety), Kotlinx Serialization fails to deserialize it. The convenience methods `getText()` and `getThought()` only process the first part of the first candidate.  
+    Recommendation: Make `candidates` nullable or default to an empty list; expose helpers to inspect all candidates.
 
-12. **Medium: Non-JVM file uploads read the entire file into memory.**  
-    JS and wasm upload implementations read the whole file into a byte array before sending (`src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt:129-139,177-198,207-227`, `src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt:176-198,208-233`). That makes large uploads memory-heavy and can fail on constrained devices or browsers even when the server would accept the file.
-    Fix policy: stream file contents where the platform supports it, and document hard limits where it does not. If streaming is impossible on a target, enforce a file-size cap before reading the whole file.
+16. **Medium - Batch DSL only models inline request mode**  
+    Status: `Confirmed`  
+    Evidence: [BatchInputConfig.kt:14-20](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/batch/BatchInputConfig.kt#L14-L20), [BatchDsl.kt:92-113](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/batch/BatchDsl.kt#L92-L113)  
+    Finding: `BatchInputConfigBuilder` lacks properties and methods for `gcsSource` or `fileName` fields, rendering the DSL incapable of building configurations that rely on Google Cloud Storage or the File API. It also fails to validate exclusivity rules.  
+    Recommendation: Expand `BatchInputConfigBuilder` with methods for GCS and File API, and validate input mode exclusivity.
 
-13. **Low: Automatic function binding and schema generation only support a narrow type subset.**  
-    The JVM binder and schema generator support primitives, collections, maps, `JsonElement`, and a few container shapes, but not ordinary data classes, enums, or array parameters (`src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt:109-163`, `src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/FunctionDsl.kt:9-37`). A normal Kotlin function that takes a custom request type will fail at runtime with `Unsupported parameter type`, which is easy to hit once callers move beyond toy examples.
-    Fix policy: either extend the reflection layer to support enums and serializable data classes, or document the supported types very explicitly in the public API and error messages.
+17. **High - Automatic function binding breaks on `Unit` returns**  
+    Status: `Confirmed`  
+    Evidence: [AutomaticFunctionCallingJvm.kt:95-105](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L95-L105), [AutomaticFunctionCallingJvm.kt:184-210](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L184-L210)  
+    Finding: If a registered function has a return type of `Unit`, it returns the `kotlin.Unit` object. Since `anyToJsonElement` does not expect `Unit` in its pattern match, it triggers the fallback `else` branch and throws `IllegalArgumentException: Unsupported return type for automatic binding: class kotlin.Unit`, crashing the tool call execution.  
+    Recommendation: Explicitly match `Unit` or null in `anyToJsonElement` and return an empty or acknowledged tool result.
 
-14. **High: Several common builders do not enforce one-of protocol shapes.**  
-    `PartBuilder` can set text, inline data, function calls, function responses, file data, executable code, code execution results, tool calls, tool responses, and video metadata at the same time (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Part.kt:69-269`). `ToolBuilder` can mix function declarations with built-in tools like search, code execution, file search, computer use, and maps in one object (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Tool.kt:46-240`). `SpeechConfigBuilder` and `AttributionSourceIdBuilder` also allow multiple mutually exclusive branches to be set simultaneously (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/SpeechConfig.kt:74-241`, `src/commonMain/kotlin/io/github/ugaikit/gemini4kt/AttributionSourceId.kt:28-60`). These builders can therefore produce structurally ambiguous or invalid payloads that only fail later at the API boundary.
-    Fix policy: model each one-of group explicitly and validate it in `build()`. If multiple branches are set, fail fast with a clear error instead of serializing a contradictory object.
+18. **High - Extension functions accepted but not invokable**  
+    Status: `Confirmed`  
+    Evidence: [AutomaticFunctionCallingJvm.kt:71-76](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L71-L76), [AutomaticFunctionCallingJvm.kt:94](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L94)  
+    Finding: The registration logic checks for `instanceParameter == null` but fails to check for `extensionReceiverParameter`. Extension functions are accepted, but invoking them throws `IllegalArgumentException` in `callSuspendBy` because the extension receiver parameter is never supplied in the arguments map.  
+    Recommendation: Reject extension functions during binding registration or define a contract to supply the receiver.
 
-15. **Medium: `GenerateContentResponse` is brittle for sparse responses and the convenience helpers only inspect the first candidate.**  
-    The response model requires `candidates` with no default value (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentResponse.kt:21-28`). If the API returns a blocked or sparse response that omits candidates, deserialization fails before the caller can inspect `promptFeedback`. Separately, `getText()` and `getThought()` only read the first candidate and first matching part, so later candidates or later text parts are ignored (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentResponse.kt:30-50`).
-    Fix policy: make the response model tolerant of candidate-less responses if the API allows them, and provide helper methods that either scan all candidates or clearly document the first-candidate-only behavior.
+19. **Medium - Map schema under-specified vs runtime binder**  
+    Status: `Confirmed`  
+    Evidence: [FunctionDsl.kt:29-36](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/FunctionDsl.kt#L29-L36), [AutomaticFunctionCallingJvm.kt:139-155](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L139-L155)  
+    Finding: A `Map` parameter is serialized to the Gemini API as `Schema(type = "object")` with no property or type specifications. However, the runtime binder attempts to deserialize map values recursively into the declared Map value type. If the model returns unexpected types or malformed structures (which it is free to do as the schema is unrestricted), deserialization fails.  
+    Recommendation: Generate an `additionalProperties` schema for maps, or enforce runtime resilience when parsing.
 
-16. **Medium: The batch DSL only exposes inline requests and cannot build the other modeled input modes.**  
-    `BatchInputConfig` supports `gcsSource`, `fileName`, or `requests` as alternative input shapes (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/batch/BatchInputConfig.kt:1-18`), but `BatchInputConfigBuilder` only exposes `requests(...)` and `BatchRequestInputBuilder` only builds inline `BatchItemRequest` lists (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/batch/BatchDsl.kt:81-145`). That means valid file-based or GCS-based batch configurations cannot be expressed through the public DSL, and there is no validation that the chosen mode is exclusive.
-    Fix policy: add builder entry points for `gcsSource` and `fileName`, and enforce exactly one input mode per `BatchInputConfig`.
+22. **Medium - JVM sample entrypoints duplicate unsafe property loading**  
+    Status: `Confirmed`  
+    Evidence: [TextToImage.kt:79-85](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/samples/TextToImage.kt#L79-L85), [ITTest.kt:874-882](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/ITTest.kt#L874-L882)  
+    Finding: Multiple main entry points duplicate the logic to load `/prop.properties` and call `.use` on a potentially null stream. If the property file does not exist, they fail immediately with a NullPointerException before checking the system environment variable or fallback keys.  
+    Recommendation: Standardize API key resolution in samples using a shared helper that falls back safely.
 
-17. **High: Automatic function binding cannot handle `Unit`-returning tools.**  
-    `invokeBoundFunction()` wraps any non-`FunctionResponse` result through `anyToJsonElement()`, but `Unit` is not supported there (`src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt:94-109,184-209`). That means a perfectly valid side-effect-only tool function will fail at runtime after being invoked, even if the function body succeeded.
-    Fix policy: special-case `Unit`/`Void` results and convert them to an empty or explicitly acknowledged tool response. If the API requires a payload, document and enforce that requirement before invocation.
+24. **High - JS upload path assumes CommonJS `require('fs')`**  
+    Status: `Confirmed`  
+    Evidence: [FileUploadProvider.kt:53-59 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L53-L59), [FileUploadProvider.kt:33-48 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L33-L48)  
+    Finding: The JS implementation uses `js("require('fs')")` and Wasm uses `@kotlin.js.JsModule("fs")`. These statements assume a Node.js CommonJS environment and fail in ESM environments, browsers, or standard Kotlin JS web targets.  
+    Recommendation: Separate Node.js-specific upload logic and fail fast with meaningful error messages when running in browsers.
 
-18. **High: Extension functions are not actually supported by the JVM binder.**  
-    `buildAutomaticFunctionBinding()` only rejects member-instance functions via `instanceParameter`, but it does not account for `extensionReceiverParameter` (`src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt:63-73,94-95`). As a result, annotated extension functions are accepted into the binding set, their receiver is omitted from the generated schema, and `callSuspendBy()` will fail because no receiver argument was supplied.
-    Fix policy: either reject extension functions up front with a clear error or explicitly bind and serialize the extension receiver as part of the tool call contract.
+25. **Medium - JS function-calling APIs compile but throw at runtime**  
+    Status: `Confirmed`  
+    Evidence: [Gemini.kt:111-120](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L111-L120), [AutomaticFunctionBinding.kt:5-8 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionBinding.kt#L5-L8), [FunctionDsl.kt:10-13 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FunctionDsl.kt#L10-L13)  
+    Finding: The KFunction overload of `generateContent` is exposed in `commonMain`, compiling on JS, but calls `buildAutomaticFunctionBinding` which is hardcoded to throw `UnsupportedOperationException("Direct Kotlin function binding is not supported in JS.")`.  
+    Recommendation: Separate the JS API signature or mark the overload as unavailable on JS targets.
 
-19. **Medium: Map parameter schemas are under-specified compared with the runtime binder.**  
-    `buildTypeSchema()` maps `Map<String, *>` to a bare `Schema(type = "object")` without any value-shape metadata, while the binder can recursively decode nested values at runtime (`src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/FunctionDsl.kt:20-32`, `src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt:128-155`). That mismatch means the model sees an unconstrained object shape even when the function actually expects specific value types, increasing the chance of invalid tool calls that only fail after invocation starts.
-    Fix policy: extend the schema model to describe object value types, or explicitly document that map parameters are untyped objects and will be validated only at runtime.
+26. **Medium - Cached-content URLs built via string concatenation**  
+    Status: `Confirmed`  
+    Evidence: [Gemini.kt:255-259](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L255-259), [Gemini.kt:273](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L273), [Gemini.kt:285](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L285)  
+    Finding: URLs for fetching and deleting cached contents are built using raw string interpolation (`"$bUrl/$name"`). If `name` contains spaces, slashes, or query characters, the URL becomes invalid. `pageToken` is also appended without encoding.  
+    Recommendation: Construct paths and query parameters using Ktor URLBuilder or encode parameters before appending.
 
-20. **High: JVM API-key fallback can return a null property value without validation.**  
-    `getApiKey()` falls back to `/prop.properties` and returns `Properties.getProperty("apiKey")` directly (`src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt:20-27`). If the file exists but the key is missing or blank, the method can return a null platform type instead of failing fast. That pushes the error downstream into client construction or HTTP calls, where it is harder to diagnose and may surface as an opaque NPE or authentication failure.
-    Fix policy: validate the loaded property before returning it and throw a configuration error when the key is missing or blank. Keep credential loading centralized so the same check is applied everywhere the JVM target resolves an API key.
+27. **Medium - `GenerationConfig` schema fields are overlapping/non-exclusive**  
+    Status: `Confirmed`  
+    Evidence: [GenerationConfig.kt:51-55](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerationConfig.kt#L51-L55), [GenerationConfig.kt:122-133](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerationConfig.kt#L122-L133), [GenerationConfig.kt:217-239](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerationConfig.kt#L217-L239)  
+    Finding: `GenerationConfig` contains `responseSchema`, `responseJsonSchema`, and `_responseJsonSchema` (`underscoreResponseJsonSchema`). Callers can define multiple of these schemas in the builder, which might result in conflicts when serialized to the API.  
+    Recommendation: Enforce mutual exclusivity checks inside `build()`.
 
-21. **High: JVM image resource loading assumes the classpath asset is backed by a real filesystem path.**  
-    `getImage()` calls `File(Gemini::class.java.getResource("/scones.jpg").toURI())` and then reads bytes from that file (`src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt:39-44`). That works only when the resource URL resolves to a normal file URL. After packaging into a jar, `getResource()` typically yields a `jar:` URL, and `File(URI)` can fail, so samples and tests that rely on the bundled image stop working in the packaged distribution.
-    Fix policy: load bundled resources through `getResourceAsStream()` and read the bytes directly. Only convert a resource URL to `File` when the code explicitly requires a real filesystem path and has already verified that the URL scheme is file-backed.
+28. **Medium - `FunctionCallingConfig` allows contradictory/empty policy states**  
+    Status: `Confirmed`  
+    Evidence: [FunctionCallingConfig.kt:34-54](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/FunctionCallingConfig.kt#L34-L54)  
+    Finding: The builder allows configuring `mode = Mode.ANY` with an empty allowed function list (which is rejected by the API), or specifying allowed functions when `mode` is `AUTO` or `NONE`.  
+    Recommendation: Validate consistency between the mode and allowed function names.
 
-22. **Medium: JVM sample entrypoints duplicate unsafe `prop.properties` loading.**  
-    `TextToImageSample.main()` and `ITTest.main()` both read `/prop.properties` with `getResourceAsStream(...).use { ...load(inputStream) }` and no null check on either the stream or the `apiKey` property (`src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/samples/TextToImage.kt:79-86`, `src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/ITTest.kt:874-888`). If the resource is missing, or if the file exists but omits `apiKey`, these entrypoints crash with an unhelpful NPE instead of a clear configuration error.
-    Fix policy: route all JVM entrypoints through the same validated credential helper, and fail fast with a descriptive startup exception when the resource or property is missing. Avoid duplicating property-loading logic in individual samples or tests.
+29. **Low - `ThinkingConfig` always serializes default budget**  
+    Status: `Confirmed`  
+    Evidence: [ThinkingConfig.kt:21-24](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/ThinkingConfig.kt#L21-L24)  
+    Finding: The property `thinkingBudget` is annotated with `@EncodeDefault(EncodeDefault.Mode.ALWAYS)`. This means it will always serialize `"thinking_budget": 1024` even if the user did not set it, overriding server-side defaults and forcing a low token budget.  
+    Recommendation: Remove the `ALWAYS` serialization mode or make the budget property nullable.
 
-23. **High: The JS sample launcher fires work into `GlobalScope` and never waits for completion.**  
-    `src/jsMain/kotlin/io/github/ugaikit/gemini4kt/samples/Models.kt:3-38` launches the selected sample with `GlobalScope.launch { action() }` and then returns immediately. That makes the entrypoint race the runtime shutdown path, and any exception from the sample coroutine is detached from the caller instead of being reported synchronously. In practice, the selected sample can appear to do nothing or fail nondeterministically depending on the JS host.
-    Fix policy: make the JS entrypoint suspend or return a `Promise`/`Job` that the host explicitly awaits. Avoid `GlobalScope` for CLI-style orchestration, and propagate coroutine failures back to the caller.
+30. **Medium - `PromptFeedback` cannot represent missing `safetyRatings` field**  
+    Status: `Confirmed in code (API-dependent impact)`  
+    Evidence: [PromptFeedback.kt:17-19](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/PromptFeedback.kt#L17-L19)  
+    Finding: `safetyRatings` is declared as a non-nullable list. If the server response contains a `promptFeedback` object but omits the `safetyRatings` field, Kotlinx Serialization throws a parsing exception.  
+    Recommendation: Declare `safetyRatings` as nullable or assign an empty default list.
 
-24. **High: JS file upload support hardcodes CommonJS `require('fs')`, which breaks in modern JS runtimes.**  
-    `FileUploadProvider` loads Node's filesystem module through `js("require('fs')")` (`src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt:48-59`). That assumes CommonJS `require` exists globally, but browser bundles and Node ESM builds often do not expose it. Even when the code is running in Node-compatible JS, this means file upload can fail at runtime simply because the module loader is not CommonJS.
-    Fix policy: use a runtime-appropriate filesystem abstraction or guard the upload feature behind an explicit Node/CommonJS capability check. If file upload is Node-only, make that restriction part of the API and avoid invoking `require` from generic JS code paths.
+---
 
-25. **Medium: Public JS function-calling APIs compile but intentionally throw at runtime.**  
-    The common `Gemini.generateContent(..., vararg functions)` API is available to JS callers through expect declarations, but the JS actual implementation of `buildAutomaticFunctionBinding()` throws `UnsupportedOperationException`, and `buildFunctionDeclaration()` does the same (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt:111-120`, `src/jsMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionBinding.kt:5-8`, `src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FunctionDsl.kt:5-8`). That means code can compile on JS, call the API successfully, and then fail only when the runtime path hits the unsupported stub.
-    Fix policy: hide unsupported overloads from the JS target, or make the unsupported behavior explicit in the type system and documentation. If the feature is intentionally JVM-only, fail at compile time where possible instead of exposing a runtime trap.
+## Investigation Summary
 
-26. **Medium: Cached-content URLs are assembled by string concatenation instead of path/query encoding.**  
-    `listCachedContent()` appends `pageToken` directly into the query string, and `getCachedContent()` / `deleteCachedContent()` interpolate `name` directly into the path (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt:255-275`). If either value contains reserved URL characters, the request can target the wrong resource or fail before it reaches the API. This is especially risky for opaque server-issued tokens, which should be treated as data rather than trusted URL fragments.
-    Fix policy: build URLs with typed query/path helpers and encode each segment explicitly. Never concatenate opaque identifiers or tokens directly into a URL string.
+- Confirmed: 18
+- Partially confirmed: 1 (`#12`)
+- Confirmed in code but API-response-dependent impact: 2 (`#15`, `#30`)
 
-27. **Medium: `GenerationConfig` exposes overlapping response-schema fields without exclusivity checks.**  
-    The model and builder both expose `responseSchema`, `responseJsonSchema`, and `_responseJsonSchema` side by side, and `GenerationConfigBuilder.build()` will serialize whatever combination the caller set (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerationConfig.kt:51-55,122-132,217-239`). That makes it easy to emit contradictory output-format hints or to send both schema representations at once, which can lead to ignored settings or API rejection that is hard to diagnose.
-    Fix policy: model response-format/schema controls as a single validated choice, and reject conflicting combinations in `build()`. If one field exists only for backward compatibility, make that compatibility path explicit and mutually exclusive.
+## Most Actionable First Fixes
 
-28. **Medium: Function-calling policy can be built in contradictory or empty states.**  
-    `FunctionCallingConfigBuilder` defaults `mode` to `AUTO` but never validates `allowedFunctionNames`, so callers can produce `Mode.NONE` with an allowlist, `Mode.VALIDATED` with no functions, or duplicated names with no warning (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/FunctionCallingConfig.kt:22-53`). That makes the policy object ambiguous and can silently disable tools or mislead the model about what it is allowed to call.
-    Fix policy: validate mode/allowlist combinations in `build()` and fail fast on contradictory or empty configurations. If a mode requires a non-empty allowlist, enforce that requirement explicitly.
-
-29. **Low: `ThinkingConfig` always serializes a hard-coded default budget.**  
-    `thinkingBudget` defaults to `1024` and is annotated with `@EncodeDefault(EncodeDefault.Mode.ALWAYS)`, so omitting the field still sends the budget on every request (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/ThinkingConfig.kt:20-29`). That means callers cannot distinguish “use the server/model default” from “use 1024”, and the library may silently change latency or token usage even when the caller did not intend to set a budget.
-    Fix policy: only serialize the field when the caller sets it intentionally, or document the default as an explicit library policy rather than a silent fallback. Keep default budgets configurable at the request layer, not hard-coded into the serialized model.
-
-30. **Medium: `PromptFeedback` cannot represent feedback-less responses.**  
-    `PromptFeedback` requires a non-null `safetyRatings` list, and the builder always constructs one even if no ratings were added (`src/commonMain/kotlin/io/github/ugaikit/gemini4kt/PromptFeedback.kt:17-42`). If the API returns prompt feedback without safety ratings, or omits the object in a sparse/blocked response, deserialization can fail before the caller can inspect the rest of the response.
-    Fix policy: make `safetyRatings` nullable or default it to an empty list if the API allows absent feedback, and ensure the response model can represent sparse or blocked cases without throwing during parsing.
+1. Live WebSocket backpressure and error propagation (`#5`)
+2. Image payload availability on non-JVM targets (`#6`)
+3. Upload robustness (`#12`, `#24`)
+4. DSL/builders validation for one-of and required fields (`#11`, `#14`, `#16`, `#27`, `#28`)
+5. API response shape hardening (`#15`, `#30`)

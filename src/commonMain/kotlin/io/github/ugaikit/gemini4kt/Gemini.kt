@@ -2,7 +2,6 @@ package io.github.ugaikit.gemini4kt
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -12,8 +11,8 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.utils.io.readLine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -41,6 +40,10 @@ class Gemini(
     private val client: HttpClient? = null,
     private val fileUploadProvider: FileUploadProvider? = null,
 ) {
+    init {
+        require(apiKey.isNotBlank()) { "apiKey must not be blank." }
+    }
+
     /**
      * Executes Gemini function-calling turns automatically until the model
      * returns a non-function-call response.
@@ -136,6 +139,11 @@ class Gemini(
     private val httpClient = client ?: createHttpClient(json)
 
     /**
+     * Tracks whether this instance owns the HTTP client and should close it.
+     */
+    private val ownsHttpClient = client == null
+
+    /**
      * Holds the provider.
      */
     private val provider: FileUploadProvider = fileUploadProvider ?: FileUploadProvider(apiKey, httpClient, json)
@@ -149,10 +157,6 @@ class Gemini(
      * Holds the base url.
      */
     private val baseUrl = "$bUrl/models"
-
-    companion object {
-        private const val PREVIEW_LENGTH = 100
-    }
 
     /**
      * Generates content based on the provided input JSON using a specified model.
@@ -192,20 +196,8 @@ class Gemini(
                         setBody(json.encodeToString<GenerateContentRequest>(inputJson))
                     }
 
-                if (response.status != HttpStatusCode.OK) {
-                    logger.error { "Error: ${response.status}" }
-                    val errorMsg = response.bodyAsText()
-                    logger.error { "Error Message: $errorMsg" }
-                    try {
-                        val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
-                        throw GeminiException(errorResponse.error)
-                    } catch (e: GeminiException) {
-                        throw e
-                    } catch (e: SerializationException) {
-                        logger.error { "Failed to parse error message: ${e.message}" }
-                    } catch (e: IllegalArgumentException) {
-                        logger.error { "Failed to parse error message: ${e.message}" }
-                    }
+                if (!response.status.isSuccess()) {
+                    throwApiException(response)
                 } else {
                     val channel = response.bodyAsChannel()
                     while (!channel.isClosedForRead) {
@@ -222,7 +214,6 @@ class Gemini(
                     }
                 }
             } catch (e: Exception) {
-                logger.error { "Stream error: ${e.message}" }
                 throw e
             }
         }
@@ -298,7 +289,6 @@ class Gemini(
         model: String = "gemini-2.0-flash-lite",
     ): TotalTokens {
         val urlString = "$baseUrl/$model:countTokens"
-        println(inputJson)
         return json.decodeFromString<TotalTokens>(
             getContent(urlString, json.encodeToString<CountTokensRequest>(inputJson)),
         )
@@ -371,49 +361,26 @@ class Gemini(
         urlStr: String,
         inputJson: String? = null,
     ): String =
-        try {
-            logger.info { inputJson }
+        with(httpClient) {
             val response: HttpResponse =
                 if (inputJson == null) {
-                    httpClient.get(urlStr) {
+                    get(urlStr) {
                         header("x-goog-api-key", apiKey)
                         header("Content-Type", "application/json")
                     }
                 } else {
-                    httpClient.post(urlStr) {
+                    post(urlStr) {
                         header("x-goog-api-key", apiKey)
                         contentType(ContentType.Application.Json)
                         setBody(inputJson)
                     }
                 }
 
-            if (response.status != HttpStatusCode.OK) {
-                logger.error { "Error: ${response.status}" }
-                val errorMsg = response.bodyAsText()
-                logger.error { "Error Message: $errorMsg" }
-                try {
-                    val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
-                    throw GeminiException(errorResponse.error)
-                } catch (e: GeminiException) {
-                    throw e
-                } catch (e: SerializationException) {
-                    logger.error { "Failed to parse error message: ${e.message}" }
-                } catch (e: IllegalArgumentException) {
-                    logger.error { "Failed to parse error message: ${e.message}" }
-                }
-                "{}"
-            } else {
-                logger.info { "GenerateContentResponse Code: ${response.status}" }
-                val txt = response.bodyAsText()
-                logger.debug { "Content length: ${txt.length}" }
-                logger.debug { "Content preview: ${txt.take(PREVIEW_LENGTH)}" }
-                logger.trace { "Content : $txt" }
-                txt
+            if (!response.status.isSuccess()) {
+                throwApiException(response)
             }
-        } catch (e: ClientRequestException) {
-            // Catch Ktor specific exceptions if needed
-            logger.error { "Client Request Exception: ${e.message}" }
-            throw e
+
+            response.bodyAsText()
         }
 
     /**
@@ -422,19 +389,45 @@ class Gemini(
      * @param urlStr The URL string where the DELETE request is sent.
      */
     suspend fun deleteContent(urlStr: String) {
-        try {
-            val response =
-                httpClient.delete(urlStr) {
-                    header("x-goog-api-key", apiKey)
-                }
-            if (response.status != HttpStatusCode.OK) {
-                logger.error { "Error: ${response.status}" }
-                val msg = response.bodyAsText()
-                logger.error { "Error Message: $msg" }
+        val response =
+            httpClient.delete(urlStr) {
+                header("x-goog-api-key", apiKey)
             }
-            logger.info { "GenerateContentResponse Code: ${response.status}" }
-        } catch (e: Exception) {
-            logger.error { e.message }
+        if (!response.status.isSuccess()) {
+            throwApiException(response)
+        }
+    }
+
+    private suspend fun throwApiException(response: HttpResponse): Nothing {
+        val errorMsg = response.bodyAsText()
+        try {
+            val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
+            throw GeminiException(errorResponse.error)
+        } catch (e: GeminiException) {
+            throw e
+        } catch (_: SerializationException) {
+            throw GeminiException(fallbackError(response, errorMsg))
+        } catch (_: IllegalArgumentException) {
+            throw GeminiException(fallbackError(response, errorMsg))
+        }
+    }
+
+    private fun fallbackError(
+        response: HttpResponse,
+        errorMsg: String,
+    ): GeminiError =
+        GeminiError(
+            code = response.status.value,
+            message = errorMsg.ifBlank { response.status.description },
+            status = response.status.description.ifBlank { response.status.value.toString() },
+        )
+
+    /**
+     * Closes the owned HTTP client, if this instance created one.
+     */
+    fun close() {
+        if (ownsHttpClient) {
+            httpClient.close()
         }
     }
 }

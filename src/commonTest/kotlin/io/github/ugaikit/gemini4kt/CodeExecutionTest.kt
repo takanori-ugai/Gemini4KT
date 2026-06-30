@@ -4,6 +4,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * Represents the code execution test.
@@ -119,8 +120,7 @@ class CodeExecutionTest {
      */
     @Test
     fun testPartWithTextAndCodeExecutionResultSerialization() {
-        // Just checking multiple fields
-        val part =
+        assertFailsWith<IllegalArgumentException> {
             part {
                 text { "Result:" }
                 codeExecutionResult {
@@ -128,11 +128,6 @@ class CodeExecutionTest {
                     output { "hello" }
                 }
             }
-        val encoded = json.encodeToString(part)
-        // Order of keys might vary depending on serialization, but kotlin serialization usually
-        // preserves definition order defined in class: text, inlineData, functionCall,
-        // functionResponse, fileData, executableCode, codeExecutionResult
-        val expected = """{"text":"Result:","codeExecutionResult":{"outcome":"OUTCOME_OK","output":"hello"}}"""
-        assertEquals(expected, encoded)
+        }
     }
 }

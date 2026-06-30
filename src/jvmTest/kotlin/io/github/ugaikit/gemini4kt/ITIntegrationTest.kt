@@ -1,7 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
 import io.ktor.client.plugins.HttpRequestTimeoutException
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -38,7 +38,16 @@ class ITIntegrationTest {
     }
 
     private fun handleQuotaError(error: GeminiException): Nothing {
-        if (error.error.code == httpTooManyRequests || error.error.status == "RESOURCE_EXHAUSTED") {
+        val isQuotaError =
+            error.error.code == httpTooManyRequests || error.error.status == "RESOURCE_EXHAUSTED"
+        val isTransientError =
+            error.error.code >= 500 ||
+                error.error.status == "INTERNAL" ||
+                error.error.status == "UNAVAILABLE" ||
+                error.error.status == "DEADLINE_EXCEEDED" ||
+                error.message?.contains("internal error", ignoreCase = true) == true ||
+                error.message?.contains("unavailable", ignoreCase = true) == true
+        if (isQuotaError || isTransientError) {
             Assumptions.assumeTrue(false, "Skipping integration test due to quota exhaustion: ${error.error.message}")
         }
         throw error
@@ -51,22 +60,22 @@ class ITIntegrationTest {
 
     @Test
     fun testContentAndEmbeddingApis() =
-        runTest {
+        runBlocking {
             val apiKey = getApiKey()
             Assumptions.assumeTrue(!apiKey.isNullOrEmpty(), "API key not found. Skipping integration test.")
 
             val gemini = Gemini(apiKey!!)
-            val text = "Write a story about a magic backpack."
-            val inputJson =
-                generateContentRequest {
-                    content { part { text { text } } }
-                    safetySetting {
-                        category = HarmCategory.HARM_CATEGORY_HARASSMENT
-                        threshold = Threshold.BLOCK_ONLY_HIGH
-                    }
-                }
-
             try {
+                val text = "Write a story about a magic backpack."
+                val inputJson =
+                    generateContentRequest {
+                        content { part { text { text } } }
+                        safetySetting {
+                            category = HarmCategory.HARM_CATEGORY_HARASSMENT
+                            threshold = Threshold.BLOCK_ONLY_HIGH
+                        }
+                    }
+
                 val response = gemini.generateContent(inputJson, model = model)
                 val textPart =
                     response.candidates
@@ -111,12 +120,14 @@ class ITIntegrationTest {
                 handleQuotaError(error)
             } catch (error: HttpRequestTimeoutException) {
                 handleRequestTimeout(error)
+            } finally {
+                gemini.close()
             }
         }
 
     @Test
     fun testModelsAndMultimodalGeneration() =
-        runTest {
+        runBlocking {
             val apiKey = getApiKey()
             Assumptions.assumeTrue(!apiKey.isNullOrEmpty(), "API key not found. Skipping integration test.")
 
@@ -162,12 +173,14 @@ class ITIntegrationTest {
                 handleQuotaError(error)
             } catch (error: HttpRequestTimeoutException) {
                 handleRequestTimeout(error)
+            } finally {
+                gemini.close()
             }
         }
 
     @Test
     fun testFunctionCallingFirstTurn() =
-        runTest {
+        runBlocking {
             val apiKey = getApiKey()
             Assumptions.assumeTrue(!apiKey.isNullOrEmpty(), "API key not found. Skipping integration test.")
 
@@ -201,12 +214,14 @@ class ITIntegrationTest {
                 handleQuotaError(error)
             } catch (error: HttpRequestTimeoutException) {
                 handleRequestTimeout(error)
+            } finally {
+                gemini.close()
             }
         }
 
     @Test
     fun testFunctionCallingSecondTurnWithAllModelParts() =
-        runTest {
+        runBlocking {
             val apiKey = getApiKey()
             Assumptions.assumeTrue(!apiKey.isNullOrEmpty(), "API key not found. Skipping integration test.")
 
@@ -288,6 +303,8 @@ class ITIntegrationTest {
                 handleQuotaError(error)
             } catch (error: HttpRequestTimeoutException) {
                 handleRequestTimeout(error)
+            } finally {
+                gemini.close()
             }
         }
 

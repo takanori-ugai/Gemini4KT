@@ -107,7 +107,11 @@ class SpeechConfigBuilder {
         SpeechConfig(
             voiceConfig = voiceConfig,
             multiSpeakerVoiceConfig = multiSpeakerVoiceConfig,
-        )
+        ).also {
+            require(listOfNotNull(voiceConfig, multiSpeakerVoiceConfig).size <= 1) {
+                "SpeechConfigBuilder supports only one voice configuration at a time."
+            }
+        }
 }
 
 /**
@@ -134,7 +138,11 @@ class VoiceConfigBuilder {
     fun build() =
         VoiceConfig(
             prebuiltVoiceConfig = prebuiltVoiceConfig,
-        )
+        ).also {
+            require(listOfNotNull(prebuiltVoiceConfig).size <= 1) {
+                "VoiceConfigBuilder supports only one voice configuration at a time."
+            }
+        }
 }
 
 /**
@@ -161,7 +169,11 @@ class PrebuiltVoiceConfigBuilder {
     fun build() =
         PrebuiltVoiceConfig(
             voiceName = voiceName,
-        )
+        ).also {
+            require(listOfNotNull(voiceName).size <= 1) {
+                "PrebuiltVoiceConfigBuilder supports only one property at a time."
+            }
+        }
 }
 
 /**

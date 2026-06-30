@@ -32,7 +32,7 @@ class ComputerUseBuilder {
     /**
      * Holds the excluded predefined functions.
      */
-    private var excludedPredefinedFunctions: MutableList<String> = mutableListOf()
+    private val excludedPredefinedFunctions: MutableList<String> = mutableListOf()
 
     /**
      * Handles excluded predefined function.

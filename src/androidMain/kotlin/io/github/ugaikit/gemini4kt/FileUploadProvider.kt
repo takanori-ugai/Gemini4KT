@@ -14,7 +14,6 @@ import io.ktor.util.cio.readChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -29,7 +28,7 @@ import java.io.IOException
  *
  * @property file The file.
  */
-@Serializable
+@kotlinx.serialization.Serializable
 private data class FileWrapper(
     val file: GeminiFile,
 )
@@ -46,6 +45,10 @@ actual class FileUploadProvider actual constructor(
     private val client: HttpClient?,
     private val json: Json,
 ) {
+    init {
+        require(apiKey.isNotBlank()) { "apiKey must not be blank." }
+    }
+
     /**
      * Holds the http client.
      */
@@ -122,7 +125,7 @@ actual class FileUploadProvider actual constructor(
                     header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
                     header("X-Goog-Upload-Header-Content-Type", mimeType)
                     contentType(ContentType.Application.Json)
-                    setBody("""{ "file" : { "displayName" : "$displayName" }}""")
+                    setBody(json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))))
                 }
 
             if (response.status != HttpStatusCode.OK) {

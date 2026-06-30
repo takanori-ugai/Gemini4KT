@@ -654,15 +654,19 @@ private fun testPartBuilder() {
     /**
      * Holds the example part.
      */
-    val examplePart =
+    val textPart =
         part {
             text { "This is an example text." }
+        }
+    val inlineDataPart =
+        part {
             inlineData {
                 mimeType { "text/plain" }
                 data { "This is an example inline data." }
             }
         }
-    println(examplePart)
+    println(textPart)
+    println(inlineDataPart)
 }
 
 /**

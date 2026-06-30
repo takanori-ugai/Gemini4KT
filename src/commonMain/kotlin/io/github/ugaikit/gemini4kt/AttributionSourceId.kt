@@ -57,7 +57,12 @@ class AttributionSourceIdBuilder {
     /**
      * Handles build.
      */
-    fun build() = AttributionSourceId(groundingPassage, semanticRetrieverChunk)
+    fun build() =
+        AttributionSourceId(groundingPassage, semanticRetrieverChunk).also {
+            require(listOfNotNull(groundingPassage, semanticRetrieverChunk).size <= 1) {
+                "AttributionSourceIdBuilder supports only one attribution source at a time."
+            }
+        }
 }
 
 /**

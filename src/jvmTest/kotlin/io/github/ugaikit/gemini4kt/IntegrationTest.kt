@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonPrimitive
@@ -40,23 +41,15 @@ class IntegrationTest {
     private val liveAudioSampleSizeInBits = 16
 
     private fun isSkippableLiveApiError(error: Throwable): Boolean {
-        var current: Throwable? = error
-        while (current != null) {
-            if (current is TimeoutCancellationException) {
-                return true
+        val skippable =
+            generateSequence(error) { it.cause }.any { current ->
+                current is TimeoutCancellationException ||
+                    current.message.orEmpty().contains("Timed out", ignoreCase = true) ||
+                    current.message.orEmpty().contains("SetupComplete", ignoreCase = true) ||
+                    current.message.orEmpty().contains("too_many_requests", ignoreCase = true) ||
+                    current.message.orEmpty().contains("RESOURCE_EXHAUSTED", ignoreCase = true)
             }
-            val message = current.message.orEmpty()
-            if (
-                message.contains("Timed out", ignoreCase = true) ||
-                message.contains("SetupComplete", ignoreCase = true) ||
-                message.contains("too_many_requests", ignoreCase = true) ||
-                message.contains("RESOURCE_EXHAUSTED", ignoreCase = true)
-            ) {
-                return true
-            }
-            current = current.cause
-        }
-        return false
+        return skippable
     }
 
     private fun getApiKey(): String? {
@@ -151,7 +144,7 @@ class IntegrationTest {
      */
     @Test
     fun testLiveAPI() =
-        runTest {
+        runBlocking {
             val apiKey = getApiKey()
             Assumptions.assumeTrue(!apiKey.isNullOrEmpty(), "API key not found. Skipping Live API integration test.")
 
