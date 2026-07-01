@@ -34,7 +34,7 @@ actual class FileUploadProvider actual constructor(
     /**
      * Holds the fs.
      */
-    private val fs: dynamic by lazy { loadNodeFs() }
+    private val fs: dynamic by lazy { NodeFs }
 
     /**
      * Handles upload.
@@ -121,30 +121,5 @@ actual class FileUploadProvider actual constructor(
         } catch (e: dynamic) {
             throw IOException("Failed to read file $path: $e")
         }
-    }
-
-    /**
-     * Loads the Node.js fs module when available.
-     */
-    private fun loadNodeFs(): dynamic {
-        val module =
-            js(
-                """(function() {
-                  if (typeof process === 'undefined' || process == null || !process.versions || !process.versions.node) {
-                    return null;
-                  }
-                  if (typeof require === 'function') {
-                    return require('node:fs');
-                  }
-                  if (typeof module !== 'undefined' && typeof module.require === 'function') {
-                    return module.require('node:fs');
-                  }
-                  return null;
-                })()""",
-            )
-        if (module == null) {
-            throw IOException("File upload is only supported in a Node.js environment.")
-        }
-        return module
     }
 }
