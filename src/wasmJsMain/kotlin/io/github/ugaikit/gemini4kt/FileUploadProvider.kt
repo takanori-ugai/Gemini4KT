@@ -131,8 +131,11 @@ actual class FileUploadProvider actual constructor(
      */
     private fun readFile(path: String): ByteArray {
         try {
-            val source = fs.readFileSync(path)
-            return source.unsafeCast<ByteArray>()
+            val buffer = fs.readFileSync(path)
+            val length = buffer.length as Int
+            return ByteArray(length) { index ->
+                (buffer[index] as Int).toByte()
+            }
         } catch (e: dynamic) {
             throw IOException("Failed to read file $path", e)
         }

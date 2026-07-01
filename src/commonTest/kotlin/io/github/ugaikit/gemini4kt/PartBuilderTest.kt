@@ -109,6 +109,9 @@ class PartBuilderTest {
         assertEquals("image/png", fileData.mimeType)
     }
 
+    /**
+     * Handles build rejection when multiple primary payloads are set.
+     */
     @Test
     fun buildRejectsMultiplePrimaryPayloads() {
         assertFailsWith<IllegalArgumentException> {

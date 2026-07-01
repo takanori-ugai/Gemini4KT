@@ -278,7 +278,6 @@ class PartBuilder {
                     codeExecutionResult,
                     toolCall,
                     toolResponse,
-                    videoMetadata,
                 ).size
             require(activePayloadCount <= 1) {
                 "Part builders support only one primary payload field at a time."

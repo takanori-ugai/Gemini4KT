@@ -4,7 +4,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 /**
@@ -129,46 +128,30 @@ class ToolBuilderTest {
     }
 
     @Test
-    fun testToolBuilderRejectsMultiplePrimaryConfigurations() {
-        assertFailsWith<IllegalArgumentException> {
+    fun testToolBuilderAllowsMultipleConfigurations() {
+        val tool =
             tool {
+                functionDeclaration {
+                    name = "lookupWeather"
+                    description = "Look up weather by city"
+                    parameters {
+                        type = "object"
+                        property("city") {
+                            type = "string"
+                        }
+                        required("city")
+                    }
+                }
                 googleSearch {
                     timeRangeFilter = Interval(startTime = "2026-01-01T00:00:00Z", endTime = "2026-01-31T00:00:00Z")
                     searchTypes = SearchTypes(webSearch = WebSearch(), imageSearch = ImageSearch())
                 }
-                fileSearch {
-                    fileSearchStoreName("store-a")
-                    metadataFilter("author=alice")
-                }
-                googleSearchRetrieval(
-                    GoogleSearchRetrieval(
-                        dynamicRetrievalConfig =
-                            DynamicRetrievalConfig(
-                                mode = DynamicRetrievalMode.MODE_DYNAMIC,
-                                dynamicThreshold = 0.5,
-                            ),
-                    ),
-                )
-                computerUse {
-                    environment = Environment.ENVIRONMENT_BROWSER
-                    excludedPredefinedFunction("CLICK")
-                }
-                mcpServer(
-                    McpServer(
-                        name = "mcp-server",
-                        streamableHttpTransport =
-                            StreamableHttpTransport(
-                                url = "https://mcp.example.com",
-                                headers = mapOf("Authorization" to "Bearer token"),
-                                timeout = "30s",
-                                sseReadTimeout = "120s",
-                                terminateOnClose = true,
-                            ),
-                    ),
-                )
-                googleMaps(GoogleMaps(enableWidget = true))
+                codeExecution()
             }
-        }
+
+        assertEquals(1, tool.functionDeclarations!!.size)
+        assertNotNull(tool.googleSearch)
+        assertNotNull(tool.codeExecution)
     }
 
     @Test
@@ -193,6 +176,8 @@ class ToolBuilderTest {
         assertNotNull(decoded.googleSearch)
         assertEquals("2026-01-01T00:00:00Z", decoded.googleSearch?.timeRangeFilter?.startTime)
         assertEquals("2026-01-31T00:00:00Z", decoded.googleSearch?.timeRangeFilter?.endTime)
+        assertNotNull(decoded.googleSearch?.searchTypes?.webSearch)
+        assertNotNull(decoded.googleSearch?.searchTypes?.imageSearch)
     }
 
     @Test

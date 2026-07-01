@@ -102,18 +102,13 @@ class AutomaticFunctionCallingJvmTest {
     @Test
     fun handlerRejectsExtensionFunctionInvocation() =
         runTest {
-            val binding = buildAutomaticFunctionBinding(arrayOf(String::extensionEcho))
-            val handler = binding.handlers.getValue("extensionEcho")
             val exception =
                 assertFailsWith<IllegalArgumentException> {
-                    handler(
-                        FunctionCall(
-                            name = "extensionEcho",
-                            args = mapOf("suffix" to JsonPrimitive("x")),
-                        ),
-                    )
+                    buildAutomaticFunctionBinding(arrayOf(String::extensionEcho))
                 }
-            assertTrue(exception.message?.isNotBlank() == true)
+            assertTrue(
+                exception.message?.contains("Extension functions are not supported for automatic binding") == true,
+            )
         }
 
     @Test

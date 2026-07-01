@@ -29,7 +29,7 @@ object ComputerUseSample {
                         InteractionTool(
                             type = "computer_use",
                             environment = "browser",
-                            excludedPredefinedFunctions = arrayOf("CLICK"),
+                            excludedPredefinedFunctions = listOf("CLICK"),
                         ),
                     ),
             )

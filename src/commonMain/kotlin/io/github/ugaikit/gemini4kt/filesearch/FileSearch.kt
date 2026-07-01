@@ -46,6 +46,11 @@ class FileSearch(
     private val httpClient = client ?: createHttpClient(json)
 
     /**
+     * Tracks whether this instance owns the HTTP client and should close it.
+     */
+    private val ownsHttpClient = client == null
+
+    /**
      * Holds the b url.
      */
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
@@ -230,4 +235,13 @@ class FileSearch(
             message = errorMsg.ifBlank { response.status.description },
             status = response.status.description.ifBlank { response.status.value.toString() },
         )
+
+    /**
+     * Closes the owned HTTP client, if this instance created one.
+     */
+    fun close() {
+        if (ownsHttpClient) {
+            httpClient.close()
+        }
+    }
 }

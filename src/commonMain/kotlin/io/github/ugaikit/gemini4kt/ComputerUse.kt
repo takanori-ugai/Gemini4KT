@@ -17,7 +17,7 @@ import kotlin.js.JsExport
 data class ComputerUse(
     val environment: Environment? = null,
     @SerialName("excluded_predefined_functions")
-    val excludedPredefinedFunctions: Array<String>? = null,
+    val excludedPredefinedFunctions: List<String>? = null,
 )
 
 /**
@@ -62,7 +62,7 @@ class ComputerUseBuilder {
                 if (excludedPredefinedFunctions.isEmpty()) {
                     null
                 } else {
-                    excludedPredefinedFunctions.toTypedArray()
+                    excludedPredefinedFunctions.toList()
                 },
         )
 }

@@ -140,6 +140,32 @@ class PartTest {
     }
 
     /**
+     * Handles builder usage with file data and video metadata.
+     */
+    @Test
+    fun builderWithFileDataAndVideoMetadata() {
+        val part =
+            part {
+                fileData {
+                    FileData(
+                        mimeType = "video/mp4",
+                        fileUri = "gs://bucket/video.mp4",
+                    )
+                }
+                videoMetadata {
+                    VideoMetadata(
+                        startOffset = "0s",
+                        endOffset = "1.5s",
+                        fps = 24.0,
+                    )
+                }
+            }
+
+        assertEquals("video/mp4", part.fileData?.mimeType)
+        assertEquals("1.5s", part.videoMetadata?.endOffset)
+    }
+
+    /**
      * Handles serialization with thought signature.
      */
     @Test
@@ -233,6 +259,13 @@ class PartTest {
             decoded.toolResponse
                 ?.response
                 ?.get("answer")
+                ?.toString()
+                ?.trim('"'),
+        )
+        assertEquals(
+            "unit-test",
+            decoded.partMetadata
+                ?.get("origin")
                 ?.toString()
                 ?.trim('"'),
         )
