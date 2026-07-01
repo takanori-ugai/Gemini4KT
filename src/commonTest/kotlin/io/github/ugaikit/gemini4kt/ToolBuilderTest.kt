@@ -196,7 +196,7 @@ class ToolBuilderTest {
                                 sseReadTimeout = "120s",
                                 terminateOnClose = true,
                             ),
-                ),
+                    ),
                 )
                 googleMaps(GoogleMaps(enableWidget = true))
             }
