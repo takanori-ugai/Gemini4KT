@@ -11,16 +11,6 @@ import org.khronos.webgl.Int8Array
 import org.khronos.webgl.Uint8Array
 
 /**
- * Represents the file wrapper.
- *
- * @property file The file.
- */
-@kotlinx.serialization.Serializable
-private data class FileWrapper(
-    val file: GeminiFile,
-)
-
-/**
  * Represents the file upload provider.
  *
  * @property apiKey The api key.
