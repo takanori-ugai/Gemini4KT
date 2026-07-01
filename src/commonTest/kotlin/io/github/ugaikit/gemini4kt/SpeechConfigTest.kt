@@ -169,4 +169,39 @@ class SpeechConfigTest {
             }
         }
     }
+
+    @Test
+    fun testSpeechConfigRejectsEmptyBuilder() {
+        assertFailsWith<IllegalArgumentException> {
+            speechConfig {}
+        }
+    }
+
+    @Test
+    fun testVoiceConfigRejectsEmptyBuilder() {
+        assertFailsWith<IllegalArgumentException> {
+            VoiceConfigBuilder().build()
+        }
+    }
+
+    @Test
+    fun testPrebuiltVoiceConfigRejectsEmptyBuilder() {
+        assertFailsWith<IllegalArgumentException> {
+            PrebuiltVoiceConfigBuilder().build()
+        }
+    }
+
+    @Test
+    fun testMultiSpeakerVoiceConfigRejectsEmptyBuilder() {
+        assertFailsWith<IllegalArgumentException> {
+            MultiSpeakerVoiceConfigBuilder().build()
+        }
+    }
+
+    @Test
+    fun testSpeakerVoiceConfigRejectsEmptyBuilder() {
+        assertFailsWith<IllegalArgumentException> {
+            SpeakerVoiceConfigBuilder().build()
+        }
+    }
 }

@@ -172,12 +172,12 @@ class ToolBuilderTest {
 
         val encoded = json.encodeToString(tool)
         val decoded = json.decodeFromString<Tool>(encoded)
+        val googleSearch = checkNotNull(decoded.googleSearch)
 
-        assertNotNull(decoded.googleSearch)
-        assertEquals("2026-01-01T00:00:00Z", decoded.googleSearch?.timeRangeFilter?.startTime)
-        assertEquals("2026-01-31T00:00:00Z", decoded.googleSearch?.timeRangeFilter?.endTime)
-        assertNotNull(decoded.googleSearch?.searchTypes?.webSearch)
-        assertNotNull(decoded.googleSearch?.searchTypes?.imageSearch)
+        assertEquals("2026-01-01T00:00:00Z", googleSearch.timeRangeFilter?.startTime)
+        assertEquals("2026-01-31T00:00:00Z", googleSearch.timeRangeFilter?.endTime)
+        assertNotNull(googleSearch.searchTypes?.webSearch)
+        assertNotNull(googleSearch.searchTypes?.imageSearch)
     }
 
     @Test

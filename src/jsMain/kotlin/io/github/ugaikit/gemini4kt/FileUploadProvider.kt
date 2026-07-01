@@ -3,19 +3,22 @@ package io.github.ugaikit.gemini4kt
 import io.github.ugaikit.gemini4kt.filesearch.Operation
 import io.github.ugaikit.gemini4kt.filesearch.UploadFileSearchStoreRequest
 import io.ktor.client.HttpClient
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
 import kotlinx.io.IOException
 import kotlinx.io.files.Path
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.khronos.webgl.Int8Array
 import org.khronos.webgl.Uint8Array
+import kotlin.js.JsModule
+import kotlin.js.JsNonModule
+
+@JsModule("node:fs")
+@JsNonModule
+external object NodeFs {
+    fun statSync(path: String): dynamic
+
+    fun readFileSync(path: String): dynamic
+}
 
 /**
  * Represents the file wrapper.
@@ -51,7 +54,7 @@ actual class FileUploadProvider actual constructor(
     /**
      * Holds the fs.
      */
-    private val fs: dynamic by lazy { loadNodeFs() }
+    private val fs = NodeFs
 
     /**
      * Handles upload.
@@ -67,8 +70,13 @@ actual class FileUploadProvider actual constructor(
     ): GeminiFile {
         val pathStr = file.toString()
         val fileSize = getFileSize(pathStr)
-        val baseUrl = "https://generativelanguage.googleapis.com"
-        val uploadUrl = getUploadUrl(baseUrl, apiKey, mimeType, displayName, fileSize)
+        val uploadUrl =
+            httpClient.requestResumableUploadUrl(
+                apiKey,
+                mimeType,
+                fileSize,
+                json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))),
+            )
         return uploadFile(uploadUrl, pathStr, mimeType, fileSize)
     }
 
@@ -88,15 +96,13 @@ actual class FileUploadProvider actual constructor(
     ): Operation {
         val pathStr = file.toString()
         val fileSize = getFileSize(pathStr)
-        val baseUrl = "https://generativelanguage.googleapis.com"
         val uploadUrl =
-            getFileSearchStoreUploadUrl(
-                baseUrl,
+            httpClient.requestResumableUploadUrl(
                 apiKey,
-                fileSearchStoreName,
                 mimeType,
                 fileSize,
-                uploadRequest,
+                json.encodeToString(uploadRequest),
+                "upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore",
             )
         return uploadFileToSearchStore(uploadUrl, pathStr, mimeType, fileSize)
     }
@@ -132,89 +138,6 @@ actual class FileUploadProvider actual constructor(
     }
 
     /**
-     * Loads the Node.js fs module when available.
-     */
-    private fun loadNodeFs(): dynamic {
-        val module = js("(typeof require !== 'undefined' && require) ? require('fs') : null")
-        if (module == null) {
-            throw IOException("File upload is only supported in a Node.js environment.")
-        }
-        return module
-    }
-
-    /**
-     * Handles get upload url.
-     *
-     * @param baseUrl The base url.
-     * @param apiKey The api key.
-     * @param mimeType The mime type.
-     * @param displayName The display name.
-     * @param fileSize The file size.
-     */
-    private suspend fun getUploadUrl(
-        baseUrl: String,
-        apiKey: String,
-        mimeType: String,
-        displayName: String,
-        fileSize: Long,
-    ): String {
-        val response =
-            httpClient.post("$baseUrl/upload/v1beta/files") {
-                header("x-goog-api-key", apiKey)
-                header("X-Goog-Upload-Protocol", "resumable")
-                header("X-Goog-Upload-Command", "start")
-                header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
-                header("X-Goog-Upload-Header-Content-Type", mimeType)
-                contentType(ContentType.Application.Json)
-                setBody(json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))))
-            }
-
-        if (response.status != HttpStatusCode.OK) {
-            throw IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
-        }
-
-        return response.headers["X-Goog-Upload-URL"]
-            ?: throw IOException("Upload URL not found in response headers")
-    }
-
-    /**
-     * Handles get file search store upload url.
-     *
-     * @param baseUrl The base url.
-     * @param apiKey The api key.
-     * @param fileSearchStoreName The file search store name.
-     * @param mimeType The mime type.
-     * @param fileSize The file size.
-     * @param uploadRequest The upload request.
-     */
-    private suspend fun getFileSearchStoreUploadUrl(
-        baseUrl: String,
-        apiKey: String,
-        fileSearchStoreName: String,
-        mimeType: String,
-        fileSize: Long,
-        uploadRequest: UploadFileSearchStoreRequest,
-    ): String {
-        val response =
-            httpClient.post("$baseUrl/upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore") {
-                header("x-goog-api-key", apiKey)
-                header("X-Goog-Upload-Protocol", "resumable")
-                header("X-Goog-Upload-Command", "start")
-                header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
-                header("X-Goog-Upload-Header-Content-Type", mimeType)
-                contentType(ContentType.Application.Json)
-                setBody(json.encodeToString(uploadRequest))
-            }
-
-        if (response.status != HttpStatusCode.OK) {
-            throw IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
-        }
-
-        return response.headers["X-Goog-Upload-URL"]
-            ?: throw IOException("Upload URL not found in response headers")
-    }
-
-    /**
      * Handles upload file.
      *
      * @param uploadUrl The upload url.
@@ -229,22 +152,16 @@ actual class FileUploadProvider actual constructor(
         fileSize: Long,
     ): GeminiFile {
         val fileContent = readFile(path)
-
-        val response =
-            httpClient.post(uploadUrl) {
-                header("Content-Length", fileSize.toString())
-                header("X-Goog-Upload-Offset", "0")
-                header("X-Goog-Upload-Command", "upload, finalize")
-                contentType(ContentType.parse(mimeType))
-                setBody(fileContent)
-            }
-
-        if (response.status != HttpStatusCode.OK) {
-            throw IOException("Failed to upload file: ${response.status} ${response.bodyAsText()}")
-        }
-
-        val responseText = response.bodyAsText()
-        return json.decodeFromString<FileWrapper>(responseText).file
+        val uploadResponse =
+            httpClient.performResumableUploadAndDecode<FileWrapper>(
+                uploadUrl,
+                mimeType,
+                fileSize,
+                fileContent,
+                json,
+            )
+        val file = uploadResponse.file
+        return file
     }
 
     /**
@@ -262,21 +179,13 @@ actual class FileUploadProvider actual constructor(
         fileSize: Long,
     ): Operation {
         val fileContent = readFile(path)
-
-        val response =
-            httpClient.post(uploadUrl) {
-                header("Content-Length", fileSize.toString())
-                header("X-Goog-Upload-Offset", "0")
-                header("X-Goog-Upload-Command", "upload, finalize")
-                contentType(ContentType.parse(mimeType))
-                setBody(fileContent)
-            }
-
-        if (response.status != HttpStatusCode.OK) {
-            throw IOException("Failed to upload file: ${response.status} ${response.bodyAsText()}")
-        }
-
-        val responseText = response.bodyAsText()
-        return json.decodeFromString<Operation>(responseText)
+        return httpClient
+            .performResumableUploadAndDecode(
+                uploadUrl,
+                mimeType,
+                fileSize,
+                fileContent,
+                json,
+            )
     }
 }
