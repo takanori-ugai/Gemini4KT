@@ -46,11 +46,11 @@ Status keys:
     Finding: Automatic schemas and reflection binders only support primitives, collections, maps with String keys, and raw JsonElements. Complex types, enums, or nested data structures fail with an `IllegalArgumentException` during function registration.  
     Recommendation: Support enums and nested serialization or document supported signatures.
 
-14. **High - One-of protocol shapes not enforced in builders**  
-    Status: `Confirmed`  
-    Evidence: [Part.kt:69-269](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Part.kt#L69-L269), [Tool.kt:46-190](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Tool.kt#L46-L190), [SpeechConfig.kt:74-110](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/SpeechConfig.kt#L74-L110), [AttributionSourceId.kt:28-60](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/AttributionSourceId.kt#L28-L60)  
-    Finding: Models representing mutually exclusive one-of properties (like `Part` and `Tool`) allow setting multiple or zero fields in their builders. The API will subsequently reject these requests.  
-    Recommendation: Validate one-of invariants in `build()` and throw descriptive errors when violated.
+14. **High - `Tool` one-of protocol shape not enforced in builder**  
+    Status: `Partially confirmed`  
+    Evidence: [Tool.kt:46-190](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Tool.kt#L46-L190)  
+    Finding: `ToolBuilder` still allows multiple or zero tool configuration blocks, so the API can receive invalid mutually exclusive tool combinations. The `Part`, `SpeechConfig`, and `AttributionSourceId` builders now enforce their one-of invariants, so the original finding is narrower than the note implied.  
+    Recommendation: Add validation to `ToolBuilder.build()` and reject invalid combinations before serialization.
 
 15. **Medium - `GenerateContentResponse` strictness + first-candidate helpers**  
     Status: `Confirmed in code (API-dependent impact)`  
@@ -178,12 +178,6 @@ Status keys:
     Finding: The JS surface builds nearly identical single-prompt requests and then repeats the same first-candidate/first-part text extraction in multiple entry points. That duplication is mostly harmless at runtime, but it makes the exported API harder to maintain and spreads the same response-shaping logic across three places.  
     Recommendation: Route the exported JS helpers through a shared internal function that constructs the prompt request once and centralizes the “return the first text part” logic.
 
-41. **Low - Resumable file upload flow is copy-pasted across platform implementations**  
-    Status: `Confirmed`  
-    Evidence: [GeminiExtensions.kt:34-226](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/GeminiExtensions.kt#L34-L226), [FileUploadProvider.kt:37-281 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L37-L281), [FileUploadProvider.kt:35-280 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L35-L280), [FileUploadProvider.kt:42-215 (Native)](file:///home/ugai/Gemini4KT/src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L42-L215)  
-    Finding: The JVM, JS, Wasm, and Native implementations all repeat the same resumable-upload choreography: resolve file size, request an upload URL with the same headers, verify `HttpStatusCode.OK`, upload with finalize headers, and decode either `GeminiFile` or `Operation`. Only the file access layer changes (`java.io.File`, Node `fs`, Okio `SystemFileSystem`), so any protocol change must be duplicated in four places.  
-    Recommendation: Extract the shared request/response choreography into a common internal helper and keep only the file-size/read adapters platform-specific.
-
 42. **Low - HTTP client setup repeats the same Ktor plugin wiring on every target**  
     Status: `Confirmed`  
     Evidence: [HttpClient.kt:15-23 (JVM)](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [HttpClient.kt:15-23 (Android)](file:///home/ugai/Gemini4KT/src/androidMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [HttpClient.kt:15-23 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [HttpClient.kt:15-23 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [Platform.kt:22-30 (Native)](file:///home/ugai/Gemini4KT/src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L22-L30)  
@@ -200,8 +194,8 @@ Status keys:
 
 ## Investigation Summary
 
-- Confirmed: 28
-- Partially confirmed: 1 (`#12`)
+- Confirmed: 27
+- Partially confirmed: 2 (`#12`, `#14`)
 - Confirmed in code but API-response-dependent impact: 2 (`#15`, `#30`)
 
 ## Most Actionable First Fixes
