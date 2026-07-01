@@ -14,6 +14,8 @@ import kotlinx.io.IOException
 import kotlinx.io.files.Path
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.khronos.webgl.Int8Array
+import org.khronos.webgl.Uint8Array
 
 /**
  * Represents the file wrapper.
@@ -121,10 +123,9 @@ actual class FileUploadProvider actual constructor(
     private fun readFile(path: String): ByteArray {
         try {
             val buffer = fs.readFileSync(path)
-            val length = buffer.length as Int
-            return ByteArray(length) { index ->
-                (buffer[index] as Int).toByte()
-            }
+            val uint8Array = buffer.unsafeCast<Uint8Array>()
+            val int8Array = Int8Array(uint8Array.buffer, uint8Array.byteOffset, uint8Array.length)
+            return int8Array.unsafeCast<ByteArray>()
         } catch (e: dynamic) {
             throw IOException("Failed to read file $path: $e")
         }

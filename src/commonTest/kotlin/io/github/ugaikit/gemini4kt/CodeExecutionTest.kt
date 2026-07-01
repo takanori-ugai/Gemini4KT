@@ -116,10 +116,10 @@ class CodeExecutionTest {
     }
 
     /**
-     * Tests test part with text and code execution result serialization.
+     * Tests that combining text with code execution result is rejected by the builder.
      */
     @Test
-    fun testPartWithTextAndCodeExecutionResultSerialization() {
+    fun testPartWithTextAndCodeExecutionResultRejected() {
         assertFailsWith<IllegalArgumentException> {
             part {
                 text { "Result:" }

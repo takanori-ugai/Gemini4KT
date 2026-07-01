@@ -651,9 +651,6 @@ private suspend fun testAutomaticFunctionCalling(
  */
 private fun testPartBuilder() {
     println("--- testPartBuilder ---")
-    /**
-     * Holds the example part.
-     */
     val textPart =
         part {
             text { "This is an example text." }

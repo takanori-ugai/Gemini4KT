@@ -62,7 +62,7 @@ class ITIntegrationTest {
     fun testContentAndEmbeddingApis() =
         runBlocking {
             val apiKey = getApiKey()
-            Assumptions.assumeTrue(!apiKey.isNullOrEmpty(), "API key not found. Skipping integration test.")
+            Assumptions.assumeTrue(!apiKey.isNullOrBlank(), "API key not found. Skipping integration test.")
 
             val gemini = Gemini(apiKey!!)
             try {
@@ -129,7 +129,7 @@ class ITIntegrationTest {
     fun testModelsAndMultimodalGeneration() =
         runBlocking {
             val apiKey = getApiKey()
-            Assumptions.assumeTrue(!apiKey.isNullOrEmpty(), "API key not found. Skipping integration test.")
+            Assumptions.assumeTrue(!apiKey.isNullOrBlank(), "API key not found. Skipping integration test.")
 
             val gemini = Gemini(apiKey!!)
             try {
@@ -182,7 +182,7 @@ class ITIntegrationTest {
     fun testFunctionCallingFirstTurn() =
         runBlocking {
             val apiKey = getApiKey()
-            Assumptions.assumeTrue(!apiKey.isNullOrEmpty(), "API key not found. Skipping integration test.")
+            Assumptions.assumeTrue(!apiKey.isNullOrBlank(), "API key not found. Skipping integration test.")
 
             val gemini = Gemini(apiKey!!)
             val tools = defineFunctionTools()
@@ -223,7 +223,7 @@ class ITIntegrationTest {
     fun testFunctionCallingSecondTurnWithAllModelParts() =
         runBlocking {
             val apiKey = getApiKey()
-            Assumptions.assumeTrue(!apiKey.isNullOrEmpty(), "API key not found. Skipping integration test.")
+            Assumptions.assumeTrue(!apiKey.isNullOrBlank(), "API key not found. Skipping integration test.")
 
             val gemini = Gemini(apiKey!!)
             val tools = defineFunctionTools()

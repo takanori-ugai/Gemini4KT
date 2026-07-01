@@ -41,6 +41,10 @@ fun buildFunctionTools(vararg functions: KFunction<*>): Array<Tool> {
  */
 actual fun buildAutomaticFunctionBinding(functions: Array<out KFunction<*>>): AutomaticFunctionBinding {
     require(functions.isNotEmpty()) { "At least one function is required." }
+    val extensionFunctions = functions.filter(::hasExtensionReceiver).map { it.name }
+    require(extensionFunctions.isEmpty()) {
+        "Extension functions are not supported for automatic binding: ${extensionFunctions.joinToString(", ")}."
+    }
     val duplicateNames =
         functions
             .groupingBy { it.name }
@@ -71,9 +75,6 @@ private suspend fun invokeBoundFunction(
     }
     require(function.instanceParameter == null) {
         "Only top-level or bound functions are supported: '${function.name}'."
-    }
-    require(!hasExtensionReceiver(function)) {
-        "Extension functions are not supported for automatic binding: '${function.name}'."
     }
 
     val arguments = mutableMapOf<KParameter, Any?>()
