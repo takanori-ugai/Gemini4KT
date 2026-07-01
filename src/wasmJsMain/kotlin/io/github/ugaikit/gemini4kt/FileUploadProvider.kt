@@ -95,7 +95,21 @@ actual class FileUploadProvider actual constructor(
      * Loads Node.js fs when available.
      */
     private fun loadNodeFs(): dynamic {
-        val module = js("(typeof require !== 'undefined' && require) ? require('fs') : null")
+        val module =
+            js(
+                """(function() {
+                  if (typeof process === 'undefined' || process == null || !process.versions || !process.versions.node) {
+                    return null;
+                  }
+                  if (typeof require === 'function') {
+                    return require('node:fs');
+                  }
+                  if (typeof module !== 'undefined' && typeof module.require === 'function') {
+                    return module.require('node:fs');
+                  }
+                  return null;
+                })()""",
+            )
         if (module == null) {
             throw IOException("File upload is only supported in a Node.js environment.")
         }
@@ -132,5 +146,4 @@ actual class FileUploadProvider actual constructor(
             throw IOException("Failed to read file $path", e)
         }
     }
-
 }

@@ -9,16 +9,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.khronos.webgl.Int8Array
 import org.khronos.webgl.Uint8Array
-import kotlin.js.JsModule
-import kotlin.js.JsNonModule
-
-@JsModule("node:fs")
-@JsNonModule
-external object NodeFs {
-    fun statSync(path: String): dynamic
-
-    fun readFileSync(path: String): dynamic
-}
 
 /**
  * Represents the file upload provider.
@@ -44,7 +34,7 @@ actual class FileUploadProvider actual constructor(
     /**
      * Holds the fs.
      */
-    private val fs: dynamic by lazy { NodeFs }
+    private val fs: dynamic by lazy { loadNodeFs() }
 
     /**
      * Handles upload.
@@ -115,6 +105,31 @@ actual class FileUploadProvider actual constructor(
         } catch (e: dynamic) {
             throw IOException("Failed to get file size for $path: $e")
         }
+    }
+
+    /**
+     * Loads the Node.js fs module when available.
+     */
+    private fun loadNodeFs(): dynamic {
+        val module =
+            js(
+                """(function() {
+                  if (typeof process === 'undefined' || process == null || !process.versions || !process.versions.node) {
+                    return null;
+                  }
+                  if (typeof require === 'function') {
+                    return require('node:fs');
+                  }
+                  if (typeof module !== 'undefined' && typeof module.require === 'function') {
+                    return module.require('node:fs');
+                  }
+                  return null;
+                })()""",
+            )
+        if (module == null) {
+            throw IOException("File upload is only supported in a Node.js environment.")
+        }
+        return module
     }
 
     /**

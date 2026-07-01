@@ -10,10 +10,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.IOException
 import kotlinx.io.files.Path
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 /**
  * Represents the file upload provider test.
@@ -138,6 +141,41 @@ class FileUploadProviderTest {
                 } catch (e: dynamic) {
                     // Ignore cleanup errors, as failing to delete a temp file should not fail the test
                 }
+            }
+        }
+
+    /**
+     * Tests upload fails outside Node.js environments.
+     */
+    @Test
+    fun testUploadFailsOutsideNodeEnvironment() =
+        runTest {
+            val mockClient =
+                HttpClient(MockEngine { respond("unused", HttpStatusCode.OK) }) {
+                    install(ContentNegotiation) {
+                        json(json)
+                    }
+                }
+            val provider =
+                FileUploadProvider(
+                    apiKey = "test_key",
+                    client = mockClient,
+                    json = json,
+                )
+
+            val globalThis: dynamic = js("globalThis")
+            val originalProcess: dynamic = globalThis.process
+            try {
+                globalThis.process = null
+
+                val exception =
+                    assertFailsWith<IOException> {
+                        provider.upload(Path("/tmp/does-not-matter"), "text/plain", "test_file.txt")
+                    }
+
+                assertTrue(exception.message?.contains("Node.js environment") == true)
+            } finally {
+                globalThis.process = originalProcess
             }
         }
 }
