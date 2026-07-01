@@ -65,9 +65,8 @@ class AttributionSourceIdBuilderTest {
      */
     @Test
     fun buildWithNoProperties() {
-        val attributionSourceId = attributionSourceId {}
-
-        assertEquals(null, attributionSourceId.groundingPassage)
-        assertEquals(null, attributionSourceId.semanticRetrieverChunk)
+        assertFailsWith<IllegalArgumentException> {
+            attributionSourceId {}
+        }
     }
 }
