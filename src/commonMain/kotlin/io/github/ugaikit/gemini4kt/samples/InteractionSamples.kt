@@ -193,7 +193,7 @@ object InteractionSamples {
 
     private fun printGeneratedContents(interaction: Interaction) {
         val generatedText = interaction.outputText?.takeIf { it.isNotBlank() }
-            if (generatedText != null) {
+        if (generatedText != null) {
             println("Generated text:")
             println(generatedText)
         } else {
@@ -243,7 +243,10 @@ object InteractionSamples {
             .distinct()
     }
 
-    private fun collectText(element: JsonElement, texts: MutableList<String>) {
+    private fun collectText(
+        element: JsonElement,
+        texts: MutableList<String>,
+    ) {
         when (element) {
             is JsonPrimitive -> return
             is JsonArray -> element.forEach { collectText(it, texts) }
