@@ -4,7 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 /**
  * Represents the attribution source id builder test.
@@ -24,7 +23,7 @@ class AttributionSourceIdBuilderTest {
         assertNotNull(attributionSourceId.groundingPassage)
         val groundingPassage = checkNotNull(attributionSourceId.groundingPassage)
         assertEquals("passage123", groundingPassage.passageId)
-        assertNull(attributionSourceId.semanticRetrieverChunk)
+        assertEquals(null, attributionSourceId.semanticRetrieverChunk)
     }
 
     /**
@@ -38,7 +37,7 @@ class AttributionSourceIdBuilderTest {
                     SemanticRetrieverChunk(source = "source123", chunk = "chunk content")
                 }
             }
-        assertNull(attributionSourceId.groundingPassage)
+        assertEquals(null, attributionSourceId.groundingPassage)
         assertNotNull(attributionSourceId.semanticRetrieverChunk)
         val semanticRetrieverChunk = checkNotNull(attributionSourceId.semanticRetrieverChunk)
         assertEquals("source123", semanticRetrieverChunk.source)
@@ -67,7 +66,8 @@ class AttributionSourceIdBuilderTest {
     @Test
     fun buildWithNoProperties() {
         val attributionSourceId = attributionSourceId {}
-        assertNull(attributionSourceId.groundingPassage)
-        assertNull(attributionSourceId.semanticRetrieverChunk)
+
+        assertEquals(null, attributionSourceId.groundingPassage)
+        assertEquals(null, attributionSourceId.semanticRetrieverChunk)
     }
 }

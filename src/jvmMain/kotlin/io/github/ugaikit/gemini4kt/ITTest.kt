@@ -730,6 +730,7 @@ private suspend fun testAgentAPI(apiKey: String) {
                 println("Agent cleanup failed: ${cleanupError.message}")
             }
         }
+        geminiAI.close()
     }
 }
 

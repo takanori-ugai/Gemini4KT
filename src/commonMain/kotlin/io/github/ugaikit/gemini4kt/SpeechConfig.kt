@@ -200,7 +200,11 @@ class MultiSpeakerVoiceConfigBuilder {
     fun build() =
         MultiSpeakerVoiceConfig(
             speakerVoiceConfigs = if (speakerVoiceConfigs.isEmpty()) null else speakerVoiceConfigs.toTypedArray(),
-        )
+        ).also {
+            require(speakerVoiceConfigs.isNotEmpty()) {
+                "MultiSpeakerVoiceConfigBuilder requires at least one speakerVoiceConfig."
+            }
+        }
 }
 
 /**
@@ -242,7 +246,14 @@ class SpeakerVoiceConfigBuilder {
         SpeakerVoiceConfig(
             speaker = speaker,
             voiceConfig = voiceConfig,
-        )
+        ).also {
+            require(!speaker.isNullOrBlank()) {
+                "SpeakerVoiceConfigBuilder requires speaker."
+            }
+            require(voiceConfig != null) {
+                "SpeakerVoiceConfigBuilder requires voiceConfig."
+            }
+        }
 }
 
 /**

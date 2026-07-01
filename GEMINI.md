@@ -77,7 +77,7 @@ The project enforces a set of development conventions to maintain code quality a
 *   **Static Analysis:** [Detekt](https://detekt.dev/) is used for static analysis. The configuration can be found in `config/detekt/detekt.yml`.
 *   **Code Formatting:** [Spotless](https://github.com/diffplug/spotless) and [ktlint](https://ktlint.github.io/) are used to enforce a consistent code style. It's recommended to run the formatter before committing any changes.
     ```bash
-    ./gradlew spotlessApply
+    ./gradlew spotlessApply ktlintFormat
     ```
 *   **API Documentation:** The project uses [Dokka](https://github.com/Kotlin/dokka) to generate API documentation. You can generate the documentation by running:
     ```bash

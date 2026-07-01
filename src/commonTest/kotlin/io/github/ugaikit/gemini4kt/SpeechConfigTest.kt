@@ -169,4 +169,40 @@ class SpeechConfigTest {
             }
         }
     }
+
+    @Test
+    fun testSpeechConfigAllowsEmptyBuilder() {
+        val speechConfig = speechConfig {}
+
+        assertEquals(null, speechConfig.voiceConfig)
+        assertEquals(null, speechConfig.multiSpeakerVoiceConfig)
+    }
+
+    @Test
+    fun testVoiceConfigAllowsEmptyBuilder() {
+        val voiceConfig = VoiceConfigBuilder().build()
+
+        assertEquals(null, voiceConfig.prebuiltVoiceConfig)
+    }
+
+    @Test
+    fun testPrebuiltVoiceConfigAllowsEmptyBuilder() {
+        val prebuiltVoiceConfig = PrebuiltVoiceConfigBuilder().build()
+
+        assertEquals(null, prebuiltVoiceConfig.voiceName)
+    }
+
+    @Test
+    fun testMultiSpeakerVoiceConfigRejectsEmptyBuilder() {
+        assertFailsWith<IllegalArgumentException> {
+            MultiSpeakerVoiceConfigBuilder().build()
+        }
+    }
+
+    @Test
+    fun testSpeakerVoiceConfigRejectsEmptyBuilder() {
+        assertFailsWith<IllegalArgumentException> {
+            SpeakerVoiceConfigBuilder().build()
+        }
+    }
 }

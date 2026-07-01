@@ -24,34 +24,46 @@ object InteractionSamples {
 
     suspend fun runSimple(client: GeminiAI? = null) {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
-        println("--- Simple Request ---")
-        val request =
-            CreateInteractionRequest(
-                model = "gemini-2.5-flash",
-                input = JsonPrimitive("Hello, how are you?"),
-            )
-        val interaction = ai.createInteraction(request)
-        printOutputs(interaction)
+        try {
+            println("--- Simple Request ---")
+            val request =
+                CreateInteractionRequest(
+                    model = "gemini-2.5-flash",
+                    input = JsonPrimitive("Hello, how are you?"),
+                )
+            val interaction = ai.createInteraction(request)
+            printOutputs(interaction)
+        } finally {
+            if (client == null) {
+                ai.close()
+            }
+        }
     }
 
     suspend fun runMultiTurn(client: GeminiAI? = null) {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
-        println("--- Multi-turn ---")
-        val turns =
-            listOf(
-                InteractionTurn(role = "user", content = JsonPrimitive("Hello!")),
-                InteractionTurn(role = "model", content = JsonPrimitive("Hi there! How can I help you today?")),
-                InteractionTurn(role = "user", content = JsonPrimitive("What is the capital of France?")),
-            )
-        val inputJson = json.encodeToJsonElement(turns)
+        try {
+            println("--- Multi-turn ---")
+            val turns =
+                listOf(
+                    InteractionTurn(role = "user", content = JsonPrimitive("Hello!")),
+                    InteractionTurn(role = "model", content = JsonPrimitive("Hi there! How can I help you today?")),
+                    InteractionTurn(role = "user", content = JsonPrimitive("What is the capital of France?")),
+                )
+            val inputJson = json.encodeToJsonElement(turns)
 
-        val request =
-            CreateInteractionRequest(
-                model = "gemini-2.5-flash",
-                input = inputJson,
-            )
-        val interaction = ai.createInteraction(request)
-        printOutputs(interaction)
+            val request =
+                CreateInteractionRequest(
+                    model = "gemini-2.5-flash",
+                    input = inputJson,
+                )
+            val interaction = ai.createInteraction(request)
+            printOutputs(interaction)
+        } finally {
+            if (client == null) {
+                ai.close()
+            }
+        }
     }
 
     suspend fun runImageInput(
@@ -59,60 +71,72 @@ object InteractionSamples {
         imageProvider: () -> String = { getImage() },
     ) {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
-        println("--- Image Input ---")
-        val base64Image = imageProvider()
+        try {
+            println("--- Image Input ---")
+            val base64Image = imageProvider()
 
-        val textContent = InteractionContent(type = "text", text = "What is in this picture?")
-        val imageContent = InteractionContent(type = "image", data = base64Image, mimeType = "image/jpeg")
+            val textContent = InteractionContent(type = "text", text = "What is in this picture?")
+            val imageContent = InteractionContent(type = "image", data = base64Image, mimeType = "image/jpeg")
 
-        val inputList = listOf(textContent, imageContent)
-        val inputJson = json.encodeToJsonElement(inputList)
+            val inputList = listOf(textContent, imageContent)
+            val inputJson = json.encodeToJsonElement(inputList)
 
-        val request =
-            CreateInteractionRequest(
-                model = "gemini-2.5-flash",
-                input = inputJson,
-            )
-        val interaction = ai.createInteraction(request)
-        printOutputs(interaction)
+            val request =
+                CreateInteractionRequest(
+                    model = "gemini-2.5-flash",
+                    input = inputJson,
+                )
+            val interaction = ai.createInteraction(request)
+            printOutputs(interaction)
+        } finally {
+            if (client == null) {
+                ai.close()
+            }
+        }
     }
 
     suspend fun runFunctionCalling(client: GeminiAI? = null) {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
-        println("--- Function Calling ---")
+        try {
+            println("--- Function Calling ---")
 
-        val tool =
-            InteractionTool(
-                type = "function",
-                name = "get_weather",
-                description = "Get the current weather in a given location",
-                parameters =
-                    buildJsonObject {
-                        put("type", "object")
-                        put(
-                            "properties",
-                            buildJsonObject {
-                                put(
-                                    "location",
-                                    buildJsonObject {
-                                        put("type", "string")
-                                        put("description", "The city and state, e.g. San Francisco, CA")
-                                    },
-                                )
-                            },
-                        )
-                        putJsonArray("required") { add(JsonPrimitive("location")) }
-                    },
-            )
+            val tool =
+                InteractionTool(
+                    type = "function",
+                    name = "get_weather",
+                    description = "Get the current weather in a given location",
+                    parameters =
+                        buildJsonObject {
+                            put("type", "object")
+                            put(
+                                "properties",
+                                buildJsonObject {
+                                    put(
+                                        "location",
+                                        buildJsonObject {
+                                            put("type", "string")
+                                            put("description", "The city and state, e.g. San Francisco, CA")
+                                        },
+                                    )
+                                },
+                            )
+                            putJsonArray("required") { add(JsonPrimitive("location")) }
+                        },
+                )
 
-        val request =
-            CreateInteractionRequest(
-                model = "gemini-2.5-flash",
-                tools = arrayOf(tool),
-                input = JsonPrimitive("What is the weather like in Boston, MA?"),
-            )
-        val interaction = ai.createInteraction(request)
-        printOutputs(interaction)
+            val request =
+                CreateInteractionRequest(
+                    model = "gemini-2.5-flash",
+                    tools = arrayOf(tool),
+                    input = JsonPrimitive("What is the weather like in Boston, MA?"),
+                )
+            val interaction = ai.createInteraction(request)
+            printOutputs(interaction)
+        } finally {
+            if (client == null) {
+                ai.close()
+            }
+        }
     }
 
     private fun printOutputs(interaction: Interaction) {
@@ -135,18 +159,24 @@ object InteractionSamples {
 
     suspend fun runDeepResearch(client: GeminiAI? = null) {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
-        println("--- Deep Research ---")
-        val request =
-            CreateInteractionRequest(
-                agent = "deep-research-pro-preview-12-2025",
-                input = JsonPrimitive("Find a cure to cancer"),
-                background = true,
-            )
         try {
-            val interaction = ai.createInteraction(request)
-            println("Status: ${interaction.status}")
-        } catch (e: Exception) {
-            println("Error: ${e.message}")
+            println("--- Deep Research ---")
+            val request =
+                CreateInteractionRequest(
+                    agent = "deep-research-pro-preview-12-2025",
+                    input = JsonPrimitive("Find a cure to cancer"),
+                    background = true,
+                )
+            try {
+                val interaction = ai.createInteraction(request)
+                println("Status: ${interaction.status}")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        } finally {
+            if (client == null) {
+                ai.close()
+            }
         }
     }
 }

@@ -47,6 +47,7 @@ class GeminiAI(
         }
 
     private val httpClient = client ?: createHttpClient(json)
+    private val ownsHttpClient = client == null
 
     private val baseUrl = "https://generativelanguage.googleapis.com/v1beta"
 
@@ -253,4 +254,10 @@ class GeminiAI(
         } catch (e: Exception) {
             GeminiError(statusCode, "Unknown error: $body", "UNKNOWN")
         }
+
+    fun close() {
+        if (ownsHttpClient) {
+            httpClient.close()
+        }
+    }
 }

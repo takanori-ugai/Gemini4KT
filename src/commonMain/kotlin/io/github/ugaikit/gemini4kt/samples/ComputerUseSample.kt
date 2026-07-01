@@ -20,23 +20,29 @@ object ComputerUseSample {
      */
     suspend fun run(gemini: GeminiAI? = null) {
         val client = gemini ?: GeminiAI(apiKey = getApiKey())
-        val request =
-            CreateInteractionRequest(
-                model = "gemini-2.5-computer-use-preview-10-2025",
-                input = JsonPrimitive("Search for 'Gemini API' on Google."),
-                tools =
-                    arrayOf(
-                        InteractionTool(
-                            type = "computer_use",
-                            environment = "browser",
-                            excludedPredefinedFunctions = listOf("CLICK"),
+        try {
+            val request =
+                CreateInteractionRequest(
+                    model = "gemini-2.5-computer-use-preview-10-2025",
+                    input = JsonPrimitive("Search for 'Gemini API' on Google."),
+                    tools =
+                        arrayOf(
+                            InteractionTool(
+                                type = "computer_use",
+                                environment = "browser",
+                                excludedPredefinedFunctions = listOf("CLICK"),
+                            ),
                         ),
-                    ),
-            )
+                )
 
-        val response =
-            client.createInteraction(request)
+            val response =
+                client.createInteraction(request)
 
-        println(response)
+            println(response)
+        } finally {
+            if (gemini == null) {
+                client.close()
+            }
+        }
     }
 }

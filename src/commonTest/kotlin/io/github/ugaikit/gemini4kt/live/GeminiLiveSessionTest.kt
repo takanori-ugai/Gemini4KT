@@ -271,6 +271,7 @@ class MockWebSocketSession : WebSocketSession {
         sentFrames.add(frame)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @Deprecated(
         "Use close() instead",
         ReplaceWith("close()"),

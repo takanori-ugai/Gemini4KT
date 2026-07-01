@@ -280,7 +280,10 @@ class PartBuilder {
                     toolResponse,
                 ).size
             require(activePayloadCount <= 1) {
-                "Part builders support only one primary payload field at a time."
+                "Part builders support at most one primary payload field at a time."
+            }
+            require(videoMetadata == null || inlineData != null || fileData != null) {
+                "videoMetadata can only be set when inlineData or fileData is present."
             }
         }
 }

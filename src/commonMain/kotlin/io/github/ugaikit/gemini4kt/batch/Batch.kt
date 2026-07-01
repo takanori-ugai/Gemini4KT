@@ -1,9 +1,7 @@
 package io.github.ugaikit.gemini4kt.batch
 
-import io.github.ugaikit.gemini4kt.GeminiError
-import io.github.ugaikit.gemini4kt.GeminiErrorResponse
-import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.createHttpClient
+import io.github.ugaikit.gemini4kt.throwApiException
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -15,7 +13,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -174,7 +171,7 @@ class Batch(
                 }
 
             if (!response.status.isSuccess()) {
-                throwApiException(response)
+                response.throwApiException()
             }
             response.bodyAsText()
         }
@@ -190,33 +187,9 @@ class Batch(
                 header("x-goog-api-key", apiKey)
             }
         if (!response.status.isSuccess()) {
-            throwApiException(response)
+            response.throwApiException()
         }
     }
-
-    private suspend fun throwApiException(response: HttpResponse): Nothing {
-        val errorMsg = response.bodyAsText()
-        try {
-            val errorResponse = json.decodeFromString<GeminiErrorResponse>(errorMsg)
-            throw GeminiException(errorResponse.error)
-        } catch (e: GeminiException) {
-            throw e
-        } catch (_: SerializationException) {
-            throw GeminiException(fallbackError(response, errorMsg))
-        } catch (_: IllegalArgumentException) {
-            throw GeminiException(fallbackError(response, errorMsg))
-        }
-    }
-
-    private fun fallbackError(
-        response: HttpResponse,
-        errorMsg: String,
-    ): GeminiError =
-        GeminiError(
-            code = response.status.value,
-            message = errorMsg.ifBlank { response.status.description },
-            status = response.status.description.ifBlank { response.status.value.toString() },
-        )
 
     /**
      * Closes the owned HTTP client, if this instance created one.

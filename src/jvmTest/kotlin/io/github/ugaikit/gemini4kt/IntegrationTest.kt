@@ -136,6 +136,7 @@ class IntegrationTest {
                         println("Agent cleanup failed: ${cleanupError.message}")
                     }
                 }
+                geminiAI.close()
             }
         }
 

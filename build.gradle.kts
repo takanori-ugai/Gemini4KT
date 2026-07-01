@@ -72,7 +72,13 @@ kotlin {
         binaries.library()
         binaries.executable()
         generateTypeScriptDefinitions()
-        nodejs {}
+        nodejs {
+            testTask {
+                useMocha {
+                    timeout = "10s"
+                }
+            }
+        }
     }
 
     linuxX64 {
