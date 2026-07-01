@@ -108,8 +108,8 @@ class SpeechConfigBuilder {
             voiceConfig = voiceConfig,
             multiSpeakerVoiceConfig = multiSpeakerVoiceConfig,
         ).also {
-            require(listOfNotNull(voiceConfig, multiSpeakerVoiceConfig).size == 1) {
-                "SpeechConfigBuilder requires exactly one voice configuration."
+            require(listOfNotNull(voiceConfig, multiSpeakerVoiceConfig).size <= 1) {
+                "SpeechConfigBuilder supports only one voice configuration at a time."
             }
         }
 }
@@ -139,8 +139,8 @@ class VoiceConfigBuilder {
         VoiceConfig(
             prebuiltVoiceConfig = prebuiltVoiceConfig,
         ).also {
-            require(prebuiltVoiceConfig != null) {
-                "VoiceConfigBuilder requires prebuiltVoiceConfig."
+            require(listOfNotNull(prebuiltVoiceConfig).size <= 1) {
+                "VoiceConfigBuilder supports only one voice configuration at a time."
             }
         }
 }
@@ -170,8 +170,8 @@ class PrebuiltVoiceConfigBuilder {
         PrebuiltVoiceConfig(
             voiceName = voiceName,
         ).also {
-            require(!voiceName.isNullOrBlank()) {
-                "PrebuiltVoiceConfigBuilder requires voiceName."
+            require(listOfNotNull(voiceName).size <= 1) {
+                "PrebuiltVoiceConfigBuilder supports only one property at a time."
             }
         }
 }

@@ -87,6 +87,80 @@ actual class FileUploadProvider actual constructor(
     }
 
     /**
+     * Handles get upload url.
+     *
+     * @param baseUrl The base url.
+     * @param apiKey The api key.
+     * @param mimeType The mime type.
+     * @param displayName The display name.
+     * @param fileSize The file size.
+     */
+    private suspend fun getUploadUrl(
+        baseUrl: String,
+        apiKey: String,
+        mimeType: String,
+        displayName: String,
+        fileSize: Long,
+    ): String =
+        withContext(Dispatchers.IO) {
+            val response =
+                httpClient.post("$baseUrl/upload/v1beta/files") {
+                    header("x-goog-api-key", apiKey)
+                    header("X-Goog-Upload-Protocol", "resumable")
+                    header("X-Goog-Upload-Command", "start")
+                    header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
+                    header("X-Goog-Upload-Header-Content-Type", mimeType)
+                    contentType(ContentType.Application.Json)
+                    setBody(json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))))
+                }
+
+            if (response.status != HttpStatusCode.OK) {
+                throw IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
+            }
+
+            response.headers["X-Goog-Upload-URL"]
+                ?: throw IOException("Upload URL not found in response headers")
+        }
+
+    /**
+     * Handles get file search store upload url.
+     *
+     * @param baseUrl The base url.
+     * @param apiKey The api key.
+     * @param fileSearchStoreName The file search store name.
+     * @param mimeType The mime type.
+     * @param fileSize The file size.
+     * @param uploadRequest The upload request.
+     */
+    private suspend fun getFileSearchStoreUploadUrl(
+        baseUrl: String,
+        apiKey: String,
+        fileSearchStoreName: String,
+        mimeType: String,
+        fileSize: Long,
+        uploadRequest: UploadFileSearchStoreRequest,
+    ): String =
+        withContext(Dispatchers.IO) {
+            val response =
+                httpClient.post("$baseUrl/upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore") {
+                    header("x-goog-api-key", apiKey)
+                    header("X-Goog-Upload-Protocol", "resumable")
+                    header("X-Goog-Upload-Command", "start")
+                    header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
+                    header("X-Goog-Upload-Header-Content-Type", mimeType)
+                    contentType(ContentType.Application.Json)
+                    setBody(json.encodeToString(uploadRequest))
+                }
+
+            if (response.status != HttpStatusCode.OK) {
+                throw IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
+            }
+
+            response.headers["X-Goog-Upload-URL"]
+                ?: throw IOException("Upload URL not found in response headers")
+        }
+
+    /**
      * Handles upload file.
      *
      * @param uploadUrl The upload url.

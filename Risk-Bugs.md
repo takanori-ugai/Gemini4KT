@@ -28,6 +28,12 @@ Status keys:
    Finding: On Android, JS, Wasm, and Native targets, `getImage()` is hardcoded to return `""`, causing image-reliant samples to send empty payloads and fail at runtime.  
    Recommendation: Require callers to supply image data explicitly or fail-fast with target limitation errors.
 
+7. **Low - Automatic binding rejects member functions; message implies support**  
+   Status: `Confirmed`  
+   Evidence: [AutomaticFunctionCallingJvm.kt:71-73](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L71-L73), [AutomaticFunctionCallingJvmTest.kt:70-88](file:///home/ugai/Gemini4KT/src/jvmTest/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvmTest.kt#L70-L88)  
+   Finding: The binding logic checks `require(function.instanceParameter == null)` and throws an error saying only top-level or bound functions are supported. However, class member functions cannot be registered even if bound, and the message confuses developers.  
+   Recommendation: Add class instance binding support or rewrite the exception message to state that member functions are unsupported.
+
 11. **Low - Public builders allow malformed payloads**  
     Status: `Confirmed`  
     Evidence: [GenerateContentRequest.kt:59-157](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentRequest.kt#L59-L157), [InlineData.kt:45-90](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/InlineData.kt#L45-L90), [FileData.kt:33-45](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/FileData.kt#L33-L45)  
@@ -63,6 +69,18 @@ Status keys:
     Evidence: [BatchInputConfig.kt:14-20](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/batch/BatchInputConfig.kt#L14-L20), [BatchDsl.kt:92-113](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/batch/BatchDsl.kt#L92-L113)  
     Finding: `BatchInputConfigBuilder` lacks properties and methods for `gcsSource` or `fileName` fields, rendering the DSL incapable of building configurations that rely on Google Cloud Storage or the File API. It also fails to validate exclusivity rules.  
     Recommendation: Expand `BatchInputConfigBuilder` with methods for GCS and File API, and validate input mode exclusivity.
+
+17. **High - Automatic function binding breaks on `Unit` returns**  
+    Status: `Confirmed`  
+    Evidence: [AutomaticFunctionCallingJvm.kt:95-105](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L95-L105), [AutomaticFunctionCallingJvm.kt:184-210](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L184-L210)  
+    Finding: If a registered function has a return type of `Unit`, it returns the `kotlin.Unit` object. Since `anyToJsonElement` does not expect `Unit` in its pattern match, it triggers the fallback `else` branch and throws `IllegalArgumentException: Unsupported return type for automatic binding: class kotlin.Unit`, crashing the tool call execution.  
+    Recommendation: Explicitly match `Unit` or null in `anyToJsonElement` and return an empty or acknowledged tool result.
+
+18. **High - Extension functions accepted but not invokable**  
+    Status: `Confirmed`  
+    Evidence: [AutomaticFunctionCallingJvm.kt:71-76](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L71-L76), [AutomaticFunctionCallingJvm.kt:94](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L94)  
+    Finding: The registration logic checks for `instanceParameter == null` but fails to check for `extensionReceiverParameter`. Extension functions are accepted, but invoking them throws `IllegalArgumentException` in `callSuspendBy` because the extension receiver parameter is never supplied in the arguments map.  
+    Recommendation: Reject extension functions during binding registration or define a contract to supply the receiver.
 
 19. **Medium - Map schema under-specified vs runtime binder**  
     Status: `Confirmed`  
@@ -206,8 +224,8 @@ Status keys:
 
 ## Most Actionable First Fixes
 
-1. Live client lifecycle and payload logging (`#33`, `#34`)
-2. Client lifecycle leaks in `GeminiAI`, `FileUploadProvider`, samples, and JS wrappers (`#31`, `#32`, `#36`, `#37`)
-3. Live WebSocket backpressure and error propagation (`#5`)
-4. Breaking API surface changes for collection-backed fields (`#35`)
-5. Image payload availability on non-JVM targets (`#6`)
+1. Live WebSocket backpressure and error propagation (`#5`)
+2. Image payload availability on non-JVM targets (`#6`)
+3. Upload robustness (`#12`, `#24`)
+4. DSL/builders validation for one-of and required fields (`#11`, `#14`, `#16`, `#27`, `#28`)
+5. API response shape hardening (`#15`, `#30`)

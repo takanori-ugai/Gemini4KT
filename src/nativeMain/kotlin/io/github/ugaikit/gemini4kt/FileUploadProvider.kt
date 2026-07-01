@@ -62,14 +62,12 @@ actual class FileUploadProvider actual constructor(
         val metadata = fs.metadataOrNull(file) ?: throw IOException("File not found: $file")
         val fileSize = metadata.size
         val uploadUrl =
-            withContext(Dispatchers.IO) {
-                httpClient.requestResumableUploadUrl(
-                    apiKey,
-                    mimeType,
-                    fileSize,
-                    json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))),
-                )
-            }
+            getInitialUploadUrl(
+                mimeType,
+                fileSize,
+                "upload/v1beta/files",
+                json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))),
+            )
         return uploadFile(uploadUrl, file, mimeType, fileSize)
     }
 
