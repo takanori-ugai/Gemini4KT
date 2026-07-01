@@ -1,5 +1,11 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.serializer
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
@@ -10,6 +16,7 @@ import kotlin.reflect.full.valueParameters
  *
  * @param type The type.
  */
+@OptIn(InternalSerializationApi::class)
 private fun buildTypeSchema(type: KType): Schema {
     val classifier = type.classifier
     val baseSchema =
@@ -41,10 +48,67 @@ private fun buildTypeSchema(type: KType): Schema {
                     additionalProperties = AdditionalProperties.SchemaValue(buildTypeSchema(valueType)),
                 )
             }
-            else -> throw IllegalArgumentException("Unsupported parameter type: $type")
+            else -> buildDescriptorSchema(serializer(type).descriptor)
         }
 
     return baseSchema.copy(nullable = type.isMarkedNullable)
+}
+
+private fun buildDescriptorSchema(descriptor: SerialDescriptor): Schema {
+    val baseSchema =
+        when (descriptor.kind) {
+            PrimitiveKind.INT, PrimitiveKind.LONG -> Schema(type = "integer")
+            PrimitiveKind.STRING -> Schema(type = "string")
+            PrimitiveKind.BOOLEAN -> Schema(type = "boolean")
+            PrimitiveKind.DOUBLE, PrimitiveKind.FLOAT -> Schema(type = "number")
+            SerialKind.ENUM ->
+                Schema(
+                    type = "string",
+                    enum = List(descriptor.elementsCount) { index -> descriptor.getElementName(index) },
+                )
+            StructureKind.LIST ->
+                Schema(
+                    type = "array",
+                    items = buildDescriptorSchema(descriptor.getElementDescriptor(0)),
+                )
+            StructureKind.MAP -> {
+                val keyDescriptor = descriptor.getElementDescriptor(0)
+                require(keyDescriptor.kind == PrimitiveKind.STRING) {
+                    "Map parameter keys must be String for automatic binding: ${descriptor.serialName}"
+                }
+                Schema(
+                    type = "object",
+                    additionalProperties =
+                        AdditionalProperties.SchemaValue(
+                            buildDescriptorSchema(descriptor.getElementDescriptor(1)),
+                        ),
+                )
+            }
+            StructureKind.CLASS, StructureKind.OBJECT ->
+                Schema(
+                    type = "object",
+                    properties =
+                        buildMap {
+                            for (index in 0 until descriptor.elementsCount) {
+                                put(
+                                    descriptor.getElementName(index),
+                                    buildDescriptorSchema(descriptor.getElementDescriptor(index)),
+                                )
+                            }
+                        },
+                    required =
+                        buildList {
+                            for (index in 0 until descriptor.elementsCount) {
+                                if (!descriptor.isElementOptional(index)) {
+                                    add(descriptor.getElementName(index))
+                                }
+                            }
+                        },
+                )
+            else -> throw IllegalArgumentException("Unsupported parameter type: ${descriptor.serialName}")
+        }
+
+    return baseSchema.copy(nullable = descriptor.isNullable)
 }
 
 private fun buildParameterSchema(

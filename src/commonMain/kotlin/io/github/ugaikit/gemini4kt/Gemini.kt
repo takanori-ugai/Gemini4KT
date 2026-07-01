@@ -166,30 +166,25 @@ class Gemini(
     ): Flow<GenerateContentResponse> =
         flow {
             val urlString = "$baseUrl/$model:streamGenerateContent?alt=sse"
-            try {
-                val response =
-                    httpClient.post(urlString) {
-                        header("x-goog-api-key", apiKey)
-                        contentType(ContentType.Application.Json)
-                        setBody(json.encodeToString<GenerateContentRequest>(inputJson))
-                    }
-
-                if (!response.status.isSuccess()) {
-                    response.throwApiException()
-                } else {
-                    val channel = response.bodyAsChannel()
-                    channel.consumeServerSentEvents { jsonStr ->
-                        if (jsonStr == "[DONE]") return@consumeServerSentEvents
-                        try {
-                            val result = json.decodeFromString<GenerateContentResponse>(jsonStr)
-                            emit(result)
-                        } catch (e: SerializationException) {
-                            logger.error { "Failed to parse stream response: ${e.message}" }
-                        }
-                    }
+            val response =
+                httpClient.post(urlString) {
+                    header("x-goog-api-key", apiKey)
+                    contentType(ContentType.Application.Json)
+                    setBody(json.encodeToString<GenerateContentRequest>(inputJson))
                 }
-            } catch (e: Exception) {
-                throw e
+
+            if (!response.status.isSuccess()) {
+                response.throwApiException()
+                return@flow
+            }
+
+            response.bodyAsChannel().consumeServerSentEvents { payload ->
+                if (payload == "[DONE]") return@consumeServerSentEvents
+                try {
+                    emit(json.decodeFromString<GenerateContentResponse>(payload))
+                } catch (e: SerializationException) {
+                    logger.error(e) { "Failed to parse stream response payload" }
+                }
             }
         }
 

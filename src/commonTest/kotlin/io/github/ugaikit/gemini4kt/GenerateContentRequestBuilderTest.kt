@@ -2,6 +2,7 @@ package io.github.ugaikit.gemini4kt
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -159,5 +160,15 @@ class GenerateContentRequestBuilderTest {
         assertEquals(2, request.contents.size)
         assertEquals(2, request.tools.size)
         assertEquals(2, request.safetySettings.size)
+    }
+
+    @Test
+    fun buildRejectsMissingContents() {
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                generateContentRequest { }
+            }
+
+        assertEquals("At least one content item is required.", exception.message)
     }
 }

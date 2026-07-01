@@ -1,27 +1,15 @@
 package io.github.ugaikit.gemini4kt.live
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.ugaikit.gemini4kt.X_GOOG_API_CLIENT
-import io.github.ugaikit.gemini4kt.live.decodeBinaryFrame
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
-import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.client.plugins.websocket.webSocketSession
-import io.ktor.client.request.header
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
-import io.ktor.websocket.readText
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -82,67 +70,18 @@ class GeminiLive(
         setup: BidiGenerateContentSetup? = null,
         handshakeTimeoutMs: Long = 10_000,
     ): GeminiLiveSession {
-        // Use provided client or create a new one.
-        val httpClient =
-            client?.config {
-                install(WebSockets)
-            } ?: HttpClient {
-                install(WebSockets)
-            }
+        logger.info { "Connecting to WebSocket at $wsUrl" }
 
-        val urlString = wsUrl
+        val connection =
+            openLiveConnection<BidiGenerateContentServerMessage>(
+                url = wsUrl,
+                apiKey = apiKey,
+                client = client,
+                json = json,
+                logger = logger,
+            ) { message -> message.setupComplete != null }
 
-        logger.info { "Connecting to WebSocket at $urlString" }
-
-        var session: DefaultClientWebSocketSession? = null
         try {
-            session =
-                httpClient.webSocketSession(urlString) {
-                    header("x-goog-api-key", apiKey)
-                    header("x-goog-api-client", X_GOOG_API_CLIENT)
-                }
-
-            val incomingMessages = Channel<BidiGenerateContentServerMessage>(Channel.BUFFERED)
-            val scope = CoroutineScope(Dispatchers.Default)
-            val handshakeCompleted = CompletableDeferred<Unit>()
-
-            // Launch a coroutine to listen for messages
-            val listenerJob =
-                scope.launch {
-                    try {
-                        for (frame in session.incoming) {
-                            val text =
-                                when (frame) {
-                                    is Frame.Text -> frame.readText()
-                                    is Frame.Binary -> {
-                                        val decoded = decodeBinaryFrame(frame, logger) ?: continue
-                                        decoded
-                                    }
-                                    else -> continue
-                                }
-
-                            logger.debug { "Received live message (${text.length} chars)" }
-                            processHandshakeMessage(
-                                text,
-                                handshakeCompleted,
-                                incomingMessages,
-                                json,
-                                logger,
-                            ) { message -> message.setupComplete != null }
-                        }
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        logger.error(e) { "WebSocket error" }
-                        incomingMessages.close(e)
-                        if (!handshakeCompleted.isCompleted) {
-                            handshakeCompleted.completeExceptionally(e)
-                        }
-                    } finally {
-                        incomingMessages.close()
-                    }
-                }
-
             // Send Setup Message
             val setupMessage =
                 setup ?: run {
@@ -179,27 +118,34 @@ class GeminiLive(
             val clientMessage = BidiGenerateContentClientMessage(setup = setupMessage)
             val jsonMessage = json.encodeToString(clientMessage)
             logger.debug { "Sending setup message (${jsonMessage.length} chars)" }
-            session.send(Frame.Text(jsonMessage))
+            connection.session.send(Frame.Text(jsonMessage))
 
             // Wait for setup complete message
             try {
                 withTimeout(handshakeTimeoutMs) {
-                    handshakeCompleted.await()
+                    connection.handshakeCompleted.await()
                 }
             } catch (e: Exception) {
                 logger.error(e) { "Error waiting for SetupComplete" }
                 // Close resources
-                listenerJob.cancelAndJoin()
-                session.close()
+                connection.listenerJob.cancelAndJoin()
+                connection.session.close()
                 throw e
             }
 
-            return GeminiLiveSession(session, incomingMessages, json, listenerJob, httpClient, true)
+            return GeminiLiveSession(
+                connection.session,
+                connection.incomingMessages,
+                json,
+                connection.listenerJob,
+                connection.httpClient,
+                true,
+            )
         } catch (e: Exception) {
             try {
-                session?.close()
+                connection.session.close()
             } finally {
-                httpClient.close()
+                connection.httpClient.close()
             }
             throw e
         }

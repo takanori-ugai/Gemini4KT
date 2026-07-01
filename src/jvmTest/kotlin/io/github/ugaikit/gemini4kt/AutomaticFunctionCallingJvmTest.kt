@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -45,6 +46,30 @@ private fun unitResult(
 ) {
     message.length
 }
+
+@Serializable
+private enum class Priority {
+    LOW,
+    HIGH,
+}
+
+@Serializable
+private data class Address(
+    val city: String,
+    val zipCode: Int,
+)
+
+@Serializable
+private data class Profile(
+    val name: String,
+    val priority: Priority,
+    val address: Address,
+)
+
+@GeminiFunction(description = "Summarizes profile")
+private fun summarizeProfile(
+    @GeminiParameter(description = "profile") profile: Profile,
+): String = "${profile.name}|${profile.priority}|${profile.address.city}|${profile.address.zipCode}"
 
 @GeminiFunction(description = "Extension function")
 private fun String.extensionEcho(
@@ -192,5 +217,51 @@ class AutomaticFunctionCallingJvmTest {
                 )
 
             assertTrue(response.response["result"]?.toString() == "{}")
+        }
+
+    @Test
+    fun declarationSupportsNestedSerializableTypesAndEnums() {
+        val declaration = buildFunctionDeclaration(::summarizeProfile)
+        val profileSchema = requireNotNull(declaration.parameters.properties["profile"])
+        val prioritySchema = requireNotNull(profileSchema.properties["priority"])
+        val addressSchema = requireNotNull(profileSchema.properties["address"])
+
+        assertEquals("object", profileSchema.type)
+        assertTrue(profileSchema.required.containsAll(listOf("name", "priority", "address")))
+        assertEquals(listOf("LOW", "HIGH"), prioritySchema.enum)
+        assertEquals("object", addressSchema.type)
+        assertEquals("string", addressSchema.properties["city"]?.type)
+        assertEquals("integer", addressSchema.properties["zipCode"]?.type)
+    }
+
+    @Test
+    fun handlerConvertsNestedSerializableTypesAndEnums() =
+        runTest {
+            val binding = buildAutomaticFunctionBinding(arrayOf(::summarizeProfile))
+            val handler = binding.handlers.getValue("summarizeProfile")
+
+            val response =
+                handler(
+                    FunctionCall(
+                        name = "summarizeProfile",
+                        args =
+                            mapOf(
+                                "profile" to
+                                    buildJsonObject {
+                                        put("name", "Ada")
+                                        put("priority", "HIGH")
+                                        put(
+                                            "address",
+                                            buildJsonObject {
+                                                put("city", "Tokyo")
+                                                put("zipCode", 1000)
+                                            },
+                                        )
+                                    },
+                            ),
+                    ),
+                )
+
+            assertEquals("Ada|HIGH|Tokyo|1000", response.response["result"]?.jsonPrimitive?.content)
         }
 }

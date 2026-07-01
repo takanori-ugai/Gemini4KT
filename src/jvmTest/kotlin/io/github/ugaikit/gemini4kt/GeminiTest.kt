@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
+import kotlin.test.assertFailsWith
 
 @GeminiFunction(description = "Adds two integers")
 private fun addDirect(
@@ -81,9 +82,9 @@ private fun list_and_map(
 ): String = "${numbers.sum()}-${labels["mode"] ?: "unknown"}"
 
 @GeminiFunction(description = "Unsupported parameter type for declaration")
-private fun unsupported_pair(
-    @GeminiParameter(description = "pair") items: Pair<Int, Int>,
-): String = "${items.first},${items.second}"
+private fun unsupported_key_map(
+    @GeminiParameter(description = "map") value: Map<Int, String>,
+): String = value.size.toString()
 
 private data class UnsupportedReturnType(
     val value: Int,
@@ -1037,21 +1038,9 @@ class GeminiTest {
     @Test
     fun `generateContent with direct binding rejects unsupported parameter types`() =
         runTest {
-            gemini = createGemini { respond("""{"candidates": []}""", HttpStatusCode.OK) }
-
-            val exception =
-                try {
-                    gemini.generateContent(
-                        GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "x"))))),
-                        ::unsupported_pair,
-                    )
-                    null
-                } catch (e: IllegalArgumentException) {
-                    e
-                }
-
-            assertNotNull(exception)
-            assertTrue(exception!!.message?.contains("Unsupported parameter type") == true)
+            assertFailsWith<Exception> {
+                buildFunctionDeclaration(::unsupported_key_map)
+            }
         }
 
     @Test

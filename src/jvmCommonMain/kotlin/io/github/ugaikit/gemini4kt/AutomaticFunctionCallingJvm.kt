@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -18,6 +19,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
+import kotlinx.serialization.serializer
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.KParameter.Kind
@@ -111,6 +113,7 @@ private suspend fun invokeBoundFunction(
     }
 }
 
+@OptIn(InternalSerializationApi::class)
 private fun jsonElementToKotlinValue(
     element: JsonElement,
     type: KType,
@@ -165,7 +168,9 @@ private fun jsonElementToKotlinValue(
         JsonArray::class ->
             element as? JsonArray
                 ?: throw IllegalArgumentException("Expected JsonArray but got $element")
-        else -> throw IllegalArgumentException("Unsupported parameter type for automatic binding: $type")
+        else ->
+            kotlinx.serialization.json.Json
+                .decodeFromJsonElement(serializer(type), element)
     }
 }
 

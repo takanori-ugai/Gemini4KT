@@ -42,12 +42,12 @@ class InlineDataBuilder {
     /**
      * Holds the mime type.
      */
-    private var mimeType: String = ""
+    private var mimeType: String? = null
 
     /**
      * Holds the data.
      */
-    private var data: String = ""
+    private var data: String? = null
 
     /**
      * Holds the display name.
@@ -84,8 +84,8 @@ class InlineDataBuilder {
      */
     fun build() =
         InlineData(
-            mimeType = mimeType,
-            data = data,
+            mimeType = requireNotNull(mimeType) { "mimeType must be set before building InlineData." },
+            data = requireNotNull(data) { "data must be set before building InlineData." },
             displayName = displayName,
         )
 }
