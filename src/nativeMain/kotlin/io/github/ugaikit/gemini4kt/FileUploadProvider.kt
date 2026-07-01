@@ -49,7 +49,9 @@ actual class FileUploadProvider actual constructor(
         val fileSize = metadata.size
         val requestBody = json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName)))
         val content =
-            fs.source(file).buffered().readByteArray()
+            fs.source(file).buffered().use { source ->
+                source.readByteArray()
+            }
         return httpClient
             .performResumableUploadAndDecode<FileWrapper>(
                 apiKey = apiKey,
@@ -79,7 +81,9 @@ actual class FileUploadProvider actual constructor(
         val fileSize = metadata.size
         val requestBody = json.encodeToString(uploadRequest)
         val content =
-            fs.source(file).buffered().readByteArray()
+            fs.source(file).buffered().use { source ->
+                source.readByteArray()
+            }
         return httpClient
             .performResumableUploadAndDecode<Operation>(
                 apiKey = apiKey,

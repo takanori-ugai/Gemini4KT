@@ -171,7 +171,7 @@ class SpeechConfigTest {
     }
 
     @Test
-    fun testSpeechConfigRejectsEmptyBuilder() {
+    fun testSpeechConfigAllowsEmptyBuilder() {
         val speechConfig = speechConfig {}
 
         assertEquals(null, speechConfig.voiceConfig)
@@ -179,14 +179,14 @@ class SpeechConfigTest {
     }
 
     @Test
-    fun testVoiceConfigRejectsEmptyBuilder() {
+    fun testVoiceConfigAllowsEmptyBuilder() {
         val voiceConfig = VoiceConfigBuilder().build()
 
         assertEquals(null, voiceConfig.prebuiltVoiceConfig)
     }
 
     @Test
-    fun testPrebuiltVoiceConfigRejectsEmptyBuilder() {
+    fun testPrebuiltVoiceConfigAllowsEmptyBuilder() {
         val prebuiltVoiceConfig = PrebuiltVoiceConfigBuilder().build()
 
         assertEquals(null, prebuiltVoiceConfig.voiceName)

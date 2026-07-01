@@ -55,9 +55,13 @@ internal suspend fun HttpClient.performResumableUpload(
     fileSize: Long,
     body: ByteArray,
 ): String {
+    val bodySize = body.size.toLong()
+    require(fileSize == bodySize) {
+        "fileSize ($fileSize) must match upload body size ($bodySize)."
+    }
     val response =
         post(uploadUrl) {
-            header("Content-Length", fileSize.toString())
+            header("Content-Length", bodySize.toString())
             header("X-Goog-Upload-Offset", "0")
             header("X-Goog-Upload-Command", RESUMABLE_UPLOAD_FINALIZE_COMMAND)
             contentType(ContentType.parse(mimeType))
@@ -101,6 +105,9 @@ internal suspend inline fun <reified T> HttpClient.performResumableUpload(
     json: Json,
     endpoint: String = RESUMABLE_UPLOAD_START_PATH,
 ): T {
+    require(fileSize == uploadBody.size.toLong()) {
+        "fileSize ($fileSize) must match upload body size (${uploadBody.size})."
+    }
     val uploadUrl = requestResumableUploadUrl(apiKey, mimeType, fileSize, startBody, endpoint)
     return performResumableUploadAndDecode(uploadUrl, mimeType, fileSize, uploadBody, json)
 }
@@ -126,6 +133,9 @@ internal suspend inline fun <reified T> HttpClient.performResumableUploadAndDeco
     json: Json,
     endpoint: String = RESUMABLE_UPLOAD_START_PATH,
 ): T {
+    require(fileSize == uploadBody.size.toLong()) {
+        "fileSize ($fileSize) must match upload body size (${uploadBody.size})."
+    }
     val uploadUrl = requestResumableUploadUrl(apiKey, mimeType, fileSize, startBody, endpoint)
     return performResumableUploadAndDecode(uploadUrl, mimeType, fileSize, uploadBody, json)
 }
