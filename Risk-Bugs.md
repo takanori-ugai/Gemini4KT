@@ -1,7 +1,7 @@
 # Risk Bugs (Investigated)
 
 Investigation date: 2026-06-30  
-Scope: reviewed the listed risks against current `src/` code. Fixed items have been removed from this document.
+Scope: reviewed all 30 listed risks against current `src/` code. Fixed items have been removed from this document.
 
 Status keys:
 - `Confirmed`: behavior exists in current code.
@@ -28,12 +28,6 @@ Status keys:
    Finding: On Android, JS, Wasm, and Native targets, `getImage()` is hardcoded to return `""`, causing image-reliant samples to send empty payloads and fail at runtime.  
    Recommendation: Require callers to supply image data explicitly or fail-fast with target limitation errors.
 
-7. **Low - Automatic binding rejects member functions; message implies support**  
-   Status: `Confirmed`  
-   Evidence: [AutomaticFunctionCallingJvm.kt:71-73](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L71-L73), [AutomaticFunctionCallingJvmTest.kt:70-88](file:///home/ugai/Gemini4KT/src/jvmTest/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvmTest.kt#L70-L88)  
-   Finding: The binding logic checks `require(function.instanceParameter == null)` and throws an error saying only top-level or bound functions are supported. However, class member functions cannot be registered even if bound, and the message confuses developers.  
-   Recommendation: Add class instance binding support or rewrite the exception message to state that member functions are unsupported.
-
 11. **Low - Public builders allow malformed payloads**  
     Status: `Confirmed`  
     Evidence: [GenerateContentRequest.kt:59-157](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentRequest.kt#L59-L157), [InlineData.kt:45-90](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/InlineData.kt#L45-L90), [FileData.kt:33-45](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/FileData.kt#L33-L45)  
@@ -51,6 +45,12 @@ Status keys:
     Evidence: [AutomaticFunctionCallingJvm.kt:118-164](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L118-L164), [FunctionDsl.kt:16-38](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/FunctionDsl.kt#L16-L38)  
     Finding: Automatic schemas and reflection binders only support primitives, collections, maps with String keys, and raw JsonElements. Complex types, enums, or nested data structures fail with an `IllegalArgumentException` during function registration.  
     Recommendation: Support enums and nested serialization or document supported signatures.
+
+14. **High - One-of protocol shapes not enforced in builders**  
+    Status: `Confirmed`  
+    Evidence: [Part.kt:69-269](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Part.kt#L69-L269), [Tool.kt:46-190](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Tool.kt#L46-L190), [SpeechConfig.kt:74-110](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/SpeechConfig.kt#L74-L110), [AttributionSourceId.kt:28-60](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/AttributionSourceId.kt#L28-L60)  
+    Finding: Models representing mutually exclusive one-of properties (like `Part` and `Tool`) allow setting multiple or zero fields in their builders. The API will subsequently reject these requests.  
+    Recommendation: Validate one-of invariants in `build()` and throw descriptive errors when violated.
 
 15. **Medium - `GenerateContentResponse` strictness + first-candidate helpers**  
     Status: `Confirmed in code (API-dependent impact)`  
@@ -75,6 +75,12 @@ Status keys:
     Evidence: [TextToImage.kt:79-85](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/samples/TextToImage.kt#L79-L85), [ITTest.kt:874-882](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/ITTest.kt#L874-L882)  
     Finding: Multiple main entry points duplicate the logic to load `/prop.properties` and call `.use` on a potentially null stream. If the property file does not exist, they fail immediately with a NullPointerException before checking the system environment variable or fallback keys.  
     Recommendation: Standardize API key resolution in samples using a shared helper that falls back safely.
+
+24. **High - JS upload path assumes CommonJS `require('fs')`**  
+    Status: `Confirmed`  
+    Evidence: [FileUploadProvider.kt:53-59 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L53-L59), [FileUploadProvider.kt:33-48 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L33-L48)  
+    Finding: The JS implementation uses `js("require('fs')")` and Wasm uses `@kotlin.js.JsModule("fs")`. These statements assume a Node.js CommonJS environment and fail in ESM environments, browsers, or standard Kotlin JS web targets.  
+    Recommendation: Separate Node.js-specific upload logic and fail fast with meaningful error messages when running in browsers.
 
 25. **Medium - JS function-calling APIs compile but throw at runtime**  
     Status: `Confirmed`  
@@ -111,6 +117,12 @@ Status keys:
     Evidence: [PromptFeedback.kt:17-19](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/PromptFeedback.kt#L17-L19)  
     Finding: `safetyRatings` is declared as a non-nullable list. If the server response contains a `promptFeedback` object but omits the `safetyRatings` field, Kotlinx Serialization throws a parsing exception.  
     Recommendation: Declare `safetyRatings` as nullable or assign an empty default list.
+
+31. **Medium - `GeminiAI` leaks owned HTTP clients**  
+    Status: `Confirmed`  
+    Evidence: [GeminiAI.kt:30-49](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GeminiAI.kt#L30-L49)  
+    Finding: `GeminiAI` eagerly creates a `HttpClient` when one is not injected, but the class exposes no ownership flag or `close()` method. Callers that rely on the default client keep sockets, engine threads, and dispatchers open until process shutdown.  
+    Recommendation: Add ownership tracking and a public `close()` method, mirroring the lifecycle handling already used by `Gemini`, `Batch`, and `FileSearch`.
 
 32. **Medium - `FileUploadProvider` leaks owned HTTP clients on every target**  
     Status: `Confirmed`  
@@ -166,6 +178,12 @@ Status keys:
     Finding: The JS surface builds nearly identical single-prompt requests and then repeats the same first-candidate/first-part text extraction in multiple entry points. That duplication is mostly harmless at runtime, but it makes the exported API harder to maintain and spreads the same response-shaping logic across three places.  
     Recommendation: Route the exported JS helpers through a shared internal function that constructs the prompt request once and centralizes the “return the first text part” logic.
 
+41. **Low - Resumable file upload flow is copy-pasted across platform implementations**  
+    Status: `Confirmed`  
+    Evidence: [GeminiExtensions.kt:34-226](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/GeminiExtensions.kt#L34-L226), [FileUploadProvider.kt:37-281 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L37-L281), [FileUploadProvider.kt:35-280 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L35-L280), [FileUploadProvider.kt:42-215 (Native)](file:///home/ugai/Gemini4KT/src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L42-L215)  
+    Finding: The JVM, JS, Wasm, and Native implementations all repeat the same resumable-upload choreography: resolve file size, request an upload URL with the same headers, verify `HttpStatusCode.OK`, upload with finalize headers, and decode either `GeminiFile` or `Operation`. Only the file access layer changes (`java.io.File`, Node `fs`, Okio `SystemFileSystem`), so any protocol change must be duplicated in four places.  
+    Recommendation: Extract the shared request/response choreography into a common internal helper and keep only the file-size/read adapters platform-specific.
+
 42. **Low - HTTP client setup repeats the same Ktor plugin wiring on every target**  
     Status: `Confirmed`  
     Evidence: [HttpClient.kt:15-23 (JVM)](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [HttpClient.kt:15-23 (Android)](file:///home/ugai/Gemini4KT/src/androidMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [HttpClient.kt:15-23 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [HttpClient.kt:15-23 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [Platform.kt:22-30 (Native)](file:///home/ugai/Gemini4KT/src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L22-L30)  
@@ -182,15 +200,14 @@ Status keys:
 
 ## Investigation Summary
 
-- Confirmed: 25
+- Confirmed: 28
 - Partially confirmed: 1 (`#12`)
-- Disproved: 0
 - Confirmed in code but API-response-dependent impact: 2 (`#15`, `#30`)
 
 ## Most Actionable First Fixes
 
-1. Live WebSocket backpressure and error propagation (`#5`)
-2. Image payload availability on non-JVM targets (`#6`)
-3. Upload robustness (`#12`)
-4. DSL/builders validation for one-of and required fields (`#11`, `#16`, `#27`, `#28`)
-5. API response shape hardening (`#15`, `#30`)
+1. Live client lifecycle and payload logging (`#33`, `#34`)
+2. Client lifecycle leaks in `GeminiAI`, `FileUploadProvider`, samples, and JS wrappers (`#31`, `#32`, `#36`, `#37`)
+3. Live WebSocket backpressure and error propagation (`#5`)
+4. Breaking API surface changes for collection-backed fields (`#35`)
+5. Image payload availability on non-JVM targets (`#6`)
