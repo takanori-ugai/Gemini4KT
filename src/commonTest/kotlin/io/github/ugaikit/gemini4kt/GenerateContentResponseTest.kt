@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class GenerateContentResponseTest {
     @Test
@@ -25,6 +26,24 @@ class GenerateContentResponseTest {
             )
 
         assertEquals("final answer", response.getText())
+    }
+
+    @Test
+    fun getTextSearchesAcrossCandidates() {
+        val response =
+            GenerateContentResponse(
+                candidates =
+                    listOf(
+                        Candidate(
+                            content = Content(parts = arrayOf(Part(text = "thought", thought = true))),
+                        ),
+                        Candidate(
+                            content = Content(parts = arrayOf(Part(text = "fallback answer"))),
+                        ),
+                    ),
+            )
+
+        assertEquals("fallback answer", response.getText())
     }
 
     @Test
@@ -91,5 +110,13 @@ class GenerateContentResponseTest {
             )
 
         assertNull(response.getThought())
+    }
+
+    @Test
+    fun deserializesWithoutCandidates() {
+        val response =
+            kotlinx.serialization.json.Json
+                .decodeFromString<GenerateContentResponse>("{}")
+        assertTrue(response.candidates.isEmpty())
     }
 }

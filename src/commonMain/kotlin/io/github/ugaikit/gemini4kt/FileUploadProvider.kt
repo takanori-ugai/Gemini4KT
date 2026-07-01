@@ -13,6 +13,7 @@ expect class FileUploadProvider(
     apiKey: String,
     client: HttpClient? = null,
     json: Json = Json { ignoreUnknownKeys = true },
+    maxUploadFileSizeBytes: Long = DEFAULT_MAX_UPLOAD_FILE_SIZE_BYTES,
 ) {
     /**
      * Handles upload.
@@ -41,4 +42,22 @@ expect class FileUploadProvider(
         mimeType: String,
         uploadRequest: UploadFileSearchStoreRequest,
     ): Operation
+
+    /**
+     * Releases the internally owned HTTP client, if one was created.
+     */
+    fun close()
+}
+
+internal const val DEFAULT_MAX_UPLOAD_FILE_SIZE_BYTES: Long = 50L * 1024L * 1024L
+
+internal fun requireUploadFileSizeWithinLimit(
+    path: String,
+    fileSize: Long,
+    maxUploadFileSizeBytes: Long,
+) {
+    require(maxUploadFileSizeBytes > 0) { "maxUploadFileSizeBytes must be greater than 0." }
+    require(fileSize <= maxUploadFileSizeBytes) {
+        "File $path is $fileSize bytes, which exceeds the upload limit of $maxUploadFileSizeBytes bytes."
+    }
 }

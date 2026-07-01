@@ -68,10 +68,11 @@ object LiveSample {
                         },
                 )
 
+            var ownedGemini: Gemini? = null
             val liveClient: LiveClient =
                 clientFactory?.invoke()
                     ?: run {
-                        val geminiClient = gemini ?: Gemini(getApiKey())
+                        val geminiClient = gemini ?: Gemini(getApiKey()).also { ownedGemini = it }
                         geminiClient.getLiveClient(liveModel, config).toLiveClient()
                     }
 
@@ -158,6 +159,7 @@ object LiveSample {
                     throw e
                 } finally {
                     session.close()
+                    ownedGemini?.close()
                 }
             } catch (e: CancellationException) {
                 println("LiveSample cancelled: ${e.message}")

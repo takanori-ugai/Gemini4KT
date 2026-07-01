@@ -31,20 +31,24 @@ object FileSearchSample {
         fileSearchInstance: FileSearch? = null,
     ) {
         val apiKey = getApiKey()
+        val ownsGemini = geminiInstance == null
+        val ownsFileSearch = fileSearchInstance == null
         val fileSearch = fileSearchInstance ?: FileSearch(apiKey)
         val gemini = geminiInstance ?: Gemini(apiKey)
-
-        // 1. Create FileSearchStore
-        val store =
-            fileSearch.createFileSearchStore(
-                FileSearchStore(displayName = "your-fileSearchStore-name"),
-            )
-        println("Created FileSearchStore: ${store.name}")
+        var storeName: String? = null
 
         try {
+            // 1. Create FileSearchStore
+            val store =
+                fileSearch.createFileSearchStore(
+                    FileSearchStore(displayName = "your-fileSearchStore-name"),
+                )
+            storeName = store.name
+            println("Created FileSearchStore: ${store.name}")
+
             // 2. Upload file
-            val storeName = store.name ?: return
-            uploadFileToStore(fileSearch, storeName, filePath)
+            val resolvedStoreName = storeName ?: return
+            uploadFileToStore(fileSearch, resolvedStoreName, filePath)
 
             // 3. Generate Content
             val generateContentRequest =
@@ -54,7 +58,7 @@ object FileSearchSample {
                         arrayOf(
                             tool {
                                 fileSearch {
-                                    fileSearchStoreName(storeName)
+                                    fileSearchStoreName(resolvedStoreName)
                                 }
                             },
                         ),
@@ -76,7 +80,15 @@ object FileSearchSample {
             )
         } finally {
             // Clean up
-            fileSearch.deleteFileSearchStore(store.name!!, force = true)
+            if (storeName != null) {
+                fileSearch.deleteFileSearchStore(storeName, force = true)
+            }
+            if (ownsGemini) {
+                gemini.close()
+            }
+            if (ownsFileSearch) {
+                fileSearch.close()
+            }
         }
     }
 

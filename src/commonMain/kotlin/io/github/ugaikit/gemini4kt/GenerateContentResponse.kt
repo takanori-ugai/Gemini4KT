@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class GenerateContentResponse(
-    val candidates: List<Candidate>,
+    val candidates: List<Candidate> = emptyList(),
     val promptFeedback: PromptFeedback? = null,
     val usageMetadata: UsageMetadata? = null,
     val modelVersion: String = "",
@@ -28,24 +28,26 @@ data class GenerateContentResponse(
     val modelStatus: ModelStatus? = null,
 ) {
     /**
-     * Returns the first non-thought text part from the first candidate, if present.
+     * Returns the first non-thought text part from any candidate, if present.
      */
     fun getText(): String? =
         candidates
-            .firstOrNull()
-            ?.content
-            ?.parts
-            ?.firstOrNull { it.text != null && it.thought != true }
-            ?.text
+            .asSequence()
+            .mapNotNull { candidate ->
+                candidate.content.parts
+                    ?.firstOrNull { it.text != null && it.thought != true }
+                    ?.text
+            }.firstOrNull()
 
     /**
-     * Returns the first thought text part from the first candidate, if present.
+     * Returns the first thought text part from any candidate, if present.
      */
     fun getThought(): String? =
         candidates
-            .firstOrNull()
-            ?.content
-            ?.parts
-            ?.firstOrNull { it.text != null && it.thought == true }
-            ?.text
+            .asSequence()
+            .mapNotNull { candidate ->
+                candidate.content.parts
+                    ?.firstOrNull { it.text != null && it.thought == true }
+                    ?.text
+            }.firstOrNull()
 }

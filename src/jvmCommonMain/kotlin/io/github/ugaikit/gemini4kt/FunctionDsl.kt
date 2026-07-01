@@ -31,8 +31,13 @@ private fun buildTypeSchema(type: KType): Schema {
                 require(keyType?.classifier == String::class) {
                     "Map parameter keys must be String for automatic binding: $type"
                 }
-                // Current Schema model has no additionalProperties field.
-                Schema(type = "object")
+                val valueType = type.arguments.getOrNull(1)?.type
+                Schema(
+                    type = "object",
+                    additionalProperties =
+                        valueType?.let(::buildTypeSchema)
+                            ?: Schema(type = "object"),
+                )
             }
             else -> throw IllegalArgumentException("Unsupported parameter type: $type")
         }

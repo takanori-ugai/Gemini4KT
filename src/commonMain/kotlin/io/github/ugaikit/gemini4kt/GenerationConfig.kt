@@ -214,8 +214,18 @@ class GenerationConfigBuilder {
     /**
      * Handles build.
      */
-    fun build() =
-        GenerationConfig(
+    fun build(): GenerationConfig {
+        val schemaCount =
+            listOfNotNull(
+                responseSchema,
+                responseJsonSchema,
+                underscoreResponseJsonSchema,
+            ).size
+        require(schemaCount <= 1) {
+            "Only one of responseSchema, responseJsonSchema, or underscoreResponseJsonSchema can be set."
+        }
+
+        return GenerationConfig(
             stopSequences = if (stopSequences.isEmpty()) null else stopSequences.toTypedArray(),
             temperature = temperature,
             maxOutputTokens = maxOutputTokens,
@@ -237,6 +247,7 @@ class GenerationConfigBuilder {
             enableEnhancedCivicAnswers = enableEnhancedCivicAnswers,
             mediaResolution = mediaResolution,
         )
+    }
 }
 
 /**

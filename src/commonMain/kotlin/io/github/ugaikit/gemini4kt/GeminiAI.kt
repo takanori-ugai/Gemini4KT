@@ -20,7 +20,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import io.ktor.utils.io.readLine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.json.Json
@@ -93,14 +92,10 @@ class GeminiAI(
                         throw GeminiException(parseError(errorBody, response.status.value))
                     } else {
                         val channel = response.bodyAsChannel()
-                        while (!channel.isClosedForRead) {
-                            val line = channel.readLine() ?: break
-                            if (line.startsWith("data:")) {
-                                val payload = line.removePrefix("data:").trimStart()
-                                if (payload.isBlank() || payload == "[DONE]") continue
-                                val result = json.decodeFromString<JsonElement>(payload)
-                                send(result)
-                            }
+                        channel.consumeServerSentEvents { payload ->
+                            if (payload.isBlank() || payload == "[DONE]") return@consumeServerSentEvents
+                            val result = json.decodeFromString<JsonElement>(payload)
+                            send(result)
                         }
                     }
                 }

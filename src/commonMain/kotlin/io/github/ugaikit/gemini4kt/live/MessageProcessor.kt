@@ -34,6 +34,8 @@ internal suspend inline fun <reified T> processHandshakeMessage(
         logger.error(e) { "Failed to parse message" }
         if (!handshakeCompleted.isCompleted) {
             handshakeCompleted.completeExceptionally(e)
+            return
         }
+        throw e
     }
 }

@@ -170,6 +170,7 @@ class GeminiAITest {
             val responseSSE =
                 """
                 data: {"id": "v1_123", "status": "in_progress"}
+
                 data: {"id": "v1_123", "status": "completed"}
                 """.trimIndent() + "\n"
 
@@ -403,6 +404,7 @@ class GeminiAITest {
             val responseSSE =
                 """
                 data:{"id":"v1_123","status":"in_progress"}
+
                 data:{"id":"v1_123","status":"completed"}
                 """.trimIndent() + "\n"
 
@@ -433,7 +435,9 @@ class GeminiAITest {
             val responseSSE =
                 """
                 data:
+
                 data: [DONE]
+
                 data: {"id":"v1_123","status":"completed"}
                 """.trimIndent() + "\n"
 

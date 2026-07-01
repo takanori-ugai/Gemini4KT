@@ -16,12 +16,12 @@ class ComputerUseTest {
         val first =
             ComputerUse(
                 environment = Environment.ENVIRONMENT_BROWSER,
-                excludedPredefinedFunctions = listOf("CLICK", "TYPE"),
+                excludedPredefinedFunctions = arrayOf("CLICK", "TYPE"),
             )
         val second =
             ComputerUse(
                 environment = Environment.ENVIRONMENT_BROWSER,
-                excludedPredefinedFunctions = listOf("CLICK", "TYPE"),
+                excludedPredefinedFunctions = arrayOf("CLICK", "TYPE"),
             )
 
         assertEquals(first, second)
@@ -33,13 +33,13 @@ class ComputerUseTest {
         val computerUse =
             ComputerUse(
                 environment = Environment.ENVIRONMENT_BROWSER,
-                excludedPredefinedFunctions = listOf("CLICK", "TYPE"),
+                excludedPredefinedFunctions = arrayOf("CLICK", "TYPE"),
             )
 
         val encoded = json.encodeToString(computerUse)
         val decoded = json.decodeFromString<ComputerUse>(encoded)
 
         assertEquals(computerUse, decoded)
-        assertEquals(listOf("CLICK", "TYPE"), decoded.excludedPredefinedFunctions)
+        assertEquals(true, decoded.excludedPredefinedFunctions?.contentEquals(arrayOf("CLICK", "TYPE")))
     }
 }

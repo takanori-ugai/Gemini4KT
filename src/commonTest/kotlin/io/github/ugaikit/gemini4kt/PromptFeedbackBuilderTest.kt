@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -50,6 +51,12 @@ class PromptFeedbackBuilderTest {
     @Test
     fun buildWithNoSafetyRatings() {
         val promptFeedback = promptFeedback {}
+        assertEquals(0, promptFeedback.safetyRatings.size)
+    }
+
+    @Test
+    fun deserializesMissingSafetyRatingsAsEmptyList() {
+        val promptFeedback = Json.decodeFromString<PromptFeedback>("{}")
         assertEquals(0, promptFeedback.safetyRatings.size)
     }
 }

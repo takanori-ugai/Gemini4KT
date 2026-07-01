@@ -10,7 +10,6 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Base64
-import java.util.Properties
 
 /**
  * Represents the text to image.
@@ -77,12 +76,8 @@ object TextToImageSample {
     fun main(args: Array<String>) =
         runBlocking {
             val apiKey =
-                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-                    Properties()
-                        .apply {
-                            load(inputStream)
-                        }.getProperty("apiKey")
-                }
+                io.github.ugaikit.gemini4kt
+                    .getApiKey()
             val gemini = Gemini(apiKey)
             val sample = TextToImage(gemini)
             try {

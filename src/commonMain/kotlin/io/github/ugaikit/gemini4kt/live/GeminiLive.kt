@@ -83,7 +83,6 @@ class GeminiLive(
         handshakeTimeoutMs: Long = 10_000,
     ): GeminiLiveSession {
         // Use provided client or create a new one.
-        val ownsClient = client == null
         val httpClient =
             client?.config {
                 install(WebSockets)
@@ -103,7 +102,7 @@ class GeminiLive(
                     header("x-goog-api-client", X_GOOG_API_CLIENT)
                 }
 
-            val incomingMessages = Channel<BidiGenerateContentServerMessage>(Channel.UNLIMITED)
+            val incomingMessages = Channel<BidiGenerateContentServerMessage>(Channel.BUFFERED)
             val scope = CoroutineScope(Dispatchers.Default)
             val handshakeCompleted = CompletableDeferred<Unit>()
 
@@ -122,7 +121,7 @@ class GeminiLive(
                                     else -> continue
                                 }
 
-                            logger.debug { "Received message: $text" }
+                            logger.debug { "Received live message (${text.length} chars)" }
                             processHandshakeMessage(
                                 text,
                                 handshakeCompleted,
@@ -179,7 +178,7 @@ class GeminiLive(
 
             val clientMessage = BidiGenerateContentClientMessage(setup = setupMessage)
             val jsonMessage = json.encodeToString(clientMessage)
-            logger.debug { "Sending setup message: $jsonMessage" }
+            logger.debug { "Sending setup message (${jsonMessage.length} chars)" }
             session.send(Frame.Text(jsonMessage))
 
             // Wait for setup complete message
@@ -195,14 +194,12 @@ class GeminiLive(
                 throw e
             }
 
-            return GeminiLiveSession(session, incomingMessages, json, listenerJob, httpClient, ownsClient)
+            return GeminiLiveSession(session, incomingMessages, json, listenerJob, httpClient, true)
         } catch (e: Exception) {
             try {
                 session?.close()
             } finally {
-                if (ownsClient) {
-                    httpClient.close()
-                }
+                httpClient.close()
             }
             throw e
         }
@@ -264,7 +261,7 @@ class GeminiLiveSession(
      */
     private suspend fun send(msg: BidiGenerateContentClientMessage) {
         val txt = json.encodeToString(msg)
-        logger.debug { "Sending message: $txt" }
+        logger.debug { "Sending live message (${txt.length} chars)" }
         session.send(Frame.Text(txt))
     }
 

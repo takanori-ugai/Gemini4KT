@@ -22,11 +22,17 @@ actual class FileUploadProvider actual constructor(
     private val apiKey: String,
     private val client: HttpClient?,
     private val json: Json,
+    private val maxUploadFileSizeBytes: Long,
 ) {
     /**
      * Holds the http client.
      */
     private val httpClient = client ?: createHttpClient(json)
+
+    /**
+     * Tracks whether this instance owns the HTTP client.
+     */
+    private val ownsHttpClient = client == null
 
     /**
      * Holds the fs.
@@ -48,6 +54,7 @@ actual class FileUploadProvider actual constructor(
         val metadata = fs.metadataOrNull(file) ?: throw IOException("File not found: $file")
         val fileSize = metadata.size
         val requestBody = json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName)))
+        requireUploadFileSizeWithinLimit(file.toString(), fileSize, maxUploadFileSizeBytes)
         val content =
             fs.source(file).buffered().use { source ->
                 source.readByteArray()
@@ -80,6 +87,7 @@ actual class FileUploadProvider actual constructor(
         val metadata = fs.metadataOrNull(file) ?: throw IOException("File not found: $file")
         val fileSize = metadata.size
         val requestBody = json.encodeToString(uploadRequest)
+        requireUploadFileSizeWithinLimit(file.toString(), fileSize, maxUploadFileSizeBytes)
         val content =
             fs.source(file).buffered().use { source ->
                 source.readByteArray()
@@ -94,5 +102,14 @@ actual class FileUploadProvider actual constructor(
                 json = json,
                 endpoint = "upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore",
             )
+    }
+
+    /**
+     * Closes the internally owned HTTP client, if any.
+     */
+    actual fun close() {
+        if (ownsHttpClient) {
+            httpClient.close()
+        }
     }
 }

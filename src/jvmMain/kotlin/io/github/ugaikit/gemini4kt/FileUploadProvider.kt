@@ -21,6 +21,7 @@ actual class FileUploadProvider actual constructor(
     private val apiKey: String,
     private val client: HttpClient?,
     private val json: Json,
+    private val maxUploadFileSizeBytes: Long,
 ) {
     init {
         require(apiKey.isNotBlank()) { "apiKey must not be blank." }
@@ -30,6 +31,11 @@ actual class FileUploadProvider actual constructor(
      * Holds the http client.
      */
     private val httpClient = client ?: createHttpClient(json)
+
+    /**
+     * Tracks whether this instance owns the HTTP client.
+     */
+    private val ownsHttpClient = client == null
 
     /**
      * Handles upload.
@@ -45,6 +51,7 @@ actual class FileUploadProvider actual constructor(
     ): GeminiFile {
         val javaFile = File(file.toString())
         val requestBody = json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName)))
+        requireUploadFileSizeWithinLimit(file.toString(), javaFile.length(), maxUploadFileSizeBytes)
         val fileContent =
             withContext(Dispatchers.IO) {
                 javaFile.readBytes()
@@ -78,6 +85,7 @@ actual class FileUploadProvider actual constructor(
     ): Operation {
         val javaFile = File(file.toString())
         val requestBody = json.encodeToString(uploadRequest)
+        requireUploadFileSizeWithinLimit(file.toString(), javaFile.length(), maxUploadFileSizeBytes)
         val fileContent =
             withContext(Dispatchers.IO) {
                 javaFile.readBytes()
@@ -93,6 +101,12 @@ actual class FileUploadProvider actual constructor(
                     json = json,
                     endpoint = "upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore",
                 )
+        }
+    }
+
+    actual fun close() {
+        if (ownsHttpClient) {
+            httpClient.close()
         }
     }
 }

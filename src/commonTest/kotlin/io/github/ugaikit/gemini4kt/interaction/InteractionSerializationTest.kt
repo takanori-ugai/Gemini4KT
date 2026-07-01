@@ -84,7 +84,7 @@ class InteractionSerializationTest {
             InteractionTool(
                 type = "computer_use",
                 environment = "browser",
-                excludedPredefinedFunctions = listOf("CLICK", "TYPE"),
+                excludedPredefinedFunctions = arrayOf("CLICK", "TYPE"),
             )
 
         val encoded = json.encodeToString(tool)

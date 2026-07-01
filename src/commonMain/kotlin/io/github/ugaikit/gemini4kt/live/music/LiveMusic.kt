@@ -97,7 +97,6 @@ class LiveMusic(
         connectTimeoutMs: Long = 10_000,
     ): LiveMusicSession {
         // Use provided client or create a new one.
-        val ownsClient = client == null
         val httpClient =
             client?.config {
                 install(WebSockets)
@@ -118,7 +117,7 @@ class LiveMusic(
                 }
             logger.info { "WebSocket session established." }
 
-            val incomingMessages = Channel<LiveMusicServerMessage>(Channel.UNLIMITED)
+            val incomingMessages = Channel<LiveMusicServerMessage>(Channel.BUFFERED)
             val scope = CoroutineScope(Dispatchers.Default)
             val handshakeCompleted = CompletableDeferred<Unit>()
 
@@ -137,7 +136,7 @@ class LiveMusic(
                                     }
                                     else -> continue
                                 }
-                            logger.debug { "Received message: $text" }
+                            logger.debug { "Received live music message (${text.length} chars)" }
                             processHandshakeMessage(
                                 text,
                                 handshakeCompleted,
@@ -166,7 +165,7 @@ class LiveMusic(
 
             val clientMessage = LiveMusicClientMessage(setup = setup)
             val jsonMessage = json.encodeToString(clientMessage)
-            logger.debug { "Sending setup message: $jsonMessage" }
+            logger.debug { "Sending setup message (${jsonMessage.length} chars)" }
             session.send(Frame.Text(jsonMessage))
 
             // Wait for setup complete message
@@ -182,15 +181,13 @@ class LiveMusic(
                 throw e
             }
 
-            return LiveMusicSession(session, incomingMessages, json, listenerJob, httpClient, ownsClient)
+            return LiveMusicSession(session, incomingMessages, json, listenerJob, httpClient, true)
         } catch (e: Exception) {
             logger.error(e) { "Error in connect method" }
             try {
                 session?.close()
             } finally {
-                if (ownsClient) {
-                    httpClient.close()
-                }
+                httpClient.close()
             }
             throw e
         }
@@ -278,7 +275,7 @@ class LiveMusicSession(
      */
     private suspend fun send(msg: LiveMusicClientMessage) {
         val txt = json.encodeToString(msg)
-        logger.debug { "Sending message: $txt" }
+        logger.debug { "Sending live music message (${txt.length} chars)" }
         session.send(Frame.Text(txt))
     }
 
