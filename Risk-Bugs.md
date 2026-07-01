@@ -1,7 +1,7 @@
 # Risk Bugs (Investigated)
 
 Investigation date: 2026-06-30  
-Scope: reviewed all 30 listed risks against current `src/` code. Fixed items have been removed from this document.
+Scope: reviewed the listed risks against current `src/` code. Fixed items have been removed from this document.
 
 Status keys:
 - `Confirmed`: behavior exists in current code.
@@ -46,12 +46,6 @@ Status keys:
     Finding: Automatic schemas and reflection binders only support primitives, collections, maps with String keys, and raw JsonElements. Complex types, enums, or nested data structures fail with an `IllegalArgumentException` during function registration.  
     Recommendation: Support enums and nested serialization or document supported signatures.
 
-14. **High - `Tool` one-of protocol shape not enforced in builder**  
-    Status: `Partially confirmed`  
-    Evidence: [Tool.kt:46-190](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Tool.kt#L46-L190)  
-    Finding: `ToolBuilder` still allows multiple or zero tool configuration blocks, so the API can receive invalid mutually exclusive tool combinations. The `Part`, `SpeechConfig`, and `AttributionSourceId` builders now enforce their one-of invariants, so the original finding is narrower than the note implied.  
-    Recommendation: Add validation to `ToolBuilder.build()` and reject invalid combinations before serialization.
-
 15. **Medium - `GenerateContentResponse` strictness + first-candidate helpers**  
     Status: `Confirmed in code (API-dependent impact)`  
     Evidence: [GenerateContentResponse.kt:22-29](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentResponse.kt#L22-L29), [GenerateContentResponse.kt:33-50](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentResponse.kt#L33-L50)  
@@ -75,12 +69,6 @@ Status keys:
     Evidence: [TextToImage.kt:79-85](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/samples/TextToImage.kt#L79-L85), [ITTest.kt:874-882](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/ITTest.kt#L874-L882)  
     Finding: Multiple main entry points duplicate the logic to load `/prop.properties` and call `.use` on a potentially null stream. If the property file does not exist, they fail immediately with a NullPointerException before checking the system environment variable or fallback keys.  
     Recommendation: Standardize API key resolution in samples using a shared helper that falls back safely.
-
-24. **High - JS upload path assumes CommonJS `require('fs')`**  
-    Status: `Confirmed`  
-    Evidence: [FileUploadProvider.kt:53-59 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L53-L59), [FileUploadProvider.kt:33-48 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L33-L48)  
-    Finding: The JS implementation uses `js("require('fs')")` and Wasm uses `@kotlin.js.JsModule("fs")`. These statements assume a Node.js CommonJS environment and fail in ESM environments, browsers, or standard Kotlin JS web targets.  
-    Recommendation: Separate Node.js-specific upload logic and fail fast with meaningful error messages when running in browsers.
 
 25. **Medium - JS function-calling APIs compile but throw at runtime**  
     Status: `Confirmed`  
@@ -117,12 +105,6 @@ Status keys:
     Evidence: [PromptFeedback.kt:17-19](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/PromptFeedback.kt#L17-L19)  
     Finding: `safetyRatings` is declared as a non-nullable list. If the server response contains a `promptFeedback` object but omits the `safetyRatings` field, Kotlinx Serialization throws a parsing exception.  
     Recommendation: Declare `safetyRatings` as nullable or assign an empty default list.
-
-31. **Medium - `GeminiAI` leaks owned HTTP clients**  
-    Status: `Confirmed`  
-    Evidence: [GeminiAI.kt:30-49](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GeminiAI.kt#L30-L49)  
-    Finding: `GeminiAI` eagerly creates a `HttpClient` when one is not injected, but the class exposes no ownership flag or `close()` method. Callers that rely on the default client keep sockets, engine threads, and dispatchers open until process shutdown.  
-    Recommendation: Add ownership tracking and a public `close()` method, mirroring the lifecycle handling already used by `Gemini`, `Batch`, and `FileSearch`.
 
 32. **Medium - `FileUploadProvider` leaks owned HTTP clients on every target**  
     Status: `Confirmed`  
@@ -194,8 +176,9 @@ Status keys:
 
 ## Investigation Summary
 
-- Confirmed: 27
-- Partially confirmed: 2 (`#12`, `#14`)
+- Confirmed: 25
+- Partially confirmed: 1 (`#12`)
+- Disproved: 0
 - Confirmed in code but API-response-dependent impact: 2 (`#15`, `#30`)
 
 ## Most Actionable First Fixes
