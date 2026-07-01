@@ -222,7 +222,7 @@ tasks {
         group = "application"
         description = "Run FunctionExample3Runner on the JVM target"
         dependsOn("jvmJar")
-        mainClass.set("io.github.ugaikit.gemini4kt.samples.FunctionExample3Runner")
+        mainClass.set("io.github.ugaikit.gemini4kt.samples.InteractionSamplesRunner")
         val jvmJar = named<Jar>("jvmJar")
         classpath =
             files(

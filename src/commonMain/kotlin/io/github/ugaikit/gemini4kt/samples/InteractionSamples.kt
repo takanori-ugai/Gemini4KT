@@ -7,13 +7,18 @@ import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.interaction.InteractionContent
 import io.github.ugaikit.gemini4kt.interaction.InteractionTool
-import io.github.ugaikit.gemini4kt.interaction.InteractionTurn
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+
+val model = "gemma-4-26b-a4b-it"
 
 object InteractionSamples {
     private val json =
@@ -28,11 +33,12 @@ object InteractionSamples {
             println("--- Simple Request ---")
             val request =
                 CreateInteractionRequest(
-                    model = "gemini-2.5-flash",
+                    model = model,
                     input = JsonPrimitive("Hello, how are you?"),
+                    background = false,
                 )
             val interaction = ai.createInteraction(request)
-            printOutputs(interaction)
+            printInteractionResult(interaction)
         } finally {
             if (client == null) {
                 ai.close()
@@ -44,21 +50,56 @@ object InteractionSamples {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
         try {
             println("--- Multi-turn ---")
-            val turns =
-                listOf(
-                    InteractionTurn(role = "user", content = JsonPrimitive("Hello!")),
-                    InteractionTurn(role = "model", content = JsonPrimitive("Hi there! How can I help you today?")),
-                    InteractionTurn(role = "user", content = JsonPrimitive("What is the capital of France?")),
-                )
-            val inputJson = json.encodeToJsonElement(turns)
+            val inputJson =
+                buildJsonArray {
+                    add(
+                        buildJsonObject {
+                            put("type", JsonPrimitive("user_input"))
+                            putJsonArray("content") {
+                                add(
+                                    buildJsonObject {
+                                        put("type", JsonPrimitive("text"))
+                                        put("text", JsonPrimitive("Hello!"))
+                                    },
+                                )
+                            }
+                        },
+                    )
+                    add(
+                        buildJsonObject {
+                            put("type", JsonPrimitive("model_output"))
+                            putJsonArray("content") {
+                                add(
+                                    buildJsonObject {
+                                        put("type", JsonPrimitive("text"))
+                                        put("text", JsonPrimitive("Hi there! How can I help you today?"))
+                                    },
+                                )
+                            }
+                        },
+                    )
+                    add(
+                        buildJsonObject {
+                            put("type", JsonPrimitive("user_input"))
+                            putJsonArray("content") {
+                                add(
+                                    buildJsonObject {
+                                        put("type", JsonPrimitive("text"))
+                                        put("text", JsonPrimitive("What is the capital of France?"))
+                                    },
+                                )
+                            }
+                        },
+                    )
+                }
 
             val request =
                 CreateInteractionRequest(
-                    model = "gemini-2.5-flash",
+                    model = model,
                     input = inputJson,
                 )
             val interaction = ai.createInteraction(request)
-            printOutputs(interaction)
+            printInteractionResult(interaction)
         } finally {
             if (client == null) {
                 ai.close()
@@ -83,11 +124,11 @@ object InteractionSamples {
 
             val request =
                 CreateInteractionRequest(
-                    model = "gemini-2.5-flash",
+                    model = model,
                     input = inputJson,
                 )
             val interaction = ai.createInteraction(request)
-            printOutputs(interaction)
+            printInteractionResult(interaction)
         } finally {
             if (client == null) {
                 ai.close()
@@ -126,12 +167,12 @@ object InteractionSamples {
 
             val request =
                 CreateInteractionRequest(
-                    model = "gemini-2.5-flash",
+                    model = model,
                     tools = arrayOf(tool),
                     input = JsonPrimitive("What is the weather like in Boston, MA?"),
                 )
             val interaction = ai.createInteraction(request)
-            printOutputs(interaction)
+            printInteractionResult(interaction)
         } finally {
             if (client == null) {
                 ai.close()
@@ -139,12 +180,41 @@ object InteractionSamples {
         }
     }
 
-    private fun printOutputs(interaction: Interaction) {
+    private fun printInteractionResult(interaction: Interaction) {
+        println("Interaction ID: ${interaction.id}")
+        println("Status: ${interaction.status}")
+        println("Model: ${interaction.model ?: "N/A"}")
+        println("Role: ${interaction.role ?: "N/A"}")
+        println("Usage: ${interaction.usage ?: "N/A"}")
+        println("Steps: ${interaction.steps?.size ?: 0}")
+
+        printGeneratedContents(interaction)
+    }
+
+    private fun printGeneratedContents(interaction: Interaction) {
+        val generatedText = interaction.outputText?.takeIf { it.isNotBlank() }
+            if (generatedText != null) {
+            println("Generated text:")
+            println(generatedText)
+        } else {
+            val extractedStepText = extractTextFromSteps(interaction.steps)
+            if (extractedStepText.isNotEmpty()) {
+                println("Generated text from steps:")
+                extractedStepText.forEachIndexed { index, text ->
+                    println("[$index] $text")
+                }
+            } else {
+                println("Generated text: N/A")
+            }
+        }
+
         val outputs = interaction.outputs
         if (outputs.isNullOrEmpty()) {
-            println("No outputs. Status: ${interaction.status}")
+            println("No generated content items returned.")
             return
         }
+
+        println("Generated content items:")
         outputs.forEach { content ->
             println("Type: ${content.type}")
             when (content.type) {
@@ -152,7 +222,45 @@ object InteractionSamples {
                 "image" -> println("Image: [Image Data]")
                 "function_call" -> println("Function Call: ${content.name}(${content.arguments})")
                 "thought" -> println("Thought: ${content.summary?.content?.text ?: "No summary"}")
+                "code_execution_result" -> println("Code result: ${content.result}")
                 else -> println("Content: $content")
+            }
+        }
+    }
+
+    private fun extractTextFromSteps(steps: Array<JsonElement>?): List<String> {
+        if (steps.isNullOrEmpty()) {
+            return emptyList()
+        }
+
+        val texts = mutableListOf<String>()
+        steps.forEach { step ->
+            collectText(step, texts)
+        }
+        return texts
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+    }
+
+    private fun collectText(element: JsonElement, texts: MutableList<String>) {
+        when (element) {
+            is JsonPrimitive -> return
+            is JsonArray -> element.forEach { collectText(it, texts) }
+            is JsonObject -> {
+                val stepType = (element["type"] as? JsonPrimitive)?.content
+                if (stepType == "user_input") {
+                    return
+                }
+
+                element.forEach { (key, value) ->
+                    if (key == "text" || key == "output_text" || key == "content") {
+                        if (value is JsonPrimitive && value.isString) {
+                            texts.add(value.content)
+                        }
+                    }
+                    collectText(value, texts)
+                }
             }
         }
     }
@@ -169,7 +277,7 @@ object InteractionSamples {
                 )
             try {
                 val interaction = ai.createInteraction(request)
-                println("Status: ${interaction.status}")
+                printInteractionResult(interaction)
             } catch (e: Exception) {
                 println("Error: ${e.message}")
             }
