@@ -91,9 +91,39 @@ fun batchInputConfig(block: BatchInputConfigBuilder.() -> Unit): BatchInputConfi
  */
 class BatchInputConfigBuilder {
     /**
+     * Holds the Google Cloud Storage source.
+     */
+    private var gcsSource: BatchGcsSource? = null
+
+    /**
+     * Holds the file name.
+     */
+    private var fileName: String? = null
+
+    /**
      * Holds the requests.
      */
     private var requests: BatchRequestInput? = null
+
+    /**
+     * Handles Google Cloud Storage source.
+     *
+     * @param uris The GCS URIs.
+     */
+    fun gcsSource(vararg uris: String) {
+        require(uris.isNotEmpty()) { "gcsSource must contain at least one URI." }
+        this.gcsSource = BatchGcsSource(uris.toList())
+    }
+
+    /**
+     * Handles File API source name.
+     *
+     * @param name The file name.
+     */
+    fun fileName(name: String) {
+        require(name.isNotBlank()) { "fileName must not be blank." }
+        this.fileName = name
+    }
 
     /**
      * Handles requests.
@@ -108,9 +138,17 @@ class BatchInputConfigBuilder {
      * Handles build.
      */
     fun build(): BatchInputConfig =
-        BatchInputConfig(
-            requests = requests ?: error("Requests must be provided."),
-        )
+        run {
+            val selectedModes = listOfNotNull(gcsSource, fileName, requests)
+            require(selectedModes.size == 1) {
+                "Exactly one of gcsSource, fileName, or requests must be provided."
+            }
+            BatchInputConfig(
+                gcsSource = gcsSource,
+                fileName = fileName,
+                requests = requests,
+            )
+        }
 }
 
 /**

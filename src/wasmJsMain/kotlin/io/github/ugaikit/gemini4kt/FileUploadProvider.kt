@@ -19,6 +19,7 @@ actual class FileUploadProvider actual constructor(
     private val apiKey: String,
     private val client: HttpClient?,
     private val json: Json,
+    private val maxUploadFileSizeBytes: Long,
 ) {
     init {
         require(apiKey.isNotBlank()) { "apiKey must not be blank." }
@@ -28,6 +29,11 @@ actual class FileUploadProvider actual constructor(
      * Holds the http client.
      */
     private val httpClient = client ?: createHttpClient(json)
+
+    /**
+     * Tracks whether this instance owns the HTTP client.
+     */
+    private val ownsHttpClient = client == null
 
     /**
      * Holds the fs module.
@@ -49,6 +55,7 @@ actual class FileUploadProvider actual constructor(
         val pathStr = file.toString()
         val fileSize = getFileSize(pathStr)
         val requestBody = json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName)))
+        requireUploadFileSizeWithinLimit(pathStr, fileSize, maxUploadFileSizeBytes)
         val fileContent = readFile(pathStr)
         return httpClient
             .performResumableUploadAndDecode<FileWrapper>(
@@ -78,6 +85,7 @@ actual class FileUploadProvider actual constructor(
         val pathStr = file.toString()
         val fileSize = getFileSize(pathStr)
         val requestBody = json.encodeToString(uploadRequest)
+        requireUploadFileSizeWithinLimit(pathStr, fileSize, maxUploadFileSizeBytes)
         val fileContent = readFile(pathStr)
         return httpClient
             .performResumableUploadAndDecode<Operation>(
@@ -144,6 +152,15 @@ actual class FileUploadProvider actual constructor(
             }
         } catch (e: dynamic) {
             throw IOException("Failed to read file $path", e)
+        }
+    }
+
+    /**
+     * Closes the internally owned HTTP client, if any.
+     */
+    actual fun close() {
+        if (ownsHttpClient) {
+            httpClient.close()
         }
     }
 }

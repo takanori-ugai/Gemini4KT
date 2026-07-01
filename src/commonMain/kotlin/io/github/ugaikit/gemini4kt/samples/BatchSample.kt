@@ -18,6 +18,7 @@ object BatchSample {
      * @param batchClient The batch client.
      */
     suspend fun run(batchClient: Batch? = null) {
+        val ownsClient = batchClient == null
         val client =
             batchClient ?: run {
                 val apiKey = getApiKey()
@@ -103,6 +104,10 @@ object BatchSample {
             }
         } catch (e: Exception) {
             println("Error: ${e.message}")
+        } finally {
+            if (ownsClient) {
+                client.close()
+            }
         }
     }
 }

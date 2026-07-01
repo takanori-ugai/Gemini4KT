@@ -50,7 +50,20 @@ class FunctionCallingConfigBuilder {
     /**
      * Handles build.
      */
-    fun build() = FunctionCallingConfig(mode, allowedFunctionNames.toTypedArray())
+    fun build(): FunctionCallingConfig {
+        val allowedNames = allowedFunctionNames.toTypedArray()
+        when (mode) {
+            Mode.ANY, Mode.VALIDATED ->
+                require(allowedNames.isNotEmpty()) {
+                    "allowedFunctionNames must not be empty when mode is $mode."
+                }
+            Mode.AUTO, Mode.NONE, Mode.MODE_UNSPECIFIED ->
+                require(allowedNames.isEmpty()) {
+                    "allowedFunctionNames must be empty when mode is $mode."
+                }
+        }
+        return FunctionCallingConfig(mode, allowedNames)
+    }
 }
 
 /**

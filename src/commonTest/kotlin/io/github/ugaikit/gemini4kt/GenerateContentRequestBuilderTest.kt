@@ -35,6 +35,7 @@ class GenerateContentRequestBuilderTest {
             toolConfig {
                 functionCallingConfig {
                     mode = Mode.ANY
+                    allowFunction("get_weather")
                 }
             }
             safetySetting {

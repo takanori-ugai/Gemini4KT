@@ -6,6 +6,7 @@ import io.github.ugaikit.gemini4kt.GeminiFunction
 import io.github.ugaikit.gemini4kt.GeminiParameter
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
+import io.github.ugaikit.gemini4kt.generateContent
 import io.github.ugaikit.gemini4kt.getApiKey
 
 /**

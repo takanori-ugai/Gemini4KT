@@ -23,7 +23,6 @@ import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import java.io.File
 import java.util.Base64
-import java.util.Properties
 import javax.sound.sampled.AudioFileFormat
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
@@ -873,20 +872,7 @@ private suspend fun testLiveAPI(apiKey: String) {
  */
 fun main() =
     runBlocking {
-        var apiKey = System.getenv("GEMINI_API_KEY")
-        if (apiKey == null) {
-            apiKey =
-                Gemini::class.java.getResourceAsStream("/prop.properties").use { inputStream ->
-                    Properties()
-                        .apply {
-                            load(inputStream)
-                        }.getProperty("apiKey")
-                }
-        }
-        if (apiKey.isNullOrEmpty()) {
-            println("API key not found. Please set the GEMINI_API_KEY environment variable.")
-            return@runBlocking
-        }
+        val apiKey = getApiKey()
         val gemini = Gemini(apiKey)
         val tools = defineFunctionTools()
 

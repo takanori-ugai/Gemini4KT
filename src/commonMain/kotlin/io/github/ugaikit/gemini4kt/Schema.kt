@@ -23,6 +23,7 @@ import kotlin.js.JsExport
  * ensuring certain fields must be present in the data.
  * @property items The schema for items in an array, applicable when the type is
  * "array". Defines the schema of elements within the array.
+ * @property additionalProperties Schema for map values when the schema represents an object map.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -36,6 +37,7 @@ data class Schema(
     val properties: Map<String, Schema> = emptyMap(),
     val required: List<String> = emptyList(),
     val items: Schema? = null,
+    val additionalProperties: Schema? = null,
 )
 
 /**
@@ -83,6 +85,11 @@ class SchemaBuilder {
     var items: SchemaBuilder? = null
 
     /**
+     * Holds the additional properties.
+     */
+    var additionalProperties: SchemaBuilder? = null
+
+    /**
      * Handles enum.
      *
      * @param values The values.
@@ -123,6 +130,15 @@ class SchemaBuilder {
     }
 
     /**
+     * Handles additional properties.
+     *
+     * @param init The init.
+     */
+    fun additionalProperties(init: SchemaBuilder.() -> Unit) {
+        additionalProperties = SchemaBuilder().apply(init)
+    }
+
+    /**
      * Handles build.
      */
     fun build(): Schema {
@@ -136,6 +152,7 @@ class SchemaBuilder {
             properties = properties,
             required = requiredInternal,
             items = items?.build(),
+            additionalProperties = additionalProperties?.build(),
         )
     }
 }

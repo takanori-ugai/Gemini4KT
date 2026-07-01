@@ -37,7 +37,7 @@ class ToolConfigBuilderTest {
         val toolConfig =
             toolConfig {
                 functionCallingConfig {
-                    mode = Mode.ANY
+                    mode = Mode.AUTO
                 }
                 retrievalConfig =
                     RetrievalConfig(

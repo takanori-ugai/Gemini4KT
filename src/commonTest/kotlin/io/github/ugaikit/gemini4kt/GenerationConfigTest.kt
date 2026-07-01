@@ -4,6 +4,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -88,7 +89,6 @@ class GenerationConfigTest {
                         includeThoughts = true,
                     )
                 responseJsonSchema = Json.parseToJsonElement("""{"type":"object"}""")
-                underscoreResponseJsonSchema = Json.parseToJsonElement("""{"type":"array"}""")
                 seed = 42
                 presencePenalty = 0.2
                 frequencyPenalty = 0.1
@@ -105,7 +105,18 @@ class GenerationConfigTest {
 
         val encoded = json.encodeToString(config)
         assertTrue(encoded.contains("\"response_json_schema\""))
-        assertTrue(encoded.contains("\"_responseJsonSchema\""))
         assertTrue(encoded.contains("\"MEDIA_RESOLUTION_HIGH\""))
+    }
+
+    @Test
+    fun testGenerationConfigRejectsMultipleResponseSchemas() {
+        assertFailsWith<IllegalArgumentException> {
+            generationConfig {
+                responseSchema {
+                    type = "object"
+                }
+                responseJsonSchema = Json.parseToJsonElement("""{"type":"object"}""")
+            }
+        }
     }
 }

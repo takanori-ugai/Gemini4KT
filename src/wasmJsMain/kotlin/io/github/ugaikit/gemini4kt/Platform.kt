@@ -19,9 +19,6 @@ internal actual fun getApiKey(): String {
 
 /**
  * Retrieves an image as a base64 encoded string for the Wasm/JS platform.
- *
- * This function currently returns an empty string as a placeholder.
- *
- * @return An empty string as a placeholder.
  */
-internal actual fun getImage(): String = ""
+internal actual fun getImage(): String =
+    throw UnsupportedOperationException("getImage() is not supported on Wasm/JS. Provide image data explicitly.")

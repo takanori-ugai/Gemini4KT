@@ -52,7 +52,14 @@ suspend fun generateText(
     apiKey: String,
     prompt: String,
     model: String = "gemini-pro",
-): String = Gemini(apiKey).generateTextInternal(prompt, model)
+): String {
+    val client = Gemini(apiKey)
+    return try {
+        client.generateTextInternal(prompt, model)
+    } finally {
+        client.close()
+    }
+}
 
 /**
  * Represents the gemini js client.
@@ -77,6 +84,13 @@ class GeminiJsClient(
         prompt: String,
         model: String = "gemini-pro",
     ): String = client.generateTextInternal(prompt, model)
+
+    /**
+     * Releases the underlying Gemini client.
+     */
+    fun close() {
+        client.close()
+    }
 }
 
 /**
@@ -120,12 +134,16 @@ suspend fun runSample1(
     /**
      * Holds the response.
      */
-    val response = client.generateContent(request, model = model)
-    return response.candidates
-        .firstOrNull()
-        ?.content
-        ?.parts
-        ?.firstOrNull()
-        ?.text
-        .orEmpty()
+    return try {
+        val response = client.generateContent(request, model = model)
+        response.candidates
+            .firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull()
+            ?.text
+            .orEmpty()
+    } finally {
+        client.close()
+    }
 }

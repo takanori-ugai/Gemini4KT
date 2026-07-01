@@ -11,9 +11,10 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.URLBuilder
+import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import io.ktor.utils.io.readLine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.io.files.Path
@@ -21,7 +22,6 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.js.JsName
-import kotlin.reflect.KFunction
 
 /**
  * A logger for logging messages. Uses KotlinLogging library for simplified logging.
@@ -107,28 +107,6 @@ class Gemini(
     }
 
     /**
-     * Executes automatic function calling using direct Kotlin function references.
-     *
-     * This is currently supported on JVM/Android targets.
-     */
-    suspend fun generateContent(
-        request: GenerateContentRequest,
-        vararg functions: KFunction<*>,
-        model: String = "gemini-flash-lite-latest",
-        maxIterations: Int = 8,
-    ): GenerateContentResponse {
-        require(functions.isNotEmpty()) { "At least one function is required." }
-        val binding = buildAutomaticFunctionBinding(functions)
-        val mergedRequest = request.copy(tools = request.tools + binding.tools)
-        return generateContent(
-            request = mergedRequest,
-            functionHandlers = binding.handlers,
-            model = model,
-            maxIterations = maxIterations,
-        )
-    }
-
-    /**
      * JSON configuration setup to ignore unknown keys during deserialization.
      */
     internal val json = Json { ignoreUnknownKeys = true }
@@ -200,16 +178,13 @@ class Gemini(
                     response.throwApiException()
                 } else {
                     val channel = response.bodyAsChannel()
-                    while (!channel.isClosedForRead) {
-                        val line = channel.readLine() ?: break
-                        if (line.startsWith("data: ")) {
-                            val jsonStr = line.substring(6)
-                            try {
-                                val result = json.decodeFromString<GenerateContentResponse>(jsonStr)
-                                emit(result)
-                            } catch (e: SerializationException) {
-                                logger.error { "Failed to parse stream response: ${e.message}" }
-                            }
+                    channel.consumeServerSentEvents { jsonStr ->
+                        if (jsonStr == "[DONE]") return@consumeServerSentEvents
+                        try {
+                            val result = json.decodeFromString<GenerateContentResponse>(jsonStr)
+                            emit(result)
+                        } catch (e: SerializationException) {
+                            logger.error { "Failed to parse stream response: ${e.message}" }
                         }
                     }
                 }
@@ -244,10 +219,14 @@ class Gemini(
         pageToken: String? = null,
     ): CachedContentList {
         val urlString =
-            buildString {
-                append("$bUrl/cachedContents?pageSize=$pageSize")
-                if (pageToken != null) append("&pageToken=$pageToken")
-            }
+            URLBuilder(bUrl)
+                .apply {
+                    appendPathSegments("cachedContents")
+                    parameters.append("pageSize", pageSize.toString())
+                    if (pageToken != null) {
+                        parameters.append("pageToken", pageToken)
+                    }
+                }.buildString()
         return json.decodeFromString<CachedContentList>(
             getContent(urlString),
         )
@@ -261,7 +240,11 @@ class Gemini(
      * given name.
      */
     suspend fun getCachedContent(name: String): CachedContent {
-        val urlString = "$bUrl/$name"
+        val urlString =
+            URLBuilder(bUrl)
+                .apply {
+                    appendPathSegments(name)
+                }.buildString()
         return json.decodeFromString<CachedContent>(
             getContent(urlString),
         )
@@ -273,7 +256,11 @@ class Gemini(
      * @param name The unique name identifier of the cached content to be deleted.
      */
     suspend fun deleteCachedContent(name: String) {
-        val urlString = "$bUrl/$name"
+        val urlString =
+            URLBuilder(bUrl)
+                .apply {
+                    appendPathSegments(name)
+                }.buildString()
         deleteContent(urlString)
     }
 
@@ -437,5 +424,12 @@ class GeminiJsExport(
     ): String {
         val response = delegate.generateContent(request, model)
         return jsonHelper.encodeToString(response)
+    }
+
+    /**
+     * Releases the wrapped Gemini client.
+     */
+    fun close() {
+        delegate.close()
     }
 }
