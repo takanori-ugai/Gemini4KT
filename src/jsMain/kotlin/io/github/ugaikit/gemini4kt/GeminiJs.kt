@@ -13,9 +13,6 @@ private suspend fun Gemini.generateTextInternal(
     prompt: String,
     model: String,
 ): String {
-    /**
-     * Holds the request.
-     */
     val request =
         GenerateContentRequest(
             contents =
@@ -26,17 +23,7 @@ private suspend fun Gemini.generateTextInternal(
                 ),
         )
 
-    /**
-     * Holds the response.
-     */
-    val response = generateContent(request, model)
-    return response.candidates
-        .firstOrNull()
-        ?.content
-        ?.parts
-        ?.firstOrNull()
-        ?.text
-        .orEmpty()
+    return generateContent(request, model).firstTextPartOrEmpty()
 }
 
 /**
@@ -107,42 +94,25 @@ suspend fun runSample1(
     prompt: String = "Write a story about a magic backpack.",
     model: String = "gemma-4-31b-it",
 ): String {
-    /**
-     * Holds the client.
-     */
     val client = Gemini(apiKey)
-
-    /**
-     * Holds the request.
-     */
-    val request =
-        GenerateContentRequest(
-            contents = arrayOf(Content(parts = arrayOf(Part(text = prompt)))),
-            safetySettings =
-                arrayOf(
-                    SafetySetting(
-                        category = HarmCategory.HARM_CATEGORY_HARASSMENT,
-                        threshold = Threshold.BLOCK_ONLY_HIGH,
-                    ),
-                ),
-            generationConfig =
-                GenerationConfig(
-                    thinkingConfig = ThinkingConfig(-1),
-                ),
-        )
-
-    /**
-     * Holds the response.
-     */
     return try {
+        val request =
+            GenerateContentRequest(
+                contents = arrayOf(Content(parts = arrayOf(Part(text = prompt)))),
+                safetySettings =
+                    arrayOf(
+                        SafetySetting(
+                            category = HarmCategory.HARM_CATEGORY_HARASSMENT,
+                            threshold = Threshold.BLOCK_ONLY_HIGH,
+                        ),
+                    ),
+                generationConfig =
+                    GenerationConfig(
+                        thinkingConfig = ThinkingConfig(-1),
+                    ),
+            )
         val response = client.generateContent(request, model = model)
-        response.candidates
-            .firstOrNull()
-            ?.content
-            ?.parts
-            ?.firstOrNull()
-            ?.text
-            .orEmpty()
+        response.firstTextPartOrEmpty()
     } finally {
         client.close()
     }

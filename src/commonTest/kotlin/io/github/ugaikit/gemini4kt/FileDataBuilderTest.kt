@@ -2,6 +2,7 @@ package io.github.ugaikit.gemini4kt
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * Represents the file data builder test.
@@ -20,5 +21,17 @@ class FileDataBuilderTest {
 
         assertEquals("image/png", fileData.mimeType)
         assertEquals("gs://bucket/image.png", fileData.fileUri)
+    }
+
+    @Test
+    fun buildRejectsMissingRequiredProperties() {
+        val builder = FileDataBuilder()
+
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                builder.build()
+            }
+
+        assertEquals("mimeType must be set before building FileData.", exception.message)
     }
 }

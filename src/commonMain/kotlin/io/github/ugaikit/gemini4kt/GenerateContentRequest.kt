@@ -145,8 +145,9 @@ class GenerateContentRequestBuilder {
     /**
      * Handles build.
      */
-    fun build() =
-        GenerateContentRequest(
+    fun build(): GenerateContentRequest {
+        require(contents.isNotEmpty()) { "At least one content item is required." }
+        return GenerateContentRequest(
             contents = contents.toTypedArray(),
             tools = tools.toTypedArray(),
             toolConfig = toolConfig,
@@ -155,6 +156,7 @@ class GenerateContentRequestBuilder {
             generationConfig = generationConfig,
             cachedContent = cachedContent,
         )
+    }
 }
 
 /**

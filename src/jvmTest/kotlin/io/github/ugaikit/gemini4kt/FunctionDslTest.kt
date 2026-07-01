@@ -13,11 +13,10 @@ class FunctionDslTest {
     @Test
     fun buildFunctionDeclarationIncludesMapValueSchema() {
         val declaration = buildFunctionDeclaration(::mapReader)
-        val labelsSchema = declaration.parameters.properties["labels"]
+        val labelsSchema = assertNotNull(declaration.parameters.properties["labels"])
+        val additionalProperties = assertNotNull(labelsSchema.additionalProperties) as AdditionalProperties.SchemaValue
 
-        assertNotNull(labelsSchema)
         assertEquals("object", labelsSchema.type)
-        assertNotNull(labelsSchema.additionalProperties)
-        assertEquals("string", checkNotNull(labelsSchema.additionalProperties).type)
+        assertEquals("string", additionalProperties.schema.type)
     }
 }

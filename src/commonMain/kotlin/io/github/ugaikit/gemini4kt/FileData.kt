@@ -42,7 +42,11 @@ class FileDataBuilder {
      *
      * @return A new instance of FileData.
      */
-    fun build() = FileData(mimeType, fileUri)
+    fun build(): FileData {
+        require(::mimeType.isInitialized) { "mimeType must be set before building FileData." }
+        require(::fileUri.isInitialized) { "fileUri must be set before building FileData." }
+        return FileData(mimeType, fileUri)
+    }
 }
 
 /**

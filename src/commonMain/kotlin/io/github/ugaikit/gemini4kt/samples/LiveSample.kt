@@ -3,7 +3,6 @@ package io.github.ugaikit.gemini4kt.samples
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.Modality
 import io.github.ugaikit.gemini4kt.content
-import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.getLiveClient
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentClientContent
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentRealtimeInput
@@ -68,11 +67,9 @@ object LiveSample {
                         },
                 )
 
-            var ownedGemini: Gemini? = null
             val liveClient: LiveClient =
                 clientFactory?.invoke()
-                    ?: run {
-                        val geminiClient = gemini ?: Gemini(getApiKey()).also { ownedGemini = it }
+                    ?: withGeminiClient(gemini) { geminiClient ->
                         geminiClient.getLiveClient(liveModel, config).toLiveClient()
                     }
 
@@ -159,7 +156,6 @@ object LiveSample {
                     throw e
                 } finally {
                     session.close()
-                    ownedGemini?.close()
                 }
             } catch (e: CancellationException) {
                 println("LiveSample cancelled: ${e.message}")
