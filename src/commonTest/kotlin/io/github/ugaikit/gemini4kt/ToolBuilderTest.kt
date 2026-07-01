@@ -177,7 +177,7 @@ class ToolBuilderTest {
         assertEquals("2026-01-01T00:00:00Z", googleSearch.timeRangeFilter?.startTime)
         assertEquals("2026-01-31T00:00:00Z", googleSearch.timeRangeFilter?.endTime)
         assertNotNull(googleSearch.searchTypes?.webSearch)
-        assertNotNull(googleSearch.searchTypes?.imageSearch)
+        assertNotNull(googleSearch.searchTypes.imageSearch)
     }
 
     @Test
