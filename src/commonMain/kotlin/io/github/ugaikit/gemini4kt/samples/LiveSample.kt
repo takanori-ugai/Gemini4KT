@@ -158,8 +158,11 @@ object LiveSample {
                     println("Error in LiveSample: ${e.message}")
                     throw e
                 } finally {
-                    session.close()
-                    ownedGemini?.close()
+                    try {
+                        session.close()
+                    } finally {
+                        ownedGemini?.close()
+                    }
                 }
             } catch (e: CancellationException) {
                 println("LiveSample cancelled: ${e.message}")

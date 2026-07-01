@@ -31,12 +31,14 @@ private fun buildTypeSchema(type: KType): Schema {
                 require(keyType?.classifier == String::class) {
                     "Map parameter keys must be String for automatic binding: $type"
                 }
-                val valueType = type.arguments.getOrNull(1)?.type
+                val valueType =
+                    type.arguments.getOrNull(1)?.type
+                        ?: throw IllegalArgumentException(
+                            "Map parameter type must declare a value type: $type",
+                        )
                 Schema(
                     type = "object",
-                    additionalProperties =
-                        valueType?.let(::buildTypeSchema)
-                            ?: Schema(type = "object"),
+                    additionalProperties = AdditionalProperties.SchemaValue(buildTypeSchema(valueType)),
                 )
             }
             else -> throw IllegalArgumentException("Unsupported parameter type: $type")

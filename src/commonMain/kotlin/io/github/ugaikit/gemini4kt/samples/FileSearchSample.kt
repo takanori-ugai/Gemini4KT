@@ -80,14 +80,17 @@ object FileSearchSample {
             )
         } finally {
             // Clean up
-            if (storeName != null) {
-                fileSearch.deleteFileSearchStore(storeName, force = true)
-            }
-            if (ownsGemini) {
-                gemini.close()
-            }
-            if (ownsFileSearch) {
-                fileSearch.close()
+            try {
+                if (storeName != null) {
+                    fileSearch.deleteFileSearchStore(storeName, force = true)
+                }
+            } finally {
+                if (ownsGemini) {
+                    gemini.close()
+                }
+                if (ownsFileSearch) {
+                    fileSearch.close()
+                }
             }
         }
     }
