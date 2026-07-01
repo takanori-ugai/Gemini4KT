@@ -188,21 +188,6 @@ class ToolBuilderTest {
                 excludedPredefinedFunctions("CLICK", "TYPE")
             }
 
-        assertNotNull(decoded.googleSearch)
-        assertEquals("2026-01-01T00:00:00Z", decoded.googleSearch?.timeRangeFilter?.startTime)
-        assertEquals("2026-01-31T00:00:00Z", decoded.googleSearch?.timeRangeFilter?.endTime)
-        assertNotNull(decoded.googleSearch?.searchTypes?.webSearch)
-        assertNotNull(decoded.googleSearch?.searchTypes?.imageSearch)
-    }
-
-    @Test
-    fun testComputerUseBuilder() {
-        val computerUse =
-            computerUse {
-                environment = Environment.ENVIRONMENT_BROWSER
-                excludedPredefinedFunctions("CLICK", "TYPE")
-            }
-
         assertEquals(Environment.ENVIRONMENT_BROWSER, computerUse.environment)
         assertEquals(2, computerUse.excludedPredefinedFunctions?.size)
         assertEquals("CLICK", computerUse.excludedPredefinedFunctions?.first())

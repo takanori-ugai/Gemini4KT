@@ -21,16 +21,6 @@ external object NodeFs {
 }
 
 /**
- * Represents the file wrapper.
- *
- * @property file The file.
- */
-@kotlinx.serialization.Serializable
-private data class FileWrapper(
-    val file: GeminiFile,
-)
-
-/**
  * Represents the file upload provider.
  *
  * @property apiKey The api key.
@@ -70,14 +60,17 @@ actual class FileUploadProvider actual constructor(
     ): GeminiFile {
         val pathStr = file.toString()
         val fileSize = getFileSize(pathStr)
-        val uploadUrl =
-            httpClient.requestResumableUploadUrl(
-                apiKey,
-                mimeType,
-                fileSize,
-                json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))),
-            )
-        return uploadFile(uploadUrl, pathStr, mimeType, fileSize)
+        val requestBody = json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName)))
+        val fileContent = readFile(pathStr)
+        return httpClient
+            .performResumableUploadAndDecode<FileWrapper>(
+                apiKey = apiKey,
+                mimeType = mimeType,
+                fileSize = fileSize,
+                startBody = requestBody,
+                uploadBody = fileContent,
+                json = json,
+            ).file
     }
 
     /**
@@ -96,15 +89,18 @@ actual class FileUploadProvider actual constructor(
     ): Operation {
         val pathStr = file.toString()
         val fileSize = getFileSize(pathStr)
-        val uploadUrl =
-            httpClient.requestResumableUploadUrl(
-                apiKey,
-                mimeType,
-                fileSize,
-                json.encodeToString(uploadRequest),
-                "upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore",
+        val requestBody = json.encodeToString(uploadRequest)
+        val fileContent = readFile(pathStr)
+        return httpClient
+            .performResumableUploadAndDecode<Operation>(
+                apiKey = apiKey,
+                mimeType = mimeType,
+                fileSize = fileSize,
+                startBody = requestBody,
+                uploadBody = fileContent,
+                json = json,
+                endpoint = "upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore",
             )
-        return uploadFileToSearchStore(uploadUrl, pathStr, mimeType, fileSize)
     }
 
     /**
@@ -146,129 +142,5 @@ actual class FileUploadProvider actual constructor(
             throw IOException("File upload is only supported in a Node.js environment.")
         }
         return module
-    }
-
-    /**
-     * Handles get upload url.
-     *
-     * @param baseUrl The base url.
-     * @param apiKey The api key.
-     * @param mimeType The mime type.
-     * @param displayName The display name.
-     * @param fileSize The file size.
-     */
-    private suspend fun getUploadUrl(
-        baseUrl: String,
-        apiKey: String,
-        mimeType: String,
-        displayName: String,
-        fileSize: Long,
-    ): String {
-        val response =
-            httpClient.post("$baseUrl/upload/v1beta/files") {
-                header("x-goog-api-key", apiKey)
-                header("X-Goog-Upload-Protocol", "resumable")
-                header("X-Goog-Upload-Command", "start")
-                header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
-                header("X-Goog-Upload-Header-Content-Type", mimeType)
-                contentType(ContentType.Application.Json)
-                setBody(json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))))
-            }
-
-        if (response.status != HttpStatusCode.OK) {
-            throw IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
-        }
-
-        return response.headers["X-Goog-Upload-URL"]
-            ?: throw IOException("Upload URL not found in response headers")
-    }
-
-    /**
-     * Handles get file search store upload url.
-     *
-     * @param baseUrl The base url.
-     * @param apiKey The api key.
-     * @param fileSearchStoreName The file search store name.
-     * @param mimeType The mime type.
-     * @param fileSize The file size.
-     * @param uploadRequest The upload request.
-     */
-    private suspend fun getFileSearchStoreUploadUrl(
-        baseUrl: String,
-        apiKey: String,
-        fileSearchStoreName: String,
-        mimeType: String,
-        fileSize: Long,
-        uploadRequest: UploadFileSearchStoreRequest,
-    ): String {
-        val response =
-            httpClient.post("$baseUrl/upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore") {
-                header("x-goog-api-key", apiKey)
-                header("X-Goog-Upload-Protocol", "resumable")
-                header("X-Goog-Upload-Command", "start")
-                header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
-                header("X-Goog-Upload-Header-Content-Type", mimeType)
-                contentType(ContentType.Application.Json)
-                setBody(json.encodeToString(uploadRequest))
-            }
-
-        if (response.status != HttpStatusCode.OK) {
-            throw IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
-        }
-
-        return response.headers["X-Goog-Upload-URL"]
-            ?: throw IOException("Upload URL not found in response headers")
-    }
-
-    /**
-     * Handles upload file.
-     *
-     * @param uploadUrl The upload url.
-     * @param path The path.
-     * @param mimeType The mime type.
-     * @param fileSize The file size.
-     */
-    private suspend fun uploadFile(
-        uploadUrl: String,
-        path: String,
-        mimeType: String,
-        fileSize: Long,
-    ): GeminiFile {
-        val fileContent = readFile(path)
-        val uploadResponse =
-            httpClient.performResumableUploadAndDecode<FileWrapper>(
-                uploadUrl,
-                mimeType,
-                fileSize,
-                fileContent,
-                json,
-            )
-        val file = uploadResponse.file
-        return file
-    }
-
-    /**
-     * Handles upload file to search store.
-     *
-     * @param uploadUrl The upload url.
-     * @param path The path.
-     * @param mimeType The mime type.
-     * @param fileSize The file size.
-     */
-    private suspend fun uploadFileToSearchStore(
-        uploadUrl: String,
-        path: String,
-        mimeType: String,
-        fileSize: Long,
-    ): Operation {
-        val fileContent = readFile(path)
-        return httpClient
-            .performResumableUploadAndDecode(
-                uploadUrl,
-                mimeType,
-                fileSize,
-                fileContent,
-                json,
-            )
     }
 }

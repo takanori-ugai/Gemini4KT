@@ -3,27 +3,13 @@ package io.github.ugaikit.gemini4kt
 import io.github.ugaikit.gemini4kt.filesearch.Operation
 import io.github.ugaikit.gemini4kt.filesearch.UploadFileSearchStoreRequest
 import io.ktor.client.HttpClient
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readByteArray
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-
-/**
- * Represents the file wrapper.
- *
- * @property file The file.
- */
-@Serializable
-private data class FileWrapper(
-    val file: GeminiFile,
-)
 
 /**
  * Represents the file upload provider.
@@ -61,14 +47,18 @@ actual class FileUploadProvider actual constructor(
     ): GeminiFile {
         val metadata = fs.metadataOrNull(file) ?: throw IOException("File not found: $file")
         val fileSize = metadata.size
-        val uploadUrl =
-            getInitialUploadUrl(
-                mimeType,
-                fileSize,
-                "upload/v1beta/files",
-                json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName))),
-            )
-        return uploadFile(uploadUrl, file, mimeType, fileSize)
+        val requestBody = json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName)))
+        val content =
+            fs.source(file).buffered().readByteArray()
+        return httpClient
+            .performResumableUploadAndDecode<FileWrapper>(
+                apiKey = apiKey,
+                mimeType = mimeType,
+                fileSize = fileSize,
+                startBody = requestBody,
+                uploadBody = content,
+                json = json,
+            ).file
     }
 
     /**
@@ -87,77 +77,18 @@ actual class FileUploadProvider actual constructor(
     ): Operation {
         val metadata = fs.metadataOrNull(file) ?: throw IOException("File not found: $file")
         val fileSize = metadata.size
-        val uploadUrl =
-            withContext(Dispatchers.IO) {
-                httpClient.requestResumableUploadUrl(
-                    apiKey,
-                    mimeType,
-                    fileSize,
-                    json.encodeToString(uploadRequest),
-                    "upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore",
-                )
-            }
-        return uploadFileToSearchStore(uploadUrl, file, mimeType, fileSize)
-    }
-
-    /**
-     * Handles upload file.
-     *
-     * @param uploadUrl The upload url.
-     * @param file The file.
-     * @param mimeType The mime type.
-     * @param fileSize The file size.
-     */
-    private suspend fun uploadFile(
-        uploadUrl: String,
-        file: Path,
-        mimeType: String,
-        fileSize: Long,
-    ): GeminiFile {
+        val requestBody = json.encodeToString(uploadRequest)
         val content =
-            withContext(Dispatchers.IO) {
-                fs.source(file).buffered().readByteArray()
-            }
-        val uploadResponse =
-            withContext(Dispatchers.IO) {
-                httpClient.performResumableUploadAndDecode<FileWrapper>(
-                    uploadUrl,
-                    mimeType,
-                    fileSize,
-                    content,
-                    json,
-                )
-            }
-        return uploadResponse.file
-    }
-
-    /**
-     * Handles upload file to search store.
-     *
-     * @param uploadUrl The upload url.
-     * @param file The file.
-     * @param mimeType The mime type.
-     * @param fileSize The file size.
-     */
-    private suspend fun uploadFileToSearchStore(
-        uploadUrl: String,
-        file: Path,
-        mimeType: String,
-        fileSize: Long,
-    ): Operation {
-        val content =
-            withContext(Dispatchers.IO) {
-                fs.source(file).buffered().readByteArray()
-            }
-        return withContext(Dispatchers.IO) {
-            httpClient
-                .performResumableUploadAndDecode(
-                    uploadUrl,
-                    mimeType,
-                    fileSize,
-                    content,
-                    json,
-                )
-        }
+            fs.source(file).buffered().readByteArray()
+        return httpClient
+            .performResumableUploadAndDecode<Operation>(
+                apiKey = apiKey,
+                mimeType = mimeType,
+                fileSize = fileSize,
+                startBody = requestBody,
+                uploadBody = content,
+                json = json,
+                endpoint = "upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore",
+            )
     }
 }

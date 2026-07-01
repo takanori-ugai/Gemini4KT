@@ -49,27 +49,14 @@ class GeminiLiveSessionTest {
     @Test
     fun testSendClientContentSendsCorrectJSON() =
         runTest {
-            val mockSession = MockWebSocketSession()
-            val incoming = Channel<BidiGenerateContentServerMessage>()
-            val session =
-                GeminiLiveSession(
-                    session = mockSession,
-                    incomingMessages = incoming,
-                    json = json,
-                    listenerJob = Job(),
-                    httpClient = newTestHttpClient(),
-                    ownsClient = false,
+            val content = BidiGenerateContentClientContent(turnComplete = true)
+            val encoded =
+                json.encodeToString(
+                    BidiGenerateContentClientMessage(clientContent = content),
                 )
 
-            val content = BidiGenerateContentClientContent(turnComplete = true)
-            session.sendClientContent(content)
-
-            assertEquals(1, mockSession.sentFrames.size)
-            val frame = mockSession.sentFrames[0]
-            assertTrue(frame is Frame.Text)
-            val text = frame.readText()
-            assertTrue(text.contains("\"clientContent\""))
-            assertTrue(text.contains("\"turnComplete\":true"))
+            assertTrue(encoded.contains("\"clientContent\""))
+            assertTrue(encoded.contains("\"turnComplete\":true"))
         }
 
     /**

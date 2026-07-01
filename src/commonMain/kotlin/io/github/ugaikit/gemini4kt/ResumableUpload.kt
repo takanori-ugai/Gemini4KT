@@ -7,6 +7,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
 
@@ -16,6 +17,11 @@ private const val RESUMABLE_UPLOAD_PROTOCOL = "resumable"
 private const val RESUMABLE_UPLOAD_START_COMMAND = "start"
 private const val RESUMABLE_UPLOAD_FINALIZE_COMMAND = "upload, finalize"
 private const val RESUMABLE_UPLOAD_START_PATH = "upload/v1beta/files"
+
+@kotlinx.serialization.Serializable
+internal data class FileWrapper(
+    val file: GeminiFile,
+)
 
 internal suspend fun HttpClient.requestResumableUploadUrl(
     apiKey: String,
@@ -32,7 +38,7 @@ internal suspend fun HttpClient.requestResumableUploadUrl(
             header("X-Goog-Upload-Header-Content-Length", fileSize.toString())
             header("X-Goog-Upload-Header-Content-Type", mimeType)
             contentType(ContentType.Application.Json)
-            setBody(bodyContent)
+            setBody(TextContent(bodyContent, ContentType.Application.Json))
         }
 
     if (response.status != HttpStatusCode.OK) {
@@ -47,7 +53,7 @@ internal suspend fun HttpClient.performResumableUpload(
     uploadUrl: String,
     mimeType: String,
     fileSize: Long,
-    body: Any,
+    body: ByteArray,
 ): String {
     val response =
         post(uploadUrl) {
@@ -69,6 +75,57 @@ internal suspend inline fun <reified T> HttpClient.performResumableUploadAndDeco
     uploadUrl: String,
     mimeType: String,
     fileSize: Long,
-    body: Any,
+    body: ByteArray,
     json: Json,
 ): T = json.decodeFromString(performResumableUpload(uploadUrl, mimeType, fileSize, body))
+
+/**
+ * Performs the full resumable upload flow: request an upload URL, upload the payload, and decode
+ * the final response.
+ *
+ * @param apiKey API key used for the resumable upload request.
+ * @param mimeType MIME type of the uploaded file.
+ * @param fileSize Size of the uploaded file in bytes.
+ * @param startBody JSON body sent when requesting the resumable upload URL.
+ * @param uploadBody Raw file bytes to upload.
+ * @param json JSON serializer used to decode the final response.
+ * @param endpoint Optional upload endpoint path segment.
+ * @return Decoded response payload of type [T].
+ */
+internal suspend inline fun <reified T> HttpClient.performResumableUpload(
+    apiKey: String,
+    mimeType: String,
+    fileSize: Long,
+    startBody: String,
+    uploadBody: ByteArray,
+    json: Json,
+    endpoint: String = RESUMABLE_UPLOAD_START_PATH,
+): T {
+    val uploadUrl = requestResumableUploadUrl(apiKey, mimeType, fileSize, startBody, endpoint)
+    return performResumableUploadAndDecode(uploadUrl, mimeType, fileSize, uploadBody, json)
+}
+
+/**
+ * Performs the full resumable upload flow and decodes the final response directly.
+ *
+ * @param apiKey API key used for the resumable upload request.
+ * @param mimeType MIME type of the uploaded file.
+ * @param fileSize Size of the uploaded file in bytes.
+ * @param startBody JSON body sent when requesting the resumable upload URL.
+ * @param uploadBody Raw file bytes to upload.
+ * @param json JSON serializer used to decode the final response.
+ * @param endpoint Optional upload endpoint path segment.
+ * @return Decoded response payload of type [T].
+ */
+internal suspend inline fun <reified T> HttpClient.performResumableUploadAndDecode(
+    apiKey: String,
+    mimeType: String,
+    fileSize: Long,
+    startBody: String,
+    uploadBody: ByteArray,
+    json: Json,
+    endpoint: String = RESUMABLE_UPLOAD_START_PATH,
+): T {
+    val uploadUrl = requestResumableUploadUrl(apiKey, mimeType, fileSize, startBody, endpoint)
+    return performResumableUploadAndDecode(uploadUrl, mimeType, fileSize, uploadBody, json)
+}
