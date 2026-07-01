@@ -11,6 +11,16 @@ import org.khronos.webgl.Int8Array
 import org.khronos.webgl.Uint8Array
 
 /**
+ * Represents the file wrapper.
+ *
+ * @property file The file.
+ */
+@kotlinx.serialization.Serializable
+private data class FileWrapper(
+    val file: GeminiFile,
+)
+
+/**
  * Represents the file upload provider.
  *
  * @property apiKey The api key.
@@ -108,6 +118,22 @@ actual class FileUploadProvider actual constructor(
     }
 
     /**
+     * Handles read file.
+     *
+     * @param path The path.
+     */
+    private fun readFile(path: String): ByteArray {
+        try {
+            val buffer = fs.readFileSync(path)
+            val uint8Array = buffer.unsafeCast<Uint8Array>()
+            val int8Array = Int8Array(uint8Array.buffer, uint8Array.byteOffset, uint8Array.length)
+            return int8Array.unsafeCast<ByteArray>()
+        } catch (e: dynamic) {
+            throw IOException("Failed to read file $path: $e")
+        }
+    }
+
+    /**
      * Loads the Node.js fs module when available.
      */
     private fun loadNodeFs(): dynamic {
@@ -130,21 +156,5 @@ actual class FileUploadProvider actual constructor(
             throw IOException("File upload is only supported in a Node.js environment.")
         }
         return module
-    }
-
-    /**
-     * Handles read file.
-     *
-     * @param path The path.
-     */
-    private fun readFile(path: String): ByteArray {
-        try {
-            val buffer = fs.readFileSync(path)
-            val uint8Array = buffer.unsafeCast<Uint8Array>()
-            val int8Array = Int8Array(uint8Array.buffer, uint8Array.byteOffset, uint8Array.length)
-            return int8Array.unsafeCast<ByteArray>()
-        } catch (e: dynamic) {
-            throw IOException("Failed to read file $path: $e")
-        }
     }
 }
