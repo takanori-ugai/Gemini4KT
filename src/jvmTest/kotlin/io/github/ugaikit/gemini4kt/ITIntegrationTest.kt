@@ -20,6 +20,7 @@ import kotlin.test.assertTrue
  */
 class ITIntegrationTest {
     private val model = "gemma-4-31b-it"
+    private val googleSearchModel = "gemini-3.1-flash-lite"
     private val embedModel = "gemini-embedding-2"
     private val httpTooManyRequests = 429
 
@@ -300,6 +301,105 @@ class ITIntegrationTest {
                         ?.parts
                 assertTrue(!parts.isNullOrEmpty())
             } catch (error: GeminiException) {
+                handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
+            } finally {
+                gemini.close()
+            }
+        }
+
+    @Test
+    fun testGenerateTextWithGoogleSearchTool() =
+        runBlocking {
+            val apiKey = getApiKey()
+            Assumptions.assumeTrue(!apiKey.isNullOrBlank(), "API key not found. Skipping integration test.")
+
+            val gemini = Gemini(apiKey!!)
+            try {
+                val request =
+                    generateContentRequest {
+                        content {
+                            part {
+                                text {
+                                    "What was the most recent NASA Artemis mission milestone? Answer in one sentence."
+                                }
+                            }
+                        }
+                        tool {
+                            googleSearch()
+                        }
+                    }
+
+                val response = gemini.generateContent(request, model = googleSearchModel)
+                val textPart =
+                    response.candidates
+                        .firstOrNull()
+                        ?.content
+                        ?.parts
+                        ?.firstOrNull { it.text != null && it.thought != true }
+                assertTrue(!textPart?.text.isNullOrBlank())
+            } catch (error: GeminiException) {
+                val isUnsupportedToolOrModel =
+                    error.error.status == "INVALID_ARGUMENT" &&
+                        (
+                            error.error.message.contains("google_search", ignoreCase = true) ||
+                                error.error.message.contains("tool", ignoreCase = true) ||
+                                error.error.message.contains("model", ignoreCase = true)
+                        )
+                if (isUnsupportedToolOrModel) {
+                    Assumptions.assumeTrue(false, "Skipping integration test due to unsupported model/tool combination.")
+                }
+                handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
+            } finally {
+                gemini.close()
+            }
+        }
+
+    @Test
+    fun testGenerateTextWithGoogleMapsTool() =
+        runBlocking {
+            val apiKey = getApiKey()
+            Assumptions.assumeTrue(!apiKey.isNullOrBlank(), "API key not found. Skipping integration test.")
+
+            val gemini = Gemini(apiKey!!)
+            try {
+                val request =
+                    generateContentRequest {
+                        content {
+                            part {
+                                text {
+                                    "Recommend one popular coffee spot near Tokyo Station in one sentence."
+                                }
+                            }
+                        }
+                        tool {
+                            googleMaps(GoogleMaps(enableWidget = true))
+                        }
+                    }
+
+                val response = gemini.generateContent(request, model = googleSearchModel)
+                val textPart =
+                    response.candidates
+                        .firstOrNull()
+                        ?.content
+                        ?.parts
+                        ?.firstOrNull { it.text != null && it.thought != true }
+                assertTrue(!textPart?.text.isNullOrBlank())
+            } catch (error: GeminiException) {
+                val isUnsupportedToolOrModel =
+                    error.error.status == "INVALID_ARGUMENT" &&
+                        (
+                            error.error.message.contains("google maps", ignoreCase = true) ||
+                                error.error.message.contains("google_maps", ignoreCase = true) ||
+                                error.error.message.contains("tool", ignoreCase = true) ||
+                                error.error.message.contains("model", ignoreCase = true)
+                        )
+                if (isUnsupportedToolOrModel) {
+                    Assumptions.assumeTrue(false, "Skipping integration test due to unsupported model/tool combination.")
+                }
                 handleQuotaError(error)
             } catch (error: HttpRequestTimeoutException) {
                 handleRequestTimeout(error)
