@@ -1,5 +1,8 @@
 package io.github.ugaikit.gemini4kt.interaction
 
+import io.github.ugaikit.gemini4kt.PrebuiltVoiceConfig
+import io.github.ugaikit.gemini4kt.SpeechConfig
+import io.github.ugaikit.gemini4kt.VoiceConfig
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -143,6 +146,14 @@ class InteractionSerializationTest {
                 thinkingLevel = ThinkingLevel.HIGH,
                 thinkingSummaries = ThinkingSummaries.AUTO,
                 maxOutputTokens = 128,
+                speechConfig =
+                    SpeechConfig(
+                        voiceConfig =
+                            VoiceConfig(
+                                prebuiltVoiceConfig =
+                                    PrebuiltVoiceConfig(voiceName = "Kore"),
+                            ),
+                    ),
             )
         val right =
             InteractionGenerationConfig(
@@ -150,6 +161,14 @@ class InteractionSerializationTest {
                 thinkingLevel = ThinkingLevel.HIGH,
                 thinkingSummaries = ThinkingSummaries.AUTO,
                 maxOutputTokens = 128,
+                speechConfig =
+                    SpeechConfig(
+                        voiceConfig =
+                            VoiceConfig(
+                                prebuiltVoiceConfig =
+                                    PrebuiltVoiceConfig(voiceName = "Kore"),
+                            ),
+                    ),
             )
 
         assertEquals(left, right)
@@ -157,6 +176,7 @@ class InteractionSerializationTest {
         val encoded = json.encodeToString(left)
         assertTrue(encoded.contains("\"thinking_level\":\"high\""))
         assertTrue(encoded.contains("\"thinking_summaries\":\"auto\""))
+        assertTrue(encoded.contains("\"speech_config\":{"))
     }
 
     @Test

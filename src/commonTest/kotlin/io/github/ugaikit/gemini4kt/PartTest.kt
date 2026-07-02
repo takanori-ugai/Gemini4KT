@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * Represents the part test.
@@ -163,6 +164,26 @@ class PartTest {
 
         assertEquals("video/mp4", part.fileData?.mimeType)
         assertEquals("1.5s", part.videoMetadata?.endOffset)
+    }
+
+    /**
+     * Handles builder validation when video metadata is provided alone.
+     */
+    @Test
+    fun builderRejectsVideoMetadataWithoutPrimaryPayload() {
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                part {
+                    videoMetadata {
+                        VideoMetadata(
+                            startOffset = "0s",
+                            endOffset = "1.5s",
+                            fps = 24.0,
+                        )
+                    }
+                }
+            }
+        assertEquals("videoMetadata can only be set when inlineData or fileData is present.", exception.message)
     }
 
     /**

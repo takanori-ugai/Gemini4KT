@@ -25,7 +25,7 @@ internal suspend inline fun <reified T> processHandshakeMessage(
             if (isSetupComplete(message)) {
                 handshakeCompleted.complete(Unit)
             } else {
-                logger.warn { "Received message before SetupComplete: $message" }
+                logger.warn { "Received message before SetupComplete" }
             }
         }
 

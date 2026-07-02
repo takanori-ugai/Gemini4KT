@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt.samples
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.Modality
 import io.github.ugaikit.gemini4kt.content
+import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.getLiveClient
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentClientContent
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentRealtimeInput
@@ -67,9 +68,11 @@ object LiveSample {
                         },
                 )
 
+            var ownedGemini: Gemini? = null
             val liveClient: LiveClient =
                 clientFactory?.invoke()
-                    ?: withGeminiClient(gemini) { geminiClient ->
+                    ?: run {
+                        val geminiClient = gemini ?: Gemini(getApiKey()).also { ownedGemini = it }
                         geminiClient.getLiveClient(liveModel, config).toLiveClient()
                     }
 
@@ -81,7 +84,12 @@ object LiveSample {
                     val receiveJob =
                         launch {
                             session.receive().collect { msg ->
-                                println(msg)
+                                val partCount =
+                                    msg.serverContent
+                                        ?.modelTurn
+                                        ?.parts
+                                        ?.size ?: 0
+                                println("Received live message with $partCount model parts.")
                                 msg.serverContent?.modelTurn?.parts?.forEach { part ->
                                     part.inlineData?.let {
                                         if (it.mimeType.startsWith("audio")) {
@@ -160,6 +168,8 @@ object LiveSample {
             } catch (e: CancellationException) {
                 println("LiveSample cancelled: ${e.message}")
                 throw e
+            } finally {
+                ownedGemini?.close()
             }
         }
 }

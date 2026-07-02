@@ -351,7 +351,7 @@ class GeminiTest {
             val responseJson = """{"name": "cachedContent-123"}"""
             gemini =
                 createGemini { request ->
-                    assertEquals("$baseUrl/$name", request.url.toString())
+                    assertEquals("$baseUrl/cachedContents/$name", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
 
@@ -369,7 +369,7 @@ class GeminiTest {
             val name = "cachedContent-123"
             gemini =
                 createGemini { request ->
-                    assertEquals("$baseUrl/$name", request.url.toString())
+                    assertEquals("$baseUrl/cachedContents/$name", request.url.toString())
                     assertEquals(HttpMethod.Delete, request.method)
                     respond(content = "", status = HttpStatusCode.OK)
                 }
@@ -1038,9 +1038,20 @@ class GeminiTest {
     @Test
     fun `generateContent with direct binding rejects unsupported parameter types`() =
         runTest {
-            assertFailsWith<Exception> {
-                buildFunctionDeclaration(::unsupported_key_map)
-            }
+            gemini =
+                createGemini {
+                    respond("""{"candidates": []}""", HttpStatusCode.OK)
+                }
+
+            val exception =
+                assertFailsWith<IllegalArgumentException> {
+                    gemini.generateContent(
+                        GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "x"))))),
+                        ::unsupported_key_map,
+                    )
+                }
+
+            assertTrue(exception.message?.contains("Map parameter keys must be String for automatic binding") == true)
         }
 
     @Test

@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt.filesearch
 
+import io.github.ugaikit.gemini4kt.TestHttpClientTracker
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -15,6 +16,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -26,6 +28,8 @@ class FileSearchTest {
      * Holds the file search.
      */
     private lateinit var fileSearch: FileSearch
+
+    private val clientTracker = TestHttpClientTracker()
 
     /**
      * Holds the json.
@@ -52,7 +56,12 @@ class FileSearchTest {
                     json(Json { ignoreUnknownKeys = true })
                 }
             }
-        return FileSearch(apiKey = "test-api-key", client = client)
+        return FileSearch(apiKey = "test-api-key", client = clientTracker.track(client))
+    }
+
+    @AfterTest
+    fun closeClients() {
+        clientTracker.closeAll()
     }
 
     /**

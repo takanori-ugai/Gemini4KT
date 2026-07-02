@@ -26,6 +26,7 @@ private val logger = KotlinLogging.logger {}
 data class LiveMusicOptions(
     val apiVersion: String = "v1alpha",
     val baseUrl: String = "https://generativelanguage.googleapis.com/",
+    val allowCustomEndpoint: Boolean = false,
 )
 
 /**
@@ -36,6 +37,27 @@ data class LiveMusicOptions(
  */
 private fun buildWebSocketUrl(options: LiveMusicOptions): String {
     val baseWithoutSlash = if (options.baseUrl.endsWith("/")) options.baseUrl.dropLast(1) else options.baseUrl
+    val trustedHost = "generativelanguage.googleapis.com"
+    val normalizedHost =
+        baseWithoutSlash
+            .removePrefix("https://")
+            .removePrefix("http://")
+            .removePrefix("wss://")
+            .removePrefix("ws://")
+            .substringBefore("/")
+            .substringBefore("?")
+            .substringBefore("#")
+            .substringBefore("@")
+            .substringBefore(":")
+    // Intentionally pin supported versions to known Live Music preview endpoints.
+    // Revisit this list when the API adds/stabilizes new versions (for example, a GA v1).
+    val trustedApiVersions = setOf("v1alpha", "v1beta")
+    require(options.apiVersion in trustedApiVersions) {
+        "Unsupported Live Music apiVersion '${options.apiVersion}'."
+    }
+    require(options.allowCustomEndpoint || normalizedHost == trustedHost) {
+        "Custom Live Music endpoints require allowCustomEndpoint = true."
+    }
     val wsBase =
         when {
             baseWithoutSlash.startsWith("http://") -> baseWithoutSlash.replaceFirst("http://", "ws://")

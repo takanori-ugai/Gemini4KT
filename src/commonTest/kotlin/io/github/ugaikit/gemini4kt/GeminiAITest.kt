@@ -22,6 +22,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -31,6 +32,8 @@ class GeminiAITest {
     companion object {
         private const val EXPECTED_API_REVISION = "2026-05-20"
     }
+
+    private val clientTracker = TestHttpClientTracker()
 
     private fun createGeminiAI(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): GeminiAI {
         val client =
@@ -48,7 +51,12 @@ class GeminiAITest {
                     )
                 }
             }
-        return GeminiAI(client = client, apiKey = "test-key")
+        return GeminiAI(client = clientTracker.track(client), apiKey = "test-key")
+    }
+
+    @AfterTest
+    fun closeClients() {
+        clientTracker.closeAll()
     }
 
     @Test

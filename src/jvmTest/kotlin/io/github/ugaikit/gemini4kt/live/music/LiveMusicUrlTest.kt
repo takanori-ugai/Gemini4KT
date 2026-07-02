@@ -1,7 +1,9 @@
 package io.github.ugaikit.gemini4kt.live.music
 
+import java.lang.reflect.InvocationTargetException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * Exercises the LiveMusic websocket URL builder through reflection.
@@ -28,12 +30,15 @@ class LiveMusicUrlTest {
         assertEquals(
             "ws://localhost:8080/ws/google.ai.generativelanguage." +
                 "v1beta.GenerativeService.BidiGenerateMusic",
-            invoke(LiveMusicOptions(apiVersion = "v1beta", baseUrl = "http://localhost:8080")),
+            invoke(LiveMusicOptions(apiVersion = "v1beta", baseUrl = "http://localhost:8080", allowCustomEndpoint = true)),
         )
         assertEquals(
             "wss://custom-host/ws/google.ai.generativelanguage." +
                 "v1alpha.GenerativeService.BidiGenerateMusic",
-            invoke(LiveMusicOptions(baseUrl = "custom-host/")),
+            invoke(LiveMusicOptions(baseUrl = "custom-host/", allowCustomEndpoint = true)),
         )
+        assertFailsWith<InvocationTargetException> {
+            invoke(LiveMusicOptions(baseUrl = "custom-host/"))
+        }
     }
 }

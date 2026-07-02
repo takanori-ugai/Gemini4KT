@@ -5,7 +5,6 @@ import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.EmbedContentRequest
 import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.Part
-import io.github.ugaikit.gemini4kt.getApiKey
 
 /**
  * Represents the embed content.
@@ -17,23 +16,24 @@ object EmbedContent {
      * @param gemini The gemini.
      */
     suspend fun run(gemini: Gemini? = null) {
-        val client = gemini ?: Gemini(getApiKey())
-        val text = "Write a story about a magic backpack."
-        val embedRequest =
-            EmbedContentRequest(
-                content = Content(arrayOf(Part(text))),
-                model = "models/gemini-embedding-001",
-            )
-        println(client.embedContent(embedRequest, model = "gemini-embedding-001"))
-        val batchEmbedRequest =
-            BatchEmbedRequest(
-                listOf(
-                    EmbedContentRequest(
-                        content = Content(arrayOf(Part(text))),
-                        model = "models/gemini-embedding-001",
+        withGeminiClient(gemini) { client ->
+            val text = "Write a story about a magic backpack."
+            val embedRequest =
+                EmbedContentRequest(
+                    content = Content(arrayOf(Part(text))),
+                    model = "models/gemini-embedding-001",
+                )
+            println(client.embedContent(embedRequest, model = "gemini-embedding-001"))
+            val batchEmbedRequest =
+                BatchEmbedRequest(
+                    listOf(
+                        EmbedContentRequest(
+                            content = Content(arrayOf(Part(text))),
+                            model = "models/gemini-embedding-001",
+                        ),
                     ),
-                ),
-            )
-        println(client.batchEmbedContents(batchEmbedRequest, model = "gemini-embedding-001"))
+                )
+            println(client.batchEmbedContents(batchEmbedRequest, model = "gemini-embedding-001"))
+        }
     }
 }

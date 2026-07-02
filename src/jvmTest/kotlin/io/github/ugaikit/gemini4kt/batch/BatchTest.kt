@@ -15,6 +15,7 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.IOException
@@ -43,6 +44,8 @@ class BatchTest {
      */
     private val baseUrl = "$bUrl/models"
 
+    private val createdBatches = mutableListOf<Batch>()
+
     /**
      * Handles create batch.
      *
@@ -58,7 +61,13 @@ class BatchTest {
                     json(Json { ignoreUnknownKeys = true })
                 }
             }
-        return Batch(apiKey = apiKey, client = client)
+        return Batch(apiKey = apiKey, client = client).also { createdBatches.add(it) }
+    }
+
+    @AfterEach
+    fun closeClients() {
+        createdBatches.forEach(Batch::close)
+        createdBatches.clear()
     }
 
     /**

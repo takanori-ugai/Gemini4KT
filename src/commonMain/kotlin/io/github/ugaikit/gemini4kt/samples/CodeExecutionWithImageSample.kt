@@ -5,7 +5,6 @@ import io.github.ugaikit.gemini4kt.Gemini
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.InlineData
 import io.github.ugaikit.gemini4kt.Part
-import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.getImage
 import io.github.ugaikit.gemini4kt.tool
 
@@ -22,40 +21,41 @@ object CodeExecutionWithImageSample {
         gemini: Gemini? = null,
         imageProvider: () -> String = { getImage() },
     ) {
-        val client = gemini ?: Gemini(getApiKey())
-        val base64Image = imageProvider()
+        withGeminiClient(gemini) { client ->
+            val base64Image = imageProvider()
 
-        val request =
-            GenerateContentRequest(
-                contents =
-                    arrayOf(
-                        Content(
-                            arrayOf(
-                                Part(
-                                    inlineData =
-                                        InlineData(
-                                            mimeType = "image/jpeg",
-                                            data = base64Image,
-                                        ),
+            val request =
+                GenerateContentRequest(
+                    contents =
+                        arrayOf(
+                            Content(
+                                arrayOf(
+                                    Part(
+                                        inlineData =
+                                            InlineData(
+                                                mimeType = "image/jpeg",
+                                                data = base64Image,
+                                            ),
+                                    ),
+                                    Part(text = "Zoom into the expression pedals and tell me how many pedals are there?"),
                                 ),
-                                Part(text = "Zoom into the expression pedals and tell me how many pedals are there?"),
                             ),
                         ),
-                    ),
-                tools =
-                    arrayOf(
-                        tool {
-                            codeExecution()
-                        },
-                    ),
-            )
+                    tools =
+                        arrayOf(
+                            tool {
+                                codeExecution()
+                            },
+                        ),
+                )
 
-        val response = client.generateContent(request, model = "gemini-3-flash-preview")
-        printExecutionParts(
-            response.candidates
-                .firstOrNull()
-                ?.content
-                ?.parts,
-        )
+            val response = client.generateContent(request, model = "gemini-3-flash-preview")
+            printExecutionParts(
+                response.candidates
+                    .firstOrNull()
+                    ?.content
+                    ?.parts,
+            )
+        }
     }
 }

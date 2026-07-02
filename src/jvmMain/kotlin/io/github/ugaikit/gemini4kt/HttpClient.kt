@@ -8,8 +8,14 @@ import kotlinx.serialization.json.Json
  * Handles create http client.
  *
  * @param json The json.
+ * @param config Optional shared client configuration.
  */
-actual fun createHttpClient(json: Json): HttpClient =
+actual fun createHttpClient(
+    json: Json,
+    config: GeminiHttpClientConfig,
+): HttpClient =
     HttpClient(CIO) {
-        configureGeminiHttpClient(json, installTimeout = true)
+        configureGeminiHttpClient(json, config)
     }
+
+internal actual val platformDefaultRequestTimeoutMillis: Long? = 60_000

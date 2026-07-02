@@ -7,7 +7,6 @@ import io.github.ugaikit.gemini4kt.GeminiParameter
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.generateContent
-import io.github.ugaikit.gemini4kt.getApiKey
 
 /**
  * Direct Kotlin function binding sample for automatic function calling.
@@ -37,37 +36,38 @@ object FunctionExample4 {
      * Runs the disco-ball scenario with direct function references.
      */
     suspend fun run(gemini: Gemini? = null) {
-        val client = gemini ?: Gemini(getApiKey())
-        val request =
-            GenerateContentRequest(
-                contents =
-                    arrayOf(
-                        Content(
-                            role = "user",
-                            parts =
-                                arrayOf(
-                                    Part(text = "Do everything you need to turn this place into a party!"),
-                                ),
+        withGeminiClient(gemini) { client ->
+            val request =
+                GenerateContentRequest(
+                    contents =
+                        arrayOf(
+                            Content(
+                                role = "user",
+                                parts =
+                                    arrayOf(
+                                        Part(text = "Do everything you need to turn this place into a party!"),
+                                    ),
+                            ),
                         ),
-                    ),
-            )
+                )
 
-        val response =
-            client.generateContent(
-                request,
-                ::powerDiscoBall,
-                ::startMusic,
-                ::dimLights,
-                model = "gemma-4-31b-it",
-                maxIterations = 8,
-            )
+            val response =
+                client.generateContent(
+                    request,
+                    ::powerDiscoBall,
+                    ::startMusic,
+                    ::dimLights,
+                    model = "gemma-4-31b-it",
+                    maxIterations = 8,
+                )
 
-        val firstCandidate = response.candidates.firstOrNull()
-        val finalText = response.getText()
-        if (finalText != null) {
-            println("Final response: $finalText")
-        } else {
-            println("Final candidate content: ${firstCandidate?.content}")
+            val firstCandidate = response.candidates.firstOrNull()
+            val finalText = response.getText()
+            if (finalText != null) {
+                println("Final response: $finalText")
+            } else {
+                println("Final candidate content: ${firstCandidate?.content}")
+            }
         }
     }
 }

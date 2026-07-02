@@ -6,17 +6,16 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.preparePost
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.URLBuilder
-import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.io.files.Path
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
@@ -132,11 +131,6 @@ class Gemini(
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
 
     /**
-     * Holds the base url.
-     */
-    private val baseUrl = "$bUrl/models"
-
-    /**
      * Generates content based on the provided input JSON using a specified model.
      *
      * @param inputJson The request payload for content generation.
@@ -147,7 +141,7 @@ class Gemini(
         inputJson: GenerateContentRequest,
         model: String = "gemini-flash-lite-latest",
     ): GenerateContentResponse {
-        val urlString = "$baseUrl/$model:generateContent"
+        val urlString = buildModelUrl(bUrl, model, "generateContent")
         return json.decodeFromString<GenerateContentResponse>(
             getContent(urlString, json.encodeToString<GenerateContentRequest>(inputJson)),
         )
@@ -164,28 +158,27 @@ class Gemini(
         inputJson: GenerateContentRequest,
         model: String = "gemini-flash-lite-latest",
     ): Flow<GenerateContentResponse> =
-        flow {
-            val urlString = "$baseUrl/$model:streamGenerateContent?alt=sse"
-            val response =
-                httpClient.post(urlString) {
+        channelFlow {
+            val urlString = buildModelUrl(bUrl, model, "streamGenerateContent") + "?alt=sse"
+            httpClient
+                .preparePost(urlString) {
                     header("x-goog-api-key", apiKey)
                     contentType(ContentType.Application.Json)
                     setBody(json.encodeToString<GenerateContentRequest>(inputJson))
-                }
+                }.execute { response ->
+                    if (!response.status.isSuccess()) {
+                        response.throwApiException()
+                    }
 
-            if (!response.status.isSuccess()) {
-                response.throwApiException()
-                return@flow
-            }
-
-            response.bodyAsChannel().consumeServerSentEvents { payload ->
-                if (payload == "[DONE]") return@consumeServerSentEvents
-                try {
-                    emit(json.decodeFromString<GenerateContentResponse>(payload))
-                } catch (e: SerializationException) {
-                    logger.error(e) { "Failed to parse stream response payload" }
+                    response.bodyAsChannel().consumeServerSentEvents { payload ->
+                        if (payload == "[DONE]") return@consumeServerSentEvents
+                        try {
+                            send(json.decodeFromString<GenerateContentResponse>(payload))
+                        } catch (e: SerializationException) {
+                            logger.error(e) { "Failed to parse stream response payload" }
+                        }
+                    }
                 }
-            }
         }
 
     /**
@@ -195,7 +188,7 @@ class Gemini(
      * @return The created [CachedContent] object as returned by the server.
      */
     suspend fun createCachedContent(inputJson: CachedContent): CachedContent {
-        val urlString = "$bUrl/cachedContents"
+        val urlString = buildUrl(bUrl, listOf("cachedContents"))
         return json.decodeFromString<CachedContent>(
             getContent(urlString, json.encodeToString<CachedContent>(inputJson)),
         )
@@ -214,14 +207,14 @@ class Gemini(
         pageToken: String? = null,
     ): CachedContentList {
         val urlString =
-            URLBuilder(bUrl)
-                .apply {
-                    appendPathSegments("cachedContents")
-                    parameters.append("pageSize", pageSize.toString())
-                    if (pageToken != null) {
-                        parameters.append("pageToken", pageToken)
-                    }
-                }.buildString()
+            buildUrl(
+                bUrl,
+                listOf("cachedContents"),
+                mapOf(
+                    "pageSize" to pageSize.toString(),
+                    "pageToken" to pageToken,
+                ),
+            )
         return json.decodeFromString<CachedContentList>(
             getContent(urlString),
         )
@@ -235,11 +228,7 @@ class Gemini(
      * given name.
      */
     suspend fun getCachedContent(name: String): CachedContent {
-        val urlString =
-            URLBuilder(bUrl)
-                .apply {
-                    appendPathSegments(name)
-                }.buildString()
+        val urlString = cachedContentUrl(name)
         return json.decodeFromString<CachedContent>(
             getContent(urlString),
         )
@@ -251,13 +240,11 @@ class Gemini(
      * @param name The unique name identifier of the cached content to be deleted.
      */
     suspend fun deleteCachedContent(name: String) {
-        val urlString =
-            URLBuilder(bUrl)
-                .apply {
-                    appendPathSegments(name)
-                }.buildString()
+        val urlString = cachedContentUrl(name)
         deleteContent(urlString)
     }
+
+    private fun cachedContentUrl(name: String): String = buildUrl(bUrl, listOf("cachedContents") + normalizeResourcePathSegments(name, "cachedContents"))
 
     /**
      * Counts the number of tokens in the provided text using a specified model.
@@ -270,7 +257,7 @@ class Gemini(
         inputJson: CountTokensRequest,
         model: String = "gemini-2.0-flash-lite",
     ): TotalTokens {
-        val urlString = "$baseUrl/$model:countTokens"
+        val urlString = buildModelUrl(bUrl, model, "countTokens")
         return json.decodeFromString<TotalTokens>(
             getContent(urlString, json.encodeToString<CountTokensRequest>(inputJson)),
         )
@@ -286,7 +273,7 @@ class Gemini(
         inputJson: BatchEmbedRequest,
         model: String = "embedding-001",
     ): BatchEmbedResponse {
-        val urlString = "$baseUrl/$model:batchEmbedContents"
+        val urlString = buildModelUrl(bUrl, model, "batchEmbedContents")
         return json.decodeFromString<BatchEmbedResponse>(
             getContent(urlString, json.encodeToString<BatchEmbedRequest>(inputJson)),
         )
@@ -302,7 +289,7 @@ class Gemini(
         inputJson: EmbedContentRequest,
         model: String = "embedding-001",
     ): EmbedResponse {
-        val urlString = "$baseUrl/$model:embedContent"
+        val urlString = buildModelUrl(bUrl, model, "embedContent")
         return json.decodeFromString<EmbedResponse>(
             getContent(urlString, json.encodeToString<EmbedContentRequest>(inputJson)),
         )
@@ -314,7 +301,7 @@ class Gemini(
      * @return The collection of models as a [ModelCollection] object.
      */
     suspend fun getModels(): ModelCollection {
-        val urlString = "$baseUrl"
+        val urlString = buildUrl(bUrl, listOf("models"))
         return json.decodeFromString<ModelCollection>(getContent(urlString))
     }
 

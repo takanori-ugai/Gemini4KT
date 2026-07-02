@@ -1,6 +1,9 @@
 package io.github.ugaikit.gemini4kt.batch
 
+import io.github.ugaikit.gemini4kt.buildModelUrl
+import io.github.ugaikit.gemini4kt.buildUrl
 import io.github.ugaikit.gemini4kt.createHttpClient
+import io.github.ugaikit.gemini4kt.normalizeResourcePathSegments
 import io.github.ugaikit.gemini4kt.throwApiException
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
@@ -50,11 +53,6 @@ class Batch(
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
 
     /**
-     * Holds the base url.
-     */
-    private val baseUrl = "$bUrl/models"
-
-    /**
      * Creates a batch job for content generation.
      *
      * @param model The model to use for the batch job.
@@ -65,7 +63,7 @@ class Batch(
         model: String,
         request: CreateBatchRequest,
     ): BatchJob {
-        val urlString = "$baseUrl/$model:batchGenerateContent"
+        val urlString = buildModelUrl(bUrl, model, "batchGenerateContent")
         return json.decodeFromString<BatchJob>(
             getContent(urlString, json.encodeToString(request)),
         )
@@ -78,7 +76,7 @@ class Batch(
      * @return The [BatchJob] with current status.
      */
     suspend fun getBatch(name: String): BatchJob {
-        val urlString = "$bUrl/$name"
+        val urlString = batchResourceUrl(name)
         return json.decodeFromString<BatchJob>(
             getContent(urlString),
         )
@@ -90,7 +88,7 @@ class Batch(
      * @param name The resource name of the batch job to cancel.
      */
     suspend fun cancelBatch(name: String) {
-        val urlString = "$bUrl/$name:cancel"
+        val urlString = batchResourceUrl(name) + ":cancel"
         getContent(urlString, "{}") // POST with empty body
     }
 
@@ -100,9 +98,11 @@ class Batch(
      * @param name The resource name of the batch job to delete.
      */
     suspend fun deleteBatch(name: String) {
-        val urlString = "$bUrl/$name"
+        val urlString = batchResourceUrl(name)
         deleteContent(urlString)
     }
+
+    private fun batchResourceUrl(name: String): String = buildUrl(bUrl, listOf("batches") + normalizeResourcePathSegments(name, "batches"))
 
     /**
      * Creates a batch job for creating embeddings.
@@ -115,7 +115,7 @@ class Batch(
         model: String,
         request: CreateBatchRequest,
     ): BatchJob {
-        val urlString = "$baseUrl/$model:asyncBatchEmbedContent"
+        val urlString = buildModelUrl(bUrl, model, "asyncBatchEmbedContent")
         return json.decodeFromString<BatchJob>(
             getContent(urlString, json.encodeToString(request)),
         )
@@ -133,13 +133,14 @@ class Batch(
         pageToken: String? = null,
     ): ListBatchesResponse {
         val urlString =
-            buildString {
-                append("$bUrl/batches")
-                val params = mutableListOf<String>()
-                if (pageSize != null) params.add("pageSize=$pageSize")
-                if (pageToken != null) params.add("pageToken=$pageToken")
-                if (params.isNotEmpty()) append("?${params.joinToString("&")}")
-            }
+            buildUrl(
+                bUrl,
+                listOf("batches"),
+                mapOf(
+                    "pageSize" to pageSize?.toString(),
+                    "pageToken" to pageToken,
+                ),
+            )
         return json.decodeFromString<ListBatchesResponse>(
             getContent(urlString),
         )

@@ -1,7 +1,9 @@
 package io.github.ugaikit.gemini4kt.filesearch
 
 import io.github.ugaikit.gemini4kt.FileUploadProvider
+import io.github.ugaikit.gemini4kt.buildUrl
 import io.github.ugaikit.gemini4kt.createHttpClient
+import io.github.ugaikit.gemini4kt.normalizeResourcePathSegments
 import io.github.ugaikit.gemini4kt.throwApiException
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
@@ -26,7 +28,7 @@ import kotlinx.serialization.json.Json
 class FileSearch(
     private val apiKey: String,
     private val client: HttpClient? = null,
-    private val fileUploadProvider: FileUploadProvider = FileUploadProvider(apiKey),
+    uploadProvider: FileUploadProvider? = null,
 ) {
     init {
         require(apiKey.isNotBlank()) { "apiKey must not be blank." }
@@ -48,6 +50,12 @@ class FileSearch(
     private val ownsHttpClient = client == null
 
     /**
+     * Holds the file upload provider.
+     */
+    private val fileUploadProvider: FileUploadProvider =
+        uploadProvider ?: FileUploadProvider(apiKey, httpClient)
+
+    /**
      * Holds the b url.
      */
     private val bUrl = "https://generativelanguage.googleapis.com/v1beta"
@@ -59,7 +67,7 @@ class FileSearch(
      * @return The created [FileSearchStore] object.
      */
     suspend fun createFileSearchStore(inputJson: FileSearchStore): FileSearchStore {
-        val urlString = "$bUrl/fileSearchStores"
+        val urlString = buildUrl(bUrl, listOf("fileSearchStores"))
         return json.decodeFromString<FileSearchStore>(
             getContent(urlString, json.encodeToString(inputJson)),
         )
@@ -72,7 +80,7 @@ class FileSearch(
      * @return The [FileSearchStore] object.
      */
     suspend fun getFileSearchStore(name: String): FileSearchStore {
-        val urlString = "$bUrl/$name"
+        val urlString = buildUrl(bUrl, listOf("fileSearchStores") + normalizeResourcePathSegments(name, "fileSearchStores"))
         return json.decodeFromString<FileSearchStore>(
             getContent(urlString),
         )
@@ -90,13 +98,14 @@ class FileSearch(
         pageToken: String? = null,
     ): ListFileSearchStoresResponse {
         val urlString =
-            buildString {
-                append("$bUrl/fileSearchStores")
-                val params = mutableListOf<String>()
-                if (pageSize != null) params.add("pageSize=$pageSize")
-                if (pageToken != null) params.add("pageToken=$pageToken")
-                if (params.isNotEmpty()) append("?${params.joinToString("&")}")
-            }
+            buildUrl(
+                bUrl,
+                listOf("fileSearchStores"),
+                mapOf(
+                    "pageSize" to pageSize?.toString(),
+                    "pageToken" to pageToken,
+                ),
+            )
         return json.decodeFromString<ListFileSearchStoresResponse>(
             getContent(urlString),
         )
@@ -112,7 +121,12 @@ class FileSearch(
         name: String,
         force: Boolean = false,
     ) {
-        val urlString = "$bUrl/$name" + if (force) "?force=true" else ""
+        val urlString =
+            buildUrl(
+                bUrl,
+                listOf("fileSearchStores") + normalizeResourcePathSegments(name, "fileSearchStores"),
+                mapOf("force" to if (force) "true" else null),
+            )
         deleteContent(urlString)
     }
 
@@ -127,7 +141,7 @@ class FileSearch(
         fileSearchStoreName: String,
         inputJson: ImportFileRequest,
     ): Operation {
-        val urlString = "$bUrl/$fileSearchStoreName:importFile"
+        val urlString = buildUrl(bUrl, listOf("fileSearchStores") + normalizeResourcePathSegments(fileSearchStoreName, "fileSearchStores")) + ":importFile"
         return json.decodeFromString<Operation>(
             getContent(urlString, json.encodeToString(inputJson)),
         )
@@ -156,7 +170,7 @@ class FileSearch(
      * @return The [Operation] object.
      */
     suspend fun getFileSearchStoreOperation(name: String): Operation {
-        val urlString = "$bUrl/$name"
+        val urlString = buildUrl(bUrl, listOf("operations") + normalizeResourcePathSegments(name, "operations"))
         return json.decodeFromString<Operation>(
             getContent(urlString),
         )

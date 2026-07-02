@@ -4,6 +4,7 @@ import io.github.ugaikit.gemini4kt.FunctionResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondOk
+import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketExtension
 import io.ktor.websocket.WebSocketSession
@@ -186,17 +187,8 @@ class GeminiLiveSessionTest {
 
             session.close()
 
-            // Verify session received close frame in outgoing
-            // The extension method session.close() sends a close frame to outgoing.
             val frame = mockSession.outgoing.tryReceive().getOrNull()
-            // If tryReceive fails, it might be timing or implementation detail of ktor's close().
-            // For now, let's assume if job is cancelled and channel closed, it's fine.
-            // But we really should verify the close frame if possible.
-            // Let's print what we got if failure.
-            // println("Frame received: $frame")
-
-            // If frame is null, it means it wasn't sent or we missed it (unlikely with unlimited channel).
-            // Maybe we should just trust job and incoming check.
+            assertTrue(frame is Frame.Close)
             assertTrue(job.isCancelled)
             assertTrue(incoming.isClosedForSend)
         }
@@ -269,6 +261,7 @@ class MockWebSocketSession : WebSocketSession {
      */
     override suspend fun send(frame: Frame) {
         sentFrames.add(frame)
+        outgoing.trySend(frame)
     }
 
     @Suppress("UNUSED_PARAMETER")

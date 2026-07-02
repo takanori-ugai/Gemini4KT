@@ -7,7 +7,6 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
-import io.github.ugaikit.gemini4kt.getApiKey
 
 /**
  * Represents the function example1.
@@ -19,37 +18,37 @@ object FunctionExample1 {
      * @param gemini The gemini.
      */
     suspend fun run(gemini: Gemini? = null) {
-        val client = gemini ?: Gemini(getApiKey())
+        withGeminiClient(gemini) { client ->
+            val exFunction =
+                GenerateContentRequest(
+                    contents =
+                        arrayOf(
+                            Content(
+                                role = "user",
+                                parts =
+                                    arrayOf(
+                                        Part(text = "Which theaters in Mountain View show Barbie movie?"),
+                                    ),
+                            ),
+                        ),
+                    tools =
+                        arrayOf(
+                            Tool(
+                                functionDeclarations = getFunctionDeclarations(),
+                            ),
+                        ),
+                )
 
-        val exFunction =
-            GenerateContentRequest(
-                contents =
-                    arrayOf(
-                        Content(
-                            role = "user",
-                            parts =
-                                arrayOf(
-                                    Part(text = "Which theaters in Mountain View show Barbie movie?"),
-                                ),
-                        ),
-                    ),
-                tools =
-                    arrayOf(
-                        Tool(
-                            functionDeclarations = getFunctionDeclarations(),
-                        ),
-                    ),
+            println(
+                client
+                    .generateContent(
+                        exFunction,
+                        "gemma-4-31b-it",
+                    ).candidates[0]
+                    .content.parts!!
+                    .get(0),
             )
-
-        println(
-            client
-                .generateContent(
-                    exFunction,
-                    "gemma-4-31b-it",
-                ).candidates[0]
-                .content.parts!!
-                .get(0),
-        )
+        }
     }
 
     /**

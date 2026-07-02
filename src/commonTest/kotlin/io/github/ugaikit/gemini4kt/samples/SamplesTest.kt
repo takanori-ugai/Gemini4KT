@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Gemini
+import io.github.ugaikit.gemini4kt.TestHttpClientTracker
 import io.github.ugaikit.gemini4kt.batch.Batch
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -10,12 +11,15 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
+import kotlin.test.AfterTest
 import kotlin.test.Test
 
 /**
  * Represents the samples test.
  */
 class SamplesTest {
+    private val clientTracker = TestHttpClientTracker()
+
     /**
      * Handles create mock gemini.
      *
@@ -30,8 +34,13 @@ class SamplesTest {
                     headers = headersOf(HttpHeaders.ContentType, "application/json"),
                 )
             }
-        val client = HttpClient(mockEngine)
+        val client = clientTracker.track(HttpClient(mockEngine))
         return Gemini(apiKey = "test_key", client = client)
+    }
+
+    @AfterTest
+    fun closeClients() {
+        clientTracker.closeAll()
     }
 
     /**
@@ -230,7 +239,7 @@ class SamplesTest {
                         headers = headersOf(HttpHeaders.ContentType, "application/json"),
                     )
                 }
-            val client = HttpClient(mockEngine)
+            val client = clientTracker.track(HttpClient(mockEngine))
             val gemini = Gemini(apiKey = "test_key", client = client)
 
             EmbedContent.run(gemini)
@@ -318,7 +327,7 @@ class SamplesTest {
                         headers = headersOf(HttpHeaders.ContentType, "application/json"),
                     )
                 }
-            val client = HttpClient(mockEngine)
+            val client = clientTracker.track(HttpClient(mockEngine))
             val batch = Batch(apiKey = "test_key", client = client)
 
             BatchSample.run(batch)
@@ -408,7 +417,7 @@ class SamplesTest {
                     )
                 }
 
-            val client = HttpClient(mockEngine)
+            val client = clientTracker.track(HttpClient(mockEngine))
             val gemini = Gemini(apiKey = "test_key", client = client)
 
             FunctionExample2.run(gemini)
@@ -473,7 +482,7 @@ class SamplesTest {
                     )
                 }
 
-            val client = HttpClient(mockEngine)
+            val client = clientTracker.track(HttpClient(mockEngine))
             val gemini = Gemini(apiKey = "test_key", client = client)
 
             FunctionExample3.run(gemini)
@@ -501,7 +510,7 @@ class SamplesTest {
                         headers = headersOf(HttpHeaders.ContentType, "text/event-stream"),
                     )
                 }
-            val client = HttpClient(mockEngine)
+            val client = clientTracker.track(HttpClient(mockEngine))
             val gemini = Gemini(apiKey = "test_key", client = client)
 
             StreamGenerateContentSample.run(gemini)
@@ -639,7 +648,7 @@ class SamplesTest {
                         headers = headersOf(HttpHeaders.ContentType, "application/json"),
                     )
                 }
-            val client = HttpClient(mockEngine)
+            val client = clientTracker.track(HttpClient(mockEngine))
             val gemini = Gemini(apiKey = "test_key", client = client)
 
             Cache.run(gemini)

@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt.batch
 import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
+import io.github.ugaikit.gemini4kt.TestHttpClientTracker
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -18,6 +19,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -29,6 +31,8 @@ class BatchClientTest {
      * Holds the json.
      */
     private val json = Json { ignoreUnknownKeys = true }
+
+    private val clientTracker = TestHttpClientTracker()
 
     /**
      * Handles create batch.
@@ -45,7 +49,12 @@ class BatchClientTest {
                     json(Json { ignoreUnknownKeys = true })
                 }
             }
-        return Batch(apiKey = "api-key", client = client)
+        return Batch(apiKey = "api-key", client = clientTracker.track(client))
+    }
+
+    @AfterTest
+    fun closeClients() {
+        clientTracker.closeAll()
     }
 
     /**

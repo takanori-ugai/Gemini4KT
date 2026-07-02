@@ -29,6 +29,22 @@ internal suspend fun HttpResponse.throwApiException(): Nothing {
 private fun HttpResponse.fallbackError(errorMsg: String): GeminiError =
     GeminiError(
         code = status.value,
-        message = errorMsg.ifBlank { status.description },
+        message = summarizeErrorBody(errorMsg, status.description),
         status = status.description.ifBlank { status.value.toString() },
     )
+
+internal fun summarizeErrorBody(
+    errorMsg: String,
+    fallback: String,
+): String {
+    val trimmed = errorMsg.trim()
+    if (trimmed.isBlank()) {
+        return fallback
+    }
+    val maxChars = 512
+    return if (trimmed.length <= maxChars) {
+        trimmed
+    } else {
+        trimmed.take(maxChars) + "..."
+    }
+}

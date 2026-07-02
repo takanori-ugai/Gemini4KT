@@ -1,6 +1,6 @@
 # Risk Bugs (Investigated)
 
-Investigation date: 2026-06-30  
+Investigation date: 2026-07-02  
 Scope: reviewed the listed risks against current `src/` code. Fixed items have been removed from this document.
 
 Status keys:
@@ -27,4 +27,12 @@ Status keys:
 
 ## Most Actionable First Fixes
 
-1. Upload robustness (`#12`)
+1. Non-JVM uploads buffer full file in memory (`#12`)
+2. JVM timeout default (`#25`)
+3. JVM music sample buffering (`#26`)
+4. JS CLI arg leakage/parsing (`#27`)
+5. JS timeout absence (`#28`)
+6. Sample polling loop timeout (`#29`)
+7. Sample failure masking (`#30`)
+8. Live session close-frame assertion (`#33`)
+9. Function-calling mode coverage (`#35`)

@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.GeminiAI
+import io.github.ugaikit.gemini4kt.TestHttpClientTracker
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -14,9 +15,12 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlin.test.AfterTest
 import kotlin.test.Test
 
 class InteractionSamplesTest {
+    private val clientTracker = TestHttpClientTracker()
+
     private fun createGeminiAI(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): GeminiAI {
         val client =
             HttpClient(MockEngine) {
@@ -33,7 +37,12 @@ class InteractionSamplesTest {
                     )
                 }
             }
-        return GeminiAI(client = client, apiKey = "test-key")
+        return GeminiAI(client = clientTracker.track(client), apiKey = "test-key")
+    }
+
+    @AfterTest
+    fun closeClients() {
+        clientTracker.closeAll()
     }
 
     @Test

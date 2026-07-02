@@ -35,4 +35,47 @@ class FunctionCallingConfigBuilderTest {
             }
         }
     }
+
+    @Test
+    fun buildRequiresAllowedFunctionsForValidatedMode() {
+        val config =
+            functionCallingConfig {
+                mode = Mode.VALIDATED
+                allowFunction("search")
+            }
+
+        assertEquals(Mode.VALIDATED, config.mode)
+        assertEquals(listOf("search"), config.allowedFunctionNames.toList())
+    }
+
+    @Test
+    fun buildRejectsValidatedModeWithoutAllowedFunctions() {
+        assertFailsWith<IllegalArgumentException> {
+            functionCallingConfig {
+                mode = Mode.VALIDATED
+            }
+        }
+    }
+
+    @Test
+    fun buildAllowsEmptyAllowlistForNoneMode() {
+        val config =
+            functionCallingConfig {
+                mode = Mode.NONE
+            }
+
+        assertEquals(Mode.NONE, config.mode)
+        assertEquals(emptyList<String>(), config.allowedFunctionNames.toList())
+    }
+
+    @Test
+    fun buildAllowsEmptyAllowlistForUnspecifiedMode() {
+        val config =
+            functionCallingConfig {
+                mode = Mode.MODE_UNSPECIFIED
+            }
+
+        assertEquals(Mode.MODE_UNSPECIFIED, config.mode)
+        assertEquals(emptyList<String>(), config.allowedFunctionNames.toList())
+    }
 }
