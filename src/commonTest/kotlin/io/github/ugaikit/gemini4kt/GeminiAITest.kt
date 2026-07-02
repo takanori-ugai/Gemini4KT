@@ -33,7 +33,7 @@ class GeminiAITest {
         private const val EXPECTED_API_REVISION = "2026-05-20"
     }
 
-    private val createdClients = mutableListOf<GeminiAI>()
+    private val clientTracker = TestHttpClientTracker()
 
     private fun createGeminiAI(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): GeminiAI {
         val client =
@@ -51,13 +51,12 @@ class GeminiAITest {
                     )
                 }
             }
-        return GeminiAI(client = client, apiKey = "test-key").also { createdClients.add(it) }
+        return GeminiAI(client = clientTracker.track(client), apiKey = "test-key")
     }
 
     @AfterTest
     fun closeClients() {
-        createdClients.forEach(GeminiAI::close)
-        createdClients.clear()
+        clientTracker.closeAll()
     }
 
     @Test

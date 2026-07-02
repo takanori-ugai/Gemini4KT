@@ -33,7 +33,7 @@ private fun HttpResponse.fallbackError(errorMsg: String): GeminiError =
         status = status.description.ifBlank { status.value.toString() },
     )
 
-private fun summarizeErrorBody(
+internal fun summarizeErrorBody(
     errorMsg: String,
     fallback: String,
 ): String {

@@ -103,8 +103,8 @@ actual class FileUploadProvider actual constructor(
                     uploadBody = fileContent,
                     json = json,
                     endpointPathSegments =
-                        listOf("upload", "v1beta") +
-                            normalizeResourcePathSegments(fileSearchStoreName),
+                        listOf("upload", "v1beta", "fileSearchStores") +
+                            normalizeResourcePathSegments(fileSearchStoreName, "fileSearchStores"),
                     endpointSuffix = ":uploadToFileSearchStore",
                 )
         }

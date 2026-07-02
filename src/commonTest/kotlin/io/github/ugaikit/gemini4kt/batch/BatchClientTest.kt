@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt.batch
 import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
+import io.github.ugaikit.gemini4kt.TestHttpClientTracker
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -31,7 +32,7 @@ class BatchClientTest {
      */
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val createdBatches = mutableListOf<Batch>()
+    private val clientTracker = TestHttpClientTracker()
 
     /**
      * Handles create batch.
@@ -48,13 +49,12 @@ class BatchClientTest {
                     json(Json { ignoreUnknownKeys = true })
                 }
             }
-        return Batch(apiKey = "api-key", client = client).also { createdBatches.add(it) }
+        return Batch(apiKey = "api-key", client = clientTracker.track(client))
     }
 
     @AfterTest
     fun closeClients() {
-        createdBatches.forEach(Batch::close)
-        createdBatches.clear()
+        clientTracker.closeAll()
     }
 
     /**

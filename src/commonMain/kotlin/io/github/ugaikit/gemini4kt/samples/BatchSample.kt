@@ -16,8 +16,12 @@ object BatchSample {
      * Handles run.
      *
      * @param batchClient The batch client.
+     * @param pollTimeoutMillis Timeout for polling batch completion.
      */
-    suspend fun run(batchClient: Batch? = null) {
+    suspend fun run(
+        batchClient: Batch? = null,
+        pollTimeoutMillis: Long = 600_000,
+    ) {
         withBatchClient(batchClient) { client ->
             // Prepare standard GenerateContentRequests
             val request1 =
@@ -64,7 +68,7 @@ object BatchSample {
 
             println("Waiting for job completion...")
             val completed =
-                withTimeoutOrNull(60_000) {
+                withTimeoutOrNull(pollTimeoutMillis) {
                     while (
                         state != "BATCH_STATE_SUCCEEDED" &&
                         state != "BATCH_STATE_FAILED" &&

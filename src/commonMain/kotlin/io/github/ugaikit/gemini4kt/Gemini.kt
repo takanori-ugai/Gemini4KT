@@ -228,7 +228,7 @@ class Gemini(
      * given name.
      */
     suspend fun getCachedContent(name: String): CachedContent {
-        val urlString = buildUrl(bUrl, listOf("cachedContents") + normalizeResourcePathSegments(name, "cachedContents"))
+        val urlString = cachedContentUrl(name)
         return json.decodeFromString<CachedContent>(
             getContent(urlString),
         )
@@ -240,9 +240,11 @@ class Gemini(
      * @param name The unique name identifier of the cached content to be deleted.
      */
     suspend fun deleteCachedContent(name: String) {
-        val urlString = buildUrl(bUrl, listOf("cachedContents") + normalizeResourcePathSegments(name, "cachedContents"))
+        val urlString = cachedContentUrl(name)
         deleteContent(urlString)
     }
+
+    private fun cachedContentUrl(name: String): String = buildUrl(bUrl, listOf("cachedContents") + normalizeResourcePathSegments(name, "cachedContents"))
 
     /**
      * Counts the number of tokens in the provided text using a specified model.

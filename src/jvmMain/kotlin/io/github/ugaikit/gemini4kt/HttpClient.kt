@@ -18,4 +18,4 @@ actual fun createHttpClient(
         configureGeminiHttpClient(json, config)
     }
 
-internal actual val platformDefaultRequestTimeoutMillis: Long? = null
+internal actual val platformDefaultRequestTimeoutMillis: Long? = 60_000

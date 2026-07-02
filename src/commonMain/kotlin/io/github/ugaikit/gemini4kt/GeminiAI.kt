@@ -133,7 +133,12 @@ class GeminiAI(
     suspend fun cancelInteraction(id: String): Interaction {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.post(buildUrl(baseUrl, listOf("interactions") + normalizeResourcePathSegments(id, "interactions")) + "/cancel") {
+            httpClient.post(
+                buildUrl(
+                    baseUrl,
+                    listOf("interactions") + normalizeResourcePathSegments(id, "interactions") + listOf("cancel"),
+                ),
+            ) {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
             }
@@ -249,17 +254,8 @@ class GeminiAI(
         try {
             json.decodeFromString<GeminiErrorResponse>(body).error
         } catch (e: Exception) {
-            GeminiError(statusCode, "Unknown error: ${summarizeErrorBody(body)}", "UNKNOWN")
+            GeminiError(statusCode, "Unknown error: ${summarizeErrorBody(body, "unknown")}", "UNKNOWN")
         }
-
-    private fun summarizeErrorBody(body: String): String {
-        val trimmed = body.trim()
-        if (trimmed.isBlank()) {
-            return "unknown"
-        }
-        val maxChars = 512
-        return if (trimmed.length <= maxChars) trimmed else trimmed.take(maxChars) + "..."
-    }
 
     fun close() {
         if (ownsHttpClient) {

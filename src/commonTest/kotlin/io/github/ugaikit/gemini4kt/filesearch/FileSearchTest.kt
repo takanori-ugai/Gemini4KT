@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt.filesearch
 
+import io.github.ugaikit.gemini4kt.TestHttpClientTracker
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -28,7 +29,7 @@ class FileSearchTest {
      */
     private lateinit var fileSearch: FileSearch
 
-    private val createdClients = mutableListOf<FileSearch>()
+    private val clientTracker = TestHttpClientTracker()
 
     /**
      * Holds the json.
@@ -55,13 +56,12 @@ class FileSearchTest {
                     json(Json { ignoreUnknownKeys = true })
                 }
             }
-        return FileSearch(apiKey = "test-api-key", client = client).also { createdClients.add(it) }
+        return FileSearch(apiKey = "test-api-key", client = clientTracker.track(client))
     }
 
     @AfterTest
     fun closeClients() {
-        createdClients.forEach(FileSearch::close)
-        createdClients.clear()
+        clientTracker.closeAll()
     }
 
     /**

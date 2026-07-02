@@ -65,7 +65,6 @@ class MusicGenerationTest {
                         ),
                     )
                 }
-                incoming.close()
 
                 MusicGeneration.run(
                     onAudioData = { audioEvents.add(it) },
@@ -74,6 +73,7 @@ class MusicGenerationTest {
                     sessionFactory = { musicSession },
                 )
             } finally {
+                incoming.close()
                 client.close()
             }
 
