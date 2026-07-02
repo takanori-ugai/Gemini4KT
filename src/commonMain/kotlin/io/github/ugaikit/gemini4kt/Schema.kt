@@ -12,6 +12,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlin.js.ExperimentalJsExport
@@ -110,10 +111,11 @@ object AdditionalPropertiesSerializer : KSerializer<AdditionalProperties> {
             is JsonPrimitive ->
                 element.booleanOrNull?.let { AdditionalProperties.BooleanValue(it) }
                     ?: throw SerializationException("Expected additionalProperties to be a boolean or schema.")
-            else ->
+            is JsonObject ->
                 AdditionalProperties.SchemaValue(
                     jsonDecoder.json.decodeFromJsonElement(Schema.serializer(), element),
                 )
+            else -> throw SerializationException("Expected additionalProperties to be a boolean or schema object.")
         }
     }
 }

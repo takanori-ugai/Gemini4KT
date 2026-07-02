@@ -26,7 +26,7 @@ data class ComputerUse(
         other as ComputerUse
 
         if (environment != other.environment) return false
-        if (!excludedPredefinedFunctions.contentEqualsNullable(other.excludedPredefinedFunctions)) return false
+        if (!excludedPredefinedFunctions.contentEquals(other.excludedPredefinedFunctions)) return false
 
         return true
     }

@@ -1038,9 +1038,20 @@ class GeminiTest {
     @Test
     fun `generateContent with direct binding rejects unsupported parameter types`() =
         runTest {
-            assertFailsWith<Exception> {
-                buildFunctionDeclaration(::unsupported_key_map)
-            }
+            gemini =
+                createGemini {
+                    respond("""{"candidates": []}""", HttpStatusCode.OK)
+                }
+
+            val exception =
+                assertFailsWith<IllegalArgumentException> {
+                    gemini.generateContent(
+                        GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "x"))))),
+                        ::unsupported_key_map,
+                    )
+                }
+
+            assertTrue(exception.message?.contains("Map parameter keys must be String for automatic binding") == true)
         }
 
     @Test

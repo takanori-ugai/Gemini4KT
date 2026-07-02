@@ -34,4 +34,16 @@ class FileDataBuilderTest {
 
         assertEquals("mimeType must be set before building FileData.", exception.message)
     }
+
+    @Test
+    fun buildRejectsMissingFileUri() {
+        val builder = FileDataBuilder().apply { mimeType = "image/png" }
+
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                builder.build()
+            }
+
+        assertEquals("fileUri must be set before building FileData.", exception.message)
+    }
 }

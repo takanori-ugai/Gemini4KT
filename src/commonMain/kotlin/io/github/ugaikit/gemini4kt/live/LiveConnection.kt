@@ -12,8 +12,6 @@ import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -71,10 +69,9 @@ internal suspend inline fun <reified T> openLiveConnection(
         val activeSession = requireNotNull(session) { "WebSocket session was not initialized." }
         val incomingMessages = Channel<T>(Channel.BUFFERED)
         val handshakeCompleted = CompletableDeferred<Unit>()
-        val scope = CoroutineScope(Dispatchers.Default)
 
         val listenerJob =
-            scope.launch {
+            activeSession.launch {
                 try {
                     for (frame in activeSession.incoming) {
                         val text =
@@ -103,6 +100,11 @@ internal suspend inline fun <reified T> openLiveConnection(
                         handshakeCompleted.completeExceptionally(e)
                     }
                 } finally {
+                    if (!handshakeCompleted.isCompleted) {
+                        handshakeCompleted.completeExceptionally(
+                            IllegalStateException("WebSocket closed before setupComplete was received."),
+                        )
+                    }
                     incomingMessages.close()
                 }
             }
