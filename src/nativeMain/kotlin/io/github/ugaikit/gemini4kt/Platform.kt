@@ -13,12 +13,18 @@ import platform.posix.getenv
  * Creates an HTTP client configured for the native platform.
  *
  * @param json The JSON configuration for serialization.
+ * @param config Optional shared client configuration.
  * @return A configured [HttpClient] instance.
  */
-actual fun createHttpClient(json: Json): HttpClient =
+actual fun createHttpClient(
+    json: Json,
+    config: GeminiHttpClientConfig,
+): HttpClient =
     HttpClient {
-        configureGeminiHttpClient(json, installLogging = true)
+        configureGeminiHttpClient(json, config.copy(installLogging = true))
     }
+
+internal actual val platformDefaultRequestTimeoutMillis: Long? = 60_000
 
 @OptIn(ExperimentalForeignApi::class)
 /**

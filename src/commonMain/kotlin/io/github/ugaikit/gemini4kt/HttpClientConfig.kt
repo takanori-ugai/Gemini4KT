@@ -9,22 +9,38 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 /**
+ * Platform-agnostic options for the shared Gemini HTTP client configuration.
+ */
+data class GeminiHttpClientConfig(
+    val requestTimeoutMillis: Long? = null,
+    val usePlatformDefaultTimeout: Boolean = true,
+    val installLogging: Boolean = false,
+)
+
+/**
+ * Platform default request timeout for clients that opt into a timeout by default.
+ */
+internal expect val platformDefaultRequestTimeoutMillis: Long?
+
+/**
  * Applies the shared Gemini HTTP client configuration on top of a target-specific engine.
  */
 internal fun HttpClientConfig<*>.configureGeminiHttpClient(
     json: Json,
-    installTimeout: Boolean = false,
-    installLogging: Boolean = false,
+    config: GeminiHttpClientConfig = GeminiHttpClientConfig(),
 ) {
     install(ContentNegotiation) {
         json(json)
     }
-    if (installTimeout) {
+    val requestTimeoutMillis =
+        config.requestTimeoutMillis
+            ?: if (config.usePlatformDefaultTimeout) platformDefaultRequestTimeoutMillis else null
+    if (requestTimeoutMillis != null) {
         install(HttpTimeout) {
-            requestTimeoutMillis = 60_000
+            this.requestTimeoutMillis = requestTimeoutMillis
         }
     }
-    if (installLogging) {
+    if (config.installLogging) {
         install(Logging) {
             level = LogLevel.NONE
         }
