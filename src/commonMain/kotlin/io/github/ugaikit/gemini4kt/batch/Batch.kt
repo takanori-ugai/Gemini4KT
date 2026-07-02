@@ -76,7 +76,7 @@ class Batch(
      * @return The [BatchJob] with current status.
      */
     suspend fun getBatch(name: String): BatchJob {
-        val urlString = buildUrl(bUrl, listOf("batches") + normalizeResourcePathSegments(name, "batches"))
+        val urlString = batchResourceUrl(name)
         return json.decodeFromString<BatchJob>(
             getContent(urlString),
         )
@@ -88,7 +88,7 @@ class Batch(
      * @param name The resource name of the batch job to cancel.
      */
     suspend fun cancelBatch(name: String) {
-        val urlString = buildUrl(bUrl, listOf("batches") + normalizeResourcePathSegments(name, "batches")) + ":cancel"
+        val urlString = batchResourceUrl(name) + ":cancel"
         getContent(urlString, "{}") // POST with empty body
     }
 
@@ -98,9 +98,11 @@ class Batch(
      * @param name The resource name of the batch job to delete.
      */
     suspend fun deleteBatch(name: String) {
-        val urlString = buildUrl(bUrl, listOf("batches") + normalizeResourcePathSegments(name, "batches"))
+        val urlString = batchResourceUrl(name)
         deleteContent(urlString)
     }
+
+    private fun batchResourceUrl(name: String): String = buildUrl(bUrl, listOf("batches") + normalizeResourcePathSegments(name, "batches"))
 
     /**
      * Creates a batch job for creating embeddings.

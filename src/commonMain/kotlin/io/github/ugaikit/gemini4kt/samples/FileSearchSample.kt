@@ -111,7 +111,7 @@ object FileSearchSample {
 
         // 3. Poll operation
         val completed =
-            withTimeoutOrNull(60_000) {
+            withTimeoutOrNull(300_000) {
                 while (operation.done != true) {
                     println("Waiting for operation to complete...")
                     delay(5000L)
@@ -121,6 +121,9 @@ object FileSearchSample {
             }
         if (completed == null) {
             error("Timed out waiting for file search upload completion.")
+        }
+        operation.error?.let { operationError ->
+            error("File search upload operation failed: $operationError")
         }
         println("Upload complete.")
     }

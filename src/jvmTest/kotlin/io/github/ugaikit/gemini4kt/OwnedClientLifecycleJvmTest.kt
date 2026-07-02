@@ -6,6 +6,7 @@ import io.ktor.client.HttpClient
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -24,7 +25,7 @@ class OwnedClientLifecycleJvmTest {
             is FileSearch -> owner.close()
         }
 
-        closed.await()
+        withTimeout(5_000) { closed.await() }
         assertTrue(closed.isCompleted)
     }
 

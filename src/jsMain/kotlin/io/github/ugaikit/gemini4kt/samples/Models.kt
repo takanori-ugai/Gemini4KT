@@ -58,30 +58,37 @@ private fun parseCliArgs(raw: String): Array<String> {
     var inQuotes = false
     var quoteChar = '\u0000'
     var escaping = false
+    var tokenStarted = false
 
     raw.forEach { ch ->
         when {
             escaping -> {
                 current.append(ch)
                 escaping = false
+                tokenStarted = true
             }
             ch == '\\' -> escaping = true
             inQuotes && ch == quoteChar -> inQuotes = false
             !inQuotes && (ch == '\'' || ch == '"') -> {
                 inQuotes = true
                 quoteChar = ch
+                tokenStarted = true
             }
             !inQuotes && ch.isWhitespace() -> {
-                if (current.isNotEmpty()) {
+                if (tokenStarted) {
                     args.add(current.toString())
                     current.clear()
+                    tokenStarted = false
                 }
             }
-            else -> current.append(ch)
+            else -> {
+                current.append(ch)
+                tokenStarted = true
+            }
         }
     }
 
-    if (current.isNotEmpty()) {
+    if (tokenStarted) {
         args.add(current.toString())
     }
 

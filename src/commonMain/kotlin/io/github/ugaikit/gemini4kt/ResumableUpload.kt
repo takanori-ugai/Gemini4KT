@@ -73,7 +73,9 @@ internal suspend fun HttpClient.performResumableUpload(
         }
 
     if (response.status != HttpStatusCode.OK) {
-        throw kotlinx.io.IOException("Failed to upload file: ${response.status} ${response.bodyAsText()}")
+        throw kotlinx.io.IOException(
+            "Failed to upload file: ${response.status} ${summarizeResponseBody(response.bodyAsText())}",
+        )
     }
 
     return response.bodyAsText()
@@ -109,21 +111,17 @@ internal suspend inline fun <reified T> HttpClient.performResumableUpload(
     json: Json,
     endpointPathSegments: List<String> = RESUMABLE_UPLOAD_START_PATH_SEGMENTS,
     endpointSuffix: String? = null,
-): T {
-    require(fileSize == uploadBody.size.toLong()) {
-        "fileSize ($fileSize) must match upload body size (${uploadBody.size})."
-    }
-    val uploadUrl =
-        requestResumableUploadUrl(
-            apiKey = apiKey,
-            mimeType = mimeType,
-            fileSize = fileSize,
-            bodyContent = startBody,
-            endpointPathSegments = endpointPathSegments,
-            endpointSuffix = endpointSuffix,
-        )
-    return performResumableUploadAndDecode(uploadUrl, mimeType, fileSize, uploadBody, json)
-}
+): T =
+    performResumableUploadAndDecode(
+        apiKey = apiKey,
+        mimeType = mimeType,
+        fileSize = fileSize,
+        startBody = startBody,
+        uploadBody = uploadBody,
+        json = json,
+        endpointPathSegments = endpointPathSegments,
+        endpointSuffix = endpointSuffix,
+    )
 
 /**
  * Performs the full resumable upload flow and decodes the final response directly.
