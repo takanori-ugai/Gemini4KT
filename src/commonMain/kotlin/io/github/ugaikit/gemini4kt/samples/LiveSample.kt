@@ -84,7 +84,12 @@ object LiveSample {
                     val receiveJob =
                         launch {
                             session.receive().collect { msg ->
-                                println(msg)
+                                val partCount =
+                                    msg.serverContent
+                                        ?.modelTurn
+                                        ?.parts
+                                        ?.size ?: 0
+                                println("Received live message with $partCount model parts.")
                                 msg.serverContent?.modelTurn?.parts?.forEach { part ->
                                     part.inlineData?.let {
                                         if (it.mimeType.startsWith("audio")) {

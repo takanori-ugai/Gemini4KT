@@ -105,7 +105,8 @@ actual class FileUploadProvider actual constructor(
                 startBody = requestBody,
                 uploadBody = content,
                 json = json,
-                endpoint = "upload/v1beta/$fileSearchStoreName:uploadToFileSearchStore",
+                endpointPathSegments = listOf("upload", "v1beta") + fileSearchStoreName.trim('/').split('/').filter { it.isNotBlank() },
+                endpointSuffix = ":uploadToFileSearchStore",
             )
     }
 

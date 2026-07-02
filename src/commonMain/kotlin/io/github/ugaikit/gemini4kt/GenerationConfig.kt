@@ -47,6 +47,7 @@ data class GenerationConfig(
     val responseModalities: Array<Modality>? = null,
     val thinkingConfig: ThinkingConfig? = null,
     val imageConfig: ImageConfig? = null,
+    @SerialName("speech_config")
     val speechConfig: SpeechConfig? = null,
     val responseSchema: Schema? = null,
     @SerialName("response_json_schema")

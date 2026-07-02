@@ -13,7 +13,12 @@ class SpeechConfigTest {
     /**
      * Holds the json.
      */
-    private val json = Json { prettyPrint = true }
+    private val json =
+        Json {
+            prettyPrint = true
+            encodeDefaults = false
+            explicitNulls = false
+        }
 
     /**
      * Tests test single voice config serialization.
@@ -38,10 +43,10 @@ class SpeechConfigTest {
                 "response_modalities": [
                     "AUDIO"
                 ],
-                "speechConfig": {
-                    "voiceConfig": {
-                        "prebuiltVoiceConfig": {
-                            "voiceName": "Kore"
+                "speech_config": {
+                    "voice_config": {
+                        "prebuilt_voice_config": {
+                            "voice_name": "Kore"
                         }
                     }
                 }
@@ -116,22 +121,22 @@ class SpeechConfigTest {
                 "response_modalities": [
                     "AUDIO"
                 ],
-                "speechConfig": {
-                    "multiSpeakerVoiceConfig": {
-                        "speakerVoiceConfigs": [
+                "speech_config": {
+                    "multi_speaker_voice_config": {
+                        "speaker_voice_configs": [
                             {
                                 "speaker": "Joe",
-                                "voiceConfig": {
-                                    "prebuiltVoiceConfig": {
-                                        "voiceName": "Kore"
+                                "voice_config": {
+                                    "prebuilt_voice_config": {
+                                        "voice_name": "Kore"
                                     }
                                 }
                             },
                             {
                                 "speaker": "Jane",
-                                "voiceConfig": {
-                                    "prebuiltVoiceConfig": {
-                                        "voiceName": "Puck"
+                                "voice_config": {
+                                    "prebuilt_voice_config": {
+                                        "voice_name": "Puck"
                                     }
                                 }
                             }
@@ -189,6 +194,35 @@ class SpeechConfigTest {
         assertFailsWith<IllegalArgumentException> {
             PrebuiltVoiceConfigBuilder().build()
         }
+    }
+
+    @Test
+    fun testPrebuiltVoiceConfigRejectsBlankVoiceName() {
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                PrebuiltVoiceConfigBuilder()
+                    .apply {
+                        voiceName { "" }
+                    }.build()
+            }
+        assertEquals("PrebuiltVoiceConfigBuilder requires voiceName.", exception.message)
+    }
+
+    @Test
+    fun testSpeakerVoiceConfigRejectsBlankSpeaker() {
+        val exception =
+            assertFailsWith<IllegalArgumentException> {
+                SpeakerVoiceConfigBuilder()
+                    .apply {
+                        speaker { "" }
+                        voiceConfig {
+                            prebuiltVoiceConfig {
+                                voiceName { "Kore" }
+                            }
+                        }
+                    }.build()
+            }
+        assertEquals("SpeakerVoiceConfigBuilder requires speaker.", exception.message)
     }
 
     @Test

@@ -15,6 +15,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -26,6 +27,8 @@ class FileSearchTest {
      * Holds the file search.
      */
     private lateinit var fileSearch: FileSearch
+
+    private val createdClients = mutableListOf<FileSearch>()
 
     /**
      * Holds the json.
@@ -52,7 +55,13 @@ class FileSearchTest {
                     json(Json { ignoreUnknownKeys = true })
                 }
             }
-        return FileSearch(apiKey = "test-api-key", client = client)
+        return FileSearch(apiKey = "test-api-key", client = client).also { createdClients.add(it) }
+    }
+
+    @AfterTest
+    fun closeClients() {
+        createdClients.forEach(FileSearch::close)
+        createdClients.clear()
     }
 
     /**

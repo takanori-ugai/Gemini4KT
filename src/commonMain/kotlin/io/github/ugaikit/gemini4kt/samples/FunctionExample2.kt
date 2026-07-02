@@ -9,7 +9,6 @@ import io.github.ugaikit.gemini4kt.GenerateContentResponse
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.Schema
 import io.github.ugaikit.gemini4kt.Tool
-import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -32,43 +31,43 @@ object FunctionExample2 {
      * @param gemini The gemini.
      */
     suspend fun run(gemini: Gemini? = null) {
-        val client = gemini ?: Gemini(getApiKey())
+        withGeminiClient(gemini) { client ->
+            val findWeatherFunction =
+                FunctionDeclaration(
+                    name = "find_weather",
+                    description = "find weather in a given location",
+                    parameters =
+                        Schema(
+                            type = "object",
+                            properties =
+                                mapOf(
+                                    "location" to
+                                        Schema(
+                                            type = "string",
+                                            description = "The city and state, e.g. San Francisco, CA",
+                                        ),
+                                ),
+                            required = listOf("location"),
+                        ),
+                )
 
-        val findWeatherFunction =
-            FunctionDeclaration(
-                name = "find_weather",
-                description = "find weather in a given location",
-                parameters =
-                    Schema(
-                        type = "object",
-                        properties =
-                            mapOf(
-                                "location" to
-                                    Schema(
-                                        type = "string",
-                                        description = "The city and state, e.g. San Francisco, CA",
-                                    ),
-                            ),
-                        required = listOf("location"),
-                    ),
-            )
+            val tools = arrayOf(Tool(functionDeclarations = arrayOf(findWeatherFunction)))
 
-        val tools = arrayOf(Tool(functionDeclarations = arrayOf(findWeatherFunction)))
+            // Step 1: Send the user's prompt and function declarations to the model.
+            val userPrompt = "What's the weather like in Boston?"
+            val firstResponse = getFunctionCall(client, tools, userPrompt)
 
-        // Step 1: Send the user's prompt and function declarations to the model.
-        val userPrompt = "What's the weather like in Boston?"
-        val firstResponse = getFunctionCall(client, tools, userPrompt)
+            val modelResponsePart =
+                firstResponse.candidates[0]
+                    .content.parts!!
+                    .get(0)
+            val functionCall = modelResponsePart.functionCall
+            println("Model requested function call: $functionCall")
 
-        val modelResponsePart =
-            firstResponse.candidates[0]
-                .content.parts!!
-                .get(0)
-        val functionCall = modelResponsePart.functionCall
-        println("Model requested function call: $functionCall")
-
-        // Step 2: "Execute" the function and send the response back to the model.
-        val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
-        sendFunctionResult(client, tools, initialContent, modelResponsePart)
+            // Step 2: "Execute" the function and send the response back to the model.
+            val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
+            sendFunctionResult(client, tools, initialContent, modelResponsePart)
+        }
     }
 
     /**

@@ -10,7 +10,6 @@ import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.preparePost
 import io.ktor.client.request.setBody
@@ -61,7 +60,7 @@ class GeminiAI(
     suspend fun createInteraction(request: CreateInteractionRequest): Interaction {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.post("$baseUrl/interactions") {
+            httpClient.post(buildUrl(baseUrl, listOf("interactions"))) {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
                 contentType(ContentType.Application.Json)
@@ -81,7 +80,7 @@ class GeminiAI(
         channelFlow {
             val apiKey = getApiKey()
             httpClient
-                .preparePost("$baseUrl/interactions?alt=sse") {
+                .preparePost(buildUrl(baseUrl, listOf("interactions"), mapOf("alt" to "sse"))) {
                     header("x-goog-api-key", apiKey)
                     header("Api-Revision", API_REVISION)
                     contentType(ContentType.Application.Json)
@@ -103,7 +102,7 @@ class GeminiAI(
     suspend fun getInteraction(id: String): Interaction {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.get("$baseUrl/interactions/$id") {
+            httpClient.get(buildUrl(baseUrl, listOf("interactions") + normalizeResourcePathSegments(id, "interactions"))) {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
             }
@@ -119,7 +118,7 @@ class GeminiAI(
     suspend fun deleteInteraction(id: String) {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.delete("$baseUrl/interactions/$id") {
+            httpClient.delete(buildUrl(baseUrl, listOf("interactions") + normalizeResourcePathSegments(id, "interactions"))) {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
             }
@@ -134,7 +133,7 @@ class GeminiAI(
     suspend fun cancelInteraction(id: String): Interaction {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.post("$baseUrl/interactions/$id/cancel") {
+            httpClient.post(buildUrl(baseUrl, listOf("interactions") + normalizeResourcePathSegments(id, "interactions")) + "/cancel") {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
             }
@@ -150,7 +149,7 @@ class GeminiAI(
     suspend fun downloadEnvironmentFiles(envId: String): ByteArray {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.get("$baseUrl/files/$envId") {
+            httpClient.get(buildUrl(baseUrl, listOf("files") + normalizeResourcePathSegments(envId, "files"))) {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
             }
@@ -167,7 +166,7 @@ class GeminiAI(
     suspend fun createAgent(request: CreateAgentRequest): Agent {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.post("$baseUrl/agents") {
+            httpClient.post(buildUrl(baseUrl, listOf("agents"))) {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
                 contentType(ContentType.Application.Json)
@@ -186,7 +185,7 @@ class GeminiAI(
     suspend fun getAgent(id: String): Agent {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.get("$baseUrl/agents/$id") {
+            httpClient.get(buildUrl(baseUrl, listOf("agents") + normalizeResourcePathSegments(id, "agents"))) {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
             }
@@ -203,7 +202,7 @@ class GeminiAI(
     suspend fun deleteAgent(id: String) {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.delete("$baseUrl/agents/$id") {
+            httpClient.delete(buildUrl(baseUrl, listOf("agents") + normalizeResourcePathSegments(id, "agents"))) {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
             }
@@ -221,13 +220,18 @@ class GeminiAI(
     ): ListAgentsResponse {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.get("$baseUrl/agents") {
+            httpClient.get(
+                buildUrl(
+                    baseUrl,
+                    listOf("agents"),
+                    mapOf(
+                        "pageSize" to pageSize.toString(),
+                        "pageToken" to pageToken,
+                    ),
+                ),
+            ) {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
-                parameter("pageSize", pageSize)
-                if (pageToken != null) {
-                    parameter("pageToken", pageToken)
-                }
             }
 
         if (!response.status.isSuccess()) {
@@ -245,8 +249,17 @@ class GeminiAI(
         try {
             json.decodeFromString<GeminiErrorResponse>(body).error
         } catch (e: Exception) {
-            GeminiError(statusCode, "Unknown error: $body", "UNKNOWN")
+            GeminiError(statusCode, "Unknown error: ${summarizeErrorBody(body)}", "UNKNOWN")
         }
+
+    private fun summarizeErrorBody(body: String): String {
+        val trimmed = body.trim()
+        if (trimmed.isBlank()) {
+            return "unknown"
+        }
+        val maxChars = 512
+        return if (trimmed.length <= maxChars) trimmed else trimmed.take(maxChars) + "..."
+    }
 
     fun close() {
         if (ownsHttpClient) {

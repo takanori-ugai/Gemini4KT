@@ -18,6 +18,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -29,6 +30,8 @@ class BatchClientTest {
      * Holds the json.
      */
     private val json = Json { ignoreUnknownKeys = true }
+
+    private val createdBatches = mutableListOf<Batch>()
 
     /**
      * Handles create batch.
@@ -45,7 +48,13 @@ class BatchClientTest {
                     json(Json { ignoreUnknownKeys = true })
                 }
             }
-        return Batch(apiKey = "api-key", client = client)
+        return Batch(apiKey = "api-key", client = client).also { createdBatches.add(it) }
+    }
+
+    @AfterTest
+    fun closeClients() {
+        createdBatches.forEach(Batch::close)
+        createdBatches.clear()
     }
 
     /**

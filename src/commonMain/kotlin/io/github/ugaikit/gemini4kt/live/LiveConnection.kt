@@ -98,6 +98,12 @@ internal suspend inline fun <reified T> openLiveConnection(
                     incomingMessages.close(e)
                     if (!handshakeCompleted.isCompleted) {
                         handshakeCompleted.completeExceptionally(e)
+                    } else {
+                        try {
+                            activeSession.close()
+                        } finally {
+                            httpClient.close()
+                        }
                     }
                 } finally {
                     if (!handshakeCompleted.isCompleted) {

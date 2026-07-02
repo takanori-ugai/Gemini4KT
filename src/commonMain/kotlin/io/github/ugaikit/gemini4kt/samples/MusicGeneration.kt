@@ -23,6 +23,7 @@ object MusicGeneration {
         onAudioData: (String) -> Unit,
         liveMusicClient: LiveMusic? = null,
         apiKey: String? = null,
+        sessionFactory: (suspend () -> LiveMusicSession)? = null,
     ) {
         val resolvedApiKey = apiKey ?: getApiKey()
         if (resolvedApiKey.isBlank()) {
@@ -35,10 +36,15 @@ object MusicGeneration {
         // Assuming "models/lyria-realtime-exp" based on the TypeScript example.
         val musicModel = "lyria-realtime-exp"
 
-        val client = liveMusicClient ?: LiveMusic(resolvedApiKey, musicModel)
-
         try {
-            val session: LiveMusicSession = client.connect()
+            val session: LiveMusicSession =
+                when {
+                    sessionFactory != null -> sessionFactory()
+                    else -> {
+                        val client = liveMusicClient ?: LiveMusic(resolvedApiKey, musicModel)
+                        client.connect()
+                    }
+                }
 
             println("Connected to Music API.")
 

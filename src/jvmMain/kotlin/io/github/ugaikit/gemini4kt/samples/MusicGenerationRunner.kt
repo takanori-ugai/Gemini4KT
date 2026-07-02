@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt.samples
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -34,13 +35,15 @@ object MusicGenerationRunner {
                 }
             }
             val outputFile = File(outputDir, "generated_music.wav")
-            // We'll accumulate PCM data in memory and write to WAV at the end.
-            // Note: This might consume memory for long sessions.
+            val maxBufferedBytes = 10L * 1024L * 1024L
             val pcmData = java.io.ByteArrayOutputStream()
 
             MusicGeneration.run(
                 onAudioData = { base64Data ->
                     val decoded = Base64.getDecoder().decode(base64Data)
+                    if (pcmData.size().toLong() + decoded.size > maxBufferedBytes) {
+                        throw CancellationException("PCM buffer limit reached.")
+                    }
                     pcmData.write(decoded)
                 },
             )

@@ -12,6 +12,7 @@ import io.github.ugaikit.gemini4kt.filesearch.WhiteSpaceConfig
 import io.github.ugaikit.gemini4kt.firstTextPartOrEmpty
 import io.github.ugaikit.gemini4kt.tool
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.files.Path
 
 /**
@@ -109,11 +110,17 @@ object FileSearchSample {
             )
 
         // 3. Poll operation
-        while (operation.done != true) {
-            println("Waiting for operation to complete...")
-            val delayTime = 5000L
-            delay(delayTime)
-            operation = fileSearch.getFileSearchStoreOperation(operation.name!!)
+        val completed =
+            withTimeoutOrNull(60_000) {
+                while (operation.done != true) {
+                    println("Waiting for operation to complete...")
+                    delay(5000L)
+                    operation = fileSearch.getFileSearchStoreOperation(operation.name!!)
+                }
+                true
+            }
+        if (completed == null) {
+            error("Timed out waiting for file search upload completion.")
         }
         println("Upload complete.")
     }

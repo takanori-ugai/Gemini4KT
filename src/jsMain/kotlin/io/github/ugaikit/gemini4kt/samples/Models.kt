@@ -15,8 +15,7 @@ suspend fun main(args: Array<String>) {
             readCliArgs()
         }
 
-    // デバッグ表示
-    println("ターゲット引数(確定): ${targetArgs.joinToString(", ")}")
+    println("Selected target: ${targetArgs.firstOrNull() ?: "<none>"}")
     if (targetArgs.isEmpty()) {
         println("実行するターゲットを指定してください (models, samples1, ...)")
         return
@@ -50,5 +49,41 @@ private val sampleActions: Map<String, suspend () -> Unit> =
 private fun readCliArgs(): Array<String> {
     val envValue =
         js("(typeof process !== 'undefined' && process.env && process.env.CLI_ARGS) ? process.env.CLI_ARGS : null") as String?
-    return envValue?.split(" ")?.toTypedArray() ?: emptyArray()
+    return envValue?.let(::parseCliArgs) ?: emptyArray()
+}
+
+private fun parseCliArgs(raw: String): Array<String> {
+    val args = mutableListOf<String>()
+    val current = StringBuilder()
+    var inQuotes = false
+    var quoteChar = '\u0000'
+    var escaping = false
+
+    raw.forEach { ch ->
+        when {
+            escaping -> {
+                current.append(ch)
+                escaping = false
+            }
+            ch == '\\' -> escaping = true
+            inQuotes && ch == quoteChar -> inQuotes = false
+            !inQuotes && (ch == '\'' || ch == '"') -> {
+                inQuotes = true
+                quoteChar = ch
+            }
+            !inQuotes && ch.isWhitespace() -> {
+                if (current.isNotEmpty()) {
+                    args.add(current.toString())
+                    current.clear()
+                }
+            }
+            else -> current.append(ch)
+        }
+    }
+
+    if (current.isNotEmpty()) {
+        args.add(current.toString())
+    }
+
+    return args.toTypedArray()
 }

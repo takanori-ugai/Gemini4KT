@@ -14,9 +14,12 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlin.test.AfterTest
 import kotlin.test.Test
 
 class InteractionSamplesTest {
+    private val createdClients = mutableListOf<GeminiAI>()
+
     private fun createGeminiAI(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): GeminiAI {
         val client =
             HttpClient(MockEngine) {
@@ -33,7 +36,13 @@ class InteractionSamplesTest {
                     )
                 }
             }
-        return GeminiAI(client = client, apiKey = "test-key")
+        return GeminiAI(client = client, apiKey = "test-key").also { createdClients.add(it) }
+    }
+
+    @AfterTest
+    fun closeClients() {
+        createdClients.forEach(GeminiAI::close)
+        createdClients.clear()
     }
 
     @Test

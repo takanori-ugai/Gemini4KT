@@ -1,7 +1,6 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.Gemini
-import io.github.ugaikit.gemini4kt.getApiKey
 
 /**
  * Represents a collection of models.
@@ -15,8 +14,9 @@ object Models {
      *
      * @param gemini The gemini.
      */
-    suspend fun listModels(gemini: Gemini = Gemini(getApiKey())) {
-        // Retrieve and print each model
-        gemini.getModels().models.forEach(::println)
+    suspend fun listModels(gemini: Gemini? = null) {
+        withGeminiClient(gemini) { client ->
+            client.getModels().models.forEach(::println)
+        }
     }
 }

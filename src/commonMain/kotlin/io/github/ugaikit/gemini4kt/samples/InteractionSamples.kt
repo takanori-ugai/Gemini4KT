@@ -9,9 +9,6 @@ import io.github.ugaikit.gemini4kt.interaction.InteractionContent
 import io.github.ugaikit.gemini4kt.interaction.InteractionTool
 import io.github.ugaikit.gemini4kt.interaction.InteractionTurn
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
@@ -181,22 +178,7 @@ object InteractionSamples {
     }
 
     private fun printGeneratedContents(interaction: Interaction) {
-        val generatedText = interaction.outputText?.takeIf { it.isNotBlank() }
-        if (generatedText != null) {
-            println("Generated text:")
-            println(generatedText)
-        } else {
-            val extractedStepText = extractTextFromSteps(interaction.steps)
-            if (extractedStepText.isNotEmpty()) {
-                println("Generated text from steps:")
-                extractedStepText.forEachIndexed { index, text ->
-                    println("[$index] $text")
-                }
-            } else {
-                println("Generated text: N/A")
-            }
-        }
-
+        println("Output text length: ${interaction.outputText?.length ?: 0}")
         val outputs = interaction.outputs
         if (outputs.isNullOrEmpty()) {
             println("No generated content items returned.")
@@ -207,52 +189,12 @@ object InteractionSamples {
         outputs.forEach { content ->
             println("Type: ${content.type}")
             when (content.type) {
-                "text" -> println("Text: ${content.text}")
-                "image" -> println("Image: [Image Data]")
-                "function_call" -> println("Function Call: ${content.name}(${content.arguments})")
-                "thought" -> println("Thought: ${content.summary?.content?.text ?: "No summary"}")
-                "code_execution_result" -> println("Code result: ${content.result}")
-                else -> println("Content: $content")
-            }
-        }
-    }
-
-    private fun extractTextFromSteps(steps: Array<JsonElement>?): List<String> {
-        if (steps.isNullOrEmpty()) {
-            return emptyList()
-        }
-
-        val texts = mutableListOf<String>()
-        steps.forEach { step ->
-            collectText(step, texts)
-        }
-        return texts
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .distinct()
-    }
-
-    private fun collectText(
-        element: JsonElement,
-        texts: MutableList<String>,
-    ) {
-        when (element) {
-            is JsonPrimitive -> return
-            is JsonArray -> element.forEach { collectText(it, texts) }
-            is JsonObject -> {
-                val stepType = (element["type"] as? JsonPrimitive)?.content
-                if (stepType == "user_input") {
-                    return
-                }
-
-                element.forEach { (key, value) ->
-                    if (key == "text" || key == "output_text" || key == "content") {
-                        if (value is JsonPrimitive && value.isString) {
-                            texts.add(value.content)
-                        }
-                    }
-                    collectText(value, texts)
-                }
+                "text" -> println("Text length: ${content.text?.length ?: 0}")
+                "image" -> println("Image payload present: ${content.data != null}")
+                "function_call" -> println("Function call name: ${content.name ?: "N/A"}")
+                "thought" -> println("Thought summary present: ${content.summary != null}")
+                "code_execution_result" -> println("Code result present: ${content.result != null}")
+                else -> println("Content type logged without payload details.")
             }
         }
     }

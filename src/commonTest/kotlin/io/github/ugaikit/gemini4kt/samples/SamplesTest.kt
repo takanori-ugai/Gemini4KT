@@ -10,12 +10,15 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
+import kotlin.test.AfterTest
 import kotlin.test.Test
 
 /**
  * Represents the samples test.
  */
 class SamplesTest {
+    private val createdClients = mutableListOf<Gemini>()
+
     /**
      * Handles create mock gemini.
      *
@@ -31,7 +34,13 @@ class SamplesTest {
                 )
             }
         val client = HttpClient(mockEngine)
-        return Gemini(apiKey = "test_key", client = client)
+        return Gemini(apiKey = "test_key", client = client).also { createdClients.add(it) }
+    }
+
+    @AfterTest
+    fun closeClients() {
+        createdClients.forEach(Gemini::close)
+        createdClients.clear()
     }
 
     /**

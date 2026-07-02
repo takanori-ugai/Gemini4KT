@@ -15,6 +15,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -27,6 +28,8 @@ class FileUploadProviderImplTest {
      * Holds the file upload provider.
      */
     private lateinit var fileUploadProvider: FileUploadProvider
+
+    private val createdProviders = mutableListOf<FileUploadProvider>()
 
     /**
      * Handles create file upload provider.
@@ -43,7 +46,13 @@ class FileUploadProviderImplTest {
                     json(Json { ignoreUnknownKeys = true })
                 }
             }
-        return FileUploadProvider(apiKey = "test-api-key", client = client)
+        return FileUploadProvider(apiKey = "test-api-key", client = client).also { createdProviders.add(it) }
+    }
+
+    @AfterEach
+    fun closeProviders() {
+        createdProviders.forEach(FileUploadProvider::close)
+        createdProviders.clear()
     }
 
     /**
