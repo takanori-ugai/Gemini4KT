@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
@@ -14,7 +15,9 @@ import kotlin.js.JsExport
 @JsExport
 @Serializable
 data class SpeechConfig(
+    @SerialName("voice_config")
     val voiceConfig: VoiceConfig? = null,
+    @SerialName("multi_speaker_voice_config")
     val multiSpeakerVoiceConfig: MultiSpeakerVoiceConfig? = null,
 )
 
@@ -27,6 +30,7 @@ data class SpeechConfig(
 @JsExport
 @Serializable
 data class VoiceConfig(
+    @SerialName("prebuilt_voice_config")
     val prebuiltVoiceConfig: PrebuiltVoiceConfig? = null,
 )
 
@@ -39,6 +43,7 @@ data class VoiceConfig(
 @JsExport
 @Serializable
 data class PrebuiltVoiceConfig(
+    @SerialName("voice_name")
     val voiceName: String? = null,
 )
 
@@ -51,6 +56,7 @@ data class PrebuiltVoiceConfig(
 @JsExport
 @Serializable
 data class MultiSpeakerVoiceConfig(
+    @SerialName("speaker_voice_configs")
     val speakerVoiceConfigs: Array<SpeakerVoiceConfig>? = null,
 )
 
@@ -65,6 +71,7 @@ data class MultiSpeakerVoiceConfig(
 @Serializable
 data class SpeakerVoiceConfig(
     val speaker: String? = null,
+    @SerialName("voice_config")
     val voiceConfig: VoiceConfig? = null,
 )
 

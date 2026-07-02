@@ -351,7 +351,7 @@ class GeminiTest {
             val responseJson = """{"name": "cachedContent-123"}"""
             gemini =
                 createGemini { request ->
-                    assertEquals("$baseUrl/$name", request.url.toString())
+                    assertEquals("$baseUrl/cachedContents/$name", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
 
@@ -369,7 +369,7 @@ class GeminiTest {
             val name = "cachedContent-123"
             gemini =
                 createGemini { request ->
-                    assertEquals("$baseUrl/$name", request.url.toString())
+                    assertEquals("$baseUrl/cachedContents/$name", request.url.toString())
                     assertEquals(HttpMethod.Delete, request.method)
                     respond(content = "", status = HttpStatusCode.OK)
                 }

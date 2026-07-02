@@ -9,7 +9,6 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.Tool
 import io.github.ugaikit.gemini4kt.buildFunctionDeclaration
-import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
@@ -40,69 +39,69 @@ object FunctionExample3 {
      * @param gemini The gemini.
      */
     suspend fun run(gemini: Gemini? = null) {
-        val client = gemini ?: Gemini(getApiKey())
+        withGeminiClient(gemini) { client ->
+            val addFunction = buildFunctionDeclaration(::add)
 
-        val addFunction = buildFunctionDeclaration(::add)
+            val tools = arrayOf(Tool(functionDeclarations = arrayOf(addFunction)))
 
-        val tools = arrayOf(Tool(functionDeclarations = arrayOf(addFunction)))
+            // Step 1: Send the user's prompt and function declarations to the model.
+            val userPrompt = "What is 123 plus 456?"
+            val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
+            val firstRequest = GenerateContentRequest(contents = arrayOf(initialContent), tools = tools)
+            val firstResponse = client.generateContent(firstRequest, "gemma-4-31b-it")
 
-        // Step 1: Send the user's prompt and function declarations to the model.
-        val userPrompt = "What is 123 plus 456?"
-        val initialContent = Content(role = "user", parts = arrayOf(Part(text = userPrompt)))
-        val firstRequest = GenerateContentRequest(contents = arrayOf(initialContent), tools = tools)
-        val firstResponse = client.generateContent(firstRequest, "gemma-4-31b-it")
+            val modelResponsePart =
+                firstResponse.candidates[0]
+                    .content.parts!!
+                    .get(0)
+            val functionCall = modelResponsePart.functionCall
+            println("Model requested function call: $functionCall")
 
-        val modelResponsePart =
-            firstResponse.candidates[0]
-                .content.parts!!
-                .get(0)
-        val functionCall = modelResponsePart.functionCall
-        println("Model requested function call: $functionCall")
+            // Step 2: "Execute" the function and send the response back to the model.
+            if (functionCall != null && functionCall.name == "add") {
+                val a = functionCall.args["a"]?.jsonPrimitive?.int ?: 0
+                val b = functionCall.args["b"]?.jsonPrimitive?.int ?: 0
 
-        // Step 2: "Execute" the function and send the response back to the model.
-        if (functionCall != null && functionCall.name == "add") {
-            val a = functionCall.args["a"]?.jsonPrimitive?.int ?: 0
-            val b = functionCall.args["b"]?.jsonPrimitive?.int ?: 0
+                val result = add(a, b)
 
-            val result = add(a, b)
-
-            val functionResponseContent =
-                Content(
-                    role = "function",
-                    parts =
-                        arrayOf(
-                            Part(
-                                functionResponse =
-                                    FunctionResponse(
-                                        name = "add",
-                                        response = buildJsonObject { put("result", result) },
-                                    ),
+                val functionResponseContent =
+                    Content(
+                        role = "function",
+                        parts =
+                            arrayOf(
+                                Part(
+                                    functionResponse =
+                                        FunctionResponse(
+                                            name = "add",
+                                            response = buildJsonObject { put("result", result) },
+                                        ),
+                                ),
                             ),
-                        ),
-                )
+                    )
 
-            // Add the history (user prompt, model's function call) and the new function response to the next request.
-            val conversationHistory =
-                arrayOf(
-                    initialContent,
-                    Content(role = "model", parts = arrayOf(modelResponsePart)),
-                    functionResponseContent,
-                )
+                // Add the history (user prompt, model's function call) and the new function response to the next request.
+                val conversationHistory =
+                    arrayOf(
+                        initialContent,
+                        Content(role = "model", parts = arrayOf(modelResponsePart)),
+                        functionResponseContent,
+                    )
 
-            val secondRequest = GenerateContentRequest(contents = conversationHistory, tools = tools)
-            val secondResponse = client.generateContent(secondRequest, "gemma-4-31b-it")
-            val firstCandidate = secondResponse.candidates.firstOrNull()
-            val finalText =
-                firstCandidate
-                    ?.content
-                    ?.parts
-                    ?.firstOrNull()
-                    ?.text
-            if (finalText != null) {
-                println("Final response: $finalText")
-            } else {
-                // Show the full candidate content when the model returns non-text parts.
-                println("Final candidate content: ${firstCandidate?.content}")
+                val secondRequest = GenerateContentRequest(contents = conversationHistory, tools = tools)
+                val secondResponse = client.generateContent(secondRequest, "gemma-4-31b-it")
+                val firstCandidate = secondResponse.candidates.firstOrNull()
+                val finalText =
+                    firstCandidate
+                        ?.content
+                        ?.parts
+                        ?.firstOrNull()
+                        ?.text
+                if (finalText != null) {
+                    println("Final response: $finalText")
+                } else {
+                    // Show the full candidate content when the model returns non-text parts.
+                    println("Final candidate content: ${firstCandidate?.content}")
+                }
             }
         }
     }

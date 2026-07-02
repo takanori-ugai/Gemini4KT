@@ -16,7 +16,7 @@ internal const val GEMINI_UPLOAD_BASE_URL = "https://generativelanguage.googleap
 private const val RESUMABLE_UPLOAD_PROTOCOL = "resumable"
 private const val RESUMABLE_UPLOAD_START_COMMAND = "start"
 private const val RESUMABLE_UPLOAD_FINALIZE_COMMAND = "upload, finalize"
-private const val RESUMABLE_UPLOAD_START_PATH = "upload/v1beta/files"
+private val RESUMABLE_UPLOAD_START_PATH_SEGMENTS = listOf("upload", "v1beta", "files")
 
 @kotlinx.serialization.Serializable
 internal data class FileWrapper(
@@ -28,10 +28,12 @@ internal suspend fun HttpClient.requestResumableUploadUrl(
     mimeType: String,
     fileSize: Long,
     bodyContent: String,
-    endpoint: String = RESUMABLE_UPLOAD_START_PATH,
+    endpointPathSegments: List<String> = RESUMABLE_UPLOAD_START_PATH_SEGMENTS,
+    endpointSuffix: String? = null,
 ): String {
+    val endpoint = buildUrl(GEMINI_UPLOAD_BASE_URL, endpointPathSegments) + endpointSuffix.orEmpty()
     val response =
-        post("$GEMINI_UPLOAD_BASE_URL/$endpoint") {
+        post(endpoint) {
             header("x-goog-api-key", apiKey)
             header("X-Goog-Upload-Protocol", RESUMABLE_UPLOAD_PROTOCOL)
             header("X-Goog-Upload-Command", RESUMABLE_UPLOAD_START_COMMAND)
@@ -42,7 +44,9 @@ internal suspend fun HttpClient.requestResumableUploadUrl(
         }
 
     if (response.status != HttpStatusCode.OK) {
-        throw kotlinx.io.IOException("Failed to get upload URL: ${response.status} ${response.bodyAsText()}")
+        throw kotlinx.io.IOException(
+            "Failed to get upload URL: ${response.status} ${summarizeResponseBody(response.bodyAsText())}",
+        )
     }
 
     return response.headers["X-Goog-Upload-URL"]
@@ -103,12 +107,21 @@ internal suspend inline fun <reified T> HttpClient.performResumableUpload(
     startBody: String,
     uploadBody: ByteArray,
     json: Json,
-    endpoint: String = RESUMABLE_UPLOAD_START_PATH,
+    endpointPathSegments: List<String> = RESUMABLE_UPLOAD_START_PATH_SEGMENTS,
+    endpointSuffix: String? = null,
 ): T {
     require(fileSize == uploadBody.size.toLong()) {
         "fileSize ($fileSize) must match upload body size (${uploadBody.size})."
     }
-    val uploadUrl = requestResumableUploadUrl(apiKey, mimeType, fileSize, startBody, endpoint)
+    val uploadUrl =
+        requestResumableUploadUrl(
+            apiKey = apiKey,
+            mimeType = mimeType,
+            fileSize = fileSize,
+            bodyContent = startBody,
+            endpointPathSegments = endpointPathSegments,
+            endpointSuffix = endpointSuffix,
+        )
     return performResumableUploadAndDecode(uploadUrl, mimeType, fileSize, uploadBody, json)
 }
 
@@ -131,11 +144,33 @@ internal suspend inline fun <reified T> HttpClient.performResumableUploadAndDeco
     startBody: String,
     uploadBody: ByteArray,
     json: Json,
-    endpoint: String = RESUMABLE_UPLOAD_START_PATH,
+    endpointPathSegments: List<String> = RESUMABLE_UPLOAD_START_PATH_SEGMENTS,
+    endpointSuffix: String? = null,
 ): T {
     require(fileSize == uploadBody.size.toLong()) {
         "fileSize ($fileSize) must match upload body size (${uploadBody.size})."
     }
-    val uploadUrl = requestResumableUploadUrl(apiKey, mimeType, fileSize, startBody, endpoint)
+    val uploadUrl =
+        requestResumableUploadUrl(
+            apiKey = apiKey,
+            mimeType = mimeType,
+            fileSize = fileSize,
+            bodyContent = startBody,
+            endpointPathSegments = endpointPathSegments,
+            endpointSuffix = endpointSuffix,
+        )
     return performResumableUploadAndDecode(uploadUrl, mimeType, fileSize, uploadBody, json)
+}
+
+private fun summarizeResponseBody(body: String): String {
+    val trimmed = body.trim()
+    if (trimmed.isBlank()) {
+        return ""
+    }
+    val maxChars = 512
+    return if (trimmed.length <= maxChars) {
+        trimmed
+    } else {
+        trimmed.take(maxChars) + "..."
+    }
 }

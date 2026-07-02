@@ -58,9 +58,8 @@ object FileUploadSample {
                 println(response.firstTextPartOrEmpty())
             }
         } catch (e: Exception) {
-            println("An error occurred: ${e.message}")
-            // e.printStackTrace() is not available in common code standard library, but we can print exception
-            println(e)
+            println("File upload sample failed: ${e.message}")
+            throw e
         }
     }
 }

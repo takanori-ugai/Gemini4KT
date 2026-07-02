@@ -6,6 +6,7 @@ import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.batch.Batch
 import io.github.ugaikit.gemini4kt.batch.createBatchRequest
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Represents the batch sample.
@@ -62,15 +63,22 @@ object BatchSample {
             var state = batchJob.metadata?.state
 
             println("Waiting for job completion...")
-            while (
-                state != "BATCH_STATE_SUCCEEDED" &&
-                state != "BATCH_STATE_FAILED" &&
-                state != "BATCH_STATE_CANCELLED"
-            ) {
-                delay(10000) // Wait for 10 seconds
-                batchJob = client.getBatch(batchJob.name)
-                state = batchJob.metadata?.state
-                println("Current State: $state")
+            val completed =
+                withTimeoutOrNull(60_000) {
+                    while (
+                        state != "BATCH_STATE_SUCCEEDED" &&
+                        state != "BATCH_STATE_FAILED" &&
+                        state != "BATCH_STATE_CANCELLED"
+                    ) {
+                        delay(10000)
+                        batchJob = client.getBatch(batchJob.name)
+                        state = batchJob.metadata?.state
+                        println("Current State: $state")
+                    }
+                    true
+                }
+            if (completed == null) {
+                error("Timed out waiting for batch job completion.")
             }
 
             if (state == "BATCH_STATE_SUCCEEDED") {
