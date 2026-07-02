@@ -19,7 +19,7 @@ internal suspend fun ByteReadChannel.consumeServerSentEvents(onPayload: suspend 
         }
     }
 
-    while (!isClosedForRead) {
+    while (true) {
         val line = readLine() ?: break
         when {
             line.isEmpty() -> flushEvent()

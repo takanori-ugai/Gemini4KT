@@ -5,7 +5,6 @@ import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.github.ugaikit.gemini4kt.Part
 import io.github.ugaikit.gemini4kt.batch.Batch
 import io.github.ugaikit.gemini4kt.batch.createBatchRequest
-import io.github.ugaikit.gemini4kt.getApiKey
 import kotlinx.coroutines.delay
 
 /**
@@ -18,53 +17,42 @@ object BatchSample {
      * @param batchClient The batch client.
      */
     suspend fun run(batchClient: Batch? = null) {
-        val ownsClient = batchClient == null
-        val client =
-            batchClient ?: run {
-                val apiKey = getApiKey()
-                if (apiKey.isBlank()) {
-                    println("GEMINI_API_KEY not found.")
-                    return
-                }
-                Batch(apiKey)
-            }
+        withBatchClient(batchClient) { client ->
+            // Prepare standard GenerateContentRequests
+            val request1 =
+                GenerateContentRequest(
+                    contents = arrayOf(Content(parts = arrayOf(Part(text = "Tell me a haiku about coding.")))),
+                )
 
-        // Prepare standard GenerateContentRequests
-        val request1 =
-            GenerateContentRequest(
-                contents = arrayOf(Content(parts = arrayOf(Part(text = "Tell me a haiku about coding.")))),
-            )
+            val request2 =
+                GenerateContentRequest(
+                    contents = arrayOf(Content(parts = arrayOf(Part(text = "Tell me a haiku about coffee.")))),
+                )
 
-        val request2 =
-            GenerateContentRequest(
-                contents = arrayOf(Content(parts = arrayOf(Part(text = "Tell me a haiku about coffee.")))),
-            )
-
-        // Create CreateBatchRequest using the DSL
-        val createBatchRequest =
-            createBatchRequest {
-                batch {
-                    displayName = "My First Batch Job"
-                    inputConfig {
-                        requests {
-                            request {
-                                request(request1)
-                                metadata {
-                                    key = "haiku-coding"
+            // Create CreateBatchRequest using the DSL
+            val createBatchRequest =
+                createBatchRequest {
+                    batch {
+                        displayName = "My First Batch Job"
+                        inputConfig {
+                            requests {
+                                request {
+                                    request(request1)
+                                    metadata {
+                                        key = "haiku-coding"
+                                    }
                                 }
-                            }
-                            request {
-                                request(request2)
-                                metadata {
-                                    key = "haiku-coffee"
+                                request {
+                                    request(request2)
+                                    metadata {
+                                        key = "haiku-coffee"
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-        try {
             println("Creating batch job...")
             val createdBatchJob = client.createBatch("gemini-2.0-flash", createBatchRequest)
             println("Batch Job Created: ${createdBatchJob.name}")
@@ -101,12 +89,6 @@ object BatchSample {
             val batchesList = client.listBatches(pageSize = 5)
             batchesList.operations?.forEach {
                 println("- ${it.name} (${it.metadata?.state})")
-            }
-        } catch (e: Exception) {
-            println("Error: ${e.message}")
-        } finally {
-            if (ownsClient) {
-                client.close()
             }
         }
     }

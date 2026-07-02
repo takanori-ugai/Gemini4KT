@@ -7,18 +7,18 @@ import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.interaction.InteractionContent
 import io.github.ugaikit.gemini4kt.interaction.InteractionTool
+import io.github.ugaikit.gemini4kt.interaction.InteractionTurn
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
-val model = "gemma-4-26b-a4b-it"
+private const val MODEL = "gemma-4-26b-a4b-it"
 
 object InteractionSamples {
     private val json =
@@ -33,7 +33,7 @@ object InteractionSamples {
             println("--- Simple Request ---")
             val request =
                 CreateInteractionRequest(
-                    model = model,
+                    model = MODEL,
                     input = JsonPrimitive("Hello, how are you?"),
                     background = false,
                 )
@@ -50,52 +50,41 @@ object InteractionSamples {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
         try {
             println("--- Multi-turn ---")
-            val inputJson =
-                buildJsonArray {
-                    add(
-                        buildJsonObject {
-                            put("type", JsonPrimitive("user_input"))
-                            putJsonArray("content") {
-                                add(
-                                    buildJsonObject {
-                                        put("type", JsonPrimitive("text"))
-                                        put("text", JsonPrimitive("Hello!"))
-                                    },
-                                )
-                            }
-                        },
-                    )
-                    add(
-                        buildJsonObject {
-                            put("type", JsonPrimitive("model_output"))
-                            putJsonArray("content") {
-                                add(
-                                    buildJsonObject {
-                                        put("type", JsonPrimitive("text"))
-                                        put("text", JsonPrimitive("Hi there! How can I help you today?"))
-                                    },
-                                )
-                            }
-                        },
-                    )
-                    add(
-                        buildJsonObject {
-                            put("type", JsonPrimitive("user_input"))
-                            putJsonArray("content") {
-                                add(
-                                    buildJsonObject {
-                                        put("type", JsonPrimitive("text"))
-                                        put("text", JsonPrimitive("What is the capital of France?"))
-                                    },
-                                )
-                            }
-                        },
-                    )
-                }
+            val turns =
+                listOf(
+                    InteractionTurn(
+                        role = "user_input",
+                        content =
+                            json.encodeToJsonElement(
+                                listOf(
+                                    InteractionContent(type = "text", text = "Hello!"),
+                                ),
+                            ),
+                    ),
+                    InteractionTurn(
+                        role = "model_output",
+                        content =
+                            json.encodeToJsonElement(
+                                listOf(
+                                    InteractionContent(type = "text", text = "Hi there! How can I help you today?"),
+                                ),
+                            ),
+                    ),
+                    InteractionTurn(
+                        role = "user_input",
+                        content =
+                            json.encodeToJsonElement(
+                                listOf(
+                                    InteractionContent(type = "text", text = "What is the capital of France?"),
+                                ),
+                            ),
+                    ),
+                )
+            val inputJson = json.encodeToJsonElement(turns)
 
             val request =
                 CreateInteractionRequest(
-                    model = model,
+                    model = MODEL,
                     input = inputJson,
                 )
             val interaction = ai.createInteraction(request)
@@ -124,7 +113,7 @@ object InteractionSamples {
 
             val request =
                 CreateInteractionRequest(
-                    model = model,
+                    model = MODEL,
                     input = inputJson,
                 )
             val interaction = ai.createInteraction(request)
@@ -167,7 +156,7 @@ object InteractionSamples {
 
             val request =
                 CreateInteractionRequest(
-                    model = model,
+                    model = MODEL,
                     tools = arrayOf(tool),
                     input = JsonPrimitive("What is the weather like in Boston, MA?"),
                 )

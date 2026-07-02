@@ -25,6 +25,7 @@ actual class FileUploadProvider actual constructor(
 ) {
     init {
         require(apiKey.isNotBlank()) { "apiKey must not be blank." }
+        require(maxUploadFileSizeBytes > 0) { "maxUploadFileSizeBytes must be greater than 0." }
     }
 
     /**
@@ -51,17 +52,18 @@ actual class FileUploadProvider actual constructor(
     ): GeminiFile {
         val javaFile = File(file.toString())
         val requestBody = json.encodeToString(UploadFileRequest(UploadFileRequestFile(displayName)))
-        requireUploadFileSizeWithinLimit(file.toString(), javaFile.length(), maxUploadFileSizeBytes)
-        val fileContent =
+        val (fileSize, fileContent) =
             withContext(Dispatchers.IO) {
-                javaFile.readBytes()
+                val size = javaFile.length()
+                requireUploadFileSizeWithinLimit(file.toString(), size, maxUploadFileSizeBytes)
+                size to javaFile.readBytes()
             }
         return withContext(Dispatchers.IO) {
             httpClient
                 .performResumableUploadAndDecode<FileWrapper>(
                     apiKey = apiKey,
                     mimeType = mimeType,
-                    fileSize = javaFile.length(),
+                    fileSize = fileSize,
                     startBody = requestBody,
                     uploadBody = fileContent,
                     json = json,
@@ -85,17 +87,18 @@ actual class FileUploadProvider actual constructor(
     ): Operation {
         val javaFile = File(file.toString())
         val requestBody = json.encodeToString(uploadRequest)
-        requireUploadFileSizeWithinLimit(file.toString(), javaFile.length(), maxUploadFileSizeBytes)
-        val fileContent =
+        val (fileSize, fileContent) =
             withContext(Dispatchers.IO) {
-                javaFile.readBytes()
+                val size = javaFile.length()
+                requireUploadFileSizeWithinLimit(file.toString(), size, maxUploadFileSizeBytes)
+                size to javaFile.readBytes()
             }
         return withContext(Dispatchers.IO) {
             httpClient
                 .performResumableUploadAndDecode<Operation>(
                     apiKey = apiKey,
                     mimeType = mimeType,
-                    fileSize = javaFile.length(),
+                    fileSize = fileSize,
                     startBody = requestBody,
                     uploadBody = fileContent,
                     json = json,

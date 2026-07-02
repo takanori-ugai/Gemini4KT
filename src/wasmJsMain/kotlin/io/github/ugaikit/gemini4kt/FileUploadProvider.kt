@@ -23,6 +23,7 @@ actual class FileUploadProvider actual constructor(
 ) {
     init {
         require(apiKey.isNotBlank()) { "apiKey must not be blank." }
+        require(maxUploadFileSizeBytes > 0) { "maxUploadFileSizeBytes must be greater than 0." }
     }
 
     /**

@@ -1,6 +1,5 @@
 package io.github.ugaikit.gemini4kt
 
-import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,7 +18,6 @@ import kotlin.js.JsExport
 @Serializable
 data class ThinkingConfig(
     @ExperimentalSerializationApi
-    @EncodeDefault(EncodeDefault.Mode.ALWAYS)
     @SerialName("thinking_budget")
     val thinkingBudget: Int = 1024,
     @SerialName("thinking_level")

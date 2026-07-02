@@ -4,6 +4,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Represents the computer use test.
@@ -40,6 +41,6 @@ class ComputerUseTest {
         val decoded = json.decodeFromString<ComputerUse>(encoded)
 
         assertEquals(computerUse, decoded)
-        assertEquals(true, decoded.excludedPredefinedFunctions?.contentEquals(arrayOf("CLICK", "TYPE")))
+        assertTrue(decoded.excludedPredefinedFunctions?.contentEquals(arrayOf("CLICK", "TYPE")) == true)
     }
 }

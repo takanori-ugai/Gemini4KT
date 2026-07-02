@@ -51,26 +51,11 @@ data class InteractionTool(
         if (description != other.description) return false
         if (parameters != other.parameters) return false
         if (environment != other.environment) return false
-        if (excludedPredefinedFunctions != null) {
-            if (other.excludedPredefinedFunctions == null) return false
-            if (!excludedPredefinedFunctions.contentEquals(other.excludedPredefinedFunctions)) return false
-        } else if (other.excludedPredefinedFunctions != null) {
-            return false
-        }
+        if (!excludedPredefinedFunctions.contentEquals(other.excludedPredefinedFunctions)) return false
         if (url != other.url) return false
         if (headers != other.headers) return false
-        if (allowedTools != null) {
-            if (other.allowedTools == null) return false
-            if (!allowedTools.contentEquals(other.allowedTools)) return false
-        } else if (other.allowedTools != null) {
-            return false
-        }
-        if (fileSearchStoreNames != null) {
-            if (other.fileSearchStoreNames == null) return false
-            if (!fileSearchStoreNames.contentEquals(other.fileSearchStoreNames)) return false
-        } else if (other.fileSearchStoreNames != null) {
-            return false
-        }
+        if (!allowedTools.contentEquals(other.allowedTools)) return false
+        if (!fileSearchStoreNames.contentEquals(other.fileSearchStoreNames)) return false
         if (topK != other.topK) return false
         if (metadataFilter != other.metadataFilter) return false
 
@@ -114,12 +99,7 @@ data class InteractionAllowedTools(
         other as InteractionAllowedTools
 
         if (mode != other.mode) return false
-        if (tools != null) {
-            if (other.tools == null) return false
-            if (!tools.contentEquals(other.tools)) return false
-        } else if (other.tools != null) {
-            return false
-        }
+        if (!tools.contentEquals(other.tools)) return false
 
         return true
     }

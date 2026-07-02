@@ -159,11 +159,12 @@ object LiveSample {
                     throw e
                 } finally {
                     session.close()
-                    ownedGemini?.close()
                 }
             } catch (e: CancellationException) {
                 println("LiveSample cancelled: ${e.message}")
                 throw e
+            } finally {
+                ownedGemini?.close()
             }
         }
 }

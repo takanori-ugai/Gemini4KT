@@ -1,6 +1,6 @@
 # Risk Bugs (Investigated)
 
-Investigation date: 2026-06-30  
+Investigation date: 2026-07-02  
 Scope: reviewed the listed risks against current `src/` code. Fixed items have been removed from this document.
 
 Status keys:
@@ -10,88 +10,194 @@ Status keys:
 
 ---
 
-4. **Medium - SSE parser too strict / line-based assumptions**  
-   Status: `Confirmed`  
-   Evidence: [Gemini.kt:211-221](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L211-L221), [GeminiAI.kt:88-95](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GeminiAI.kt#L88-L95)  
-   Finding: `Gemini.streamGenerateContent()` only accepts lines starting with exactly `"data: "` (requires trailing space) and decodes each line independently. `GeminiAI.streamInteraction()` accepts `"data:"` but still processes JSON line-by-line. If a single JSON payload spans multiple lines, or if the server sends multi-line events or additional event metadata, parsing will fail or skip chunks.  
-   Recommendation: Parse full Server-Sent Events (SSE) properly by aggregating multi-line data fields and delimiting events on blank lines.
-
-5. **Medium - Live WebSocket queues unbounded; post-handshake decode errors dropped**  
-   Status: `Confirmed`  
-   Evidence: [GeminiLive.kt:106](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/GeminiLive.kt#L106), [LiveMusic.kt:121](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/music/LiveMusic.kt#L121), [MessageProcessor.kt:33-38](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/MessageProcessor.kt#L33-L38)  
-   Finding: Both live WebSocket clients initialize incoming queues with `Channel.UNLIMITED`, introducing memory exhaustion (OOM) risks if incoming packets arrive faster than they are consumed. Furthermore, in `MessageProcessor`, any JSON deserialization exception thrown after the handshake has successfully completed is logged but swallowed, leaving the caller unaware of corrupted payloads.  
-   Recommendation: Implement bounded channels with explicit backpressure strategies, and route post-handshake deserialization failures to the session's error flow.
-
-6. **Medium - Non-JVM `getImage()` returns empty sample payload**  
-   Status: `Confirmed`  
-   Evidence: [Platform.kt:20 (Android)](file:///home/ugai/Gemini4KT/src/androidMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L20), [Platform.kt:28 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L28), [Platform.kt:28 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L28), [Platform.kt:47 (Native)](file:///home/ugai/Gemini4KT/src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L47), [InputWithImage.kt:25-41](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/InputWithImage.kt#L25-L41), [InteractionSamples.kt:57-69](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/InteractionSamples.kt#L57-L69), [CodeExecutionWithImageSample.kt:21-39](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/CodeExecutionWithImageSample.kt#L21-L39)  
-   Finding: On Android, JS, Wasm, and Native targets, `getImage()` is hardcoded to return `""`, causing image-reliant samples to send empty payloads and fail at runtime.  
-   Recommendation: Require callers to supply image data explicitly or fail-fast with target limitation errors.
-
-11. **Low - Public builders allow malformed payloads**  
-    Status: `Confirmed`  
-    Evidence: [GenerateContentRequest.kt:59-157](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerateContentRequest.kt#L59-L157), [InlineData.kt:45-90](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/InlineData.kt#L45-L90), [FileData.kt:33-45](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/FileData.kt#L33-L45)  
-    Finding: The builders lack constraints on required properties. E.g., `FileDataBuilder` leaves `mimeType` and `fileUri` as uninitialized `lateinit var`, leading to `UninitializedPropertyAccessException` crashes on build. `InlineDataBuilder` defaults required fields to `""`, resulting in malformed requests at runtime.  
-    Recommendation: Add property checks inside `build()` to assert required properties and provide clear error messages.
-
 12. **Medium - Non-JVM uploads buffer full file in memory**  
     Status: `Partially confirmed`  
     Evidence: [FileUploadProvider.kt:129-139,228-237,261-270 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L129-L139), [FileUploadProvider.kt:161-170,261-270,294-303 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L161-L170), [FileUploadProvider.kt:183-190 (Native)](file:///home/ugai/Gemini4KT/src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L183-L190)  
     Finding: JS and Wasm targets still buffer full files in memory as `ByteArray` via Node `fs.readFileSync(path)`, and Native still reads the whole file with `readByteArray()`. The upload providers now reject files above a configurable size ceiling before reading, which limits the worst-case memory impact but does not eliminate the buffering behavior.  
     Recommendation: Stream file uploads where possible, or keep the size ceiling conservative and document it clearly.
 
-13. **Low - Automatic binding/schema supports narrow type subset**  
-    Status: `Confirmed`  
-    Evidence: [AutomaticFunctionCallingJvm.kt:118-164](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/AutomaticFunctionCallingJvm.kt#L118-L164), [FunctionDsl.kt:16-38](file:///home/ugai/Gemini4KT/src/jvmCommonMain/kotlin/io/github/ugaikit/gemini4kt/FunctionDsl.kt#L16-L38)  
-    Finding: Automatic schemas and reflection binders only support primitives, collections, maps with String keys, and raw JsonElements. Complex types, enums, or nested data structures fail with an `IllegalArgumentException` during function registration.  
-    Recommendation: Support enums and nested serialization or document supported signatures.
+13. **Medium - Model names are interpolated raw into request paths**  
+    Status: `Confirmed in code (API-dependent impact)`  
+    Evidence: [Gemini.kt:151](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L151), [Gemini.kt:169](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L169), [Gemini.kt:273](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L273), [Gemini.kt:289](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L289), [Gemini.kt:305](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Gemini.kt#L305)  
+    Finding: `generateContent`, `streamGenerateContent`, `countTokens`, `batchEmbedContents`, and `embedContent` all splice `model` directly into the URL path. If a caller passes a resource name like `models/gemma-4-31b-it`, the request becomes `.../models/models/gemma-4-31b-it:...` and targets the wrong endpoint. The code currently relies on callers using only short model IDs, but that convention is not enforced.  
+    Recommendation: Normalize model identifiers before path construction or build the URL with explicit path segments so both short IDs and resource names work consistently.
 
-29. **Low - `ThinkingConfig` always serializes default budget**  
+14. **Medium - Live message payloads are logged verbatim**  
     Status: `Confirmed`  
-    Evidence: [ThinkingConfig.kt:21-24](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/ThinkingConfig.kt#L21-L24)  
-    Finding: The property `thinkingBudget` is annotated with `@EncodeDefault(EncodeDefault.Mode.ALWAYS)`. This means it will always serialize `"thinking_budget": 1024` even if the user did not set it, overriding server-side defaults and forcing a low token budget.  
-    Recommendation: Remove the `ALWAYS` serialization mode or make the budget property nullable.
+    Evidence: [LiveSample.kt:86-99](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/LiveSample.kt#L86), [MessageProcessor.kt:23-29](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/MessageProcessor.kt#L23-L29)  
+    Finding: The live sample prints every decoded WebSocket message, and the handshake helper warns with the full message object when setup is not complete. Those payloads can contain user prompts, model outputs, tool calls, or audio-transcription data, which makes logs a durable exfiltration point in long-lived apps or shared CI output.  
+    Recommendation: Log message metadata only, or redact payload contents before printing them.
 
-38. **Low - Live connection setup is duplicated across `GeminiLive` and `LiveMusic`**  
+15. **Low - Samples leak owned Gemini clients when callers do not supply one**  
     Status: `Confirmed`  
-    Evidence: [GeminiLive.kt:81-170](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/GeminiLive.kt#L81-L170), [LiveMusic.kt:95-170](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/music/LiveMusic.kt#L95-L170)  
-    Finding: Both live clients repeat the same connection choreography: wrap or clone an `HttpClient`, open a WebSocket, create an unbounded incoming channel, launch a listener coroutine, process handshake messages, send the initial setup frame, and unwind resources on failure. The duplication makes the two implementations harder to keep in sync and increases the chance of drift when one side changes error handling or session startup behavior.  
-    Recommendation: Extract the shared WebSocket/session lifecycle into a small internal helper and keep only the endpoint-specific setup payloads in the two classes.
+    Evidence: [FunctionExample1.kt:19-40](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/FunctionExample1.kt#L19), [CountTokensSample.kt:16-20](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/CountTokensSample.kt#L16), [GoogleSearchSample.kt:16-35](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/GoogleSearchSample.kt#L16), [Cache.kt:27-68](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/Cache.kt#L27)  
+    Finding: Several sample entrypoints instantiate `Gemini(getApiKey())` when the caller passes `null`, but they never call `close()` on the owned client. Because `Gemini` owns an `HttpClient` by default, repeated sample runs leak sockets and other HTTP resources until process exit.  
+    Recommendation: Wrap those sample bodies in `withGeminiClient(...)` or close the locally created client in `finally`.
 
-39. **Low - Sample entrypoints repeat client acquisition and request scaffolding**  
+16. **Medium - Interaction samples log raw payloads and tool results**  
     Status: `Confirmed`  
-    Evidence: [LiveSample.kt:52-160](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/LiveSample.kt#L52-L160), [FileSearchSample.kt:28-80](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/FileSearchSample.kt#L28-L80), [BatchSample.kt:20-87](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/BatchSample.kt#L20-L87), [FileUploadSample.kt:15-58](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/FileUploadSample.kt#L15-L58)  
-    Finding: Several sample entrypoints duplicate the same scaffolding: resolve an API key, create a default client when one is not injected, build a one-off request object, run the API call, then print or poll results. This makes the sample code longer than necessary and obscures the actual usage pattern the examples are trying to teach.  
-    Recommendation: Add small shared helpers for client creation, request assembly, and common polling/printing flows so the samples read as focused API examples instead of boilerplate.
+    Evidence: [InteractionSamples.kt:172-215](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/InteractionSamples.kt#L172), [InteractionSamples.kt:220-280](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/InteractionSamples.kt#L220)  
+    Finding: The interaction sample prints full interaction metadata, generated text, function-call arguments, code-execution results, and fallback `toString()` output for unrecognized content. Those payloads can carry user prompts, model responses, tool inputs, and other sensitive data, so the sample becomes a durable log sink if copied into real applications or CI jobs.  
+    Recommendation: Redact payload contents, or log only metadata and counts in the sample output.
 
-40. **Low - JS helper methods duplicate single-prompt request/response handling**  
-    Status: `Confirmed`  
-    Evidence: [GeminiJs.kt:12-39](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/GeminiJs.kt#L12-L39), [GeminiJs.kt:49-79](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/GeminiJs.kt#L49-L79), [GeminiJs.kt:91-130](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/GeminiJs.kt#L91-L130)  
-    Finding: The JS surface builds nearly identical single-prompt requests and then repeats the same first-candidate/first-part text extraction in multiple entry points. That duplication is mostly harmless at runtime, but it makes the exported API harder to maintain and spreads the same response-shaping logic across three places.  
-    Recommendation: Route the exported JS helpers through a shared internal function that constructs the prompt request once and centralizes the “return the first text part” logic.
+17. **Medium - `InteractionGenerationConfig.speechConfig` uses an array where the surrounding API uses a single `SpeechConfig`**  
+    Status: `Confirmed in code (API-dependent impact)`  
+    Evidence: [Interaction.kt:345-361](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/interaction/Interaction.kt#L345), [GenerationConfig.kt:23-50](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GenerationConfig.kt#L23), [LiveTypes.kt:365-383](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/LiveTypes.kt#L365)  
+    Finding: `InteractionGenerationConfig` serializes `speech_config` as `Array<SpeechConfig>?`, but the rest of the SDK models speech generation as a single `SpeechConfig?`. If the Interaction API expects the same object shape, this field will emit the wrong JSON type and the server will reject or ignore the configuration.  
+    Recommendation: Verify the Interaction API schema and, if it matches the rest of the SDK, change the field to a single `SpeechConfig?` and add a round-trip test.
 
-42. **Low - HTTP client setup repeats the same Ktor plugin wiring on every target**  
+18. **Medium - Live Music forwards the API key to whatever WebSocket endpoint the caller constructs**  
     Status: `Confirmed`  
-    Evidence: [HttpClient.kt:15-23 (JVM)](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [HttpClient.kt:15-23 (Android)](file:///home/ugai/Gemini4KT/src/androidMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [HttpClient.kt:15-23 (JS)](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [HttpClient.kt:15-23 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L15-L23), [Platform.kt:22-30 (Native)](file:///home/ugai/Gemini4KT/src/nativeMain/kotlin/io/github/ugaikit/gemini4kt/Platform.kt#L22-L30)  
-    Finding: Each platform-specific `createHttpClient` implementation repeats the same `ContentNegotiation` JSON setup, and several targets also repeat the same timeout/logging defaults. The only real variation is the engine choice, so the current layout spreads a small but important configuration surface across five files.  
-    Recommendation: Factor the shared plugin wiring into a helper such as `configureGeminiHttpClient`, then keep only the engine constructor in each `actual`.
+    Evidence: [LiveMusic.kt:26-46](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/music/LiveMusic.kt#L26-L46), [LiveConnection.kt:61-65](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/LiveConnection.kt#L61-L65)  
+    Finding: `LiveMusicOptions.baseUrl` and `apiVersion` are concatenated directly into the WebSocket URL, and `openLiveConnection` always adds `x-goog-api-key` to the request. That is fine for the default Google endpoint, but if an application threads untrusted config or user input into `LiveMusicOptions`, the SDK will send the API key to an attacker-controlled host or path.  
+    Recommendation: Restrict `baseUrl` to trusted hosts, validate `apiVersion` against an allowlist, or make the custom-endpoint feature opt-in and clearly documented as trusted-only.
 
-43. **Low - Platform test shims duplicate a one-line reflection flag**  
+19. **Medium - Listener parse failures after handshake leave a dead session open**  
     Status: `Confirmed`  
-    Evidence: [PlatformTestUtils.kt:1-6 (JVM)](file:///home/ugai/Gemini4KT/src/jvmTest/kotlin/io/github/ugaikit/gemini4kt/samples/PlatformTestUtils.kt#L1-L6), [PlatformTestUtils.kt:1-6 (JS)](file:///home/ugai/Gemini4KT/src/jsTest/kotlin/io/github/ugaikit/gemini4kt/samples/PlatformTestUtils.kt#L1-L6), [PlatformTestUtils.kt:1-6 (Wasm)](file:///home/ugai/Gemini4KT/src/wasmJsTest/kotlin/io/github/ugaikit/gemini4kt/samples/PlatformTestUtils.kt#L1-L6), [PlatformTestUtils.kt:1-6 (Native)](file:///home/ugai/Gemini4KT/src/nativeTest/kotlin/io/github/ugaikit/gemini4kt/samples/PlatformTestUtils.kt#L1-L6), [PlatformTestUtils.kt:1-6 (Android device)](file:///home/ugai/Gemini4KT/src/androidDeviceTest/kotlin/io/github/ugaikit/gemini4kt/samples/PlatformTestUtils.kt#L1-L6), [PlatformTestUtils.kt:1-6 (Android host)](file:///home/ugai/Gemini4KT/src/androidHostTest/kotlin/io/github/ugaikit/gemini4kt/samples/PlatformTestUtils.kt#L1-L6)  
-    Finding: Six test source sets each define the same file header and a single `supportsReflection` boolean literal. The duplication is small, but it adds unnecessary maintenance if more platform capability flags are introduced later.  
-    Recommendation: Keep the target-specific `actual` declarations, but move the capability decision into a shared source-set constant or a more compact source-set hierarchy so the flag is declared in one place.
+    Evidence: [LiveConnection.kt:94-108](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/live/LiveConnection.kt#L94-L108)  
+    Finding: If `processHandshakeMessage` throws after `setupComplete` has already been observed, the listener job logs the error and closes `incomingMessages`, but it does not close the WebSocket session or the owned `HttpClient`. The caller ends up with a `LiveConnection` whose `receive()` flow is dead while the socket and engine stay alive until someone explicitly closes the session.  
+    Recommendation: Treat post-handshake decode failures as connection-fatal, close the session in the catch block, and propagate the failure to the owner so it can reconnect cleanly.
+
+20. **Low - FileSearch creates a separate upload client and never closes it**  
+    Status: `Confirmed`  
+    Evidence: [FileSearch.kt:26-29,43,215-218](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/filesearch/FileSearch.kt#L26-L29), [FileUploadProvider.kt:12-17,31-49](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L12-L17)  
+    Finding: `FileSearch` always constructs `FileUploadProvider(apiKey)` with its own internal `HttpClient`, even when the caller supplies a shared client for the main `FileSearch` calls. `FileSearch.close()` only closes the primary client, so upload requests bypass the caller's transport configuration and the upload client stays alive until process exit.  
+    Recommendation: Thread the caller's client into `FileUploadProvider`, or have `FileSearch.close()` close the owned upload provider too.
+
+21. **Medium - FileSearch builds resource URLs and pagination queries by string concatenation**  
+    Status: `Confirmed`  
+    Evidence: [FileSearch.kt:74-77,88-99,111-116,126-130,158-159](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/filesearch/FileSearch.kt#L74-L77), [FileUploadProvider.kt:82-95](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/FileUploadProvider.kt#L82-L95)  
+    Finding: `name`, `fileSearchStoreName`, and `pageToken` are interpolated directly into URL paths and query strings. That works for simple identifiers, but opaque pagination tokens and caller-supplied resource names can contain reserved characters, which can corrupt the request or splice in extra path/query components.  
+    Recommendation: Build the request URI with encoded path/query parameters instead of string concatenation.
+
+22. **Medium - Batch request URLs and pagination tokens are concatenated without encoding**  
+    Status: `Confirmed`  
+    Evidence: [Batch.kt:64-68,80-94,102-118,131-141](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/batch/Batch.kt#L64-L68), [BatchSample.kt:56-91](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/BatchSample.kt#L56-L91)  
+    Finding: `createBatch`, `getBatch`, `cancelBatch`, `deleteBatch`, `createBatchEmbeddings`, and `listBatches` all build URLs with raw string interpolation. That makes the client sensitive to reserved characters in model names, batch resource names, and `pageToken`, which can produce malformed requests or target the wrong endpoint when callers pass fully qualified resource names or opaque tokens.  
+    Recommendation: Build batch URLs with encoded path segments and query parameters, and normalize model identifiers before appending RPC suffixes.
+
+23. **Medium - Agent endpoints interpolate IDs and environment names directly into paths**  
+    Status: `Confirmed`  
+    Evidence: [GeminiAI.kt:150-206](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/GeminiAI.kt#L150-L206)  
+    Finding: `downloadEnvironmentFiles`, `getAgent`, and `deleteAgent` splice caller-provided `envId` and `id` values directly into the request path. If a caller passes a fully qualified resource name or a value containing reserved characters, the SDK can generate malformed URLs or hit the wrong resource path.  
+    Recommendation: Encode path segments with a URL builder instead of concatenating raw identifiers into the path.
+
+24. **Medium - Error handling exposes full server bodies in thrown exceptions**  
+    Status: `Confirmed`  
+    Evidence: [Errors.kt:15-33](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Errors.kt#L15-L33), [ResumableUpload.kt:44-45,71-72](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/ResumableUpload.kt#L44-L45)  
+    Finding: When an API response is not valid Gemini JSON, `throwApiException()` and the resumable upload helpers embed the raw response body directly into the exception message. That can leak sensitive server-side details, echoed request data, or HTML error pages into logs, crash reports, or telemetry, and it also allows very large responses to be copied into memory and exception strings.  
+    Recommendation: Limit surfaced error text to a bounded summary, and keep the raw body only in debug logging behind an explicit opt-in.
+
+25. **Medium - JVM clients enforce a hard 60-second request timeout by default**  
+    Status: `Confirmed`  
+    Evidence: [HttpClient.kt:12-14](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L12-L14), [HttpClientConfig.kt:14-25](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/HttpClientConfig.kt#L14-L25)  
+    Finding: The JVM default `HttpClient` installs `HttpTimeout` with `requestTimeoutMillis = 60_000`. That makes every default JVM request fail after one minute, including slow generations, large uploads, and long-running streaming workflows that are otherwise supported by the API surface.  
+    Recommendation: Make the timeout configurable or disable it for streaming-capable clients, and document the default only for short-lived unary calls.
+
+26. **Low - JVM music sample buffers all generated PCM in memory before writing output**  
+    Status: `Confirmed`  
+    Evidence: [MusicGenerationRunner.kt:18-24,37-50](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/samples/MusicGenerationRunner.kt#L18-L24), [MusicGenerationRunner.kt:41-50](file:///home/ugai/Gemini4KT/src/jvmMain/kotlin/io/github/ugaikit/gemini4kt/samples/MusicGenerationRunner.kt#L41-L50)  
+    Finding: The JVM music runner appends every decoded audio chunk to a single `ByteArrayOutputStream` and only writes the WAV file after the session ends. For longer runs this can grow without bound and trigger high heap usage or OOM in the sample runner.  
+    Recommendation: Stream audio to disk incrementally or cap the accumulated buffer size.
+
+27. **Low - JS sample launcher prints and naively splits CLI arguments from the environment**  
+    Status: `Confirmed`  
+    Evidence: [Models.kt:8-19,50-53](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/samples/Models.kt#L8-L19)  
+    Finding: The JS `main()` function echoes the resolved argument list to stdout and reads `CLI_ARGS` by splitting on spaces. That can leak values supplied through the environment into logs, and it breaks quoted arguments or any target name that itself contains whitespace.  
+    Recommendation: Avoid printing the raw argument vector, and parse `CLI_ARGS` with shell-like quoting rules or a structured format instead of a plain space split.
+
+28. **Medium - JS default clients have no request timeout at all**  
+    Status: `Confirmed`  
+    Evidence: [HttpClient.kt:8-14](file:///home/ugai/Gemini4KT/src/jsMain/kotlin/io/github/ugaikit/gemini4kt/HttpClient.kt#L8-L14), [HttpClientConfig.kt:14-25](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/HttpClientConfig.kt#L14-L25)  
+    Finding: The JS `createHttpClient()` path does not install `HttpTimeout`, unlike the JVM client. A stalled network call or a hung streaming response can therefore keep the request open indefinitely, which is an availability problem for both browser and Node consumers.  
+    Recommendation: Add a configurable timeout for JS clients, or document clearly that callers must wrap requests with their own cancellation and timeout logic.
+
+29. **Low - Batch and FileSearch sample polls can hang forever when the API never reaches a terminal state**  
+    Status: `Confirmed`  
+    Evidence: [BatchSample.kt:61-74](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/BatchSample.kt#L61-L74), [FileSearchSample.kt:111-118](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/FileSearchSample.kt#L111-L118)  
+    Finding: Both samples poll in an unbounded loop until the remote operation reports a terminal state. If the backend stalls, returns an unexpected status, or the tests only cover the success path, the sample never exits and the caller hangs indefinitely. This is an availability bug and a coverage gap because the current tests do not exercise the timeout or stuck-operation path.  
+    Recommendation: Add a maximum retry count or elapsed-time deadline, and fail closed when the operation does not finish in time.
+
+30. **Low - FileUploadSample hides failures and echoes exception details instead of propagating them**  
+    Status: `Confirmed`  
+    Evidence: [FileUploadSample.kt:25-64](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/samples/FileUploadSample.kt#L25-L64)  
+    Finding: The sample wraps the entire flow in `catch (Exception)` and only prints the message and exception object before returning normally. That masks upload and generation failures from callers and tests, and it can still leak raw response details or local file-path information to stdout.  
+    Recommendation: Let the failure propagate, or rethrow after emitting a bounded, redacted log line.
+
+31. **Low - `MusicGenerationTest` is a placeholder that never exercises the sample flow**  
+    Status: `Confirmed`  
+    Evidence: [MusicGenerationTest.kt:10-22](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/samples/MusicGenerationTest.kt#L10-L22)  
+    Finding: The test body is explicitly a placeholder and ends with `assertTrue(true)`, so it does not execute `MusicGeneration.run()` or verify any of the live-music lifecycle, stop, close, or error-handling behavior. That leaves the sample’s long-running receive loop and teardown path effectively uncovered, which creates false confidence in coverage.  
+    Recommendation: Replace the placeholder with a mocked-session test that drives the sample through playback, shutdown, and failure cases.
+
+32. **Low - Sample test fixtures leak mock HttpClient instances and never assert cleanup**  
+    Status: `Confirmed`  
+    Evidence: [SamplesTest.kt:24-34](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/samples/SamplesTest.kt#L24-L34), [ModelsTest.kt:44-56](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/samples/ModelsTest.kt#L44-L56), [GeminiAITest.kt:35-52](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/GeminiAITest.kt#L35-L52), [BatchClientTest.kt:38-48](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/batch/BatchClientTest.kt#L38-L48), [FileSearchTest.kt:45-55](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/filesearch/FileSearchTest.kt#L45-L55)  
+    Finding: These helpers build `HttpClient(MockEngine)` instances for use in tests, but the clients are never closed after the assertions finish. That leaks resources during repeated test runs and, more importantly, means the suite does not verify that owned-vs-unowned client teardown works the way the production code expects.  
+    Recommendation: Close the mock clients in `finally` blocks or test teardown, and add explicit teardown assertions where lifecycle behavior matters.
+
+33. **Low - `GeminiLiveSessionTest` should assert the actual close frame, not just cancellation flags**  
+    Status: `Confirmed`  
+    Evidence: [GeminiLiveSessionTest.kt:187-201](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/live/GeminiLiveSessionTest.kt#L187-L201)  
+    Finding: The current close test only checks `job.isCancelled` and `incoming.isClosedForSend`, while the `mockSession.outgoing` close frame is read and then ignored. That leaves the wire-level shutdown behavior unverified, so regressions in the WebSocket close handshake could still pass the suite.  
+    Recommendation: Add an assertion on the outgoing close frame, or otherwise verify that the session emits the expected close control frame before completing.
+
+34. **Low - Lifecycle tests need owned-client coverage, not only unowned-client coverage**  
+    Status: `Confirmed`  
+    Evidence: [GeminiAILifecycleTest.kt:35-43](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/GeminiAILifecycleTest.kt#L35-L43), [BatchLifecycleTest.kt:36-45](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/batch/BatchLifecycleTest.kt#L36-L45), [FileSearchLifecycleTest.kt:35-43](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/filesearch/FileSearchLifecycleTest.kt#L35-L43)  
+    Finding: These lifecycle tests only prove that `close()` does not shut down a caller-supplied `HttpClient`. They do not prove the inverse path, where the SDK owns the client and must close it. That leaves resource cleanup untested for the code path most likely to leak sockets in real use.  
+    Recommendation: Add companion tests that construct owned clients and assert that `close()` completes the underlying `HttpClient`.
+
+35. **Low - `FunctionCallingConfigBuilder` still needs explicit coverage for the remaining mode branches**  
+    Status: `Confirmed`  
+    Evidence: [FunctionCallingConfig.kt:53-66](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/FunctionCallingConfig.kt#L53-L66), [FunctionCallingConfigBuilderTest.kt:8-37](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/FunctionCallingConfigBuilderTest.kt#L8-L37)  
+    Finding: The builder tests cover `Mode.ANY` and `Mode.AUTO`, but not the `VALIDATED`, `NONE`, or `MODE_UNSPECIFIED` branches that drive different validation rules. Without those tests, a regression in the allowlist logic for the remaining modes could slip through undetected.  
+    Recommendation: Add tests for the remaining mode families, including the allowed-function and empty-allowlist failure cases.
+
+36. **Low - `SpeechConfig` should be tested for blank voice and speaker names, not only missing builders**  
+    Status: `Confirmed`  
+    Evidence: [SpeechConfig.kt:169-175](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/SpeechConfig.kt#L169-L175), [SpeechConfig.kt:245-255](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/SpeechConfig.kt#L245-L255), [SpeechConfigTest.kt:180-205](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/SpeechConfigTest.kt#L180-L205)  
+    Finding: The current tests prove that the builders reject empty state, but they never exercise the `isNullOrBlank()` guards. A blank `voiceName` or `speaker` value would therefore bypass the suite even though the production code rejects it.  
+    Recommendation: Add tests that set `voiceName = ""` and `speaker = ""` and assert the expected `IllegalArgumentException` messages.
+
+37. **Low - `PartBuilder` should cover the `videoMetadata` precondition failure path**  
+    Status: `Confirmed`  
+    Evidence: [Part.kt:270-287](file:///home/ugai/Gemini4KT/src/commonMain/kotlin/io/github/ugaikit/gemini4kt/Part.kt#L270-L287), [PartTest.kt:143-166](file:///home/ugai/Gemini4KT/src/commonTest/kotlin/io/github/ugaikit/gemini4kt/PartTest.kt#L143-L166)  
+    Finding: The tests cover the valid `fileData + videoMetadata` path, but not the guard that requires `videoMetadata` to be paired with either `inlineData` or `fileData`. That missing case leaves an important DSL invariant untested.  
+    Recommendation: Add a test that builds a `Part` with only `videoMetadata` and asserts the builder throws the documented exception.
 
 ---
 
 ## Investigation Summary
 
-- Confirmed: 9
+- Confirmed: 23 (`#14`, `#15`, `#16`, `#18`, `#19`, `#20`, `#21`, `#22`, `#23`, `#24`, `#25`, `#26`, `#27`, `#28`, `#29`, `#30`, `#31`, `#32`, `#33`, `#34`, `#35`, `#36`, `#37`)
 - Partially confirmed: 1 (`#12`)
 - Disproved: 0
-- Confirmed in code but API-response-dependent impact: 0
+- Confirmed in code but API-response-dependent impact: 2 (`#13`, `#17`)
 
 ## Most Actionable First Fixes
 
-1. Upload robustness (`#12`)
-2. Remaining low-priority builder and sample cleanup items (`#11`, `#13`, `#29`, `#38`, `#39`, `#40`, `#42`, `#43`)
+1. Live logging redaction (`#14`, `#16`)
+2. Sample client lifecycle cleanup (`#15`)
+3. Model path normalization (`#13`)
+4. Interaction speech config shape (`#17`)
+5. Live Music endpoint trust boundary (`#18`)
+6. Listener failure cleanup (`#19`)
+7. FileSearch client sharing/cleanup (`#20`)
+8. FileSearch URL encoding (`#21`)
+9. Batch URL encoding (`#22`)
+10. Agent URL encoding (`#23`)
+11. Error-body exposure (`#24`)
+12. JVM timeout default (`#25`)
+13. JVM music sample buffering (`#26`)
+14. JS CLI arg leakage/parsing (`#27`)
+15. JS timeout absence (`#28`)
+16. Sample polling loop timeout (`#29`)
+17. Sample failure masking (`#30`)
+18. Placeholder music sample test (`#31`)
+19. Mock client cleanup in tests (`#32`)
+20. Live session close-frame assertion (`#33`)
+21. Owned-client lifecycle coverage (`#34`)
+22. Function-calling mode coverage (`#35`)
+23. Blank speech-config validation coverage (`#36`)
+24. Part `videoMetadata` guard coverage (`#37`)

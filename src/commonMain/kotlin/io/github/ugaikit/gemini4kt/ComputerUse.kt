@@ -26,12 +26,7 @@ data class ComputerUse(
         other as ComputerUse
 
         if (environment != other.environment) return false
-        if (excludedPredefinedFunctions != null) {
-            if (other.excludedPredefinedFunctions == null) return false
-            if (!excludedPredefinedFunctions.contentEquals(other.excludedPredefinedFunctions)) return false
-        } else if (other.excludedPredefinedFunctions != null) {
-            return false
-        }
+        if (!excludedPredefinedFunctions.contentEquals(other.excludedPredefinedFunctions)) return false
 
         return true
     }
@@ -41,6 +36,10 @@ data class ComputerUse(
         result = 31 * result + (excludedPredefinedFunctions?.contentHashCode() ?: 0)
         return result
     }
+
+    override fun toString(): String =
+        "ComputerUse(environment=$environment, " +
+            "excludedPredefinedFunctions=${excludedPredefinedFunctions?.contentToString()})"
 }
 
 /**

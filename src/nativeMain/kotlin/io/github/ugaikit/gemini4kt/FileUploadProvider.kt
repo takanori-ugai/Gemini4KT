@@ -24,6 +24,11 @@ actual class FileUploadProvider actual constructor(
     private val json: Json,
     private val maxUploadFileSizeBytes: Long,
 ) {
+    init {
+        require(apiKey.isNotBlank()) { "apiKey must not be blank." }
+        require(maxUploadFileSizeBytes > 0) { "maxUploadFileSizeBytes must be greater than 0." }
+    }
+
     /**
      * Holds the http client.
      */

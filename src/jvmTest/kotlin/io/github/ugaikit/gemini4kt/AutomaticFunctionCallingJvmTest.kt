@@ -1,9 +1,9 @@
 package io.github.ugaikit.gemini4kt
 
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
@@ -30,6 +30,11 @@ private fun summarizePayload(
         "${list.size}|${payload["nothing"] == null}"
 }
 
+@GeminiFunction(description = "Summarizes labels")
+private fun summarizeLabels(
+    @GeminiParameter(description = "labels") labels: Map<String, String>,
+): String = "${labels["name"]}|${labels["status"]}"
+
 @GeminiFunction(description = "Returns an int array")
 private fun arrayResult(
     @GeminiParameter(description = "base") base: Int,
@@ -41,6 +46,30 @@ private fun unitResult(
 ) {
     message.length
 }
+
+@Serializable
+private enum class Priority {
+    LOW,
+    HIGH,
+}
+
+@Serializable
+private data class Address(
+    val city: String,
+    val zipCode: Int,
+)
+
+@Serializable
+private data class Profile(
+    val name: String,
+    val priority: Priority,
+    val address: Address,
+)
+
+@GeminiFunction(description = "Summarizes profile")
+private fun summarizeProfile(
+    @GeminiParameter(description = "profile") profile: Profile,
+): String = "${profile.name}|${profile.priority}|${profile.address.city}|${profile.address.zipCode}"
 
 @GeminiFunction(description = "Extension function")
 private fun String.extensionEcho(
@@ -129,36 +158,36 @@ class AutomaticFunctionCallingJvmTest {
         }
 
     @Test
-    fun handlerConvertsMapStarArgumentsAndReturnsArrayResult() =
+    fun handlerRejectsStarProjectedMapParameters() =
         runTest {
-            val binding = buildAutomaticFunctionBinding(arrayOf(::summarizePayload, ::arrayResult))
+            val exception =
+                assertFailsWith<IllegalArgumentException> {
+                    buildAutomaticFunctionBinding(arrayOf(::summarizePayload, ::arrayResult))
+                }
+            assertTrue(exception.message?.contains("Map parameter type must declare a value type") == true)
+        }
 
-            val summarizeHandler = binding.handlers.getValue("summarizePayload")
+    @Test
+    fun handlerConvertsMapArgumentsAndReturnsArrayResult() =
+        runTest {
+            val binding = buildAutomaticFunctionBinding(arrayOf(::summarizeLabels, ::arrayResult))
+
+            val summarizeHandler = binding.handlers.getValue("summarizeLabels")
             val summarizeResponse =
                 summarizeHandler(
                     FunctionCall(
-                        name = "summarizePayload",
+                        name = "summarizeLabels",
                         args =
                             mapOf(
-                                "payload" to
+                                "labels" to
                                     buildJsonObject {
                                         put("name", "party")
-                                        put("count", 3)
-                                        put("enabled", true)
-                                        put("nested", buildJsonObject { put("k", "v") })
-                                        put(
-                                            "list",
-                                            buildJsonArray {
-                                                add(JsonPrimitive(1))
-                                                add(JsonPrimitive("two"))
-                                            },
-                                        )
-                                        put("nothing", JsonNull)
+                                        put("status", "ready")
                                     },
                             ),
                     ),
                 )
-            assertEquals("party|3|true|v|2|true", summarizeResponse.response["result"]?.jsonPrimitive?.content)
+            assertEquals("party|ready", summarizeResponse.response["result"]?.jsonPrimitive?.content)
 
             val arrayHandler = binding.handlers.getValue("arrayResult")
             val arrayResponse =
@@ -188,5 +217,51 @@ class AutomaticFunctionCallingJvmTest {
                 )
 
             assertTrue(response.response["result"]?.toString() == "{}")
+        }
+
+    @Test
+    fun declarationSupportsNestedSerializableTypesAndEnums() {
+        val declaration = buildFunctionDeclaration(::summarizeProfile)
+        val profileSchema = requireNotNull(declaration.parameters.properties["profile"])
+        val prioritySchema = requireNotNull(profileSchema.properties["priority"])
+        val addressSchema = requireNotNull(profileSchema.properties["address"])
+
+        assertEquals("object", profileSchema.type)
+        assertTrue(profileSchema.required.containsAll(listOf("name", "priority", "address")))
+        assertEquals(listOf("LOW", "HIGH"), prioritySchema.enum)
+        assertEquals("object", addressSchema.type)
+        assertEquals("string", addressSchema.properties["city"]?.type)
+        assertEquals("integer", addressSchema.properties["zipCode"]?.type)
+    }
+
+    @Test
+    fun handlerConvertsNestedSerializableTypesAndEnums() =
+        runTest {
+            val binding = buildAutomaticFunctionBinding(arrayOf(::summarizeProfile))
+            val handler = binding.handlers.getValue("summarizeProfile")
+
+            val response =
+                handler(
+                    FunctionCall(
+                        name = "summarizeProfile",
+                        args =
+                            mapOf(
+                                "profile" to
+                                    buildJsonObject {
+                                        put("name", "Ada")
+                                        put("priority", "HIGH")
+                                        put(
+                                            "address",
+                                            buildJsonObject {
+                                                put("city", "Tokyo")
+                                                put("zipCode", 1000)
+                                            },
+                                        )
+                                    },
+                            ),
+                    ),
+                )
+
+            assertEquals("Ada|HIGH|Tokyo|1000", response.response["result"]?.jsonPrimitive?.content)
         }
 }

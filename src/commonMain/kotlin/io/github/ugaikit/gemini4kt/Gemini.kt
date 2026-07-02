@@ -6,6 +6,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.preparePost
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
@@ -16,7 +17,7 @@ import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.io.files.Path
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
@@ -164,33 +165,27 @@ class Gemini(
         inputJson: GenerateContentRequest,
         model: String = "gemini-flash-lite-latest",
     ): Flow<GenerateContentResponse> =
-        flow {
+        channelFlow {
             val urlString = "$baseUrl/$model:streamGenerateContent?alt=sse"
-            try {
-                val response =
-                    httpClient.post(urlString) {
-                        header("x-goog-api-key", apiKey)
-                        contentType(ContentType.Application.Json)
-                        setBody(json.encodeToString<GenerateContentRequest>(inputJson))
+            httpClient
+                .preparePost(urlString) {
+                    header("x-goog-api-key", apiKey)
+                    contentType(ContentType.Application.Json)
+                    setBody(json.encodeToString<GenerateContentRequest>(inputJson))
+                }.execute { response ->
+                    if (!response.status.isSuccess()) {
+                        response.throwApiException()
                     }
 
-                if (!response.status.isSuccess()) {
-                    response.throwApiException()
-                } else {
-                    val channel = response.bodyAsChannel()
-                    channel.consumeServerSentEvents { jsonStr ->
-                        if (jsonStr == "[DONE]") return@consumeServerSentEvents
+                    response.bodyAsChannel().consumeServerSentEvents { payload ->
+                        if (payload == "[DONE]") return@consumeServerSentEvents
                         try {
-                            val result = json.decodeFromString<GenerateContentResponse>(jsonStr)
-                            emit(result)
+                            send(json.decodeFromString<GenerateContentResponse>(payload))
                         } catch (e: SerializationException) {
-                            logger.error { "Failed to parse stream response: ${e.message}" }
+                            logger.error(e) { "Failed to parse stream response payload" }
                         }
                     }
                 }
-            } catch (e: Exception) {
-                throw e
-            }
         }
 
     /**

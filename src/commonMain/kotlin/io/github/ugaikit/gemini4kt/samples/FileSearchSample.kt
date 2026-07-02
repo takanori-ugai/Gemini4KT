@@ -9,7 +9,7 @@ import io.github.ugaikit.gemini4kt.filesearch.FileSearch
 import io.github.ugaikit.gemini4kt.filesearch.FileSearchStore
 import io.github.ugaikit.gemini4kt.filesearch.UploadFileSearchStoreRequest
 import io.github.ugaikit.gemini4kt.filesearch.WhiteSpaceConfig
-import io.github.ugaikit.gemini4kt.getApiKey
+import io.github.ugaikit.gemini4kt.firstTextPartOrEmpty
 import io.github.ugaikit.gemini4kt.tool
 import kotlinx.coroutines.delay
 import kotlinx.io.files.Path
@@ -30,64 +30,49 @@ object FileSearchSample {
         geminiInstance: Gemini? = null,
         fileSearchInstance: FileSearch? = null,
     ) {
-        val apiKey = getApiKey()
-        val ownsGemini = geminiInstance == null
-        val ownsFileSearch = fileSearchInstance == null
-        val fileSearch = fileSearchInstance ?: FileSearch(apiKey)
-        val gemini = geminiInstance ?: Gemini(apiKey)
         var storeName: String? = null
+        withGeminiClient(geminiInstance) { gemini ->
+            withFileSearchClient(fileSearchInstance) { fileSearch ->
+                try {
+                    // 1. Create FileSearchStore
+                    val store =
+                        fileSearch.createFileSearchStore(
+                            FileSearchStore(displayName = "your-fileSearchStore-name"),
+                        )
+                    storeName = store.name
+                    println("Created FileSearchStore: ${store.name}")
 
-        try {
-            // 1. Create FileSearchStore
-            val store =
-                fileSearch.createFileSearchStore(
-                    FileSearchStore(displayName = "your-fileSearchStore-name"),
-                )
-            storeName = store.name
-            println("Created FileSearchStore: ${store.name}")
+                    // 2. Upload file
+                    val resolvedStoreName = storeName ?: return@withFileSearchClient
+                    uploadFileToStore(fileSearch, resolvedStoreName, filePath)
 
-            // 2. Upload file
-            val resolvedStoreName = storeName ?: return
-            uploadFileToStore(fileSearch, resolvedStoreName, filePath)
+                    // 3. Generate Content
+                    val generateContentRequest =
+                        GenerateContentRequest(
+                            contents = arrayOf(Content(parts = arrayOf(Part(text = "What does the fox do?")))),
+                            tools =
+                                arrayOf(
+                                    tool {
+                                        fileSearch {
+                                            fileSearchStoreName(resolvedStoreName)
+                                        }
+                                    },
+                                ),
+                        )
 
-            // 3. Generate Content
-            val generateContentRequest =
-                GenerateContentRequest(
-                    contents = arrayOf(Content(parts = arrayOf(Part(text = "What does the fox do?")))),
-                    tools =
-                        arrayOf(
-                            tool {
-                                fileSearch {
-                                    fileSearchStoreName(resolvedStoreName)
-                                }
-                            },
-                        ),
-                )
+                    val response =
+                        gemini.generateContent(
+                            model = "gemma-4-31b-it",
+                            inputJson = generateContentRequest,
+                        )
 
-            val response =
-                gemini.generateContent(
-                    model = "gemma-4-31b-it",
-                    inputJson = generateContentRequest,
-                )
-
-            println(
-                response.candidates
-                    .firstOrNull()
-                    ?.content
-                    ?.parts
-                    ?.firstOrNull()
-                    ?.text,
-            )
-        } finally {
-            // Clean up
-            if (storeName != null) {
-                fileSearch.deleteFileSearchStore(storeName, force = true)
-            }
-            if (ownsGemini) {
-                gemini.close()
-            }
-            if (ownsFileSearch) {
-                fileSearch.close()
+                    println(response.firstTextPartOrEmpty())
+                } finally {
+                    val currentStoreName = storeName
+                    if (currentStoreName != null) {
+                        fileSearch.deleteFileSearchStore(currentStoreName, force = true)
+                    }
+                }
             }
         }
     }

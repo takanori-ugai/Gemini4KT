@@ -90,13 +90,11 @@ class GeminiAI(
                     if (!response.status.isSuccess()) {
                         val errorBody = response.bodyAsText()
                         throw GeminiException(parseError(errorBody, response.status.value))
-                    } else {
-                        val channel = response.bodyAsChannel()
-                        channel.consumeServerSentEvents { payload ->
-                            if (payload.isBlank() || payload == "[DONE]") return@consumeServerSentEvents
-                            val result = json.decodeFromString<JsonElement>(payload)
-                            send(result)
-                        }
+                    }
+
+                    response.bodyAsChannel().consumeServerSentEvents { payload ->
+                        if (payload.isBlank() || payload == "[DONE]") return@consumeServerSentEvents
+                        send(json.decodeFromString<JsonElement>(payload))
                     }
                 }
         }

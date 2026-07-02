@@ -278,8 +278,8 @@ class SamplesTest {
             val mockEngine =
                 MockEngine { request ->
                     val responseText =
-                        if (request.url.encodedPath.contains("batches")) {
-                            if (request.method.value == "POST") {
+                        when {
+                            request.url.encodedPath.contains("batchGenerateContent") -> {
                                 // Create batch response
                                 """
                      {
@@ -300,7 +300,8 @@ class SamplesTest {
                        }
                      }
                      """
-                            } else {
+                            }
+                            request.url.encodedPath.contains("/batches") -> {
                                 // List batches response
                                 """
                      {
@@ -308,8 +309,7 @@ class SamplesTest {
                      }
                      """
                             }
-                        } else {
-                            "{}"
+                            else -> "{}"
                         }
 
                     respond(

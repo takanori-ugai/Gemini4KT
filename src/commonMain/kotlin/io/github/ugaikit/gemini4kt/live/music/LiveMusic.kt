@@ -1,27 +1,16 @@
 package io.github.ugaikit.gemini4kt.live.music
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.ugaikit.gemini4kt.X_GOOG_API_CLIENT
-import io.github.ugaikit.gemini4kt.live.decodeBinaryFrame
-import io.github.ugaikit.gemini4kt.live.processHandshakeMessage
+import io.github.ugaikit.gemini4kt.live.openLiveConnection
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
-import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.client.plugins.websocket.webSocketSession
-import io.ktor.client.request.header
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
-import io.ktor.websocket.readText
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -96,67 +85,22 @@ class LiveMusic(
         handshakeTimeoutMs: Long = 10_000,
         connectTimeoutMs: Long = 10_000,
     ): LiveMusicSession {
-        // Use provided client or create a new one.
-        val httpClient =
-            client?.config {
-                install(WebSockets)
-            } ?: HttpClient {
-                install(WebSockets)
-            }
-
         logger.info { "Connecting to WebSocket at $wsUrl" }
 
-        var session: DefaultClientWebSocketSession? = null
+        val connection =
+            openLiveConnection<LiveMusicServerMessage>(
+                url = wsUrl,
+                apiKey = apiKey,
+                client = client,
+                json = json,
+                logger = logger,
+                connectTimeoutMs = connectTimeoutMs,
+            ) { message: LiveMusicServerMessage ->
+                message.setupComplete != null
+            }
+
         try {
-            session =
-                withTimeout(connectTimeoutMs) {
-                    httpClient.webSocketSession(wsUrl) {
-                        header("x-goog-api-key", apiKey)
-                        header("x-goog-api-client", X_GOOG_API_CLIENT)
-                    }
-                }
             logger.info { "WebSocket session established." }
-
-            val incomingMessages = Channel<LiveMusicServerMessage>(Channel.BUFFERED)
-            val scope = CoroutineScope(Dispatchers.Default)
-            val handshakeCompleted = CompletableDeferred<Unit>()
-
-            // Launch a coroutine to listen for messages
-            val listenerJob =
-                scope.launch {
-                    try {
-                        for (frame in session.incoming) {
-                            logger.debug { "Received a frame: ${frame.frameType.name}" }
-                            val text =
-                                when (frame) {
-                                    is Frame.Text -> frame.readText()
-                                    is Frame.Binary -> {
-                                        val decoded = decodeBinaryFrame(frame, logger) ?: continue
-                                        decoded
-                                    }
-                                    else -> continue
-                                }
-                            logger.debug { "Received live music message (${text.length} chars)" }
-                            processHandshakeMessage(
-                                text,
-                                handshakeCompleted,
-                                incomingMessages,
-                                json,
-                                logger,
-                            ) { message: LiveMusicServerMessage ->
-                                message.setupComplete != null
-                            }
-                        }
-                    } catch (e: Exception) {
-                        logger.error(e) { "WebSocket error" }
-                        incomingMessages.close(e)
-                        if (!handshakeCompleted.isCompleted) {
-                            handshakeCompleted.completeExceptionally(e)
-                        }
-                    } finally {
-                        incomingMessages.close()
-                    }
-                }
 
             // Send Setup Message
             // Ensure model has "models/" prefix if not present
@@ -166,28 +110,35 @@ class LiveMusic(
             val clientMessage = LiveMusicClientMessage(setup = setup)
             val jsonMessage = json.encodeToString(clientMessage)
             logger.debug { "Sending setup message (${jsonMessage.length} chars)" }
-            session.send(Frame.Text(jsonMessage))
+            connection.session.send(Frame.Text(jsonMessage))
 
             // Wait for setup complete message
             try {
                 withTimeout(handshakeTimeoutMs) {
-                    handshakeCompleted.await()
+                    connection.handshakeCompleted.await()
                 }
             } catch (e: Exception) {
                 logger.error(e) { "Error waiting for SetupComplete" }
                 // Close resources
-                listenerJob.cancelAndJoin()
-                session.close()
+                connection.listenerJob.cancelAndJoin()
+                connection.session.close()
                 throw e
             }
 
-            return LiveMusicSession(session, incomingMessages, json, listenerJob, httpClient, true)
+            return LiveMusicSession(
+                connection.session,
+                connection.incomingMessages,
+                json,
+                connection.listenerJob,
+                connection.httpClient,
+                true,
+            )
         } catch (e: Exception) {
             logger.error(e) { "Error in connect method" }
             try {
-                session?.close()
+                connection.session.close()
             } finally {
-                httpClient.close()
+                connection.httpClient.close()
             }
             throw e
         }

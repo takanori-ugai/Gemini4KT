@@ -56,7 +56,6 @@ internal fun requireUploadFileSizeWithinLimit(
     fileSize: Long,
     maxUploadFileSizeBytes: Long,
 ) {
-    require(maxUploadFileSizeBytes > 0) { "maxUploadFileSizeBytes must be greater than 0." }
     require(fileSize <= maxUploadFileSizeBytes) {
         "File $path is $fileSize bytes, which exceeds the upload limit of $maxUploadFileSizeBytes bytes."
     }

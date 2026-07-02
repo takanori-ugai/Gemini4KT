@@ -119,4 +119,14 @@ class GenerationConfigTest {
             }
         }
     }
+
+    @Test
+    fun testGenerationConfigRejectsJsonSchemaAliasesTogether() {
+        assertFailsWith<IllegalArgumentException> {
+            generationConfig {
+                responseJsonSchema = Json.parseToJsonElement("""{"type":"object"}""")
+                underscoreResponseJsonSchema = Json.parseToJsonElement("""{"type":"object"}""")
+            }
+        }
+    }
 }
