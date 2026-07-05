@@ -6,24 +6,16 @@ import io.github.ugaikit.gemini4kt.getImage
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.interaction.InteractionContent
+import io.github.ugaikit.gemini4kt.interaction.InteractionInput
 import io.github.ugaikit.gemini4kt.interaction.InteractionTool
-import io.github.ugaikit.gemini4kt.interaction.InteractionTurn
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
 private const val MODEL = "gemma-4-26b-a4b-it"
 
 object InteractionSamples {
-    private val json =
-        Json {
-            ignoreUnknownKeys = true
-            encodeDefaults = false
-        }
-
     suspend fun runSimple(client: GeminiAI? = null) {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
         try {
@@ -31,7 +23,7 @@ object InteractionSamples {
             val request =
                 CreateInteractionRequest(
                     model = MODEL,
-                    input = JsonPrimitive("Hello, how are you?"),
+                    input = "Reply with exactly one short sentence that says hello from the sample runner.",
                     background = false,
                 )
             val interaction = ai.createInteraction(request)
@@ -47,42 +39,35 @@ object InteractionSamples {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
         try {
             println("--- Multi-turn ---")
-            val turns =
-                listOf(
-                    InteractionTurn(
-                        role = "user_input",
-                        content =
-                            json.encodeToJsonElement(
-                                listOf(
-                                    InteractionContent(type = "text", text = "Hello!"),
-                                ),
-                            ),
-                    ),
-                    InteractionTurn(
-                        role = "model_output",
-                        content =
-                            json.encodeToJsonElement(
-                                listOf(
-                                    InteractionContent(type = "text", text = "Hi there! How can I help you today?"),
-                                ),
-                            ),
-                    ),
-                    InteractionTurn(
-                        role = "user_input",
-                        content =
-                            json.encodeToJsonElement(
-                                listOf(
-                                    InteractionContent(type = "text", text = "What is the capital of France?"),
-                                ),
-                            ),
-                    ),
-                )
-            val inputJson = json.encodeToJsonElement(turns)
-
             val request =
                 CreateInteractionRequest(
                     model = MODEL,
-                    input = inputJson,
+                    input =
+                        InteractionInput.StepList(
+                            arrayOf(
+                                io.github.ugaikit.gemini4kt.interaction.InteractionStep(
+                                    type = "user_input",
+                                    content =
+                                        arrayOf(
+                                            InteractionContent(type = "text", text = "Hello! Reply with a very short friendly greeting."),
+                                        ),
+                                ),
+                                io.github.ugaikit.gemini4kt.interaction.InteractionStep(
+                                    type = "model_output",
+                                    content =
+                                        arrayOf(
+                                            InteractionContent(type = "text", text = "Hi there!"),
+                                        ),
+                                ),
+                                io.github.ugaikit.gemini4kt.interaction.InteractionStep(
+                                    type = "user_input",
+                                    content =
+                                        arrayOf(
+                                            InteractionContent(type = "text", text = "What is the capital of France? Answer in one short sentence."),
+                                        ),
+                                ),
+                            ),
+                        ),
                 )
             val interaction = ai.createInteraction(request)
             printInteractionResult(interaction)
@@ -102,16 +87,26 @@ object InteractionSamples {
             println("--- Image Input ---")
             val base64Image = imageProvider()
 
-            val textContent = InteractionContent(type = "text", text = "What is in this picture?")
-            val imageContent = InteractionContent(type = "image", data = base64Image, mimeType = "image/jpeg")
-
-            val inputList = listOf(textContent, imageContent)
-            val inputJson = json.encodeToJsonElement(inputList)
-
             val request =
                 CreateInteractionRequest(
                     model = MODEL,
-                    input = inputJson,
+                    input =
+                        InteractionInput.StepList(
+                            arrayOf(
+                                io.github.ugaikit.gemini4kt.interaction.InteractionStep(
+                                    type = "user_input",
+                                    content =
+                                        arrayOf(
+                                            InteractionContent(type = "text", text = "What is in this picture?"),
+                                            InteractionContent(
+                                                type = "image",
+                                                data = base64Image,
+                                                mimeType = "image/jpeg",
+                                            ),
+                                        ),
+                                ),
+                            ),
+                        ),
                 )
             val interaction = ai.createInteraction(request)
             printInteractionResult(interaction)
@@ -155,7 +150,7 @@ object InteractionSamples {
                 CreateInteractionRequest(
                     model = MODEL,
                     tools = arrayOf(tool),
-                    input = JsonPrimitive("What is the weather like in Boston, MA?"),
+                    input = "What is the weather like in Boston, MA?",
                 )
             val interaction = ai.createInteraction(request)
             printInteractionResult(interaction)
@@ -175,9 +170,11 @@ object InteractionSamples {
         println("Steps: ${interaction.steps?.size ?: 0}")
 
         printGeneratedContents(interaction)
+        printGeneratedSteps(interaction)
     }
 
     private fun printGeneratedContents(interaction: Interaction) {
+        println("Output text: ${interaction.outputText ?: "N/A"}")
         println("Output text length: ${interaction.outputText?.length ?: 0}")
         val outputs = interaction.outputs
         if (outputs.isNullOrEmpty()) {
@@ -199,6 +196,34 @@ object InteractionSamples {
         }
     }
 
+    private fun printGeneratedSteps(interaction: Interaction) {
+        val steps = interaction.steps
+        if (steps.isNullOrEmpty()) {
+            println("No interaction steps returned.")
+            return
+        }
+
+        println("Interaction steps:")
+        steps.forEachIndexed { index, step ->
+            println("Step[$index] type: ${step.type}")
+            val content = step.content
+            if (content.isNullOrEmpty()) {
+                println("  No step content returned.")
+            } else {
+                content.forEachIndexed { contentIndex, item ->
+                    val summary =
+                        when {
+                            !item.text.isNullOrBlank() -> "text=${item.text}"
+                            !item.data.isNullOrBlank() -> "data=<${item.type ?: "content"} payload>"
+                            !item.name.isNullOrBlank() -> "name=${item.name}"
+                            else -> item.type ?: "unknown"
+                        }
+                    println("  Content[$contentIndex]: $summary")
+                }
+            }
+        }
+    }
+
     suspend fun runDeepResearch(client: GeminiAI? = null) {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
         try {
@@ -206,7 +231,7 @@ object InteractionSamples {
             val request =
                 CreateInteractionRequest(
                     agent = "deep-research-pro-preview-12-2025",
-                    input = JsonPrimitive("Find a cure to cancer"),
+                    input = "Find a cure to cancer",
                     background = true,
                 )
             try {
