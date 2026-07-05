@@ -11,13 +11,9 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.put
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
@@ -99,25 +95,9 @@ object InteractionEnvironmentSerializer : KSerializer<InteractionEnvironment> {
         encoder: Encoder,
         value: InteractionEnvironment,
     ) {
-        val jsonEncoder =
-            encoder as? JsonEncoder
-                ?: throw SerializationException("InteractionEnvironment can only be serialized as JSON.")
-
         when (value) {
-            is EnvironmentReference -> jsonEncoder.encodeString(value.id)
-            is EnvironmentConfig -> {
-                val encoded = jsonEncoder.json.encodeToJsonElement(EnvironmentConfig.serializer(), value) as JsonObject
-                jsonEncoder.encodeJsonElement(
-                    buildJsonObject {
-                        put("type", JsonPrimitive(value.type))
-                        encoded.entries.forEach { (key, element) ->
-                            if (key != "type") {
-                                put(key, element)
-                            }
-                        }
-                    },
-                )
-            }
+            is EnvironmentReference -> encoder.encodeString(value.id)
+            is EnvironmentConfig -> encoder.encodeSerializableValue(EnvironmentConfig.serializer(), value)
         }
     }
 
