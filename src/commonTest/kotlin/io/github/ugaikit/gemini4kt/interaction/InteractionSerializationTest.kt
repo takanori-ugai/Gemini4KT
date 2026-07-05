@@ -1,13 +1,12 @@
 package io.github.ugaikit.gemini4kt.interaction
 
+import io.github.ugaikit.gemini4kt.MediaResolution
+import io.github.ugaikit.gemini4kt.MediaResolutionLevel
 import io.github.ugaikit.gemini4kt.PrebuiltVoiceConfig
 import io.github.ugaikit.gemini4kt.SpeechConfig
 import io.github.ugaikit.gemini4kt.VoiceConfig
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
@@ -112,8 +111,69 @@ class InteractionSerializationTest {
     }
 
     @Test
+    fun responseFormatRoundTrips() {
+        val responseFormat =
+            TextResponseFormat(
+                mimeType = "application/json",
+                schema =
+                    buildJsonObject {
+                        put("type", "object")
+                        put(
+                            "properties",
+                            buildJsonObject {
+                                put("summary", buildJsonObject { put("type", "string") })
+                            },
+                        )
+                    },
+            )
+
+        val encoded = json.encodeToString(ResponseFormatSerializer, responseFormat)
+        val decoded = json.decodeFromString(ResponseFormatSerializer, encoded)
+
+        assertEquals(responseFormat, decoded)
+    }
+
+    @Test
+    fun environmentConfigRoundTrips() {
+        val environment =
+            EnvironmentConfig(
+                sources =
+                    arrayOf(
+                        EnvironmentSource(
+                            type = "inline",
+                            target = ".agents/AGENTS.md",
+                            content = "Write a summary table",
+                        ),
+                    ),
+            )
+
+        val encoded = json.encodeToString(InteractionEnvironmentSerializer, environment)
+        val decoded = json.decodeFromString(InteractionEnvironmentSerializer, encoded)
+
+        assertEquals(environment, decoded)
+    }
+
+    @Test
+    fun environmentReferenceRoundTrips() {
+        val environment = EnvironmentReference(id = "remote-env-1")
+
+        val encoded = json.encodeToString(InteractionEnvironmentSerializer, environment)
+        val decoded = json.decodeFromString(InteractionEnvironmentSerializer, encoded)
+
+        assertEquals("\"remote-env-1\"", encoded)
+        assertEquals(environment, decoded)
+    }
+
+    @Test
     fun interactionRoundTripsWithOutputsAndTools() {
         val content = InteractionContent(type = "text", text = "Hello")
+        val steps =
+            arrayOf(
+                InteractionStep(
+                    type = "user_input",
+                    content = arrayOf(InteractionContent(type = "text", text = "Hello")),
+                ),
+            )
         val tool =
             InteractionTool(
                 type = "function",
@@ -130,7 +190,15 @@ class InteractionSerializationTest {
                 outputs = arrayOf(content),
                 tools = arrayOf(tool),
                 responseModalities = arrayOf(InteractionResponseModality.TEXT),
-                responseFormat = JsonObject(mapOf("mode" to JsonPrimitive("json"))),
+                responseFormat =
+                    TextResponseFormat(
+                        mimeType = "application/json",
+                        schema =
+                            buildJsonObject {
+                                put("type", "object")
+                            },
+                    ),
+                steps = steps,
             )
 
         val encoded = json.encodeToString(interaction)
@@ -203,6 +271,64 @@ class InteractionSerializationTest {
     }
 
     @Test
+    fun interactionRoundTripsWithTypedOutputMedia() {
+        val interaction =
+            Interaction(
+                id = "inter_media",
+                status = InteractionStatus.COMPLETED,
+                outputImage =
+                    InteractionImageContent(
+                        type = "image",
+                        data = "image-base64",
+                        mimeType = "image/png",
+                        resolution = MediaResolution(level = MediaResolutionLevel.MEDIA_RESOLUTION_HIGH),
+                    ),
+                outputAudio =
+                    InteractionAudioContent(
+                        type = "audio",
+                        data = "audio-base64",
+                        mimeType = "audio/mp3",
+                        channels = 2,
+                        sampleRate = 24000,
+                    ),
+                outputVideo =
+                    InteractionVideoContent(
+                        type = "video",
+                        data = "video-base64",
+                        mimeType = "video/mp4",
+                        resolution = MediaResolution(level = MediaResolutionLevel.MEDIA_RESOLUTION_MEDIUM),
+                    ),
+            )
+
+        val encoded = json.encodeToString(interaction)
+        val decoded = json.decodeFromString<Interaction>(encoded)
+
+        assertEquals(interaction, decoded)
+    }
+
+    @Test
+    fun interactionOutputTextFallsBackToLastModelStep() {
+        val interaction =
+            Interaction(
+                id = "inter_text",
+                status = InteractionStatus.COMPLETED,
+                steps =
+                    arrayOf(
+                        InteractionStep(
+                            type = "user_input",
+                            content = arrayOf(InteractionContent(type = "text", text = "Hello")),
+                        ),
+                        InteractionStep(
+                            type = "model_output",
+                            content = arrayOf(InteractionContent(type = "text", text = "Hello from the model.")),
+                        ),
+                    ),
+            )
+
+        assertEquals("Hello from the model.", interaction.outputText)
+    }
+
+    @Test
     fun interactionAgentConfigSerializesThinkingSummaries() {
         val config =
             InteractionAgentConfig(
@@ -227,16 +353,34 @@ class InteractionSerializationTest {
 
     @Test
     fun testInteractionEqualsAndHashCode() {
-        val steps1 = arrayOf<JsonElement>(JsonPrimitive("step1"))
-        val steps2 = arrayOf<JsonElement>(JsonPrimitive("step1"))
-        val stepsDifferent = arrayOf<JsonElement>(JsonPrimitive("stepDifferent"))
+        val steps1 =
+            arrayOf(
+                InteractionStep(
+                    type = "user_input",
+                    content = arrayOf(InteractionContent(type = "text", text = "step1")),
+                ),
+            )
+        val steps2 =
+            arrayOf(
+                InteractionStep(
+                    type = "user_input",
+                    content = arrayOf(InteractionContent(type = "text", text = "step1")),
+                ),
+            )
+        val stepsDifferent =
+            arrayOf(
+                InteractionStep(
+                    type = "user_input",
+                    content = arrayOf(InteractionContent(type = "text", text = "stepDifferent")),
+                ),
+            )
 
         val interaction1 =
             Interaction(
                 id = "inter_1",
                 status = InteractionStatus.COMPLETED,
                 environmentId = "env_1",
-                outputText = "output",
+                outputTextRaw = "output",
                 steps = steps1,
             )
         val interaction2 =
@@ -244,7 +388,7 @@ class InteractionSerializationTest {
                 id = "inter_1",
                 status = InteractionStatus.COMPLETED,
                 environmentId = "env_1",
-                outputText = "output",
+                outputTextRaw = "output",
                 steps = steps2,
             )
         val interactionDiffId =
@@ -252,7 +396,7 @@ class InteractionSerializationTest {
                 id = "inter_2",
                 status = InteractionStatus.COMPLETED,
                 environmentId = "env_1",
-                outputText = "output",
+                outputTextRaw = "output",
                 steps = steps1,
             )
         val interactionDiffStatus =
@@ -260,7 +404,7 @@ class InteractionSerializationTest {
                 id = "inter_1",
                 status = InteractionStatus.IN_PROGRESS,
                 environmentId = "env_1",
-                outputText = "output",
+                outputTextRaw = "output",
                 steps = steps1,
             )
         val interactionDiffEnvId =
@@ -268,7 +412,7 @@ class InteractionSerializationTest {
                 id = "inter_1",
                 status = InteractionStatus.COMPLETED,
                 environmentId = "env_2",
-                outputText = "output",
+                outputTextRaw = "output",
                 steps = steps1,
             )
         val interactionDiffOutput =
@@ -276,7 +420,7 @@ class InteractionSerializationTest {
                 id = "inter_1",
                 status = InteractionStatus.COMPLETED,
                 environmentId = "env_1",
-                outputText = "output_diff",
+                outputTextRaw = "output_diff",
                 steps = steps1,
             )
         val interactionDiffSteps =
@@ -284,7 +428,7 @@ class InteractionSerializationTest {
                 id = "inter_1",
                 status = InteractionStatus.COMPLETED,
                 environmentId = "env_1",
-                outputText = "output",
+                outputTextRaw = "output",
                 steps = stepsDifferent,
             )
         val interactionNullSteps1 =
@@ -292,7 +436,7 @@ class InteractionSerializationTest {
                 id = "inter_1",
                 status = InteractionStatus.COMPLETED,
                 environmentId = "env_1",
-                outputText = "output",
+                outputTextRaw = "output",
                 steps = null,
             )
         val interactionNullSteps2 =
@@ -300,7 +444,7 @@ class InteractionSerializationTest {
                 id = "inter_1",
                 status = InteractionStatus.COMPLETED,
                 environmentId = "env_1",
-                outputText = "output",
+                outputTextRaw = "output",
                 steps = null,
             )
 
@@ -325,32 +469,32 @@ class InteractionSerializationTest {
         val request1 =
             CreateInteractionRequest(
                 model = "gemini-2.5-flash",
-                input = JsonPrimitive("Hello"),
-                environment = JsonPrimitive("remote"),
+                input = "Hello",
+                environment = EnvironmentReference(id = "remote"),
             )
         val request2 =
             CreateInteractionRequest(
                 model = "gemini-2.5-flash",
-                input = JsonPrimitive("Hello"),
-                environment = JsonPrimitive("remote"),
+                input = "Hello",
+                environment = EnvironmentReference(id = "remote"),
             )
         val requestDiffModel =
             CreateInteractionRequest(
                 model = "gemini-1.5-flash",
-                input = JsonPrimitive("Hello"),
-                environment = JsonPrimitive("remote"),
+                input = "Hello",
+                environment = EnvironmentReference(id = "remote"),
             )
         val requestDiffInput =
             CreateInteractionRequest(
                 model = "gemini-2.5-flash",
-                input = JsonPrimitive("World"),
-                environment = JsonPrimitive("remote"),
+                input = "World",
+                environment = EnvironmentReference(id = "remote"),
             )
         val requestDiffEnv =
             CreateInteractionRequest(
                 model = "gemini-2.5-flash",
-                input = JsonPrimitive("Hello"),
-                environment = JsonPrimitive("local"),
+                input = "Hello",
+                environment = EnvironmentReference(id = "local"),
             )
 
         // Test CreateInteractionRequest equals and hashCode

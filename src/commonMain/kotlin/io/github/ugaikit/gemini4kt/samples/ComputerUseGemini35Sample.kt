@@ -4,7 +4,6 @@ import io.github.ugaikit.gemini4kt.GeminiAI
 import io.github.ugaikit.gemini4kt.getApiKey
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.InteractionTool
-import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Represents a Computer Use sample using gemini-3.5-flash and the Interactions API.
@@ -24,7 +23,7 @@ object ComputerUseGemini35Sample {
             val request =
                 CreateInteractionRequest(
                     model = "gemini-3.5-flash",
-                    input = JsonPrimitive("Search for 'Gemini API' on Google."),
+                    input = "Search for 'Gemini API' on Google.",
                     tools =
                         arrayOf(
                             InteractionTool(
