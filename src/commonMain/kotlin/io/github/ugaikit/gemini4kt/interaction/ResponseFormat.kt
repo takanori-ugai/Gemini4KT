@@ -6,20 +6,15 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.put
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
@@ -89,50 +84,10 @@ object ResponseFormatSerializer : KSerializer<ResponseFormat> {
         encoder: Encoder,
         value: ResponseFormat,
     ) {
-        val jsonEncoder =
-            encoder as? JsonEncoder
-                ?: throw SerializationException("ResponseFormat can only be serialized as JSON.")
-
         when (value) {
-            is TextResponseFormat -> {
-                val encoded = jsonEncoder.json.encodeToJsonElement(TextResponseFormat.serializer(), value) as JsonObject
-                jsonEncoder.encodeJsonElement(
-                    buildJsonObject {
-                        put("type", JsonPrimitive(value.type))
-                        encoded.entries.forEach { (key, element) ->
-                            if (key != "type") {
-                                put(key, element)
-                            }
-                        }
-                    },
-                )
-            }
-            is AudioResponseFormat -> {
-                val encoded = jsonEncoder.json.encodeToJsonElement(AudioResponseFormat.serializer(), value) as JsonObject
-                jsonEncoder.encodeJsonElement(
-                    buildJsonObject {
-                        put("type", JsonPrimitive(value.type))
-                        encoded.entries.forEach { (key, element) ->
-                            if (key != "type") {
-                                put(key, element)
-                            }
-                        }
-                    },
-                )
-            }
-            is ImageResponseFormat -> {
-                val encoded = jsonEncoder.json.encodeToJsonElement(ImageResponseFormat.serializer(), value) as JsonObject
-                jsonEncoder.encodeJsonElement(
-                    buildJsonObject {
-                        put("type", JsonPrimitive(value.type))
-                        encoded.entries.forEach { (key, element) ->
-                            if (key != "type") {
-                                put(key, element)
-                            }
-                        }
-                    },
-                )
-            }
+            is TextResponseFormat -> encoder.encodeSerializableValue(TextResponseFormat.serializer(), value)
+            is AudioResponseFormat -> encoder.encodeSerializableValue(AudioResponseFormat.serializer(), value)
+            is ImageResponseFormat -> encoder.encodeSerializableValue(ImageResponseFormat.serializer(), value)
         }
     }
 

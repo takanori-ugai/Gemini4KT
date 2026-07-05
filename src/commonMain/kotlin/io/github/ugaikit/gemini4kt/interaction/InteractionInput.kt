@@ -158,47 +158,51 @@ internal fun JsonElement.toInteractionInput(jsonDecoder: JsonDecoder? = null): I
                 InteractionInput.ContentList(emptyArray())
             } else {
                 val firstObject = firstOrNull() as? JsonObject
-                when {
-                    firstObject?.containsKey("type") == true && firstObject.containsKey("content") -> {
-                        val json = jsonDecoder
-                        runCatching {
-                            InteractionInput.StepList(
-                                json.json.decodeFromJsonElement(
-                                    ArraySerializer(InteractionStep.serializer()),
-                                    this,
-                                ),
-                            )
-                        }.getOrElse {
-                            InteractionInput.RawJson(this)
+                if (firstObject == null) {
+                    InteractionInput.RawJson(this)
+                } else {
+                    when {
+                        "type" in firstObject && "content" in firstObject -> {
+                            val json = jsonDecoder
+                            runCatching {
+                                InteractionInput.StepList(
+                                    json.json.decodeFromJsonElement(
+                                        ArraySerializer(InteractionStep.serializer()),
+                                        this,
+                                    ),
+                                )
+                            }.getOrElse {
+                                InteractionInput.RawJson(this)
+                            }
                         }
-                    }
-                    firstObject?.containsKey("role") == true && firstObject.containsKey("content") -> {
-                        val json = jsonDecoder
-                        runCatching {
-                            InteractionInput.TurnList(
-                                json.json.decodeFromJsonElement(
-                                    ArraySerializer(InteractionTurn.serializer()),
-                                    this,
-                                ),
-                            )
-                        }.getOrElse {
-                            InteractionInput.RawJson(this)
+                        "role" in firstObject && "content" in firstObject -> {
+                            val json = jsonDecoder
+                            runCatching {
+                                InteractionInput.TurnList(
+                                    json.json.decodeFromJsonElement(
+                                        ArraySerializer(InteractionTurn.serializer()),
+                                        this,
+                                    ),
+                                )
+                            }.getOrElse {
+                                InteractionInput.RawJson(this)
+                            }
                         }
-                    }
-                    firstObject?.containsKey("parts") == true || firstObject?.containsKey("role") == true -> {
-                        val json = jsonDecoder
-                        runCatching {
-                            InteractionInput.ContentList(
-                                json.json.decodeFromJsonElement(
-                                    ArraySerializer(Content.serializer()),
-                                    this,
-                                ),
-                            )
-                        }.getOrElse {
-                            InteractionInput.RawJson(this)
+                        "parts" in firstObject || "role" in firstObject -> {
+                            val json = jsonDecoder
+                            runCatching {
+                                InteractionInput.ContentList(
+                                    json.json.decodeFromJsonElement(
+                                        ArraySerializer(Content.serializer()),
+                                        this,
+                                    ),
+                                )
+                            }.getOrElse {
+                                InteractionInput.RawJson(this)
+                            }
                         }
+                        else -> InteractionInput.RawJson(this)
                     }
-                    else -> InteractionInput.RawJson(this)
                 }
             }
         }

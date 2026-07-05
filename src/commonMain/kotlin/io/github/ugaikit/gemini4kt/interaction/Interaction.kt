@@ -150,7 +150,7 @@ data class Interaction(
         result = 31 * result + (responseFormat?.hashCode() ?: 0)
         result = 31 * result + (responseMimeType?.hashCode() ?: 0)
         result = 31 * result + (previousInteractionId?.hashCode() ?: 0)
-        result = 31 * result + input.hashCode()
+        result = 31 * result + (input?.hashCode() ?: 0)
         result = 31 * result + (generationConfig?.hashCode() ?: 0)
         result = 31 * result + (agentConfig?.hashCode() ?: 0)
         result = 31 * result + (environmentId?.hashCode() ?: 0)
