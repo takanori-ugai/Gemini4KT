@@ -84,4 +84,25 @@ class TextToImageSampleTest {
 
             assertContentEquals(expectedBytes, Files.readAllBytes(Paths.get(outputPath)))
         }
+
+    @Test
+    fun runReportsWhenNoImageIsReturned() =
+        runTest {
+            val outputPath = Files.createTempFile("gemini-image-missing", ".png").toString()
+            val ai =
+                createGeminiAI {
+                    respond(
+                        """{"id":"v1_img","status":"completed","outputs":[{"type":"text","text":"No image"}]}""",
+                        HttpStatusCode.OK,
+                        headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            TextToImageSample.run(
+                client = ai,
+                outputPath = outputPath,
+            )
+
+            assertTrue(Files.notExists(Paths.get(outputPath)) || Files.size(Paths.get(outputPath)) == 0L)
+        }
 }
