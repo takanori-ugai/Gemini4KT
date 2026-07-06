@@ -251,10 +251,19 @@ class GeminiAI(
     }
 
     @JsName("createWebhook")
-    suspend fun createWebhook(request: CreateWebhookRequest): Webhook {
+    suspend fun createWebhook(
+        request: CreateWebhookRequest,
+        webhookId: String? = null,
+    ): Webhook {
         val apiKey = getApiKey()
         val response: HttpResponse =
-            httpClient.post(buildUrl(baseUrl, listOf("webhooks"))) {
+            httpClient.post(
+                buildUrl(
+                    baseUrl,
+                    listOf("webhooks"),
+                    mapOf("webhookId" to webhookId),
+                ),
+            ) {
                 header("x-goog-api-key", apiKey)
                 header("Api-Revision", API_REVISION)
                 contentType(ContentType.Application.Json)
