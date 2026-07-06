@@ -5,12 +5,17 @@ import io.github.ugaikit.gemini4kt.MediaResolutionLevel
 import io.github.ugaikit.gemini4kt.PrebuiltVoiceConfig
 import io.github.ugaikit.gemini4kt.SpeechConfig
 import io.github.ugaikit.gemini4kt.VoiceConfig
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.encoding.AbstractDecoder
+import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.modules.SerializersModule
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class InteractionSerializationTest {
@@ -134,6 +139,72 @@ class InteractionSerializationTest {
     }
 
     @Test
+    fun audioResponseFormatRoundTrips() {
+        val responseFormat =
+            AudioResponseFormat(
+                mimeType = "audio/mp3",
+                delivery = "inline",
+                sampleRate = 24000,
+                bitRate = 128000,
+            )
+
+        val encoded = json.encodeToString(ResponseFormatSerializer, responseFormat)
+        val decoded = json.decodeFromString(ResponseFormatSerializer, encoded)
+
+        assertEquals(responseFormat, decoded)
+    }
+
+    @Test
+    fun imageResponseFormatRoundTrips() {
+        val responseFormat =
+            ImageResponseFormat(
+                mimeType = "image/png",
+                delivery = "inline",
+                aspectRatio = "16:9",
+                imageSize = "1024x1024",
+            )
+
+        val encoded = json.encodeToString(ResponseFormatSerializer, responseFormat)
+        val decoded = json.decodeFromString(ResponseFormatSerializer, encoded)
+
+        assertEquals(responseFormat, decoded)
+    }
+
+    @Test
+    fun responseFormatRejectsNonObjectJson() {
+        assertFailsWith<SerializationException> {
+            json.decodeFromString(ResponseFormatSerializer, "\"text\"")
+        }
+    }
+
+    @Test
+    fun responseFormatRejectsMissingType() {
+        assertFailsWith<SerializationException> {
+            json.decodeFromString(
+                ResponseFormatSerializer,
+                """{"mime_type":"application/json"}""",
+            )
+        }
+    }
+
+    @Test
+    fun responseFormatRejectsUnknownType() {
+        assertFailsWith<SerializationException> {
+            json.decodeFromString(
+                ResponseFormatSerializer,
+                """{"type":"markdown"}""",
+            )
+        }
+    }
+
+    @Test
+    fun responseFormatRejectsNonJsonDecoder() {
+        assertFailsWith<SerializationException> {
+            ResponseFormatSerializer.deserialize(NonJsonDecoder)
+        }
+    }
+
+    @Test
     fun environmentConfigRoundTrips() {
         val environment =
             EnvironmentConfig(
@@ -245,6 +316,12 @@ class InteractionSerializationTest {
         assertTrue(encoded.contains("\"thinking_level\":\"high\""))
         assertTrue(encoded.contains("\"thinking_summaries\":\"auto\""))
         assertTrue(encoded.contains("\"speech_config\":{"))
+    }
+
+    private object NonJsonDecoder : AbstractDecoder() {
+        override val serializersModule: SerializersModule = SerializersModule {}
+
+        override fun decodeElementIndex(descriptor: kotlinx.serialization.descriptors.SerialDescriptor): Int = CompositeDecoder.DECODE_DONE
     }
 
     @Test
