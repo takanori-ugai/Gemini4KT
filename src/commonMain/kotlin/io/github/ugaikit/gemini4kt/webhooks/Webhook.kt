@@ -7,6 +7,17 @@ import kotlin.js.JsExport
 
 /**
  * Represents a webhook resource.
+ *
+ * @property id The unique identifier of the webhook.
+ * @property name The name of the webhook resource.
+ * @property uri The destination URI where webhook payloads will be sent.
+ * @property subscribedEvents The list of event types this webhook is subscribed to.
+ * @property newSigningSecret The new signing secret. NOTE: This contains sensitive credential
+ * material and must not be logged to prevent accidental exposure.
+ * @property signingSecrets The list of active signing secrets for the webhook.
+ * @property state The state of the webhook.
+ * @property createTime The creation time of the webhook.
+ * @property updateTime The update time of the webhook.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -25,6 +36,10 @@ data class Webhook(
 
 /**
  * Represents a signing secret attached to a webhook.
+ *
+ * @property truncatedSecret The truncated signing secret. NOTE: While truncated, this relates to
+ * sensitive credential material and must not be logged to prevent security leaks.
+ * @property expireTime The expiration time of the signing secret.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
