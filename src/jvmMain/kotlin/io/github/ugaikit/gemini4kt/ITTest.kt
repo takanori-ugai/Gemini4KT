@@ -4,6 +4,7 @@ package io.github.ugaikit.gemini4kt
 
 import io.github.ugaikit.gemini4kt.agent.CreateAgentRequest
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
+import io.github.ugaikit.gemini4kt.interaction.EnvironmentConfig
 import io.github.ugaikit.gemini4kt.live.AudioTranscriptionConfig
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentClientContent
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentSetup
@@ -15,7 +16,6 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -700,8 +700,8 @@ private suspend fun testAgentAPI(apiKey: String) {
         val interactionRequest =
             CreateInteractionRequest(
                 agent = agentId,
-                input = JsonPrimitive("Generate the first 5 Fibonacci numbers."),
-                environment = buildJsonObject { put("type", "remote") },
+                input = "Generate the first 5 Fibonacci numbers.",
+                environment = EnvironmentConfig(),
                 stream = false,
             )
         val interaction = geminiAI.createInteraction(interactionRequest)

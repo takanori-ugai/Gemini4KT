@@ -1,11 +1,13 @@
 package io.github.ugaikit.gemini4kt.interaction
 
+import io.github.ugaikit.gemini4kt.Content
 import io.github.ugaikit.gemini4kt.SpeechConfig
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
+import kotlin.js.JsName
 
 /**
  * Persisted interaction object returned by the Interaction API.
@@ -30,7 +32,8 @@ import kotlin.js.JsExport
  * @property generationConfig Optional generation configuration.
  * @property agentConfig Optional agent runtime configuration.
  * @property environmentId Optional execution environment ID.
- * @property outputText Optional plain-text aggregate output.
+ * @property outputTextRaw Optional plain-text aggregate output as returned by the API.
+ * @property outputText Derived plain-text aggregate output, falling back to the last model step.
  * @property steps Optional step-level execution details.
  */
 @OptIn(ExperimentalJsExport::class)
@@ -50,17 +53,27 @@ data class Interaction(
     val tools: Array<InteractionTool>? = null,
     val background: Boolean? = null,
     @SerialName("response_modalities") val responseModalities: Array<InteractionResponseModality>? = null,
-    @SerialName("response_format") val responseFormat: JsonElement? = null,
+    @SerialName("response_format") val responseFormat: ResponseFormat? = null,
     @SerialName("response_mime_type") val responseMimeType: String? = null,
     @SerialName("previous_interaction_id")
     val previousInteractionId: String? = null,
-    val input: JsonElement? = null,
+    val input: InteractionInput? = null,
     @SerialName("generation_config") val generationConfig: InteractionGenerationConfig? = null,
     @SerialName("agent_config") val agentConfig: InteractionAgentConfig? = null,
     @SerialName("environment_id") val environmentId: String? = null,
-    @SerialName("output_text") val outputText: String? = null,
-    val steps: Array<JsonElement>? = null,
+    @SerialName("cached_content") val cachedContent: String? = null,
+    val environment: InteractionEnvironment? = null,
+    @SerialName("service_tier") val serviceTier: JsonElement? = null,
+    @SerialName("webhook_config") val webhookConfig: JsonElement? = null,
+    @SerialName("output_text") val outputTextRaw: String? = null,
+    @SerialName("output_image") val outputImage: InteractionImageContent? = null,
+    @SerialName("output_audio") val outputAudio: InteractionAudioContent? = null,
+    @SerialName("output_video") val outputVideo: InteractionVideoContent? = null,
+    val steps: Array<InteractionStep>? = null,
 ) {
+    val outputText: String?
+        get() = outputTextRaw ?: steps?.resolvedOutputText()
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -102,7 +115,14 @@ data class Interaction(
         if (generationConfig != other.generationConfig) return false
         if (agentConfig != other.agentConfig) return false
         if (environmentId != other.environmentId) return false
-        if (outputText != other.outputText) return false
+        if (cachedContent != other.cachedContent) return false
+        if (environment != other.environment) return false
+        if (serviceTier != other.serviceTier) return false
+        if (webhookConfig != other.webhookConfig) return false
+        if (outputTextRaw != other.outputTextRaw) return false
+        if (outputImage != other.outputImage) return false
+        if (outputAudio != other.outputAudio) return false
+        if (outputVideo != other.outputVideo) return false
         if (steps != null) {
             if (other.steps == null) return false
             if (!steps.contentEquals(other.steps)) return false
@@ -134,7 +154,14 @@ data class Interaction(
         result = 31 * result + (generationConfig?.hashCode() ?: 0)
         result = 31 * result + (agentConfig?.hashCode() ?: 0)
         result = 31 * result + (environmentId?.hashCode() ?: 0)
-        result = 31 * result + (outputText?.hashCode() ?: 0)
+        result = 31 * result + (cachedContent?.hashCode() ?: 0)
+        result = 31 * result + (environment?.hashCode() ?: 0)
+        result = 31 * result + (serviceTier?.hashCode() ?: 0)
+        result = 31 * result + (webhookConfig?.hashCode() ?: 0)
+        result = 31 * result + (outputTextRaw?.hashCode() ?: 0)
+        result = 31 * result + (outputImage?.hashCode() ?: 0)
+        result = 31 * result + (outputAudio?.hashCode() ?: 0)
+        result = 31 * result + (outputVideo?.hashCode() ?: 0)
         result = 31 * result + (steps?.contentHashCode() ?: 0)
         return result
     }
@@ -165,10 +192,10 @@ data class Interaction(
 data class CreateInteractionRequest(
     val model: String? = null,
     val agent: String? = null,
-    val input: JsonElement? = null,
+    val input: InteractionInput,
     @SerialName("system_instruction") val systemInstruction: String? = null,
     val tools: Array<InteractionTool>? = null,
-    @SerialName("response_format") val responseFormat: JsonElement? = null,
+    @SerialName("response_format") val responseFormat: ResponseFormat? = null,
     @SerialName("response_mime_type") val responseMimeType: String? = null,
     val stream: Boolean? = null,
     val store: Boolean? = null,
@@ -177,8 +204,78 @@ data class CreateInteractionRequest(
     @SerialName("agent_config") val agentConfig: InteractionAgentConfig? = null,
     @SerialName("response_modalities") val responseModalities: Array<InteractionResponseModality>? = null,
     @SerialName("previous_interaction_id") val previousInteractionId: String? = null,
-    val environment: JsonElement? = null,
+    val environment: InteractionEnvironment? = null,
 ) {
+    @JsName("fromTextInput")
+    constructor(
+        model: String? = null,
+        agent: String? = null,
+        input: String,
+        systemInstruction: String? = null,
+        tools: Array<InteractionTool>? = null,
+        responseFormat: ResponseFormat? = null,
+        responseMimeType: String? = null,
+        stream: Boolean? = null,
+        store: Boolean? = null,
+        background: Boolean? = null,
+        generationConfig: InteractionGenerationConfig? = null,
+        agentConfig: InteractionAgentConfig? = null,
+        responseModalities: Array<InteractionResponseModality>? = null,
+        previousInteractionId: String? = null,
+        environment: InteractionEnvironment? = null,
+    ) : this(
+        model = model,
+        agent = agent,
+        input = InteractionInput.Text(input),
+        systemInstruction = systemInstruction,
+        tools = tools,
+        responseFormat = responseFormat,
+        responseMimeType = responseMimeType,
+        stream = stream,
+        store = store,
+        background = background,
+        generationConfig = generationConfig,
+        agentConfig = agentConfig,
+        responseModalities = responseModalities,
+        previousInteractionId = previousInteractionId,
+        environment = environment,
+    )
+
+    @JsName("fromContentInput")
+    constructor(
+        model: String? = null,
+        agent: String? = null,
+        input: Content,
+        systemInstruction: String? = null,
+        tools: Array<InteractionTool>? = null,
+        responseFormat: ResponseFormat? = null,
+        responseMimeType: String? = null,
+        stream: Boolean? = null,
+        store: Boolean? = null,
+        background: Boolean? = null,
+        generationConfig: InteractionGenerationConfig? = null,
+        agentConfig: InteractionAgentConfig? = null,
+        responseModalities: Array<InteractionResponseModality>? = null,
+        previousInteractionId: String? = null,
+        environment: InteractionEnvironment? = null,
+    ) : this(
+        model = model,
+        agent = agent,
+        input = InteractionInput.SingleContent(input),
+        systemInstruction = systemInstruction,
+        tools = tools,
+        responseFormat = responseFormat,
+        responseMimeType = responseMimeType,
+        stream = stream,
+        store = store,
+        background = background,
+        generationConfig = generationConfig,
+        agentConfig = agentConfig,
+        responseModalities = responseModalities,
+        previousInteractionId = previousInteractionId,
+        environment = environment,
+    )
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -217,7 +314,7 @@ data class CreateInteractionRequest(
     override fun hashCode(): Int {
         var result = model?.hashCode() ?: 0
         result = 31 * result + (agent?.hashCode() ?: 0)
-        result = 31 * result + (input?.hashCode() ?: 0)
+        result = 31 * result + input.hashCode()
         result = 31 * result + (systemInstruction?.hashCode() ?: 0)
         result = 31 * result + (tools?.contentHashCode() ?: 0)
         result = 31 * result + (responseFormat?.hashCode() ?: 0)
@@ -425,3 +522,44 @@ data class InteractionTurn(
     val role: String,
     val content: JsonElement,
 )
+
+/**
+ * Step payload used by the Interactions API multi-turn input shape.
+ *
+ * @property type Step type identifier.
+ * @property content Step content payload.
+ */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+@Serializable
+data class InteractionStep(
+    val type: String,
+    val content: Array<InteractionContent>? = null,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as InteractionStep
+
+        if (type != other.type) return false
+        if (content != null) {
+            if (other.content == null) return false
+            if (!content.contentEquals(other.content)) return false
+        } else if (other.content != null) {
+            return false
+        }
+
+        return true
+    }
+
+    override fun hashCode(): Int = 31 * type.hashCode() + (content?.contentHashCode() ?: 0)
+}
+
+internal fun Array<InteractionStep>.resolvedOutputText(): String? {
+    val lastModelOutput = lastOrNull { it.type == "model_output" }
+    val content = lastModelOutput?.content ?: return null
+
+    val text = content.mapNotNull { it.text?.takeIf(String::isNotBlank) }
+    return text.takeIf { it.isNotEmpty() }?.joinToString(separator = "\n")
+}

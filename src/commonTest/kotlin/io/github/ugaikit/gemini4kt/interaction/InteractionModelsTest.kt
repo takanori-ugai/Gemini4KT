@@ -64,6 +64,7 @@ class InteractionModelsTest {
     fun createInteractionRequestSerializesSnakeCaseKeys() {
         val request =
             CreateInteractionRequest(
+                input = "hello",
                 systemInstruction = "stay concise",
                 responseMimeType = "application/json",
                 previousInteractionId = "int_prev",

@@ -19,7 +19,6 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.AfterTest
@@ -90,7 +89,7 @@ class GeminiAITest {
             val request =
                 CreateInteractionRequest(
                     model = "gemini-2.5-flash",
-                    input = JsonPrimitive("Hello"),
+                    input = "Hello",
                 )
             val interaction = geminiAI.createInteraction(request)
 
@@ -198,7 +197,7 @@ class GeminiAITest {
             val request =
                 CreateInteractionRequest(
                     model = "gemini-2.5-flash",
-                    input = JsonPrimitive("Hello"),
+                    input = "Hello",
                 )
             val events = geminiAI.streamInteraction(request).toList()
 
@@ -363,7 +362,7 @@ class GeminiAITest {
             val request =
                 CreateInteractionRequest(
                     model = "gemini-2.5-flash",
-                    input = JsonPrimitive("Hello"),
+                    input = "Hello",
                 )
 
             try {
@@ -398,7 +397,7 @@ class GeminiAITest {
             val request =
                 CreateInteractionRequest(
                     model = "gemini-2.5-flash",
-                    input = JsonPrimitive("Hello"),
+                    input = "Hello",
                 )
             val events = geminiAI.streamInteraction(request).toList()
 
@@ -428,7 +427,7 @@ class GeminiAITest {
             val request =
                 CreateInteractionRequest(
                     model = "gemini-2.5-flash",
-                    input = JsonPrimitive("Hello"),
+                    input = "Hello",
                 )
             val events = geminiAI.streamInteraction(request).toList()
 
@@ -461,7 +460,7 @@ class GeminiAITest {
             val request =
                 CreateInteractionRequest(
                     model = "gemini-2.5-flash",
-                    input = JsonPrimitive("Hello"),
+                    input = "Hello",
                 )
             val events = geminiAI.streamInteraction(request).toList()
 
@@ -682,7 +681,7 @@ class GeminiAITest {
                     )
                 }
 
-            val request = CreateInteractionRequest(model = "invalid-model", input = JsonPrimitive("Hello"))
+            val request = CreateInteractionRequest(model = "invalid-model", input = "Hello")
             try {
                 geminiAI.createInteraction(request)
                 assertTrue(false, "Should have thrown GeminiException")
