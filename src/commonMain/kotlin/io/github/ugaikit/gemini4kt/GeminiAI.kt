@@ -5,6 +5,9 @@ import io.github.ugaikit.gemini4kt.agent.CreateAgentRequest
 import io.github.ugaikit.gemini4kt.agent.ListAgentsResponse
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.Interaction
+import io.github.ugaikit.gemini4kt.webhooks.CreateWebhookRequest
+import io.github.ugaikit.gemini4kt.webhooks.ListWebhooksResponse
+import io.github.ugaikit.gemini4kt.webhooks.Webhook
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
@@ -229,6 +232,86 @@ class GeminiAI(
                 buildUrl(
                     baseUrl,
                     listOf("agents"),
+                    mapOf(
+                        "pageSize" to pageSize.toString(),
+                        "pageToken" to pageToken,
+                    ),
+                ),
+            ) {
+                header("x-goog-api-key", apiKey)
+                header("Api-Revision", API_REVISION)
+            }
+
+        if (!response.status.isSuccess()) {
+            val errorBody = response.bodyAsText()
+            throw GeminiException(parseError(errorBody, response.status.value))
+        }
+
+        return response.body()
+    }
+
+    @JsName("createWebhook")
+    suspend fun createWebhook(request: CreateWebhookRequest): Webhook {
+        val apiKey = getApiKey()
+        val response: HttpResponse =
+            httpClient.post(buildUrl(baseUrl, listOf("webhooks"))) {
+                header("x-goog-api-key", apiKey)
+                header("Api-Revision", API_REVISION)
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+
+        if (!response.status.isSuccess()) {
+            val errorBody = response.bodyAsText()
+            throw GeminiException(parseError(errorBody, response.status.value))
+        }
+
+        return response.body()
+    }
+
+    @JsName("getWebhook")
+    suspend fun getWebhook(id: String): Webhook {
+        val apiKey = getApiKey()
+        val response: HttpResponse =
+            httpClient.get(buildUrl(baseUrl, listOf("webhooks") + normalizeResourcePathSegments(id, "webhooks"))) {
+                header("x-goog-api-key", apiKey)
+                header("Api-Revision", API_REVISION)
+            }
+
+        if (!response.status.isSuccess()) {
+            val errorBody = response.bodyAsText()
+            throw GeminiException(parseError(errorBody, response.status.value))
+        }
+
+        return response.body()
+    }
+
+    @JsName("deleteWebhook")
+    suspend fun deleteWebhook(id: String) {
+        val apiKey = getApiKey()
+        val response: HttpResponse =
+            httpClient.delete(buildUrl(baseUrl, listOf("webhooks") + normalizeResourcePathSegments(id, "webhooks"))) {
+                header("x-goog-api-key", apiKey)
+                header("Api-Revision", API_REVISION)
+            }
+
+        if (!response.status.isSuccess()) {
+            val errorBody = response.bodyAsText()
+            throw GeminiException(parseError(errorBody, response.status.value))
+        }
+    }
+
+    @JsName("listWebhooks")
+    suspend fun listWebhooks(
+        pageSize: Int = 10,
+        pageToken: String? = null,
+    ): ListWebhooksResponse {
+        val apiKey = getApiKey()
+        val response: HttpResponse =
+            httpClient.get(
+                buildUrl(
+                    baseUrl,
+                    listOf("webhooks"),
                     mapOf(
                         "pageSize" to pageSize.toString(),
                         "pageToken" to pageToken,
