@@ -13,14 +13,25 @@ import kotlin.js.JsExport
 @Serializable
 data class Webhook(
     val id: String,
-    @SerialName("display_name") val displayName: String? = null,
-    val description: String? = null,
-    val url: String? = null,
-    val events: List<String>? = null,
-    val secret: String? = null,
-    val enabled: Boolean? = null,
-    val created: String? = null,
-    val updated: String? = null,
+    val name: String? = null,
+    val uri: String? = null,
+    @SerialName("subscribed_events") val subscribedEvents: List<String>? = null,
+    @SerialName("new_signing_secret") val newSigningSecret: String? = null,
+    @SerialName("signing_secrets") val signingSecrets: List<SigningSecret>? = null,
+    val state: String? = null,
+    @SerialName("create_time") val createTime: String? = null,
+    @SerialName("update_time") val updateTime: String? = null,
+)
+
+/**
+ * Represents a signing secret attached to a webhook.
+ */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+@Serializable
+data class SigningSecret(
+    @SerialName("truncated_secret") val truncatedSecret: String? = null,
+    @SerialName("expire_time") val expireTime: String? = null,
 )
 
 /**
@@ -30,13 +41,9 @@ data class Webhook(
 @JsExport
 @Serializable
 data class CreateWebhookRequest(
-    val id: String,
-    @SerialName("display_name") val displayName: String? = null,
-    val description: String? = null,
-    val url: String? = null,
-    val events: List<String>? = null,
-    val secret: String? = null,
-    val enabled: Boolean? = null,
+    val name: String? = null,
+    val uri: String? = null,
+    @SerialName("subscribed_events") val subscribedEvents: List<String>? = null,
 )
 
 /**
@@ -47,5 +54,5 @@ data class CreateWebhookRequest(
 @Serializable
 data class ListWebhooksResponse(
     val webhooks: List<Webhook>,
-    @SerialName("nextPageToken") val nextPageToken: String? = null,
+    @SerialName("next_page_token") val nextPageToken: String? = null,
 )

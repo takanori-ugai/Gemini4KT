@@ -59,20 +59,22 @@ class GeminiAIWebhookTest {
                         when {
                             path == "/v1beta/webhooks" && request.method == HttpMethod.Post -> {
                                 val body = (request.body as TextContent).text
-                                assertTrue(body.contains("\"id\":\"wh_123\""))
-                                assertTrue(body.contains("\"url\":\"https://example.com/webhook\""))
+                                assertEquals("wh_123", request.url.parameters["webhookId"])
+                                assertTrue(body.contains("\"name\":\"Build status\""))
+                                assertTrue(body.contains("\"uri\":\"https://example.com/webhook\""))
+                                assertTrue(body.contains("\"subscribed_events\":[\"interaction.completed\"]"))
                                 """
-                                {"id":"wh_123","display_name":"Build status","url":"https://example.com/webhook","events":["interaction.completed"],"enabled":true}
+                                {"id":"wh_123","name":"Build status","uri":"https://example.com/webhook","subscribed_events":["interaction.completed"],"state":"enabled"}
                                 """.trimIndent()
                             }
                             path == "/v1beta/webhooks" && request.method == HttpMethod.Get -> {
                                 assertEquals("10", request.url.parameters["pageSize"])
                                 """
-                                {"webhooks":[{"id":"wh_123","url":"https://example.com/webhook"}],"nextPageToken":"next-token"}
+                                {"webhooks":[{"id":"wh_123","uri":"https://example.com/webhook"}],"next_page_token":"next-token"}
                                 """.trimIndent()
                             }
                             path == "/v1beta/webhooks/wh_123" && request.method == HttpMethod.Get -> {
-                                """{"id":"wh_123","url":"https://example.com/webhook"}"""
+                                """{"id":"wh_123","uri":"https://example.com/webhook"}"""
                             }
                             path == "/v1beta/webhooks/wh_123" && request.method == HttpMethod.Delete -> ""
                             else -> error("Unexpected request: ${request.method} ${request.url}")
@@ -88,15 +90,14 @@ class GeminiAIWebhookTest {
             val created =
                 ai.createWebhook(
                     CreateWebhookRequest(
-                        id = "wh_123",
-                        displayName = "Build status",
-                        url = "https://example.com/webhook",
-                        events = listOf("interaction.completed"),
-                        enabled = true,
+                        name = "Build status",
+                        uri = "https://example.com/webhook",
+                        subscribedEvents = listOf("interaction.completed"),
                     ),
+                    webhookId = "wh_123",
                 )
             assertEquals("wh_123", created.id)
-            assertEquals("https://example.com/webhook", created.url)
+            assertEquals("https://example.com/webhook", created.uri)
 
             val listed = ai.listWebhooks()
             assertEquals(1, listed.webhooks.size)

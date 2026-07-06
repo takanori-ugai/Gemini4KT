@@ -17,14 +17,14 @@ class WebhooksSerializationTest {
         val webhook =
             Webhook(
                 id = "wh_123",
-                displayName = "Build status",
-                description = "Notify when a build finishes.",
-                url = "https://example.com/webhook",
-                events = listOf("interaction.completed"),
-                secret = "secret",
-                enabled = true,
-                created = "2026-07-06T00:00:00Z",
-                updated = "2026-07-06T01:00:00Z",
+                name = "Build status",
+                uri = "https://example.com/webhook",
+                subscribedEvents = listOf("interaction.completed"),
+                newSigningSecret = "secret",
+                signingSecrets = listOf(SigningSecret(truncatedSecret = "abcd", expireTime = "2026-07-06T02:00:00Z")),
+                state = "enabled",
+                createTime = "2026-07-06T00:00:00Z",
+                updateTime = "2026-07-06T01:00:00Z",
             )
 
         val encoded = json.encodeToString(webhook)
@@ -32,16 +32,21 @@ class WebhooksSerializationTest {
             """
             {
               "id": "wh_123",
-              "display_name": "Build status",
-              "description": "Notify when a build finishes.",
-              "url": "https://example.com/webhook",
-              "events": [
+              "name": "Build status",
+              "uri": "https://example.com/webhook",
+              "subscribed_events": [
                 "interaction.completed"
               ],
-              "secret": "secret",
-              "enabled": true,
-              "created": "2026-07-06T00:00:00Z",
-              "updated": "2026-07-06T01:00:00Z"
+              "new_signing_secret": "secret",
+              "signing_secrets": [
+                {
+                  "truncated_secret": "abcd",
+                  "expire_time": "2026-07-06T02:00:00Z"
+                }
+              ],
+              "state": "enabled",
+              "create_time": "2026-07-06T00:00:00Z",
+              "update_time": "2026-07-06T01:00:00Z"
             }
             """.trimIndent()
 
@@ -53,24 +58,20 @@ class WebhooksSerializationTest {
     fun createWebhookRequestSerializesCorrectly() {
         val request =
             CreateWebhookRequest(
-                id = "wh_123",
-                displayName = "Build status",
-                url = "https://example.com/webhook",
-                events = listOf("interaction.completed"),
-                enabled = true,
+                name = "Build status",
+                uri = "https://example.com/webhook",
+                subscribedEvents = listOf("interaction.completed"),
             )
 
         val encoded = json.encodeToString(request)
         val expected =
             """
             {
-              "id": "wh_123",
-              "display_name": "Build status",
-              "url": "https://example.com/webhook",
-              "events": [
+              "name": "Build status",
+              "uri": "https://example.com/webhook",
+              "subscribed_events": [
                 "interaction.completed"
-              ],
-              "enabled": true
+              ]
             }
             """.trimIndent()
 
@@ -81,7 +82,7 @@ class WebhooksSerializationTest {
     fun listWebhooksResponseSerializesCorrectly() {
         val response =
             ListWebhooksResponse(
-                webhooks = listOf(Webhook(id = "wh_123", url = "https://example.com/webhook")),
+                webhooks = listOf(Webhook(id = "wh_123", uri = "https://example.com/webhook")),
                 nextPageToken = "next-token",
             )
 
@@ -92,10 +93,10 @@ class WebhooksSerializationTest {
               "webhooks": [
                 {
                   "id": "wh_123",
-                  "url": "https://example.com/webhook"
+                  "uri": "https://example.com/webhook"
                 }
               ],
-              "nextPageToken": "next-token"
+              "next_page_token": "next-token"
             }
             """.trimIndent()
 
