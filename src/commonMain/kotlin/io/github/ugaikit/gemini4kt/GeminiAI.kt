@@ -261,7 +261,7 @@ class GeminiAI(
                 buildUrl(
                     baseUrl,
                     listOf("webhooks"),
-                    mapOf("webhookId" to webhookId),
+                    mapOf("webhook_id" to webhookId),
                 ),
             ) {
                 header("x-goog-api-key", apiKey)
@@ -322,8 +322,8 @@ class GeminiAI(
                     baseUrl,
                     listOf("webhooks"),
                     mapOf(
-                        "pageSize" to pageSize.toString(),
-                        "pageToken" to pageToken,
+                        "page_size" to pageSize.toString(),
+                        "page_token" to pageToken,
                     ),
                 ),
             ) {
