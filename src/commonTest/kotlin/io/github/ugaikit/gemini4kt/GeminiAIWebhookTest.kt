@@ -59,7 +59,7 @@ class GeminiAIWebhookTest {
                         when {
                             path == "/v1beta/webhooks" && request.method == HttpMethod.Post -> {
                                 val body = (request.body as TextContent).text
-                                assertEquals("wh_123", request.url.parameters["webhookId"])
+                                assertEquals("wh_123", request.url.parameters["webhook_id"])
                                 assertTrue(body.contains("\"name\":\"Build status\""))
                                 assertTrue(body.contains("\"uri\":\"https://example.com/webhook\""))
                                 assertTrue(body.contains("\"subscribed_events\":[\"interaction.completed\"]"))
@@ -68,7 +68,8 @@ class GeminiAIWebhookTest {
                                 """.trimIndent()
                             }
                             path == "/v1beta/webhooks" && request.method == HttpMethod.Get -> {
-                                assertEquals("10", request.url.parameters["pageSize"])
+                                assertEquals("10", request.url.parameters["page_size"])
+                                assertEquals("next-token", request.url.parameters["page_token"])
                                 """
                                 {"webhooks":[{"id":"wh_123","uri":"https://example.com/webhook"}],"next_page_token":"next-token"}
                                 """.trimIndent()
@@ -99,7 +100,7 @@ class GeminiAIWebhookTest {
             assertEquals("wh_123", created.id)
             assertEquals("https://example.com/webhook", created.uri)
 
-            val listed = ai.listWebhooks()
+            val listed = ai.listWebhooks(pageToken = "next-token")
             assertEquals(1, listed.webhooks.size)
             assertEquals("next-token", listed.nextPageToken)
 
