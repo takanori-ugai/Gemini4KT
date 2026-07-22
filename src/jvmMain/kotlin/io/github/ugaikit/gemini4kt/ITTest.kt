@@ -514,7 +514,7 @@ private suspend fun testFunctionCallingSecondTurn(
                         role = "model",
                     ),
                     content {
-                        role = "function"
+                        role = "user"
                         part {
                             functionResponse {
                                 FunctionResponse(
@@ -876,7 +876,7 @@ fun main() =
         val gemini = Gemini(apiKey)
         val tools = defineFunctionTools()
 
-        val models = listOf("gemini-3.1-flash-lite", "gemma-4-31b-it")
+        val models = listOf("gemini-3.5-flash-lite", "gemma-4-31b-it")
         for (model in models) {
             println("\n========================================")
             println("Testing with model: $model")

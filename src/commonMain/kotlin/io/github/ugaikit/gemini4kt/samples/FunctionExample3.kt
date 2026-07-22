@@ -66,7 +66,7 @@ object FunctionExample3 {
 
                 val functionResponseContent =
                     Content(
-                        role = "function",
+                        role = "user",
                         parts =
                             arrayOf(
                                 Part(
