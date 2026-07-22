@@ -90,7 +90,7 @@ class Gemini(
             val modelContent = Content(role = "model", parts = modelParts)
             val functionContent =
                 Content(
-                    role = "function",
+                    role = "user",
                     parts = functionResponseParts.toTypedArray(),
                 )
 

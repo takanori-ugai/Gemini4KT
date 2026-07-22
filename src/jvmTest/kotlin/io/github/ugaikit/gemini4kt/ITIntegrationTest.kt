@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
  */
 class ITIntegrationTest {
     private val model = "gemma-4-31b-it"
-    private val googleSearchModel = "gemini-3.1-flash-lite"
+    private val googleSearchModel = "gemini-3.5-flash-lite"
     private val embedModel = "gemini-embedding-2"
     private val httpTooManyRequests = 429
 
@@ -279,7 +279,7 @@ class ITIntegrationTest {
                                     role = "model",
                                 ),
                                 content {
-                                    role = "function"
+                                    role = "user"
                                     part {
                                         functionResponse {
                                             FunctionResponse(
