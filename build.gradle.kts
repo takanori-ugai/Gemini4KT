@@ -127,11 +127,11 @@ kotlin {
                     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
                     implementation("io.github.oshai:kotlin-logging:8.0.4")
                     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
-                    implementation("io.ktor:ktor-client-core:3.5.1")
-                    implementation("io.ktor:ktor-client-content-negotiation:3.5.1")
-                    implementation("io.ktor:ktor-serialization-kotlinx-json:3.5.1")
-                    implementation("io.ktor:ktor-client-logging:3.5.1")
-                    implementation("io.ktor:ktor-client-websockets:3.5.1")
+                    implementation("io.ktor:ktor-client-core:3.5.2")
+                    implementation("io.ktor:ktor-client-content-negotiation:3.5.2")
+                    implementation("io.ktor:ktor-serialization-kotlinx-json:3.5.2")
+                    implementation("io.ktor:ktor-client-logging:3.5.2")
+                    implementation("io.ktor:ktor-client-websockets:3.5.2")
                     implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.9.1")
                 }
                 buildConfig {
@@ -154,7 +154,7 @@ kotlin {
             getByName("commonTest") {
                 dependencies {
                     implementation("org.jetbrains.kotlin:kotlin-test")
-                    implementation("io.ktor:ktor-client-mock:3.5.1")
+                    implementation("io.ktor:ktor-client-mock:3.5.2")
                     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
                 }
             }
@@ -163,7 +163,7 @@ kotlin {
                 dependsOn(jvmCommonMain)
                 dependencies {
                     runtimeOnly("ch.qos.logback:logback-classic:1.6.0")
-                    implementation("io.ktor:ktor-client-cio:3.5.1")
+                    implementation("io.ktor:ktor-client-cio:3.5.2")
                 }
             }
         val jvmTest =
@@ -183,26 +183,26 @@ kotlin {
         val iosMain =
             getByName("iosMain") {
                 dependencies {
-                    implementation("io.ktor:ktor-client-darwin:3.5.1")
+                    implementation("io.ktor:ktor-client-darwin:3.5.2")
                 }
             }
         val mingwX64Main =
             getByName("mingwX64Main") {
                 dependencies {
-                    implementation("io.ktor:ktor-client-curl:3.5.1")
+                    implementation("io.ktor:ktor-client-curl:3.5.2")
                 }
             }
         val linuxX64Main =
             getByName("linuxX64Main") {
                 dependencies {
-                    implementation("io.ktor:ktor-client-curl:3.5.1")
+                    implementation("io.ktor:ktor-client-curl:3.5.2")
                 }
             }
         val androidMain =
             getByName("androidMain") {
                 dependsOn(jvmCommonMain)
                 dependencies {
-                    implementation("io.ktor:ktor-client-android:3.5.1")
+                    implementation("io.ktor:ktor-client-android:3.5.2")
                 }
             }
     }
