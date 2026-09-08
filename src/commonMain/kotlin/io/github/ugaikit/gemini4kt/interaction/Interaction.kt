@@ -527,14 +527,22 @@ data class InteractionTurn(
  * Step payload used by the Interactions API multi-turn input shape.
  *
  * @property type Step type identifier.
+ * @property id Identifier for a processing call step.
+ * @property callId Identifier linking a processing result to its call.
+ * @property signature Optional step signature.
  * @property content Step content payload.
+ * @property summary Thought summary content.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
 data class InteractionStep(
     val type: String,
+    val id: String? = null,
+    @SerialName("call_id") val callId: String? = null,
+    val signature: String? = null,
     val content: Array<InteractionContent>? = null,
+    val summary: Array<InteractionContent>? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -543,17 +551,34 @@ data class InteractionStep(
         other as InteractionStep
 
         if (type != other.type) return false
+        if (id != other.id) return false
+        if (callId != other.callId) return false
+        if (signature != other.signature) return false
         if (content != null) {
             if (other.content == null) return false
             if (!content.contentEquals(other.content)) return false
         } else if (other.content != null) {
             return false
         }
+        if (summary != null) {
+            if (other.summary == null) return false
+            if (!summary.contentEquals(other.summary)) return false
+        } else if (other.summary != null) {
+            return false
+        }
 
         return true
     }
 
-    override fun hashCode(): Int = 31 * type.hashCode() + (content?.contentHashCode() ?: 0)
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + (id?.hashCode() ?: 0)
+        result = 31 * result + (callId?.hashCode() ?: 0)
+        result = 31 * result + (signature?.hashCode() ?: 0)
+        result = 31 * result + (content?.contentHashCode() ?: 0)
+        result = 31 * result + (summary?.contentHashCode() ?: 0)
+        return result
+    }
 }
 
 internal fun Array<InteractionStep>.resolvedOutputText(): String? {
