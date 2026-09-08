@@ -538,10 +538,10 @@ data class InteractionTurn(
 @Serializable
 data class InteractionStep(
     val type: String,
+    val content: Array<InteractionContent>? = null,
     val id: String? = null,
     @SerialName("call_id") val callId: String? = null,
     val signature: String? = null,
-    val content: Array<InteractionContent>? = null,
     val summary: Array<InteractionContent>? = null,
 ) {
     override fun equals(other: Any?): Boolean {

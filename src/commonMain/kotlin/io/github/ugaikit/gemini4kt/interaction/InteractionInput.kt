@@ -21,6 +21,23 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
+private val interactionStepTypes =
+    setOf("thought", "processing_call", "processing_result", "model_output", "user_input", "assistant_output")
+
+/**
+ * Checks whether an input object represents an interaction step.
+ */
+private fun JsonObject.isInteractionStep(): Boolean {
+    val type = (this["type"] as? JsonPrimitive)?.content
+    return type in interactionStepTypes ||
+        (type != null &&
+            ("id" in this ||
+                "call_id" in this ||
+                "signature" in this ||
+                "summary" in this ||
+                "content" in this))
+}
+
 /**
  * Typed input payload accepted by the Interactions API.
  *
@@ -195,7 +212,7 @@ internal fun JsonElement.toInteractionInput(jsonDecoder: JsonDecoder? = null): I
                     InteractionInput.RawJson(this)
                 } else {
                     when {
-                        "type" in firstObject && "content" in firstObject -> {
+                        firstObject.isInteractionStep() -> {
                             val json = jsonDecoder
                             runCatching {
                                 InteractionInput.StepList(
@@ -269,8 +286,17 @@ fun interactionInput(value: Content): InteractionInput = InteractionInput.Single
  */
 fun interactionInput(value: InteractionContent): InteractionInput = InteractionInput.SingleInteractionContent(value)
 
+/**
+ * Creates a typed input from multiple interaction content items.
+ */
 fun interactionContentInput(value: Array<InteractionContent>): InteractionInput = InteractionInput.InteractionContentList(value)
 
+/**
+ * Creates a typed input from interaction steps.
+ */
 fun interactionStepsInput(value: Array<InteractionStep>): InteractionInput = InteractionInput.StepList(value)
 
+/**
+ * Creates a typed input from interaction turns.
+ */
 fun interactionTurnsInput(value: Array<InteractionTurn>): InteractionInput = InteractionInput.TurnList(value)
