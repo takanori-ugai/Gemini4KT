@@ -14,6 +14,7 @@ import kotlin.js.JsExport
  * @property data Optional inline encoded data.
  * @property uri Optional URI reference for external content.
  * @property mimeType Optional MIME type for `data` or `uri` content.
+ * @property processing Video processing mode (`static` or `agentic`).
  * @property resolution Optional resolution descriptor for media content.
  * @property signature Optional signature or integrity metadata.
  * @property summary Optional thought summary content.
@@ -41,6 +42,7 @@ data class InteractionContent(
     val data: String? = null,
     val uri: String? = null,
     @SerialName("mime_type") val mimeType: String? = null,
+    val processing: InteractionVideoProcessing? = null,
     val resolution: String? = null,
     val signature: String? = null,
     val summary: InteractionThoughtSummary? = null,
@@ -70,6 +72,7 @@ data class InteractionContent(
         if (data != other.data) return false
         if (uri != other.uri) return false
         if (mimeType != other.mimeType) return false
+        if (processing != other.processing) return false
         if (resolution != other.resolution) return false
         if (signature != other.signature) return false
         if (summary != other.summary) return false
@@ -107,6 +110,7 @@ data class InteractionContent(
         result1 = 31 * result1 + (data?.hashCode() ?: 0)
         result1 = 31 * result1 + (uri?.hashCode() ?: 0)
         result1 = 31 * result1 + (mimeType?.hashCode() ?: 0)
+        result1 = 31 * result1 + (processing?.hashCode() ?: 0)
         result1 = 31 * result1 + (resolution?.hashCode() ?: 0)
         result1 = 31 * result1 + (signature?.hashCode() ?: 0)
         result1 = 31 * result1 + (summary?.hashCode() ?: 0)

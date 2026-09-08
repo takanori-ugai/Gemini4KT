@@ -78,6 +78,38 @@ class InteractionInputSerializationTest {
     }
 
     @Test
+    fun videoInputSerializesWithAgenticProcessing() {
+        val input =
+            interactionContentInput(
+                arrayOf(
+                    InteractionContent(type = "video", uri = "files/video", mimeType = "video/mp4", processing = InteractionVideoProcessing.AGENTIC),
+                    InteractionContent(type = "text", text = "What are the three main arguments?"),
+                ),
+            )
+
+        val encoded = json.encodeToString(InteractionInput.serializer(), input)
+
+        assertTrue(encoded.contains("\"type\":\"video\""))
+        assertTrue(encoded.contains("\"processing\":\"agentic\""))
+        assertTrue(encoded.contains("\"mime_type\":\"video/mp4\""))
+    }
+
+    @Test
+    fun processingStepsRoundTripIdentifiersAndThoughtSummary() {
+        val step =
+            InteractionStep(
+                type = "processing_result",
+                callId = "call_01",
+                signature = "sig_result_01",
+                summary = arrayOf(InteractionContent(type = "text", text = "Loaded transcript")),
+            )
+
+        val decoded = json.decodeFromString<InteractionStep>(json.encodeToString(step))
+
+        assertEquals(step, decoded)
+    }
+
+    @Test
     fun rawJsonInputKeepsNonStringPrimitive() {
         val encoded = "123"
 
