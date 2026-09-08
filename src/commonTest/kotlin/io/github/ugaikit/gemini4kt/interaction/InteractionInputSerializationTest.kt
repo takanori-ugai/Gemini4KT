@@ -15,6 +15,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class InteractionInputSerializationTest {
@@ -95,6 +96,20 @@ class InteractionInputSerializationTest {
 
         val decoded = json.decodeFromString(InteractionInputSerializer, encoded)
         assertEquals(input, decoded)
+        assertNotEquals(
+            input,
+            interactionContentInput(
+                arrayOf(
+                    InteractionContent(
+                        type = "video",
+                        uri = "files/video",
+                        mimeType = "video/mp4",
+                        processing = InteractionVideoProcessing.STATIC,
+                    ),
+                    InteractionContent(type = "text", text = "What are the three main arguments?"),
+                ),
+            ),
+        )
     }
 
     @Test
@@ -114,6 +129,30 @@ class InteractionInputSerializationTest {
 
         assertEquals(input, decoded)
         assertTrue(encoded.contains("\"processing\":\"static\""))
+    }
+
+    @Test
+    fun interactionStepEqualityCoversOptionalMetadataBranches() {
+        val step =
+            InteractionStep(
+                type = "processing_result",
+                content = arrayOf(InteractionContent(type = "text", text = "loaded")),
+                id = "step_01",
+                callId = "call_01",
+                signature = "sig_01",
+                summary = arrayOf(InteractionContent(type = "text", text = "summary")),
+            )
+
+        assertNotEquals(step, step.copy(id = "step_02"))
+        assertNotEquals(step, step.copy(callId = "call_02"))
+        assertNotEquals(step, step.copy(signature = "sig_02"))
+        assertNotEquals(step, step.copy(summary = null))
+        assertNotEquals(step.copy(summary = null), step)
+        assertNotEquals(
+            step,
+            step.copy(summary = arrayOf(InteractionContent(type = "text", text = "different"))),
+        )
+        assertEquals(step.hashCode(), step.copy().hashCode())
     }
 
     @Test
