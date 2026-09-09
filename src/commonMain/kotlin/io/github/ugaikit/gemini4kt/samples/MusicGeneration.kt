@@ -1,19 +1,97 @@
 package io.github.ugaikit.gemini4kt.samples
 
+import io.github.ugaikit.gemini4kt.GeminiAI
 import io.github.ugaikit.gemini4kt.getApiKey
+import io.github.ugaikit.gemini4kt.interaction.AudioResponseFormat
+import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
+import io.github.ugaikit.gemini4kt.interaction.Interaction
+import io.github.ugaikit.gemini4kt.interaction.InteractionAudioContent
+import io.github.ugaikit.gemini4kt.interaction.InteractionInput
 import io.github.ugaikit.gemini4kt.live.music.LiveMusic
 import io.github.ugaikit.gemini4kt.live.music.LiveMusicGenerationConfig
 import io.github.ugaikit.gemini4kt.live.music.LiveMusicSession
 import io.github.ugaikit.gemini4kt.live.music.WeightedPrompt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.collect
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * Represents the music generation sample.
  */
 object MusicGeneration {
     /**
-     * Runs the Music Generation Sample.
+     * Generates a music track with the Lyria 3.5 Interactions API.
+     *
+     * The callback receives base64-encoded audio data. Lyria returns MP3 by default;
+     * the returned interaction also contains generated lyrics in [Interaction.outputText]
+     * when the model produces them.
+     *
+     * @param prompt Text description of the requested music.
+     * @param onAudioData Callback invoked for each generated audio block.
+     * @param model Lyria model ID, such as `lyria-3.5` or `lyria-3-clip-preview`.
+     * @param images Optional images to use as additional musical inspiration.
+     * @param client Optional GeminiAI client for reuse or testing.
+     * @param apiKey Optional API key used when [client] is null.
+     * @return The completed interaction returned by the API.
+     */
+    suspend fun run(
+        prompt: String,
+        onAudioData: (String) -> Unit,
+        model: String = LYRIA_3_5_MODEL,
+        images: List<MusicGenerationImage> = emptyList(),
+        client: GeminiAI? = null,
+        apiKey: String? = null,
+    ): Interaction {
+        require(prompt.isNotBlank()) { "prompt must not be blank." }
+        require(images.size <= MAX_IMAGE_COUNT) {
+            "Lyria accepts at most $MAX_IMAGE_COUNT images."
+        }
+
+        val ai = client ?: GeminiAI(apiKey = apiKey ?: getApiKey())
+        return try {
+            val input =
+                buildJsonArray {
+                    add(
+                        buildJsonObject {
+                            put("type", "text")
+                            put("text", prompt)
+                        },
+                    )
+                    images.forEach { image ->
+                        add(
+                            buildJsonObject {
+                                put("type", "image")
+                                put("data", image.data)
+                                put("mime_type", image.mimeType)
+                            },
+                        )
+                    }
+                }
+
+            val interaction =
+                ai.createInteraction(
+                    CreateInteractionRequest(
+                        model = model,
+                        input = InteractionInput.RawJson(input),
+                        responseFormat = AudioResponseFormat(),
+                    ),
+                )
+
+            interaction.audioOutputs().forEach { audio ->
+                audio.data?.let(onAudioData)
+            }
+            interaction
+        } finally {
+            if (client == null) {
+                ai.close()
+            }
+        }
+    }
+
+    /**
+     * Runs the legacy Live Music API sample.
      *
      * @param onAudioData Callback to handle received audio data (Base64 encoded string).
      * @param liveMusicClient Optional LiveMusic client for testing.
@@ -106,4 +184,52 @@ object MusicGeneration {
             println(e.stackTraceToString())
         }
     }
+
+    private fun Interaction.audioOutputs(): List<InteractionAudioContent> {
+        outputAudio?.let { return listOf(it) }
+
+        val outputContents =
+            outputs
+                ?.filter { it.type == "audio" }
+                ?.map { content ->
+                    InteractionAudioContent(
+                        type = content.type,
+                        data = content.data,
+                        uri = content.uri,
+                        mimeType = content.mimeType,
+                    )
+                }.orEmpty()
+        if (outputContents.isNotEmpty()) return outputContents
+
+        return steps
+            ?.filter { it.type == "model_output" }
+            ?.flatMap { step ->
+                step
+                    .content
+                    .orEmpty()
+                    .filter { it.type == "audio" }
+                    .map { content ->
+                        InteractionAudioContent(
+                            type = content.type,
+                            data = content.data,
+                            uri = content.uri,
+                            mimeType = content.mimeType,
+                        )
+                    }
+            }.orEmpty()
+    }
+
+    private const val MAX_IMAGE_COUNT = 10
+    const val LYRIA_3_5_MODEL = "lyria-3.5"
 }
+
+/**
+ * Base64-encoded image input for Lyria music generation.
+ *
+ * @property data Base64-encoded image bytes.
+ * @property mimeType Image MIME type, for example `image/jpeg`.
+ */
+data class MusicGenerationImage(
+    val data: String,
+    val mimeType: String,
+)
