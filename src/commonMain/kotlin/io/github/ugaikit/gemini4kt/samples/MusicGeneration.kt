@@ -185,8 +185,30 @@ object MusicGeneration {
         }
     }
 
+    /**
+     * Resolves generated audio blocks in timeline order, with aggregate fallbacks.
+     *
+     * @return Audio blocks emitted by model output steps, aggregate outputs, or output audio.
+     */
     private fun Interaction.audioOutputs(): List<InteractionAudioContent> {
-        outputAudio?.let { return listOf(it) }
+        val stepOutputs =
+            steps
+                ?.filter { it.type == "model_output" }
+                ?.flatMap { step ->
+                    step
+                        .content
+                        .orEmpty()
+                        .filter { it.type == "audio" }
+                        .map { content ->
+                            InteractionAudioContent(
+                                type = content.type,
+                                data = content.data,
+                                uri = content.uri,
+                                mimeType = content.mimeType,
+                            )
+                        }
+                }.orEmpty()
+        if (stepOutputs.isNotEmpty()) return stepOutputs
 
         val outputContents =
             outputs
@@ -201,22 +223,7 @@ object MusicGeneration {
                 }.orEmpty()
         if (outputContents.isNotEmpty()) return outputContents
 
-        return steps
-            ?.filter { it.type == "model_output" }
-            ?.flatMap { step ->
-                step
-                    .content
-                    .orEmpty()
-                    .filter { it.type == "audio" }
-                    .map { content ->
-                        InteractionAudioContent(
-                            type = content.type,
-                            data = content.data,
-                            uri = content.uri,
-                            mimeType = content.mimeType,
-                        )
-                    }
-            }.orEmpty()
+        return outputAudio?.let(::listOf).orEmpty()
     }
 
     private const val MAX_IMAGE_COUNT = 10

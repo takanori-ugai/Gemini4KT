@@ -27,6 +27,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -58,12 +59,20 @@ class MusicGenerationTest {
                                     {
                                       "id": "lyria_123",
                                       "status": "completed",
+                                      "output_text": "[Verse] Homeward",
+                                      "output_audio": {"type": "audio", "data": "fallback-audio", "mime_type": "audio/mp3"},
                                       "steps": [
                                         {
                                           "type": "model_output",
                                           "content": [
                                             {"type": "text", "text": "[Verse] Homeward"},
-                                            {"type": "audio", "data": "YXVkaW8=", "mime_type": "audio/mp3"}
+                                            {"type": "audio", "data": "first-audio", "mime_type": "audio/mp3"}
+                                          ]
+                                        },
+                                        {
+                                          "type": "model_output",
+                                          "content": [
+                                            {"type": "audio", "data": "second-audio", "mime_type": "audio/mp3"}
                                           ]
                                         }
                                       ]
@@ -92,9 +101,72 @@ class MusicGenerationTest {
 
                 assertEquals("lyria_123", interaction.id)
                 assertEquals("[Verse] Homeward", interaction.outputText)
-                assertEquals(listOf("YXVkaW8="), audioEvents)
+                assertEquals(listOf("first-audio", "second-audio"), audioEvents)
             } finally {
                 client.close()
+            }
+        }
+
+    @Test
+    fun testLyriaMusicGenerationFallsBackToAggregateOutputs() =
+        runTest {
+            val audioEvents =
+                runLyriaWithResponse(
+                    """
+                    {
+                      "id": "lyria_outputs",
+                      "status": "completed",
+                      "outputs": [
+                        {"type": "text", "text": "Lyrics"},
+                        {"type": "audio", "data": "aggregate-audio", "mime_type": "audio/mp3"}
+                      ],
+                      "steps": [
+                        {"type": "model_output", "content": [{"type": "text", "text": "Lyrics"}]}
+                      ]
+                    }
+                    """.trimIndent(),
+                )
+
+            assertEquals(listOf("aggregate-audio"), audioEvents)
+        }
+
+    @Test
+    fun testLyriaMusicGenerationFallsBackToOutputAudio() =
+        runTest {
+            val audioEvents =
+                runLyriaWithResponse(
+                    """
+                    {
+                      "id": "lyria_output_audio",
+                      "status": "completed",
+                      "output_audio": {"type": "audio", "data": "output-audio", "mime_type": "audio/mp3"}
+                    }
+                    """.trimIndent(),
+                )
+
+            assertEquals(listOf("output-audio"), audioEvents)
+        }
+
+    @Test
+    fun testLyriaMusicGenerationRejectsBlankPrompt() =
+        runTest {
+            assertFailsWith<IllegalArgumentException> {
+                MusicGeneration.run(prompt = "  ", onAudioData = {}, apiKey = "test-api-key")
+            }
+        }
+
+    @Test
+    fun testLyriaMusicGenerationRejectsTooManyImages() =
+        runTest {
+            val images = List(11) { MusicGenerationImage("image-data", "image/jpeg") }
+
+            assertFailsWith<IllegalArgumentException> {
+                MusicGeneration.run(
+                    prompt = "A cinematic piano track",
+                    images = images,
+                    onAudioData = {},
+                    apiKey = "test-api-key",
+                )
             }
         }
 
@@ -158,4 +230,41 @@ class MusicGenerationTest {
 
             assertEquals(51, audioEvents.size)
         }
+
+    private suspend fun runLyriaWithResponse(response: String): List<String> {
+        val json =
+            Json {
+                ignoreUnknownKeys = true
+                encodeDefaults = false
+                explicitNulls = false
+            }
+        val client =
+            HttpClient(MockEngine) {
+                engine {
+                    addHandler {
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                        )
+                    }
+                }
+                install(ContentNegotiation) {
+                    json(json)
+                }
+            }
+        val ai = GeminiAI(client = client, apiKey = "test-api-key")
+        val audioEvents = mutableListOf<String>()
+
+        return try {
+            MusicGeneration.run(
+                prompt = "A cinematic piano track",
+                onAudioData = { audioEvents.add(it) },
+                client = ai,
+            )
+            audioEvents
+        } finally {
+            client.close()
+        }
+    }
 }
