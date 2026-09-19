@@ -1,7 +1,10 @@
 package io.github.ugaikit.gemini4kt.agent
 
+import io.github.ugaikit.gemini4kt.interaction.InteractionTool
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -92,6 +95,74 @@ class AgentSerializationTest {
             """.trimIndent()
 
         assertEquals(json.parseToJsonElement(expected), json.parseToJsonElement(encoded))
+    }
+
+    @Test
+    fun managedAgentDefinitionSerializesCurrentRestFields() {
+        val agent =
+            Agent(
+                id = "data-analyst",
+                baseAgent = "antigravity-preview-09-2026",
+                description = "Analyzes data and creates reports.",
+                agentConfig =
+                    AgentConfig(
+                        type = "antigravity",
+                        model = "gemini-3.8-flash",
+                        maxTotalTokens = 50000,
+                    ),
+                tools = arrayOf(InteractionTool(type = "code_execution")),
+                baseEnvironment =
+                    AgentEnvironment(
+                        type = "remote",
+                        network = buildJsonObject { put("mode", "restricted") },
+                    ),
+            )
+
+        val encoded = json.encodeToString(agent)
+        val expected =
+            """
+            {
+              "id": "data-analyst",
+              "base_agent": "antigravity-preview-09-2026",
+              "base_environment": {
+                "type": "remote",
+                "network": {"mode": "restricted"}
+              },
+              "description": "Analyzes data and creates reports.",
+              "agent_config": {
+                "type": "antigravity",
+                "model": "gemini-3.8-flash",
+                "max_total_tokens": 50000
+              },
+              "tools": [{"type": "code_execution"}]
+            }
+            """.trimIndent()
+
+        assertEquals(json.parseToJsonElement(expected), json.parseToJsonElement(encoded))
+        assertEquals(agent, json.decodeFromString<Agent>(encoded))
+    }
+
+    @Test
+    fun managedAgentRequestSupportsEnvironmentIdReference() {
+        val request =
+            CreateAgentRequest(
+                id = "my-data-analyst",
+                baseAgent = "antigravity-preview-09-2026",
+                baseEnvironment = AgentEnvironmentReference("env_abc123"),
+            )
+
+        val encoded = json.encodeToString(request)
+        val expected =
+            """
+            {
+              "id": "my-data-analyst",
+              "base_agent": "antigravity-preview-09-2026",
+              "base_environment": "env_abc123"
+            }
+            """.trimIndent()
+
+        assertEquals(json.parseToJsonElement(expected), json.parseToJsonElement(encoded))
+        assertEquals(request, json.decodeFromString<CreateAgentRequest>(encoded))
     }
 
     @Test
