@@ -78,3 +78,17 @@ enum class InteractionResponseModality {
     @SerialName("audio")
     AUDIO,
 }
+
+/**
+ * Video timeline processing strategy for interaction video inputs.
+ */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+@Serializable
+enum class InteractionVideoProcessing {
+    @SerialName("static")
+    STATIC,
+
+    @SerialName("agentic")
+    AGENTIC,
+}

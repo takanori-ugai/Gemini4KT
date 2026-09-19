@@ -6,15 +6,15 @@ import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExec
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("multiplatform") version "2.4.10"
-    kotlin("plugin.serialization") version "2.4.10"
+    kotlin("multiplatform") version "2.4.20"
+    kotlin("plugin.serialization") version "2.4.20"
     id("org.jetbrains.dokka") version "2.2.0"
 //    id("org.jetbrains.dokka-javadoc") version "2.1.0"
     id("com.android.kotlin.multiplatform.library") version "9.4.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.1.4"
     id("com.github.spotbugs") version "6.5.11"
-    id("com.diffplug.spotless") version "8.10.1"
+    id("com.diffplug.spotless") version "8.10.2"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("com.github.gmazzo.buildconfig") version "6.0.10"
     jacoco
@@ -147,7 +147,7 @@ kotlin {
             create("jvmCommonMain") {
                 dependsOn(commonMain)
                 dependencies {
-                    implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.10")
+                    implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.20")
                 }
             }
         val commonTest =

@@ -21,6 +21,27 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
+private val interactionStepTypes =
+    setOf("thought", "processing_call", "processing_result", "model_output", "user_input", "assistant_output")
+
+/**
+ * Checks whether an input object represents an interaction step.
+ */
+private fun JsonObject.isInteractionStep(): Boolean {
+    val type = (this["type"] as? JsonPrimitive)?.content
+    return type in interactionStepTypes ||
+        (
+            type != null &&
+                (
+                    "id" in this ||
+                        "call_id" in this ||
+                        "signature" in this ||
+                        "summary" in this ||
+                        "content" in this
+                )
+        )
+}
+
 /**
  * Typed input payload accepted by the Interactions API.
  *
@@ -48,6 +69,14 @@ sealed interface InteractionInput {
     ) : InteractionInput
 
     /**
+     * A single typed interaction content item, such as a video input.
+     */
+    @Serializable
+    data class SingleInteractionContent(
+        val value: InteractionContent,
+    ) : InteractionInput
+
+    /**
      * Multiple content objects.
      */
     @Serializable
@@ -55,6 +84,18 @@ sealed interface InteractionInput {
         val value: Array<Content>,
     ) : InteractionInput {
         override fun equals(other: Any?): Boolean = other is ContentList && value.contentEquals(other.value)
+
+        override fun hashCode(): Int = value.contentHashCode()
+    }
+
+    /**
+     * Multiple typed interaction content items, such as text and video inputs.
+     */
+    @Serializable
+    data class InteractionContentList(
+        val value: Array<InteractionContent>,
+    ) : InteractionInput {
+        override fun equals(other: Any?): Boolean = other is InteractionContentList && value.contentEquals(other.value)
 
         override fun hashCode(): Int = value.contentHashCode()
     }
@@ -110,8 +151,12 @@ object InteractionInputSerializer : KSerializer<InteractionInput> {
         when (value) {
             is InteractionInput.Text -> jsonEncoder.encodeString(value.value)
             is InteractionInput.SingleContent -> jsonEncoder.encodeSerializableValue(Content.serializer(), value.value)
+            is InteractionInput.SingleInteractionContent ->
+                jsonEncoder.encodeSerializableValue(InteractionContent.serializer(), value.value)
             is InteractionInput.ContentList ->
                 jsonEncoder.encodeSerializableValue(ArraySerializer(Content.serializer()), value.value)
+            is InteractionInput.InteractionContentList ->
+                jsonEncoder.encodeSerializableValue(ArraySerializer(InteractionContent.serializer()), value.value)
             is InteractionInput.StepList ->
                 jsonEncoder.encodeSerializableValue(ArraySerializer(InteractionStep.serializer()), value.value)
             is InteractionInput.TurnList ->
@@ -149,6 +194,15 @@ internal fun JsonElement.toInteractionInput(jsonDecoder: JsonDecoder? = null): I
                 }.getOrElse {
                     InteractionInput.RawJson(this)
                 }
+            } else if (jsonDecoder != null && "type" in this) {
+                val json = jsonDecoder
+                runCatching {
+                    InteractionInput.SingleInteractionContent(
+                        json.json.decodeFromJsonElement(InteractionContent.serializer(), this),
+                    )
+                }.getOrElse {
+                    InteractionInput.RawJson(this)
+                }
             } else {
                 InteractionInput.RawJson(this)
             }
@@ -162,7 +216,7 @@ internal fun JsonElement.toInteractionInput(jsonDecoder: JsonDecoder? = null): I
                     InteractionInput.RawJson(this)
                 } else {
                     when {
-                        "type" in firstObject && "content" in firstObject -> {
+                        firstObject.isInteractionStep() -> {
                             val json = jsonDecoder
                             runCatching {
                                 InteractionInput.StepList(
@@ -181,6 +235,19 @@ internal fun JsonElement.toInteractionInput(jsonDecoder: JsonDecoder? = null): I
                                 InteractionInput.TurnList(
                                     json.json.decodeFromJsonElement(
                                         ArraySerializer(InteractionTurn.serializer()),
+                                        this,
+                                    ),
+                                )
+                            }.getOrElse {
+                                InteractionInput.RawJson(this)
+                            }
+                        }
+                        "type" in firstObject -> {
+                            val json = jsonDecoder
+                            runCatching {
+                                InteractionInput.InteractionContentList(
+                                    json.json.decodeFromJsonElement(
+                                        ArraySerializer(InteractionContent.serializer()),
                                         this,
                                     ),
                                 )
@@ -218,6 +285,22 @@ fun interactionInput(value: String): InteractionInput = InteractionInput.Text(va
  */
 fun interactionInput(value: Content): InteractionInput = InteractionInput.SingleContent(value)
 
+/**
+ * Creates a typed interaction content input, for example a video with agentic processing.
+ */
+fun interactionInput(value: InteractionContent): InteractionInput = InteractionInput.SingleInteractionContent(value)
+
+/**
+ * Creates a typed input from multiple interaction content items.
+ */
+fun interactionContentInput(value: Array<InteractionContent>): InteractionInput = InteractionInput.InteractionContentList(value)
+
+/**
+ * Creates a typed input from interaction steps.
+ */
 fun interactionStepsInput(value: Array<InteractionStep>): InteractionInput = InteractionInput.StepList(value)
 
+/**
+ * Creates a typed input from interaction turns.
+ */
 fun interactionTurnsInput(value: Array<InteractionTurn>): InteractionInput = InteractionInput.TurnList(value)
