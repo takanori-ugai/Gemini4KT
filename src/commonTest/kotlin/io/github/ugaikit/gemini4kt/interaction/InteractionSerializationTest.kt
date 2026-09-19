@@ -418,6 +418,29 @@ class InteractionSerializationTest {
     }
 
     @Test
+    fun interactionAgentConfigSerializesAntigravityModelAndBudget() {
+        val config =
+            InteractionAgentConfig(
+                type = "antigravity",
+                model = "gemini-3.5-flash-lite",
+                maxTotalTokens = 50000,
+            )
+
+        val encoded = json.encodeToString(config)
+        val expected =
+            """
+            {
+              "type": "antigravity",
+              "model": "gemini-3.5-flash-lite",
+              "max_total_tokens": 50000
+            }
+            """.trimIndent()
+
+        assertEquals(json.parseToJsonElement(expected), json.parseToJsonElement(encoded))
+        assertEquals(config, json.decodeFromString<InteractionAgentConfig>(encoded))
+    }
+
+    @Test
     fun interactionModalityTokenCountConstructs() {
         val count =
             InteractionModalityTokenCount(

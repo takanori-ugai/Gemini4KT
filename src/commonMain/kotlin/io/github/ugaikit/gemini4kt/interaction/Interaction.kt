@@ -499,6 +499,8 @@ data class InteractionGenerationConfig(
  * Agent execution configuration for an interaction.
  *
  * @property type Agent type identifier.
+ * @property model Optional Gemini model selection for the Antigravity agent.
+ * @property maxTotalTokens Optional total input, output, and thinking token budget.
  * @property thinkingSummaries Optional reasoning summary mode for the agent.
  */
 @OptIn(ExperimentalJsExport::class)
@@ -506,6 +508,8 @@ data class InteractionGenerationConfig(
 @Serializable
 data class InteractionAgentConfig(
     val type: String,
+    val model: String? = null,
+    @SerialName("max_total_tokens") val maxTotalTokens: Int? = null,
     @SerialName("thinking_summaries") val thinkingSummaries: ThinkingSummaries? = null,
 )
 

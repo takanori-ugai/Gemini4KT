@@ -30,12 +30,16 @@ private val interactionStepTypes =
 private fun JsonObject.isInteractionStep(): Boolean {
     val type = (this["type"] as? JsonPrimitive)?.content
     return type in interactionStepTypes ||
-        (type != null &&
-            ("id" in this ||
-                "call_id" in this ||
-                "signature" in this ||
-                "summary" in this ||
-                "content" in this))
+        (
+            type != null &&
+                (
+                    "id" in this ||
+                        "call_id" in this ||
+                        "signature" in this ||
+                        "summary" in this ||
+                        "content" in this
+                )
+        )
 }
 
 /**
