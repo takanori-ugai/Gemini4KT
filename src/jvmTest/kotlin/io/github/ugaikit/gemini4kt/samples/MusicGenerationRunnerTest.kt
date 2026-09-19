@@ -3,13 +3,16 @@ package io.github.ugaikit.gemini4kt.samples
 import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.interaction.InteractionStatus
 import kotlinx.coroutines.test.runTest
+import java.io.IOException
 import java.nio.file.Files
 import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class MusicGenerationRunnerTest {
     @Test
@@ -41,11 +44,43 @@ class MusicGenerationRunnerTest {
             val interaction = Interaction(id = "lyria_123", status = InteractionStatus.COMPLETED)
 
             val outputFile =
-                MusicGenerationRunner.run(outputDir) {
+                MusicGenerationRunner.run(outputDir) { onAudioData ->
+                    onAudioData("")
                     interaction
                 }
 
             assertNull(outputFile)
             assertFalse(outputDir.resolve("generated_music.mp3").exists())
+        }
+
+    @Test
+    fun runRejectsOutputFileBeforeCallingGenerator() =
+        runTest {
+            val outputPath = Files.createTempFile("music-runner-output", ".tmp").toFile()
+            var generatorCalled = false
+
+            assertFailsWith<IOException> {
+                MusicGenerationRunner.run(outputPath) {
+                    generatorCalled = true
+                    Interaction(id = "lyria_123", status = InteractionStatus.COMPLETED)
+                }
+            }
+
+            assertFalse(generatorCalled)
+        }
+
+    @Test
+    fun runRemovesTemporaryFileWhenGenerationFails() =
+        runTest {
+            val outputDir = Files.createTempDirectory("music-runner-failure").toFile()
+
+            assertFailsWith<IllegalStateException> {
+                MusicGenerationRunner.run(outputDir) { onAudioData ->
+                    onAudioData(Base64.getEncoder().encodeToString(byteArrayOf(1, 2, 3)))
+                    error("generation failed")
+                }
+            }
+
+            assertTrue(outputDir.listFiles().orEmpty().isEmpty())
         }
 }

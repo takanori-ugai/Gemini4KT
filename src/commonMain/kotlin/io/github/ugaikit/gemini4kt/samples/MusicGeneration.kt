@@ -13,8 +13,12 @@ import io.github.ugaikit.gemini4kt.live.music.LiveMusicSession
 import io.github.ugaikit.gemini4kt.live.music.WeightedPrompt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.collect
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
@@ -32,6 +36,7 @@ object MusicGeneration {
      * @param onAudioData Callback invoked for each generated audio block.
      * @param model Lyria model ID, such as `lyria-3.5` or `lyria-3-clip-preview`.
      * @param images Optional images to use as additional musical inspiration.
+     * @param retainAudioData Whether the returned interaction should retain inline audio data.
      * @param client Optional GeminiAI client for reuse or testing.
      * @param apiKey Optional API key used when [client] is null.
      * @return The completed interaction returned by the API.
@@ -41,6 +46,7 @@ object MusicGeneration {
         onAudioData: (String) -> Unit,
         model: String = LYRIA_3_5_MODEL,
         images: List<MusicGenerationImage> = emptyList(),
+        retainAudioData: Boolean = true,
         client: GeminiAI? = null,
         apiKey: String? = null,
     ): Interaction {
@@ -70,19 +76,22 @@ object MusicGeneration {
                     }
                 }
 
-            val interaction =
-                ai.createInteraction(
-                    CreateInteractionRequest(
-                        model = model,
-                        input = InteractionInput.RawJson(input),
-                        responseFormat = AudioResponseFormat(),
-                    ),
+            val request =
+                CreateInteractionRequest(
+                    model = model,
+                    input = InteractionInput.RawJson(input),
+                    responseFormat = AudioResponseFormat(),
                 )
 
-            interaction.audioOutputs().forEach { audio ->
-                audio.data?.let(onAudioData)
+            if (retainAudioData) {
+                val interaction = ai.createInteraction(request)
+                interaction.audioOutputs().forEach { audio ->
+                    audio.data?.let(onAudioData)
+                }
+                interaction
+            } else {
+                streamAudio(ai, request, onAudioData)
             }
-            interaction
         } finally {
             if (client == null) {
                 ai.close()
@@ -226,8 +235,50 @@ object MusicGeneration {
         return outputAudio?.let(::listOf).orEmpty()
     }
 
+    /** Streams audio deltas without retaining the generated track in the returned interaction. */
+    private suspend fun streamAudio(
+        ai: GeminiAI,
+        request: CreateInteractionRequest,
+        onAudioData: (String) -> Unit,
+    ): Interaction {
+        var latestInteraction: Interaction? = null
+        val lyrics = StringBuilder()
+
+        ai.streamInteraction(request.copy(stream = true)).collect { event ->
+            val eventObject = event.jsonObject
+            when (eventObject["event_type"]?.jsonPrimitive?.content) {
+                "interaction.created", "interaction.completed" -> {
+                    eventObject["interaction"]?.let { interactionElement ->
+                        latestInteraction = interactionJson.decodeFromJsonElement(interactionElement)
+                    }
+                }
+                "step.delta" -> {
+                    val delta = eventObject["delta"]?.jsonObject ?: return@collect
+                    when (delta["type"]?.jsonPrimitive?.content) {
+                        "audio" -> delta["data"]?.jsonPrimitive?.content?.let(onAudioData)
+                        "text" -> delta["text"]?.jsonPrimitive?.content?.let(lyrics::append)
+                    }
+                }
+                "error" -> error("Music generation stream failed: ${eventObject["error"]}")
+            }
+        }
+
+        return (latestInteraction ?: error("Music generation stream returned no interaction.")).copy(
+            outputTextRaw = lyrics.toString().takeIf(String::isNotEmpty),
+            outputs = null,
+            outputAudio = null,
+            steps = null,
+        )
+    }
+
     private const val MAX_IMAGE_COUNT = 10
     const val LYRIA_3_5_MODEL = "lyria-3.5"
+
+    private val interactionJson =
+        Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+        }
 }
 
 /**

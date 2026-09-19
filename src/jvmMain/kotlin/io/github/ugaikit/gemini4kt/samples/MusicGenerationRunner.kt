@@ -2,8 +2,10 @@ package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.interaction.Interaction
 import kotlinx.coroutines.runBlocking
-import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.Base64
 
 /**
@@ -33,29 +35,52 @@ object MusicGenerationRunner {
             MusicGeneration.run(
                 prompt = "An upbeat electronic track with a driving beat and hints of classical violin.",
                 onAudioData = onAudioData,
+                retainAudioData = false,
             )
         },
     ): File? {
         println("Running MusicGeneration Sample...")
 
-        if (!outputDir.exists() && !outputDir.mkdirs()) {
-            println("Warning: Failed to create output directory: ${outputDir.absolutePath}")
+        if (!outputDir.exists()) outputDir.mkdirs()
+        if (!outputDir.isDirectory) {
+            throw IOException("Output path is not a directory: ${outputDir.absolutePath}")
         }
         val outputFile = File(outputDir, "generated_music.mp3")
-        val audioData = ByteArrayOutputStream()
+        val temporaryFile = File.createTempFile("generated_music-", ".mp3", outputDir)
+        var moved = false
+        var hasAudio = false
 
-        val interaction =
-            musicGenerator { base64Data ->
-                audioData.write(Base64.getDecoder().decode(base64Data))
+        try {
+            val interaction =
+                temporaryFile.outputStream().buffered().use { output ->
+                    musicGenerator { base64Data ->
+                        val decodedAudio = Base64.getDecoder().decode(base64Data)
+                        if (decodedAudio.isNotEmpty()) {
+                            output.write(decodedAudio)
+                            hasAudio = true
+                        }
+                    }
+                }
+
+            if (!hasAudio) {
+                println("No audio data received.")
+                interaction.outputText?.let { println("Lyrics:\n$it") }
+                return null
             }
 
-        if (audioData.size() > 0) {
-            outputFile.writeBytes(audioData.toByteArray())
+            Files.move(
+                temporaryFile.toPath(),
+                outputFile.toPath(),
+                StandardCopyOption.REPLACE_EXISTING,
+            )
+            moved = true
             println("Saved generated music to ${outputFile.absolutePath}")
-        } else {
-            println("No audio data received.")
+            interaction.outputText?.let { println("Lyrics:\n$it") }
+            return outputFile
+        } finally {
+            if (!moved) {
+                temporaryFile.delete()
+            }
         }
-        interaction.outputText?.let { println("Lyrics:\n$it") }
-        return outputFile.takeIf { audioData.size() > 0 }
     }
 }

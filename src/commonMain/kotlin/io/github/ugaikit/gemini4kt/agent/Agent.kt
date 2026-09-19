@@ -17,6 +17,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
+import kotlin.js.JsExport.Ignore
 
 /**
  * Base environment used when creating or invoking a managed agent.
@@ -36,10 +37,12 @@ data class AgentEnvironmentReference(
     val id: String,
 ) : AgentBaseEnvironment
 
+/** Serializes an environment union as either an ID string or an environment object. */
 object AgentBaseEnvironmentSerializer : KSerializer<AgentBaseEnvironment> {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("io.github.ugaikit.gemini4kt.agent.AgentBaseEnvironment")
 
+    /** Encodes the environment union in the JSON shape expected by the REST API. */
     override fun serialize(
         encoder: Encoder,
         value: AgentBaseEnvironment,
@@ -54,6 +57,7 @@ object AgentBaseEnvironmentSerializer : KSerializer<AgentBaseEnvironment> {
         }
     }
 
+    /** Decodes either a string environment reference or an inline environment object. */
     override fun deserialize(decoder: Decoder): AgentBaseEnvironment {
         val jsonDecoder =
             decoder as? JsonDecoder
@@ -87,6 +91,7 @@ data class Agent(
     @SerialName("agent_config") val agentConfig: AgentConfig? = null,
     val tools: Array<InteractionTool>? = null,
 ) {
+    /** Compares all scalar fields and array contents of two agent responses. */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -111,6 +116,7 @@ data class Agent(
         return true
     }
 
+    /** Computes a hash using the same content-based array semantics as [equals]. */
     override fun hashCode(): Int {
         var result = id.hashCode()
         result = 31 * result + (baseAgent?.hashCode() ?: 0)
@@ -162,8 +168,10 @@ data class AgentConfig(
 data class AgentEnvironment(
     val type: String,
     val sources: Array<AgentSource>? = null,
+    @Ignore
     val network: kotlinx.serialization.json.JsonElement? = null,
 ) : AgentBaseEnvironment {
+    /** Compares environment metadata, sources, and the raw network configuration. */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -182,6 +190,7 @@ data class AgentEnvironment(
         return true
     }
 
+    /** Computes a hash using content-based source array semantics. */
     override fun hashCode(): Int {
         var result = type.hashCode()
         result = 31 * result + (sources?.contentHashCode() ?: 0)
@@ -207,6 +216,7 @@ data class ListAgentsResponse(
     val agents: Array<Agent>,
     @SerialName("nextPageToken") val nextPageToken: String? = null,
 ) {
+    /** Compares the response agents by content and the pagination token. */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -219,6 +229,7 @@ data class ListAgentsResponse(
         return true
     }
 
+    /** Computes a hash using content-based agent array semantics. */
     override fun hashCode(): Int {
         var result = agents.contentHashCode()
         result = 31 * result + (nextPageToken?.hashCode() ?: 0)

@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.samples
 
 import io.github.ugaikit.gemini4kt.GeminiAI
+import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.live.MockWebSocketSession
 import io.github.ugaikit.gemini4kt.live.music.AudioChunk
 import io.github.ugaikit.gemini4kt.live.music.LiveMusicServerContent
@@ -28,6 +29,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -46,40 +48,37 @@ class MusicGenerationTest {
                     engine {
                         addHandler { request: HttpRequestData ->
                             assertEquals(HttpMethod.Post, request.method)
-                            assertTrue(request.url.toString().endsWith("/v1beta/interactions"))
+                            assertTrue(request.url.toString().contains("/v1beta/interactions"))
                             val body = (request.body as TextContent).text
                             assertTrue(body.contains("\"model\":\"lyria-3.5\""))
                             assertTrue(body.contains("A cinematic piano track"))
                             assertTrue(body.contains("\"type\":\"image\""))
                             assertTrue(body.contains("\"response_format\":{\"type\":\"audio\"}"))
+                            assertTrue(body.contains("\"stream\":true"))
 
                             respond(
                                 content =
                                     """
-                                    {
-                                      "id": "lyria_123",
-                                      "status": "completed",
-                                      "output_text": "[Verse] Homeward",
-                                      "output_audio": {"type": "audio", "data": "fallback-audio", "mime_type": "audio/mp3"},
-                                      "steps": [
-                                        {
-                                          "type": "model_output",
-                                          "content": [
-                                            {"type": "text", "text": "[Verse] Homeward"},
-                                            {"type": "audio", "data": "first-audio", "mime_type": "audio/mp3"}
-                                          ]
-                                        },
-                                        {
-                                          "type": "model_output",
-                                          "content": [
-                                            {"type": "audio", "data": "second-audio", "mime_type": "audio/mp3"}
-                                          ]
-                                        }
-                                      ]
-                                    }
-                                    """.trimIndent(),
+                                    event: interaction.created
+                                    data: {"interaction":{"id":"lyria_123","status":"in_progress","model":"lyria-3.5"},"event_type":"interaction.created"}
+
+                                    event: step.delta
+                                    data: {"index":0,"delta":{"type":"text","text":"[Verse] Homeward"},"event_type":"step.delta"}
+
+                                    event: step.delta
+                                    data: {"index":0,"delta":{"type":"audio","data":"first-audio","mime_type":"audio/mp3"},"event_type":"step.delta"}
+
+                                    event: step.delta
+                                    data: {"index":0,"delta":{"type":"audio","data":"second-audio","mime_type":"audio/mp3"},"event_type":"step.delta"}
+
+                                    event: interaction.completed
+                                    data: {"interaction":{"id":"lyria_123","status":"completed","model":"lyria-3.5"},"event_type":"interaction.completed"}
+
+                                    event: done
+                                    data: [DONE]
+                                    """.trimIndent() + "\n",
                                 status = HttpStatusCode.OK,
-                                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.EventStream.toString()),
                             )
                         }
                     }
@@ -96,14 +95,52 @@ class MusicGenerationTest {
                         prompt = "A cinematic piano track",
                         images = listOf(MusicGenerationImage("image-data", "image/jpeg")),
                         onAudioData = { audioEvents.add(it) },
+                        retainAudioData = false,
                         client = ai,
                     )
 
                 assertEquals("lyria_123", interaction.id)
                 assertEquals("[Verse] Homeward", interaction.outputText)
                 assertEquals(listOf("first-audio", "second-audio"), audioEvents)
+                assertNull(interaction.outputAudio)
+                assertNull(interaction.outputs)
+                assertNull(interaction.steps)
             } finally {
                 client.close()
+            }
+        }
+
+    @Test
+    fun testLyriaStreamingCompletesWithoutLyrics() =
+        runTest {
+            val interaction =
+                runLyriaWithStreamResponse(
+                    """
+                    event: interaction.created
+                    data: {"interaction":{"id":"lyria_audio_only","status":"in_progress"},"event_type":"interaction.created"}
+
+                    event: step.delta
+                    data: {"index":0,"delta":{"type":"audio","data":"audio-only"},"event_type":"step.delta"}
+
+                    event: interaction.completed
+                    data: {"interaction":{"id":"lyria_audio_only","status":"completed"},"event_type":"interaction.completed"}
+                    """.trimIndent() + "\n",
+                )
+
+            assertEquals("lyria_audio_only", interaction.id)
+            assertNull(interaction.outputText)
+        }
+
+    @Test
+    fun testLyriaStreamingReportsErrorEvent() =
+        runTest {
+            assertFailsWith<IllegalStateException> {
+                runLyriaWithStreamResponse(
+                    """
+                    event: error
+                    data: {"error":{"message":"generation failed"},"event_type":"error"}
+                    """.trimIndent() + "\n",
+                )
             }
         }
 
@@ -263,6 +300,42 @@ class MusicGenerationTest {
                 client = ai,
             )
             audioEvents
+        } finally {
+            client.close()
+        }
+    }
+
+    private suspend fun runLyriaWithStreamResponse(response: String): Interaction {
+        val json =
+            Json {
+                ignoreUnknownKeys = true
+                encodeDefaults = false
+                explicitNulls = false
+            }
+        val client =
+            HttpClient(MockEngine) {
+                engine {
+                    addHandler {
+                        respond(
+                            content = response,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, ContentType.Text.EventStream.toString()),
+                        )
+                    }
+                }
+                install(ContentNegotiation) {
+                    json(json)
+                }
+            }
+        val ai = GeminiAI(client = client, apiKey = "test-api-key")
+
+        return try {
+            MusicGeneration.run(
+                prompt = "A cinematic piano track",
+                onAudioData = {},
+                retainAudioData = false,
+                client = ai,
+            )
         } finally {
             client.close()
         }
