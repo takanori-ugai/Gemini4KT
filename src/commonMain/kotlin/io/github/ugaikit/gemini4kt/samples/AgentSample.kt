@@ -10,7 +10,7 @@ import kotlin.random.Random
  * Represents a minimal Agent API sample.
  */
 object AgentSample {
-    private const val BASE_AGENT = "antigravity-preview-05-2026"
+    private const val BASE_AGENT = "antigravity-preview-09-2026"
 
     /**
      * Creates an agent, uses it for one interaction, then deletes it.

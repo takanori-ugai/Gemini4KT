@@ -91,6 +91,15 @@ data class Agent(
     @SerialName("agent_config") val agentConfig: AgentConfig? = null,
     val tools: Array<InteractionTool>? = null,
 ) {
+    /**
+     * Returns the inline environment configuration, if [baseEnvironment] is not an ID reference.
+     *
+     * Use this accessor when migrating code that previously assumed [baseEnvironment] was an
+     * [AgentEnvironment].
+     */
+    val inlineEnvironment: AgentEnvironment?
+        get() = baseEnvironment as? AgentEnvironment
+
     /** Compares all scalar fields and array contents of two agent responses. */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -142,7 +151,16 @@ data class CreateAgentRequest(
     val description: String? = null,
     @SerialName("agent_config") val agentConfig: AgentConfig? = null,
     val tools: Array<InteractionTool>? = null,
-)
+) {
+    /**
+     * Returns the inline environment configuration, if [baseEnvironment] is not an ID reference.
+     *
+     * Use this accessor when migrating code that previously assumed [baseEnvironment] was an
+     * [AgentEnvironment].
+     */
+    val inlineEnvironment: AgentEnvironment?
+        get() = baseEnvironment as? AgentEnvironment
+}
 
 /**
  * Configuration for the managed agent's underlying Antigravity model.

@@ -9,6 +9,7 @@ import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 class AgentSerializationTest {
     private val json =
@@ -22,7 +23,7 @@ class AgentSerializationTest {
         val agent =
             Agent(
                 id = "math-agent",
-                baseAgent = "antigravity-preview-05-2026",
+                baseAgent = "antigravity-preview-09-2026",
                 systemInstruction = "Help with math",
                 baseEnvironment =
                     AgentEnvironment(
@@ -50,7 +51,7 @@ class AgentSerializationTest {
             """
             {
               "id": "math-agent",
-              "base_agent": "antigravity-preview-05-2026",
+              "base_agent": "antigravity-preview-09-2026",
               "system_instruction": "Help with math",
               "base_environment": {
                 "type": "remote",
@@ -83,7 +84,7 @@ class AgentSerializationTest {
         val request =
             CreateAgentRequest(
                 id = "coder",
-                baseAgent = "antigravity-preview-05-2026",
+                baseAgent = "antigravity-preview-09-2026",
                 systemInstruction = "Help with code",
             )
         val encoded = json.encodeToString(request)
@@ -91,7 +92,7 @@ class AgentSerializationTest {
             """
             {
               "id": "coder",
-              "base_agent": "antigravity-preview-05-2026",
+              "base_agent": "antigravity-preview-09-2026",
               "system_instruction": "Help with code"
             }
             """.trimIndent()
@@ -165,6 +166,23 @@ class AgentSerializationTest {
 
         assertEquals(json.parseToJsonElement(expected), json.parseToJsonElement(encoded))
         assertEquals(request, json.decodeFromString<CreateAgentRequest>(encoded))
+    }
+
+    @Test
+    fun inlineEnvironmentAccessorsSupportEnvironmentReferences() {
+        val environment = AgentEnvironment(type = "remote")
+        val agent = Agent(id = "agent", baseEnvironment = environment)
+        val request = CreateAgentRequest(id = "agent", baseEnvironment = environment)
+
+        assertEquals(environment, agent.inlineEnvironment)
+        assertEquals(environment, request.inlineEnvironment)
+        assertNull(Agent(id = "agent", baseEnvironment = AgentEnvironmentReference("env_123")).inlineEnvironment)
+        assertNull(
+            CreateAgentRequest(
+                id = "agent",
+                baseEnvironment = AgentEnvironmentReference("env_123"),
+            ).inlineEnvironment,
+        )
     }
 
     @Test
