@@ -7,6 +7,7 @@ import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.interaction.InteractionAudioContent
 import io.github.ugaikit.gemini4kt.interaction.InteractionInput
+import io.github.ugaikit.gemini4kt.interaction.InteractionStatus
 import io.github.ugaikit.gemini4kt.live.music.LiveMusic
 import io.github.ugaikit.gemini4kt.live.music.LiveMusicGenerationConfig
 import io.github.ugaikit.gemini4kt.live.music.LiveMusicSession
@@ -242,6 +243,7 @@ object MusicGeneration {
         onAudioData: (String) -> Unit,
     ): Interaction {
         var latestInteraction: Interaction? = null
+        var completed = false
         val lyrics = StringBuilder()
 
         ai.streamInteraction(request.copy(stream = true)).collect { event ->
@@ -251,6 +253,7 @@ object MusicGeneration {
                     eventObject["interaction"]?.let { interactionElement ->
                         latestInteraction = interactionJson.decodeFromJsonElement(interactionElement)
                     }
+                    completed = eventObject["event_type"]?.jsonPrimitive?.content == "interaction.completed"
                 }
                 "step.delta" -> {
                     val delta = eventObject["delta"]?.jsonObject ?: return@collect
@@ -263,7 +266,11 @@ object MusicGeneration {
             }
         }
 
-        return (latestInteraction ?: error("Music generation stream returned no interaction.")).copy(
+        val interaction = latestInteraction ?: error("Music generation stream returned no interaction.")
+        check(completed && interaction.status == InteractionStatus.COMPLETED) {
+            "Music generation stream ended with status ${interaction.status}."
+        }
+        return interaction.copy(
             outputTextRaw = lyrics.toString().takeIf(String::isNotEmpty),
             outputs = null,
             outputAudio = null,
