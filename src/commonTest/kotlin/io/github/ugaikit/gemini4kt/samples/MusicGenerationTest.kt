@@ -148,6 +148,22 @@ class MusicGenerationTest {
         }
 
     @Test
+    fun testLyriaStreamingRejectsNonCompletedInteraction() =
+        runTest {
+            assertFailsWith<IllegalStateException> {
+                runLyriaWithStreamResponse(
+                    """
+                    event: interaction.created
+                    data: {"interaction":{"id":"lyria_not_completed","status":"in_progress"},"event_type":"interaction.created"}
+
+                    event: interaction.completed
+                    data: {"interaction":{"id":"lyria_not_completed","status":"in_progress"},"event_type":"interaction.completed"}
+                    """.trimIndent() + "\n",
+                )
+            }
+        }
+
+    @Test
     fun testLyriaStreamingReportsErrorEvent() =
         runTest {
             assertFailsWith<IllegalStateException> {

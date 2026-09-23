@@ -75,6 +75,10 @@ class AntigravityGoogleSearchSampleTest {
                                   }
                                 },
                                 {
+                                  "type": "google_search_call",
+                                  "id": "search-call-2"
+                                },
+                                {
                                   "type": "model_output",
                                   "content": [
                                     {"type": "text", "text": "The Interactions API supports models, agents, and tools."}
@@ -93,6 +97,30 @@ class AntigravityGoogleSearchSampleTest {
 
             assertTrue(output.contains("google_search[0](queries=Gemini API Interactions API)"))
             assertTrue(output.contains("Output: The Interactions API supports models, agents, and tools."))
+        }
+
+    @Test
+    fun runPrintsFallbacksWhenSearchStepsAreMissing() =
+        runTest {
+            val ai =
+                createGeminiAI {
+                    respond(
+                        content =
+                            """
+                            {
+                              "id": "search-interaction-2",
+                              "status": "completed"
+                            }
+                            """.trimIndent(),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            val output = captureStdout { AntigravityGoogleSearchSample.run(ai) }
+
+            assertTrue(output.contains("No google_search_call steps returned."))
+            assertTrue(output.contains("Output: N/A"))
         }
 
     private suspend fun captureStdout(block: suspend () -> Unit): String {

@@ -422,6 +422,7 @@ class InteractionSerializationTest {
                     type = "function_result",
                     callId = "call_123",
                     name = "get_weather",
+                    isError = false,
                     result = buildJsonObject { put("temperature", 23) },
                 ),
             )
@@ -449,6 +450,7 @@ class InteractionSerializationTest {
                 ?.jsonPrimitive
                 ?.int,
         )
+        assertEquals(false, decoded[1].isError)
     }
 
     @Test
