@@ -234,7 +234,7 @@ class GeminiAITest {
                 """
                 {
                   "id": "fibonacci-analyst",
-                  "base_agent": "antigravity-preview-05-2026"
+                  "base_agent": "antigravity-preview-09-2026"
                 }
                 """.trimIndent()
 
@@ -250,10 +250,10 @@ class GeminiAITest {
                     )
                 }
 
-            val request = CreateAgentRequest(id = "fibonacci-analyst", baseAgent = "antigravity-preview-05-2026")
+            val request = CreateAgentRequest(id = "fibonacci-analyst", baseAgent = "antigravity-preview-09-2026")
             val agent = geminiAI.createAgent(request)
             assertEquals("fibonacci-analyst", agent.id)
-            assertEquals("antigravity-preview-05-2026", agent.baseAgent)
+            assertEquals("antigravity-preview-09-2026", agent.baseAgent)
         }
 
     @Test
@@ -263,7 +263,7 @@ class GeminiAITest {
                 """
                 {
                   "id": "fibonacci-analyst",
-                  "base_agent": "antigravity-preview-05-2026"
+                  "base_agent": "antigravity-preview-09-2026"
                 }
                 """.trimIndent()
 
@@ -523,7 +523,7 @@ class GeminiAITest {
                     )
                 }
 
-            val request = CreateAgentRequest(id = "fibonacci-analyst", baseAgent = "antigravity-preview-05-2026")
+            val request = CreateAgentRequest(id = "fibonacci-analyst", baseAgent = "antigravity-preview-09-2026")
             try {
                 geminiAI.createAgent(request)
                 assertTrue(false, "Should have thrown GeminiException")

@@ -677,7 +677,7 @@ private suspend fun testAgentAPI(apiKey: String) {
     val request =
         CreateAgentRequest(
             id = agentId,
-            baseAgent = "antigravity-preview-05-2026",
+            baseAgent = "antigravity-preview-09-2026",
             systemInstruction = "You are a math analysis agent. Generate the Fibonacci sequence.",
         )
 

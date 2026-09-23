@@ -62,7 +62,7 @@ class AgentSampleTest {
                             path == "/v1beta/agents" && request.method == HttpMethod.Post -> {
                                 val body = (request.body as TextContent).text
                                 assertTrue(body.contains("agent-sample-"))
-                                assertTrue(body.contains("\"base_agent\":\"antigravity-preview-05-2026\""))
+                                assertTrue(body.contains("\"base_agent\":\"antigravity-preview-09-2026\""))
                                 createdAgentId =
                                     "\"id\"\\s*:\\s*\"([^\"]+)\""
                                         .toRegex()
@@ -70,7 +70,7 @@ class AgentSampleTest {
                                         ?.groupValues
                                         ?.getOrNull(1)
                                         ?: error("Create agent request did not include an id")
-                                """{"id":"$createdAgentId","base_agent":"antigravity-preview-05-2026"}"""
+                                """{"id":"$createdAgentId","base_agent":"antigravity-preview-09-2026"}"""
                             }
                             path == "/v1beta/agents" && request.method == HttpMethod.Get -> {
                                 val agentId = createdAgentId ?: error("Agent id was not captured before get")
@@ -82,7 +82,7 @@ class AgentSampleTest {
                                 assertEquals("/v1beta/agents/$agentId", path)
                                 when (request.method) {
                                     HttpMethod.Get ->
-                                        """{"id":"$agentId","base_agent":"antigravity-preview-05-2026"}"""
+                                        """{"id":"$agentId","base_agent":"antigravity-preview-09-2026"}"""
                                     HttpMethod.Delete -> ""
                                     else -> error("Unexpected method for /v1beta/agents/$agentId: ${request.method}")
                                 }
