@@ -3,6 +3,10 @@ package io.github.ugaikit.gemini4kt
 import io.github.ugaikit.gemini4kt.agent.CreateAgentRequest
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.EnvironmentConfig
+import io.github.ugaikit.gemini4kt.interaction.EnvironmentReference
+import io.github.ugaikit.gemini4kt.interaction.InteractionInput
+import io.github.ugaikit.gemini4kt.interaction.InteractionStep
+import io.github.ugaikit.gemini4kt.interaction.InteractionTool
 import io.github.ugaikit.gemini4kt.live.AudioTranscriptionConfig
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentClientContent
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentSetup
@@ -17,6 +21,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 import java.util.Base64
@@ -26,13 +37,15 @@ import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Integration tests for the Gemini4KT library running against live API endpoints.
  */
 @DisabledIfEnvironmentVariable(named = "GITHUB_ACTIONS", matches = "true")
 class IntegrationTest {
-    private val liveModel = "gemini-3.1-flash-live-preview"
+    private val liveModel = "gemini-3.8-live"
     private val liveTimeoutMs = 20000L
     private val httpTooManyRequests = 429
     private val liveAudioSampleRate = 24000.0f
@@ -79,7 +92,7 @@ class IntegrationTest {
             val request =
                 CreateAgentRequest(
                     id = agentId,
-                    baseAgent = "antigravity-preview-05-2026",
+                    baseAgent = "antigravity-preview-09-2026",
                     systemInstruction = "You are a math analysis agent. Generate the Fibonacci sequence.",
                 )
 
@@ -132,6 +145,122 @@ class IntegrationTest {
                         println("Deleted agent successfully.")
                     } catch (cleanupError: Exception) {
                         println("Agent cleanup failed: ${cleanupError.message}")
+                    }
+                }
+                geminiAI.close()
+            }
+        }
+
+    /**
+     * Tests a custom function call through the Antigravity Agent.
+     */
+    @Test
+    fun testAntigravityAgentFunctionCall() =
+        runTest {
+            val apiKey = getApiKey()
+            Assumptions.assumeTrue(!apiKey.isNullOrEmpty(), "API key not found. Skipping Agent function call integration test.")
+
+            val geminiAI = GeminiAI(apiKey = apiKey!!)
+            val agentId = "function-caller-jvm-${System.currentTimeMillis()}"
+            val weatherTool =
+                InteractionTool(
+                    type = "function",
+                    name = "get_weather",
+                    description = "Gets the current weather for a given location.",
+                    parameters =
+                        buildJsonObject {
+                            put("type", "object")
+                            putJsonObject("properties") {
+                                putJsonObject("location") {
+                                    put("type", "string")
+                                }
+                            }
+                            putJsonArray("required") {
+                                add(JsonPrimitive("location"))
+                            }
+                        },
+                )
+            val tools = arrayOf(weatherTool)
+            var created = false
+            try {
+                geminiAI.createAgent(
+                    CreateAgentRequest(
+                        id = agentId,
+                        baseAgent = "antigravity-preview-09-2026",
+                        systemInstruction = "Use get_weather whenever the user asks about weather. Do not answer from your own knowledge.",
+                        tools = tools,
+                    ),
+                )
+                created = true
+
+                val firstInteraction =
+                    geminiAI.createInteraction(
+                        CreateInteractionRequest(
+                            agent = agentId,
+                            input = "What is the weather in Tokyo?",
+                            tools = tools,
+                            environment = EnvironmentConfig(),
+                            stream = false,
+                        ),
+                    )
+                val functionCall =
+                    firstInteraction.steps
+                        ?.firstOrNull { it.type == "function_call" }
+                        ?: error("Antigravity Agent did not return a function_call step: $firstInteraction")
+
+                assertEquals("get_weather", functionCall.name)
+                assertEquals(
+                    "Tokyo",
+                    functionCall.arguments
+                        ?.jsonObject
+                        ?.get("location")
+                        ?.jsonPrimitive
+                        ?.content,
+                )
+                val callId = functionCall.id ?: error("Function call did not include an id: $functionCall")
+                val environmentId =
+                    firstInteraction.environmentId
+                        ?: error("Antigravity Agent did not return an environment id: $firstInteraction")
+
+                val finalInteraction =
+                    geminiAI.createInteraction(
+                        CreateInteractionRequest(
+                            agent = agentId,
+                            previousInteractionId = firstInteraction.id,
+                            input =
+                                InteractionInput.StepList(
+                                    arrayOf(
+                                        InteractionStep(
+                                            type = "function_result",
+                                            name = "get_weather",
+                                            callId = callId,
+                                            result =
+                                                buildJsonObject {
+                                                    put("temperature", 23)
+                                                    put("unit", "celsius")
+                                                },
+                                        ),
+                                    ),
+                                ),
+                            tools = tools,
+                            environment = EnvironmentReference(environmentId),
+                            stream = false,
+                        ),
+                    )
+
+                assertTrue(finalInteraction.outputText.orEmpty().contains("23"))
+            } catch (e: GeminiException) {
+                if (e.error.code == httpTooManyRequests || e.message?.contains("too_many_requests") == true) {
+                    println("Skipping Agent function call test because the API quota was exceeded.")
+                } else {
+                    throw e
+                }
+            } finally {
+                if (created) {
+                    try {
+                        geminiAI.deleteAgent(agentId)
+                    } catch (cleanupError: Exception) {
+                        println("Agent function call cleanup failed: ${cleanupError.message}")
                     }
                 }
                 geminiAI.close()

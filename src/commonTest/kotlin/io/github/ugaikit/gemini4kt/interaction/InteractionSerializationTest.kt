@@ -11,6 +11,9 @@ import kotlinx.serialization.encoding.AbstractDecoder
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.modules.SerializersModule
 import kotlin.test.Test
@@ -406,6 +409,51 @@ class InteractionSerializationTest {
     }
 
     @Test
+    fun interactionFunctionCallAndResultStepsRoundTrip() {
+        val steps =
+            arrayOf(
+                InteractionStep(
+                    type = "function_call",
+                    id = "call_123",
+                    name = "get_weather",
+                    arguments = buildJsonObject { put("location", "Tokyo") },
+                ),
+                InteractionStep(
+                    type = "function_result",
+                    callId = "call_123",
+                    name = "get_weather",
+                    isError = false,
+                    result = buildJsonObject { put("temperature", 23) },
+                ),
+            )
+
+        val encoded = json.encodeToString(steps)
+        val decoded = json.decodeFromString<Array<InteractionStep>>(encoded)
+
+        assertTrue(steps.contentEquals(decoded))
+        assertEquals("get_weather", decoded[0].name)
+        assertEquals(
+            "Tokyo",
+            decoded[0]
+                .arguments
+                ?.jsonObject
+                ?.get("location")
+                ?.jsonPrimitive
+                ?.content,
+        )
+        assertEquals(
+            23,
+            decoded[1]
+                .result
+                ?.jsonObject
+                ?.get("temperature")
+                ?.jsonPrimitive
+                ?.int,
+        )
+        assertEquals(false, decoded[1].isError)
+    }
+
+    @Test
     fun interactionAgentConfigSerializesThinkingSummaries() {
         val config =
             InteractionAgentConfig(
@@ -415,6 +463,29 @@ class InteractionSerializationTest {
 
         val encoded = json.encodeToString(config)
         assertTrue(encoded.contains("\"thinking_summaries\":\"none\""))
+    }
+
+    @Test
+    fun interactionAgentConfigSerializesAntigravityModelAndBudget() {
+        val config =
+            InteractionAgentConfig(
+                type = "antigravity",
+                model = "gemini-3.5-flash-lite",
+                maxTotalTokens = 50000,
+            )
+
+        val encoded = json.encodeToString(config)
+        val expected =
+            """
+            {
+              "type": "antigravity",
+              "model": "gemini-3.5-flash-lite",
+              "max_total_tokens": 50000
+            }
+            """.trimIndent()
+
+        assertEquals(json.parseToJsonElement(expected), json.parseToJsonElement(encoded))
+        assertEquals(config, json.decodeFromString<InteractionAgentConfig>(encoded))
     }
 
     @Test

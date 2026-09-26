@@ -1,109 +1,86 @@
 package io.github.ugaikit.gemini4kt.samples
 
-import kotlinx.coroutines.CancellationException
+import io.github.ugaikit.gemini4kt.interaction.Interaction
 import kotlinx.coroutines.runBlocking
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.Base64
-import javax.sound.sampled.AudioFileFormat
-import javax.sound.sampled.AudioFormat
-import javax.sound.sampled.AudioInputStream
-import javax.sound.sampled.AudioSystem
 
 /**
- * Runner for MusicGeneration sample.
+ * Runner for the Lyria 3.5 music generation sample.
  */
 object MusicGenerationRunner {
     /**
-     * Runs the MusicGeneration sample, collects base64-encoded PCM audio, and writes it to a WAV file.
+     * Generates a track through the Interactions API and saves the returned MP3.
      *
-     * Creates the build/outputs directory if it does not exist, invokes MusicGeneration.run with an
-     * onAudioData callback that decodes and accumulates PCM bytes in memory, and—if any audio was
-     * received—saves the accumulated PCM to build/outputs/generated_music.wav using a 44.1 kHz sample
-     * rate and 1 channel. Accumulating PCM in memory may consume significant memory for long sessions.
+     * @param args Command-line arguments, reserved for future runner options.
      */
     @JvmStatic
     fun main(args: Array<String>) {
-        runBlocking {
-            println("Running MusicGeneration Sample...")
-
-            val outputDir = File("build/outputs")
-            if (!outputDir.exists()) {
-                if (!outputDir.mkdirs()) {
-                    println("Warning: Failed to create output directory: ${outputDir.absolutePath}")
-                }
-            }
-            val outputFile = File(outputDir, "generated_music.wav")
-            val maxBufferedBytes = 10L * 1024L * 1024L
-            val pcmData = java.io.ByteArrayOutputStream()
-
-            MusicGeneration.run(
-                onAudioData = { base64Data ->
-                    val decoded = Base64.getDecoder().decode(base64Data)
-                    if (pcmData.size().toLong() + decoded.size > maxBufferedBytes) {
-                        throw CancellationException("PCM buffer limit reached.")
-                    }
-                    pcmData.write(decoded)
-                },
-            )
-
-            if (pcmData.size() > 0) {
-                // Assuming 44.1kHz for music, 1 channel. Adjust if needed.
-                savePcmToWav(pcmData.toByteArray(), outputFile.absolutePath, 44100.0f, 1)
-                println("Saved generated music to ${outputFile.absolutePath}")
-            } else {
-                println("No audio data received.")
-            }
-        }
+        runBlocking { run() }
     }
 
     /**
-     * Saves PCM byte array as a WAV file.
+     * Runs the file-writing portion of the sample.
      *
-     * @param pcmData       Raw PCM data
-     * @param filePath      Path to save the WAV file (e.g., "output.wav")
-     * @param sampleRate    Sampling rate (e.g., 24000.0f or 44100.0f)
-     * @param channels      Number of channels (1 for mono, 2 for stereo)
+     * @param outputDir Directory where `generated_music.mp3` is written.
+     * @param musicGenerator Generator callback that emits base64 audio and returns its interaction.
+     * @return The generated file, or null when no audio was returned.
      */
-    private fun savePcmToWav(
-        pcmData: ByteArray,
-        filePath: String,
-        sampleRate: Float,
-        channels: Int,
-    ) {
+    internal suspend fun run(
+        outputDir: File = File("build/outputs"),
+        musicGenerator: suspend ((String) -> Unit) -> Interaction = { onAudioData ->
+            MusicGeneration.run(
+                prompt = "An upbeat electronic track with a driving beat and hints of classical violin.",
+                onAudioData = onAudioData,
+                retainAudioData = false,
+            )
+        },
+    ): File? {
+        println("Running MusicGeneration Sample...")
+
+        if (!outputDir.exists()) outputDir.mkdirs()
+        if (!outputDir.isDirectory) {
+            throw IOException("Output path is not a directory: ${outputDir.absolutePath}")
+        }
+        val outputFile = File(outputDir, "generated_music.mp3")
+        val temporaryFile = File.createTempFile("generated_music-", ".mp3", outputDir)
+        var moved = false
+        var hasAudio = false
+
         try {
-            // Format specification (assuming standard 16-bit, Signed, Little Endian)
-            // Gemini and similar AI audio are typically 16-bit mono
-            val sampleSizeInBits = 16
-            val signed = true
-            val bigEndian = false
+            val interaction =
+                temporaryFile.outputStream().buffered().use { output ->
+                    musicGenerator { base64Data ->
+                        val decodedAudio = Base64.getDecoder().decode(base64Data)
+                        if (decodedAudio.isNotEmpty()) {
+                            output.write(decodedAudio)
+                            hasAudio = true
+                        }
+                    }
+                }
 
-            val format =
-                AudioFormat(
-                    sampleRate,
-                    sampleSizeInBits,
-                    channels,
-                    signed,
-                    bigEndian,
-                )
+            if (!hasAudio) {
+                println("No audio data received.")
+                interaction.outputText?.let { println("Lyrics:\n$it") }
+                return null
+            }
 
-            // Read PCM data as input stream
-            val bais = ByteArrayInputStream(pcmData)
-
-            // Calculate data length (number of frames)
-            val length = pcmData.size / format.frameSize.toLong()
-
-            // Create AudioInputStream
-            val ais = AudioInputStream(bais, format, length)
-
-            // Write as WAV file
-            val file = File(filePath)
-            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, file)
-
-            println("WAV file saved: $filePath")
-        } catch (e: IOException) {
-            println("Error saving WAV file: ${e.message}")
+            Files.move(
+                temporaryFile.toPath(),
+                outputFile.toPath(),
+                StandardCopyOption.REPLACE_EXISTING,
+            )
+            moved = true
+            println("Saved generated music to ${outputFile.absolutePath}")
+            interaction.outputText?.let { println("Lyrics:\n$it") }
+            return outputFile
+        } finally {
+            if (!moved) {
+                temporaryFile.delete()
+            }
         }
     }
 }

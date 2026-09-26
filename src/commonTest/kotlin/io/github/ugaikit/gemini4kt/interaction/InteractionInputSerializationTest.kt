@@ -15,6 +15,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class InteractionInputSerializationTest {
@@ -92,6 +93,66 @@ class InteractionInputSerializationTest {
         assertTrue(encoded.contains("\"type\":\"video\""))
         assertTrue(encoded.contains("\"processing\":\"agentic\""))
         assertTrue(encoded.contains("\"mime_type\":\"video/mp4\""))
+
+        val decoded = json.decodeFromString(InteractionInputSerializer, encoded)
+        assertEquals(input, decoded)
+        assertNotEquals(
+            input,
+            interactionContentInput(
+                arrayOf(
+                    InteractionContent(
+                        type = "video",
+                        uri = "files/video",
+                        mimeType = "video/mp4",
+                        processing = InteractionVideoProcessing.STATIC,
+                    ),
+                    InteractionContent(type = "text", text = "What are the three main arguments?"),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun singleInteractionContentInputRoundTrips() {
+        val input =
+            interactionInput(
+                InteractionContent(
+                    type = "video",
+                    uri = "files/video",
+                    mimeType = "video/mp4",
+                    processing = InteractionVideoProcessing.STATIC,
+                ),
+            )
+
+        val encoded = json.encodeToString(InteractionInputSerializer, input)
+        val decoded = json.decodeFromString(InteractionInputSerializer, encoded)
+
+        assertEquals(input, decoded)
+        assertTrue(encoded.contains("\"processing\":\"static\""))
+    }
+
+    @Test
+    fun interactionStepEqualityCoversOptionalMetadataBranches() {
+        val step =
+            InteractionStep(
+                type = "processing_result",
+                content = arrayOf(InteractionContent(type = "text", text = "loaded")),
+                id = "step_01",
+                callId = "call_01",
+                signature = "sig_01",
+                summary = arrayOf(InteractionContent(type = "text", text = "summary")),
+            )
+
+        assertNotEquals(step, step.copy(id = "step_02"))
+        assertNotEquals(step, step.copy(callId = "call_02"))
+        assertNotEquals(step, step.copy(signature = "sig_02"))
+        assertNotEquals(step, step.copy(summary = null))
+        assertNotEquals(step.copy(summary = null), step)
+        assertNotEquals(
+            step,
+            step.copy(summary = arrayOf(InteractionContent(type = "text", text = "different"))),
+        )
+        assertEquals(step.hashCode(), step.copy().hashCode())
     }
 
     @Test
@@ -99,6 +160,7 @@ class InteractionInputSerializationTest {
         val step =
             InteractionStep(
                 type = "processing_result",
+                id = "step_01",
                 callId = "call_01",
                 signature = "sig_result_01",
                 summary = arrayOf(InteractionContent(type = "text", text = "Loaded transcript")),
@@ -107,6 +169,17 @@ class InteractionInputSerializationTest {
         val decoded = json.decodeFromString<InteractionStep>(json.encodeToString(step))
 
         assertEquals(step, decoded)
+    }
+
+    @Test
+    fun minimalProcessingStepListPreservesStepDiscriminator() {
+        val encoded = """[{"type":"processing_result","id":"step_01"}]"""
+
+        val decoded = json.decodeFromString(InteractionInputSerializer, encoded)
+
+        assertTrue(decoded is InteractionInput.StepList)
+        assertEquals("processing_result", decoded.value.single().type)
+        assertEquals("step_01", decoded.value.single().id)
     }
 
     @Test

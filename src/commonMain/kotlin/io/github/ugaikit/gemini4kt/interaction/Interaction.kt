@@ -499,6 +499,8 @@ data class InteractionGenerationConfig(
  * Agent execution configuration for an interaction.
  *
  * @property type Agent type identifier.
+ * @property model Optional Gemini model selection for the Antigravity agent.
+ * @property maxTotalTokens Optional total input, output, and thinking token budget.
  * @property thinkingSummaries Optional reasoning summary mode for the agent.
  */
 @OptIn(ExperimentalJsExport::class)
@@ -506,6 +508,8 @@ data class InteractionGenerationConfig(
 @Serializable
 data class InteractionAgentConfig(
     val type: String,
+    val model: String? = null,
+    @SerialName("max_total_tokens") val maxTotalTokens: Int? = null,
     @SerialName("thinking_summaries") val thinkingSummaries: ThinkingSummaries? = null,
 )
 
@@ -529,6 +533,10 @@ data class InteractionTurn(
  * @property type Step type identifier.
  * @property id Identifier for a processing call step.
  * @property callId Identifier linking a processing result to its call.
+ * @property name Function name associated with a function call or result step.
+ * @property arguments JSON arguments for a function call step.
+ * @property isError Indicates whether a function result step represents an error.
+ * @property result JSON result payload for a function result step.
  * @property signature Optional step signature.
  * @property content Step content payload.
  * @property summary Thought summary content.
@@ -543,6 +551,10 @@ data class InteractionStep(
     val signature: String? = null,
     val content: Array<InteractionContent>? = null,
     val summary: Array<InteractionContent>? = null,
+    val name: String? = null,
+    val arguments: JsonElement? = null,
+    @SerialName("is_error") val isError: Boolean? = null,
+    val result: JsonElement? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -551,6 +563,10 @@ data class InteractionStep(
         other as InteractionStep
 
         if (type != other.type) return false
+        if (name != other.name) return false
+        if (arguments != other.arguments) return false
+        if (isError != other.isError) return false
+        if (result != other.result) return false
         if (id != other.id) return false
         if (callId != other.callId) return false
         if (signature != other.signature) return false
@@ -572,6 +588,10 @@ data class InteractionStep(
 
     override fun hashCode(): Int {
         var result = type.hashCode()
+        result = 31 * result + (name?.hashCode() ?: 0)
+        result = 31 * result + (arguments?.hashCode() ?: 0)
+        result = 31 * result + (isError?.hashCode() ?: 0)
+        result = 31 * result + (this.result?.hashCode() ?: 0)
         result = 31 * result + (id?.hashCode() ?: 0)
         result = 31 * result + (callId?.hashCode() ?: 0)
         result = 31 * result + (signature?.hashCode() ?: 0)

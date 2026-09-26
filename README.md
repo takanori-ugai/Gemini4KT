@@ -21,6 +21,13 @@ source .env
 
 `.env` is ignored by git so your key stays local. Look at `src/commonTest/kotlin/io/github/ugaikit/gemini4kt/samples` for sample usage.
 
+### Managed agent environment migration
+
+`Agent.baseEnvironment` and `CreateAgentRequest.baseEnvironment` accept either an inline
+`AgentEnvironment` or an `AgentEnvironmentReference`. Code that needs inline environment fields
+such as `sources`, `type`, or `network` can use `agent.inlineEnvironment` or
+`request.inlineEnvironment` and should handle `null` when the API returns an environment ID.
+
 ## API Document
 The API documentation is available at [https://takanori-ugai.github.io/Gemini4KT/](https://takanori-ugai.github.io/Gemini4KT/).
 

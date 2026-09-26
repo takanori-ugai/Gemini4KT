@@ -8,6 +8,7 @@ import io.github.ugaikit.gemini4kt.interaction.EnvironmentConfig
 import io.github.ugaikit.gemini4kt.live.AudioTranscriptionConfig
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentClientContent
 import io.github.ugaikit.gemini4kt.live.BidiGenerateContentSetup
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +17,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -36,12 +38,17 @@ private const val EMBED_MODEL = "gemini-embedding-2"
 /**
  * Holds the live model.
  */
-private const val LIVE_MODEL = "gemini-3.1-flash-live-preview"
+private const val LIVE_MODEL = "gemini-3.8-live"
 
 /**
  * Holds the live session timeout.
  */
 private const val LIVE_TIMEOUT_MS = 20000L
+
+/**
+ * Holds the request timeout for integration-test API calls.
+ */
+private const val IT_REQUEST_TIMEOUT_MS = 180_000L
 
 /**
  * Holds the HTTP status code for Too Many Requests.
@@ -57,6 +64,36 @@ private const val LIVE_AUDIO_SAMPLE_RATE = 24000.0f
  * Holds the default sample size in bits for live audio.
  */
 private const val LIVE_AUDIO_SAMPLE_SIZE_IN_BITS = 16
+
+/**
+ * Describes a failure with its source and API status when available.
+ */
+private fun describeFailure(error: Exception): String {
+    val causes = generateSequence(error as Throwable?) { it.cause }
+    val timeout = causes.filterIsInstance<HttpRequestTimeoutException>().firstOrNull()
+    if (timeout != null) {
+        return "HTTP request timed out: ${timeout.message}"
+    }
+
+    val apiError =
+        generateSequence(error as Throwable?) { it.cause }
+            .filterIsInstance<GeminiException>()
+            .firstOrNull()
+            ?.error
+    if (apiError != null) {
+        val category =
+            if (apiError.status.equals("INTERNAL", ignoreCase = true) ||
+                apiError.message.contains("internal error", ignoreCase = true)
+            ) {
+                "Gemini API internal error"
+            } else {
+                "Gemini API error"
+            }
+        return "$category (HTTP ${apiError.code}, ${apiError.status}): ${apiError.message}"
+    }
+
+    return "${error::class.simpleName}: ${error.message}"
+}
 
 /**
  * Tests test content generation.
@@ -677,7 +714,7 @@ private suspend fun testAgentAPI(apiKey: String) {
     val request =
         CreateAgentRequest(
             id = agentId,
-            baseAgent = "antigravity-preview-05-2026",
+            baseAgent = "antigravity-preview-09-2026",
             systemInstruction = "You are a math analysis agent. Generate the Fibonacci sequence.",
         )
 
@@ -873,53 +910,62 @@ private suspend fun testLiveAPI(apiKey: String) {
 fun main() =
     runBlocking {
         val apiKey = getApiKey()
-        val gemini = Gemini(apiKey)
-        val tools = defineFunctionTools()
-
-        val models = listOf("gemini-3.5-flash-lite", "gemma-4-31b-it")
-        for (model in models) {
-            println("\n========================================")
-            println("Testing with model: $model")
-            println("========================================")
-            try {
-                testContentGeneration(gemini, model)
-            } catch (e: Exception) {
-                println("testContentGeneration failed for $model: ${e.message}")
-            }
-            try {
-                testModelsAndContent(gemini, model)
-            } catch (e: Exception) {
-                println("testModelsAndContent failed for $model: ${e.message}")
-            }
-            try {
-                testFunctionCallingFirstTurn(gemini, tools, model)
-            } catch (e: Exception) {
-                println("testFunctionCallingFirstTurn failed for $model: ${e.message}")
-            }
-            try {
-                testFunctionCallingSecondTurn(gemini, tools, model)
-            } catch (e: Exception) {
-                println("testFunctionCallingSecondTurn failed for $model: ${e.message}")
-            }
-            try {
-                testAutomaticFunctionCalling(gemini, model)
-            } catch (e: Exception) {
-                println("testAutomaticFunctionCalling failed for $model: ${e.message}")
-            }
-            try {
-                testDirectFunctionCall(gemini, model)
-            } catch (e: Exception) {
-                println("testDirectFunctionCall failed for $model: ${e.message}")
-            }
-        }
+        val client =
+            createHttpClient(
+                Json { ignoreUnknownKeys = true },
+                GeminiHttpClientConfig(requestTimeoutMillis = IT_REQUEST_TIMEOUT_MS),
+            )
         try {
-            testEmbeddingApis(gemini)
-        } catch (e: Exception) {
-            println("testEmbeddingApis failed: ${e.message}")
+            val gemini = Gemini(apiKey, client = client)
+            val tools = defineFunctionTools()
+
+            val models = listOf("gemini-3.5-flash-lite", "gemma-4-31b-it")
+            for (model in models) {
+                println("\n========================================")
+                println("Testing with model: $model")
+                println("========================================")
+                try {
+                    testContentGeneration(gemini, model)
+                } catch (e: Exception) {
+                    println("testContentGeneration failed for $model: ${describeFailure(e)}")
+                }
+                try {
+                    testModelsAndContent(gemini, model)
+                } catch (e: Exception) {
+                    println("testModelsAndContent failed for $model: ${describeFailure(e)}")
+                }
+                try {
+                    testFunctionCallingFirstTurn(gemini, tools, model)
+                } catch (e: Exception) {
+                    println("testFunctionCallingFirstTurn failed for $model: ${describeFailure(e)}")
+                }
+                try {
+                    testFunctionCallingSecondTurn(gemini, tools, model)
+                } catch (e: Exception) {
+                    println("testFunctionCallingSecondTurn failed for $model: ${describeFailure(e)}")
+                }
+                try {
+                    testAutomaticFunctionCalling(gemini, model)
+                } catch (e: Exception) {
+                    println("testAutomaticFunctionCalling failed for $model: ${describeFailure(e)}")
+                }
+                try {
+                    testDirectFunctionCall(gemini, model)
+                } catch (e: Exception) {
+                    println("testDirectFunctionCall failed for $model: ${describeFailure(e)}")
+                }
+            }
+            try {
+                testEmbeddingApis(gemini)
+            } catch (e: Exception) {
+                println("testEmbeddingApis failed: ${describeFailure(e)}")
+            }
+            testPartBuilder()
+            testAgentAPI(apiKey)
+            testLiveAPI(apiKey)
+        } finally {
+            client.close()
         }
-        testPartBuilder()
-        testAgentAPI(apiKey)
-        testLiveAPI(apiKey)
     }
 
 /**
