@@ -217,6 +217,33 @@ class MusicGenerationTest {
         }
 
     @Test
+    fun testLyriaMusicGenerationReadsAudioFromModelOutputSteps() =
+        runTest {
+            val audioEvents =
+                runLyriaWithResponse(
+                    """
+                    {
+                      "id": "lyria_step_audio",
+                      "status": "completed",
+                      "steps": [
+                        {
+                          "type": "model_output",
+                          "content": [
+                            {"type": "audio", "data": "step-audio", "uri": "gs://music/track.mp3", "mime_type": "audio/mp3"}
+                          ]
+                        }
+                      ],
+                      "outputs": [
+                        {"type": "audio", "data": "aggregate-audio", "mime_type": "audio/mp3"}
+                      ]
+                    }
+                    """.trimIndent(),
+                )
+
+            assertEquals(listOf("step-audio"), audioEvents)
+        }
+
+    @Test
     fun testLyriaMusicGenerationRejectsBlankPrompt() =
         runTest {
             assertFailsWith<IllegalArgumentException> {

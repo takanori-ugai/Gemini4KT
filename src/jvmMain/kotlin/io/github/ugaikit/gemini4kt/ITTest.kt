@@ -68,7 +68,7 @@ private const val LIVE_AUDIO_SAMPLE_SIZE_IN_BITS = 16
 /**
  * Describes a failure with its source and API status when available.
  */
-private fun describeFailure(error: Exception): String {
+internal fun describeFailure(error: Exception): String {
     val causes = generateSequence(error as Throwable?) { it.cause }
     val timeout = causes.filterIsInstance<HttpRequestTimeoutException>().firstOrNull()
     if (timeout != null) {

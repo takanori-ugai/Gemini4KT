@@ -272,6 +272,7 @@ class AgentSerializationTest {
         val agentDiffDescription = agent1.copy(description = "different")
         val agentDiffConfig = agent1.copy(agentConfig = AgentConfig(type = "other"))
         val agentDiffTools = agent1.copy(tools = arrayOf(InteractionTool(type = "google_search")))
+        val agentWithoutTools = agent1.copy(tools = null)
 
         // Test Agent equals and hashCode
         assertEquals(agent1, agent1)
@@ -290,6 +291,7 @@ class AgentSerializationTest {
         kotlin.test.assertNotEquals(agent1, agentDiffDescription)
         kotlin.test.assertNotEquals(agent1, agentDiffConfig)
         kotlin.test.assertNotEquals(agent1, agentDiffTools)
+        kotlin.test.assertNotEquals(agentWithoutTools, agent1)
 
         // Test ListAgentsResponse equals and hashCode
         val response1 = ListAgentsResponse(arrayOf(agent1), "token")
