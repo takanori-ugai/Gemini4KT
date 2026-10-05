@@ -14,11 +14,13 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.AfterTest
@@ -98,6 +100,168 @@ class GeminiAITest {
             assertEquals(1, interaction.outputs?.size)
             assertEquals("text", interaction.outputs?.get(0)?.type)
             assertEquals("Hello world", interaction.outputs?.get(0)?.text)
+        }
+
+    @Test
+    fun testGenerateSpeech() =
+        runTest {
+            val responseJson =
+                """
+                {
+                  "id": "tts_123",
+                  "status": "completed",
+                  "output_audio": {"data": "AQID", "mime_type": "audio/wav"}
+                }
+                """.trimIndent()
+
+            val geminiAI =
+                createGeminiAI { request ->
+                    assertEquals(HttpMethod.Post, request.method)
+                    assertTrue(request.url.toString().contains("v1beta/interactions"))
+                    assertEquals("test-key", request.headers["x-goog-api-key"])
+                    val body = (request.body as TextContent).text
+                    val requestJson = Json.parseToJsonElement(body).jsonObject
+                    assertEquals("gemini-3.8-flash-tts", requestJson["model"]?.jsonPrimitive?.content)
+                    assertEquals(
+                        "audio",
+                        requestJson["response_format"]
+                            ?.jsonObject
+                            ?.get("type")
+                            ?.jsonPrimitive
+                            ?.content,
+                    )
+                    val textContent =
+                        requestJson["input"]!!
+                            .jsonArray[0]
+                            .jsonObject["content"]!!
+                            .jsonArray[0]
+                            .jsonObject
+                    assertEquals("Hello in a cheerful voice", textContent["text"]?.jsonPrimitive?.content)
+                    assertEquals(
+                        "cheerful and friendly",
+                        textContent["annotations"]!!
+                            .jsonArray[0]
+                            .jsonObject["style"]
+                            ?.jsonPrimitive
+                            ?.content,
+                    )
+                    assertEquals(
+                        "Kore",
+                        requestJson["generation_config"]!!
+                            .jsonObject["speech_config"]!!
+                            .jsonArray[0]
+                            .jsonObject["voice"]
+                            ?.jsonPrimitive
+                            ?.content,
+                    )
+                    respond(
+                        content = responseJson,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            val interaction =
+                geminiAI.generateSpeech(
+                    text = "Hello in a cheerful voice",
+                    voice = "Kore",
+                    style = "cheerful and friendly",
+                )
+
+            assertEquals("tts_123", interaction.id)
+            assertEquals("AQID", interaction.outputAudio?.data)
+            assertEquals("audio/wav", interaction.outputAudio?.mimeType)
+        }
+
+    @Test
+    fun testListVoicesSupportsRepeatedFilters() =
+        runTest {
+            val geminiAI =
+                createGeminiAI { request ->
+                    assertEquals(HttpMethod.Get, request.method)
+                    assertTrue(request.url.toString().contains("v1beta/voices"))
+                    assertEquals(listOf("en-US", "en-GB"), request.url.parameters.getAll("language_code"))
+                    assertEquals(listOf("prompted"), request.url.parameters.getAll("type"))
+                    assertEquals("warm", request.url.parameters["search"])
+                    respond(
+                        content = """{"voices":[{"id":"voice_1","display_name":"Warm voice","type":"prompted"}],"next_page_token":"next"}""",
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            val result =
+                geminiAI.listVoices(
+                    ListVoicesOptions(
+                        languageCode = arrayOf("en-US", "en-GB"),
+                        type = arrayOf("prompted"),
+                        search = "warm",
+                    ),
+                )
+
+            assertEquals("voice_1", result.voices?.first()?.id)
+            assertEquals("next", result.nextPageToken)
+        }
+
+    @Test
+    fun testCreateDesignedVoice() =
+        runTest {
+            val geminiAI =
+                createGeminiAI { request ->
+                    assertEquals(HttpMethod.Post, request.method)
+                    assertTrue(request.url.toString().contains("v1beta/voices"))
+                    val requestJson = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
+                    assertEquals(true, requestJson["store"]?.jsonPrimitive?.content?.toBoolean())
+                    val voice = requestJson["voice"]!!.jsonObject
+                    assertEquals("prompted", voice["type"]?.jsonPrimitive?.content)
+                    assertEquals(
+                        "Warm, thoughtful narrator",
+                        voice["prompted"]!!.jsonObject["input"]?.jsonPrimitive?.content,
+                    )
+                    respond(
+                        content = """{"id":"voice_designed","type":"prompted","sample_audio":{"data":"AQID","mime_type":"audio/wav"}}""",
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            val voice = geminiAI.createDesignedVoice("Warm, thoughtful narrator", "Narrator")
+            assertEquals("voice_designed", voice.id)
+            assertEquals("AQID", voice.sampleAudio?.data)
+        }
+
+    @Test
+    fun testCreateReplicatedVoiceSupportsStatelessKey() =
+        runTest {
+            val geminiAI =
+                createGeminiAI { request ->
+                    val requestJson = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
+                    assertEquals("false", requestJson["store"]?.jsonPrimitive?.content)
+                    val replicated = requestJson["voice"]!!.jsonObject["replicated"]!!.jsonObject
+                    assertEquals(
+                        "source-base64",
+                        replicated["source_audio"]!!.jsonObject["data"]?.jsonPrimitive?.content,
+                    )
+                    assertEquals(
+                        "consent-base64",
+                        replicated["consent_audio"]!!.jsonObject["data"]?.jsonPrimitive?.content,
+                    )
+                    respond(
+                        content = """{"id":"voicekey_ephemeral","type":"replicated"}""",
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            val voice =
+                geminiAI.createReplicatedVoice(
+                    sourceAudioBase64 = "source-base64",
+                    consentAudioBase64 = "consent-base64",
+                    displayName = "Temporary voice",
+                    store = false,
+                )
+            assertEquals("voicekey_ephemeral", voice.id)
+            assertEquals("replicated", voice.type)
         }
 
     @Test
