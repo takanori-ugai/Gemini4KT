@@ -67,7 +67,7 @@ class TextToImageSampleTest {
                     assertEquals("test-key", request.headers["x-goog-api-key"])
 
                     val body = (request.body as TextContent).text
-                    assertTrue(body.contains("\"model\":\"gemini-3.1-flash-lite-image\""))
+                    assertTrue(body.contains("\"model\":\"gemini-nano-banana-2.1\""))
                     assertTrue(body.contains("Create a picture of a nano banana dish in a fancy restaurant with a Gemini theme"))
 
                     respond(

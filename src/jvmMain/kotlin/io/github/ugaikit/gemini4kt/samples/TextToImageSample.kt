@@ -11,11 +11,11 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Base64
 
-private const val IMAGE_MODEL = "gemini-3.1-flash-lite-image"
+private const val IMAGE_MODEL = "gemini-nano-banana-2.1"
 private const val DEFAULT_OUTPUT_FILE = "gemini-native-image.png"
 
 /**
- * Minimal text-to-image sample for Gemini 3.1 Flash Lite Image.
+ * Minimal text-to-image sample for Nano Banana 2.1.
  */
 object TextToImageSample {
     /**
