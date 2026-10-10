@@ -856,6 +856,30 @@ class GeminiAITest {
         }
 
     @Test
+    fun testCreateInteractionErrorWithInteractionsApiCode() =
+        runTest {
+            val geminiAI =
+                createGeminiAI {
+                    respond(
+                        content =
+                            """{"error":{"code":"invalid_request","message":"The request payload is invalid."}}""",
+                        status = HttpStatusCode.BadRequest,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            try {
+                geminiAI.createInteraction(CreateInteractionRequest(model = "gemini-2.5-flash", input = "Hello"))
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals(400, e.error.code)
+                assertEquals("invalid_request", e.error.apiCode)
+                assertEquals("INVALID_REQUEST", e.error.status)
+                assertEquals("The request payload is invalid.", e.error.message)
+            }
+        }
+
+    @Test
     fun testGetInteractionError() =
         runTest {
             val responseJson =
