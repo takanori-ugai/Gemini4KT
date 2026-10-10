@@ -16,17 +16,20 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import java.io.File
 import java.util.Base64
+import kotlin.system.exitProcess
 
 private const val IT_REQUEST_TIMEOUT_MS = 180_000L
 private const val HTTP_TOO_MANY_REQUESTS = 429
 private val INTERACTION_MODELS = listOf("gemini-3.5-flash-lite", "gemma-4-31b-it")
 
+/** Returns a fixed sample forecast for the requested city. */
 @GeminiFunction(description = "Look up the current weather for a city")
 private fun lookupWeather(
     @GeminiParameter(description = "City name")
     location: String,
 ): String = "Sunny in $location"
 
+/** Formats an integration-test error with useful API status details. */
 private fun describeInteractionFailure(error: Exception): String {
     val timeout = generateSequence(error as Throwable?) { it.cause }
         .filterIsInstance<HttpRequestTimeoutException>()
@@ -44,6 +47,7 @@ private fun describeInteractionFailure(error: Exception): String {
     }
 }
 
+/** Sends a text-only request through the Interactions API. */
 private suspend fun testInteractionText(ai: GeminiAI, model: String) {
     println("--- testInteractionText ---")
     val interaction = ai.createInteraction(
@@ -59,6 +63,7 @@ private suspend fun testInteractionText(ai: GeminiAI, model: String) {
     println("Usage: ${interaction.usage}")
 }
 
+/** Sends a request containing a user/model/user turn sequence. */
 private suspend fun testInteractionMultiTurn(ai: GeminiAI, model: String) {
     println("--- testInteractionMultiTurn ---")
     val interaction = ai.createInteraction(
@@ -85,6 +90,7 @@ private suspend fun testInteractionMultiTurn(ai: GeminiAI, model: String) {
     println("Output: ${interaction.outputText}")
 }
 
+/** Sends the bundled scones image with a text question. */
 private suspend fun testInteractionWithImage(ai: GeminiAI, model: String) {
     println("--- testInteractionWithImage ---")
     val imageUrl = Gemini::class.java.getResource("/scones.jpg")
@@ -109,6 +115,7 @@ private suspend fun testInteractionWithImage(ai: GeminiAI, model: String) {
     println("Output: ${interaction.outputText}")
 }
 
+/** Sends a manually declared function tool and prints the model's call step. */
 private suspend fun testInteractionFunctionCalling(ai: GeminiAI, model: String) {
     println("--- testInteractionFunctionCalling ---")
     val weatherTool = InteractionTool(
@@ -137,6 +144,7 @@ private suspend fun testInteractionFunctionCalling(ai: GeminiAI, model: String) 
     println("Steps: ${interaction.steps?.contentToString()}")
 }
 
+/** Verifies automatic invocation of a Kotlin function annotated with [GeminiFunction]. */
 private suspend fun testInteractionGeminiFunction(ai: GeminiAI, model: String) {
     println("--- testInteractionGeminiFunction ---")
     val interaction = ai.createInteraction(
@@ -151,6 +159,7 @@ private suspend fun testInteractionGeminiFunction(ai: GeminiAI, model: String) {
     println("Function interaction steps: ${interaction.steps?.contentToString()}")
 }
 
+/** Runs live Interactions API checks against the configured sample models. */
 fun main() = runBlocking {
     val apiKey = getApiKey()
     val client = createHttpClient(
@@ -158,6 +167,7 @@ fun main() = runBlocking {
         GeminiHttpClientConfig(requestTimeoutMillis = IT_REQUEST_TIMEOUT_MS),
     )
     val ai = GeminiAI(apiKey = apiKey, client = client)
+    val failures = mutableListOf<String>()
     try {
         for (model in INTERACTION_MODELS) {
             println("\n========================================")
@@ -175,11 +185,16 @@ fun main() = runBlocking {
                     test()
                 } catch (e: Exception) {
                     println("$name failed: ${describeInteractionFailure(e)}")
-                    if (e is GeminiException && e.error.code == HTTP_TOO_MANY_REQUESTS) continue
+                    val isQuotaLimit = e is GeminiException && e.error.code == HTTP_TOO_MANY_REQUESTS
+                    if (!isQuotaLimit) failures += "$model/$name"
                 }
             }
         }
     } finally {
         ai.close()
+    }
+    if (failures.isNotEmpty()) {
+        System.err.println("Interactions API integration tests failed: ${failures.joinToString()}")
+        exitProcess(1)
     }
 }

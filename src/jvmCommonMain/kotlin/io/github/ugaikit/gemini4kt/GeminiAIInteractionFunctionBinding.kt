@@ -65,5 +65,10 @@ suspend fun GeminiAI.createInteraction(
         )
     }
 
+    val finalInteraction = createInteraction(nextRequest)
+    if (finalInteraction.steps.orEmpty().none { it.type == "function_call" }) {
+        return finalInteraction
+    }
+
     error("Automatic interaction function calling exceeded maxIterations=$maxIterations.")
 }
