@@ -13,10 +13,10 @@ plugins {
     id("com.android.kotlin.multiplatform.library") version "9.4.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.jk1.dependency-license-report") version "3.1.4"
-    id("com.github.spotbugs") version "6.5.11"
-    id("com.diffplug.spotless") version "8.10.2"
+    id("com.github.spotbugs") version "6.5.12"
+    id("com.diffplug.spotless") version "8.10.3"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
-    id("com.github.gmazzo.buildconfig") version "6.1.1"
+    id("com.github.gmazzo.buildconfig") version "6.1.2"
     jacoco
     // id("net.thebugmc.gradle.sonatype-central-portal-publisher") version "1.2.4"
     id("com.vanniktech.maven.publish") version "0.37.0"
@@ -162,7 +162,7 @@ kotlin {
             getByName("jvmMain") {
                 dependsOn(jvmCommonMain)
                 dependencies {
-                    runtimeOnly("ch.qos.logback:logback-classic:1.6.3")
+                    runtimeOnly("ch.qos.logback:logback-classic:1.6.5")
                     implementation("io.ktor:ktor-client-cio:3.6.0")
                 }
             }

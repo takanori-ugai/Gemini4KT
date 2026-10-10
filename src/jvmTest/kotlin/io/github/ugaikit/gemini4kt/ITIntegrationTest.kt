@@ -127,6 +127,57 @@ class ITIntegrationTest {
         }
 
     @Test
+    fun testGemini38FlashLiteTts() =
+        runBlocking {
+            val apiKey = getApiKey()
+            Assumptions.assumeTrue(!apiKey.isNullOrBlank(), "API key not found. Skipping integration test.")
+
+            val gemini = Gemini(apiKey!!)
+            try {
+                val request =
+                    GenerateContentRequest(
+                        contents =
+                            arrayOf(
+                                Content(
+                                    role = "user",
+                                    parts = arrayOf(Part(text = "Say clearly: The quick brown fox jumps over the lazy dog.")),
+                                ),
+                            ),
+                        generationConfig =
+                            generationConfig {
+                                responseModality(Modality.AUDIO)
+                                speechConfig {
+                                    voiceConfig {
+                                        prebuiltVoiceConfig {
+                                            voiceName { "Kore" }
+                                        }
+                                    }
+                                }
+                            },
+                    )
+
+                val response = gemini.generateContent(request, model = "gemini-3.8-flash-lite-tts")
+                val audio =
+                    response.candidates
+                        .firstOrNull()
+                        ?.content
+                        ?.parts
+                        ?.firstNotNullOfOrNull { part ->
+                            part.inlineData?.takeIf { it.mimeType.startsWith("audio/") }
+                        }
+
+                assertNotNull(audio, "TTS response did not contain audio inline data")
+                assertTrue(Base64.getDecoder().decode(audio.data).isNotEmpty(), "TTS response audio was empty")
+            } catch (error: GeminiException) {
+                handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
+            } finally {
+                gemini.close()
+            }
+        }
+
+    @Test
     fun testModelsAndMultimodalGeneration() =
         runBlocking {
             val apiKey = getApiKey()
