@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt
 import io.github.ugaikit.gemini4kt.agent.CreateAgentRequest
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.InteractionStatus
+import io.github.ugaikit.gemini4kt.webhooks.CreateWebhookRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -876,6 +877,149 @@ class GeminiAITest {
                 assertEquals("invalid_request", e.error.apiCode)
                 assertEquals("INVALID_REQUEST", e.error.status)
                 assertEquals("The request payload is invalid.", e.error.message)
+            }
+        }
+
+    @Test
+    fun testVoiceAndWebhookErrors() =
+        runTest {
+            val geminiAI =
+                createGeminiAI {
+                    respond(
+                        content = """{"error":{"code":"invalid_request","message":"Invalid request"}}""",
+                        status = HttpStatusCode.BadRequest,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+            val operations: List<suspend () -> Unit> =
+                listOf(
+                    { geminiAI.createDesignedVoice("A warm voice", "Warm") },
+                    { geminiAI.createReplicatedVoice("AQID", "BAUG", "Replica") },
+                    { geminiAI.getVoice("voice_123") },
+                    { geminiAI.deleteVoice("voice_123") },
+                    { geminiAI.listVoices() },
+                    { geminiAI.createWebhook(CreateWebhookRequest(uri = "https://example.com/hook")) },
+                    { geminiAI.getWebhook("webhooks/hook_123") },
+                    { geminiAI.deleteWebhook("webhooks/hook_123") },
+                    { geminiAI.listWebhooks() },
+                )
+
+            operations.forEach { operation ->
+                try {
+                    operation()
+                    assertTrue(false, "Should have thrown GeminiException")
+                } catch (e: GeminiException) {
+                    assertEquals(400, e.error.code)
+                    assertEquals("invalid_request", e.error.apiCode)
+                }
+            }
+        }
+
+    @Test
+    fun testErrorFallbacksAndHttpStatusMappings() =
+        runTest {
+            val cases =
+                listOf(
+                    401 to "UNAUTHORIZED",
+                    402 to "PAYMENT_REQUIRED",
+                    416 to "RANGE_NOT_SATISFIABLE",
+                    429 to "TOO_MANY_REQUESTS",
+                    499 to "CLIENT_CLOSED_REQUEST",
+                    501 to "NOT_IMPLEMENTED",
+                    503 to "SERVICE_UNAVAILABLE",
+                    504 to "GATEWAY_TIMEOUT",
+                    502 to "HTTP_502",
+                )
+            var responseIndex = 0
+            val geminiAI =
+                createGeminiAI {
+                    val (status, _) = cases[responseIndex++]
+                    respond(
+                        content = "not-json",
+                        status = HttpStatusCode(status, "Test error"),
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            cases.forEach { (statusCode, expectedStatus) ->
+                try {
+                    geminiAI.createInteraction(CreateInteractionRequest(model = "gemini-2.5-flash", input = "Hello"))
+                    assertTrue(false, "Should have thrown GeminiException")
+                } catch (e: GeminiException) {
+                    assertEquals(statusCode, e.error.code)
+                    assertEquals(expectedStatus, e.error.status)
+                    assertEquals(null, e.error.apiCode)
+                    assertTrue(e.error.message.startsWith("Unknown error:"))
+                }
+            }
+        }
+
+    @Test
+    fun testGetAndDeleteVoiceSuccessResponses() =
+        runTest {
+            val responses =
+                listOf(
+                    HttpStatusCode.OK to """{"id":"voice_123"}""",
+                    HttpStatusCode.NoContent to "",
+                )
+            var responseIndex = 0
+            val geminiAI =
+                createGeminiAI {
+                    val (status, body) = responses[responseIndex++]
+                    respond(
+                        content = body,
+                        status = status,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            assertEquals("voice_123", geminiAI.getVoice("voice_123").id)
+            geminiAI.deleteVoice("voice_123")
+        }
+
+    @Test
+    fun testIncompleteInteractionErrorResponses() =
+        runTest {
+            val responses =
+                listOf(
+                    """{"error":{"code":"rate_limit_exceeded","message":"Slow down","details":[{"reason":"RATE_LIMIT"}]}}""",
+                    """{"error":{"details":"not-an-array"}}""",
+                    "{}",
+                )
+            var responseIndex = 0
+            val geminiAI =
+                createGeminiAI {
+                    respond(
+                        content = responses[responseIndex++],
+                        status = HttpStatusCode.BadRequest,
+                        headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }
+
+            try {
+                geminiAI.createInteraction(CreateInteractionRequest(model = "gemini-2.5-flash", input = "Hello"))
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals("rate_limit_exceeded", e.error.apiCode)
+                assertEquals("RATE_LIMIT_EXCEEDED", e.error.status)
+                assertEquals("RATE_LIMIT", e.error.details?.single()?.reason)
+            }
+
+            try {
+                geminiAI.createInteraction(CreateInteractionRequest(model = "gemini-2.5-flash", input = "Hello"))
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals("BAD_REQUEST", e.error.status)
+                assertEquals(null, e.error.apiCode)
+                assertEquals(null, e.error.details)
+            }
+
+            try {
+                geminiAI.createInteraction(CreateInteractionRequest(model = "gemini-2.5-flash", input = "Hello"))
+                assertTrue(false, "Should have thrown GeminiException")
+            } catch (e: GeminiException) {
+                assertEquals("BAD_REQUEST", e.error.status)
+                assertTrue(e.error.message.startsWith("Unknown error:"))
             }
         }
 
