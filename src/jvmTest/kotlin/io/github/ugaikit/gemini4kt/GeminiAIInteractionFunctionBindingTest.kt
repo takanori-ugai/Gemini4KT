@@ -56,6 +56,32 @@ class GeminiAIInteractionFunctionBindingTest {
         }
 
     @Test
+    fun usesCallIdWhenFunctionCallIdIsMissing() =
+        runTest {
+            val requestBodies = mutableListOf<String>()
+            val (ai, client) = createGeminiAI(
+                responses = listOf(
+                    """{"id":"initial","status":"completed","steps":[{"type":"function_call","call_id":"call-1","name":"addInteractionNumbers","arguments":{"a":2,"b":3}}]}""",
+                    """{"id":"final","status":"completed","steps":[{"type":"model_output","content":[{"type":"text","text":"5"}]}]}""",
+                ),
+                onRequest = { body -> requestBodies.add(body) },
+            )
+            try {
+                val interaction = ai.createInteraction(
+                    CreateInteractionRequest(model = "test-model", input = "Add 2 and 3"),
+                    ::addInteractionNumbers,
+                    maxIterations = 1,
+                )
+
+                assertEquals("final", interaction.id)
+                assertTrue(requestBodies[1].contains("\"call_id\":\"call-1\""))
+                assertTrue(requestBodies[1].contains("\"result\":{\"result\":5}"))
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
     fun returnsWhenInitialInteractionHasNoFunctionCalls() =
         runTest {
             val (ai, client) = createGeminiAI(

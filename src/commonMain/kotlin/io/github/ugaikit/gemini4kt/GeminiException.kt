@@ -27,6 +27,7 @@ data class GeminiErrorResponse(
  * @property message A human-readable error message.
  * @property status The status string (e.g., "RESOURCE_EXHAUSTED").
  * @property details A list of additional details about the error.
+ * @property apiCode The API-specific string error code, when returned by the Interactions API.
  */
 @Serializable
 data class GeminiError(
@@ -34,6 +35,7 @@ data class GeminiError(
     val message: String,
     val status: String,
     val details: List<GeminiErrorDetail>? = null,
+    val apiCode: String? = null,
 )
 
 /**

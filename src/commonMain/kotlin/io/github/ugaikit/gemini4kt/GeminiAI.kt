@@ -28,6 +28,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -553,11 +558,61 @@ class GeminiAI(
     private fun parseError(
         body: String,
         statusCode: Int,
+    ): GeminiError {
+        val fallbackStatus = httpStatusErrorCode(statusCode)
+        return try {
+            val errorObject = json.parseToJsonElement(body).jsonObject["error"]?.jsonObject
+                ?: return fallbackError(body, statusCode, fallbackStatus)
+            val rawCode = errorObject["code"]?.jsonPrimitive
+            val apiCode = rawCode?.takeIf { it.isString }?.contentOrNull
+            val httpCode = rawCode?.intOrNull ?: statusCode
+            val message = errorObject["message"]?.jsonPrimitive?.contentOrNull
+                ?: "Unknown error: ${summarizeErrorBody(body, fallbackStatus)}"
+            val status = errorObject["status"]?.jsonPrimitive?.contentOrNull
+                ?: apiCode?.uppercase()
+                ?: fallbackStatus.uppercase()
+            val details = errorObject["details"]?.let { detailsElement ->
+                runCatching { json.decodeFromJsonElement<List<GeminiErrorDetail>>(detailsElement) }.getOrNull()
+            }
+            GeminiError(
+                code = httpCode,
+                message = message,
+                status = status,
+                details = details,
+                apiCode = apiCode,
+            )
+        } catch (_: Exception) {
+            fallbackError(body, statusCode, fallbackStatus)
+        }
+    }
+
+    private fun fallbackError(
+        body: String,
+        statusCode: Int,
+        fallbackStatus: String,
     ): GeminiError =
-        try {
-            json.decodeFromString<GeminiErrorResponse>(body).error
-        } catch (e: Exception) {
-            GeminiError(statusCode, "Unknown error: ${summarizeErrorBody(body, "unknown")}", "UNKNOWN")
+        GeminiError(
+            code = statusCode,
+            message = "Unknown error: ${summarizeErrorBody(body, fallbackStatus)}",
+            status = fallbackStatus.uppercase(),
+        )
+
+    private fun httpStatusErrorCode(statusCode: Int): String =
+        when (statusCode) {
+            400 -> "bad_request"
+            401 -> "unauthorized"
+            402 -> "payment_required"
+            403 -> "forbidden"
+            404 -> "not_found"
+            409 -> "conflict"
+            416 -> "range_not_satisfiable"
+            429 -> "too_many_requests"
+            499 -> "client_closed_request"
+            500 -> "internal_server_error"
+            501 -> "not_implemented"
+            503 -> "service_unavailable"
+            504 -> "gateway_timeout"
+            else -> "http_$statusCode"
         }
 
     fun close() {
