@@ -18,6 +18,7 @@ import kotlinx.serialization.json.putJsonArray
 
 private const val MODEL = "gemma-4-26b-a4b-it"
 private const val VIDEO_MODEL = "gemini-3.8-flash"
+private const val MAX_VIDEO_POLL_ATTEMPTS = 120
 
 object InteractionSamples {
     /**
@@ -54,7 +55,12 @@ object InteractionSamples {
                         background = true,
                     ),
                 )
+            var pollAttempts = 0
             while (interaction.status == InteractionStatus.IN_PROGRESS) {
+                check(pollAttempts < MAX_VIDEO_POLL_ATTEMPTS) {
+                    "Interaction ${interaction.id} did not complete after $MAX_VIDEO_POLL_ATTEMPTS polls."
+                }
+                pollAttempts++
                 delay(5_000)
                 interaction = ai.getInteraction(interaction.id)
             }
@@ -66,6 +72,7 @@ object InteractionSamples {
         }
     }
 
+    /** Runs a short text-only interaction request. */
     suspend fun runSimple(client: GeminiAI? = null) {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
         try {

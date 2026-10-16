@@ -12,6 +12,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class InteractionVideoSampleTest {
@@ -76,5 +77,23 @@ class InteractionVideoSampleTest {
                 )
             }
             coVerify(exactly = 0) { client.getInteraction(any()) }
+        }
+
+    @Test
+    fun runVideoInputStopsPollingAfterMaximumAttempts() =
+        runTest {
+            val client = mockk<GeminiAI>(relaxed = true)
+            coEvery { client.createInteraction(any()) } returns
+                Interaction(id = "video-timeout", status = InteractionStatus.IN_PROGRESS)
+            coEvery { client.getInteraction("video-timeout") } returns
+                Interaction(id = "video-timeout", status = InteractionStatus.IN_PROGRESS)
+
+            val exception =
+                assertFailsWith<IllegalStateException> {
+                    InteractionSamples.runVideoInput(client = client)
+                }
+
+            assertTrue(exception.message.orEmpty().contains("did not complete after 120 polls"))
+            coVerify(exactly = 120) { client.getInteraction("video-timeout") }
         }
 }
