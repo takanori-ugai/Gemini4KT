@@ -155,7 +155,7 @@ kotlin {
                 dependencies {
                     implementation("org.jetbrains.kotlin:kotlin-test")
                     implementation("io.ktor:ktor-client-mock:3.6.1")
-                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.12.0")
+                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
                 }
             }
         val jvmMain =
