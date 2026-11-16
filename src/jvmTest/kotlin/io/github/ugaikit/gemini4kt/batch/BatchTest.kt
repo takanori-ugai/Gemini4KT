@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.batch
 
 import io.github.ugaikit.gemini4kt.GeminiException
+import io.github.ugaikit.gemini4kt.GenerateContentRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -11,10 +12,14 @@ import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -100,6 +105,35 @@ class BatchTest {
 
             assertEquals("batches/123", result.name)
             assertEquals(false, result.done)
+        }
+
+    @Test
+    fun `createBatch sends the storage override in each inline request`() =
+        runTest {
+            val item = batchItemRequest { request(GenerateContentRequest(contents = emptyArray(), store = false)) }
+            val request =
+                CreateBatchRequest(
+                    batch =
+                        BatchConfig(
+                            inputConfig = BatchInputConfig(requests = BatchRequestInput(listOf(item))),
+                        ),
+                )
+            batch =
+                createBatch { request ->
+                    val body = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
+                    val config = checkNotNull(body["batch"]).jsonObject["input_config"]
+                    val input = checkNotNull(config).jsonObject["requests"]
+                    val items = checkNotNull(input).jsonObject["requests"]
+                    val entry = checkNotNull(items).jsonArray.single().jsonObject["request"]
+                    assertEquals(JsonPrimitive(false), checkNotNull(entry).jsonObject["store"])
+                    respond(
+                        """{"name":"batches/123","done":false}""",
+                        HttpStatusCode.OK,
+                        headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+
+            assertEquals("batches/123", batch.createBatch("gemini-flash-lite-latest", request).name)
         }
 
     /**

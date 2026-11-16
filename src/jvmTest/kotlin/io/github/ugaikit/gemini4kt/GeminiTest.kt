@@ -20,8 +20,10 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -166,6 +168,8 @@ class GeminiTest {
 
             gemini =
                 createGemini { request ->
+                    val body = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
+                    assertEquals(JsonPrimitive(false), body["store"])
                     assertEquals(HttpMethod.Post, request.method)
                     assertEquals(
                         "$baseUrl/models/gemini-flash-lite-latest:streamGenerateContent?alt=sse",
@@ -178,7 +182,7 @@ class GeminiTest {
                     )
                 }
 
-            val request = GenerateContentRequest(contents = emptyArray())
+            val request = GenerateContentRequest(contents = emptyArray(), store = false)
             val flow = gemini.streamGenerateContent(request)
             val results = flow.toList()
 
@@ -294,10 +298,12 @@ class GeminiTest {
             val responseJson = """{"candidates": []}"""
             gemini =
                 createGemini { request ->
+                    val body = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
+                    assertEquals(JsonPrimitive(false), body["store"])
                     assertEquals("$baseUrl/models/gemini-flash-lite-latest:generateContent", request.url.toString())
                     respond(responseJson, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
                 }
-            val request = GenerateContentRequest(contents = emptyArray())
+            val request = GenerateContentRequest(contents = emptyArray(), store = false)
 
             val response = gemini.generateContent(request)
 
@@ -484,6 +490,8 @@ class GeminiTest {
             var callCount = 0
             gemini =
                 createGemini { request ->
+                    val body = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
+                    assertEquals(JsonPrimitive(false), body["store"])
                     callCount += 1
 
                     if (callCount == 2) {
@@ -541,6 +549,7 @@ class GeminiTest {
                 GenerateContentRequest(
                     contents = arrayOf(Content(role = "user", parts = arrayOf(Part(text = "What is 123 plus 456?")))),
                     tools = emptyArray(),
+                    store = false,
                 )
 
             val handlers =
