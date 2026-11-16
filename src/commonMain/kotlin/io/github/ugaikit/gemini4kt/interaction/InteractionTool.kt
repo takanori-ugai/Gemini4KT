@@ -21,6 +21,9 @@ import kotlin.js.JsExport
  * @property fileSearchStoreNames Optional file search stores associated with this tool.
  * @property topK Optional top-k retrieval value.
  * @property metadataFilter Optional metadata filter expression.
+ * @property enablePromptInjectionDetection Optional screenshot prompt injection detection flag.
+ * @property disabledSafetyPolicies Optional lowercase Computer Use safety policy names to disable.
+ * Omit to retain the API defaults.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -39,6 +42,8 @@ data class InteractionTool(
     @SerialName("file_search_store_names") val fileSearchStoreNames: Array<String>? = null,
     @SerialName("top_k") val topK: Int? = null,
     @SerialName("metadata_filter") val metadataFilter: String? = null,
+    @SerialName("enable_prompt_injection_detection") val enablePromptInjectionDetection: Boolean? = null,
+    @SerialName("disabled_safety_policies") val disabledSafetyPolicies: Array<String>? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -58,6 +63,8 @@ data class InteractionTool(
         if (!fileSearchStoreNames.contentEquals(other.fileSearchStoreNames)) return false
         if (topK != other.topK) return false
         if (metadataFilter != other.metadataFilter) return false
+        if (enablePromptInjectionDetection != other.enablePromptInjectionDetection) return false
+        if (!disabledSafetyPolicies.contentEquals(other.disabledSafetyPolicies)) return false
 
         return true
     }
@@ -75,6 +82,8 @@ data class InteractionTool(
         result = 31 * result + (fileSearchStoreNames?.contentHashCode() ?: 0)
         result = 31 * result + (topK ?: 0)
         result = 31 * result + (metadataFilter?.hashCode() ?: 0)
+        result = 31 * result + (enablePromptInjectionDetection?.hashCode() ?: 0)
+        result = 31 * result + (disabledSafetyPolicies?.contentHashCode() ?: 0)
         return result
     }
 }

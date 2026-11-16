@@ -14,6 +14,7 @@ import kotlin.js.JsExport
  * @property fileUri A string containing the Uniform Resource Identifier (URI) of
  * the file. This URI specifies where the file can be accessed or downloaded from,
  * providing a reference to the file's location.
+ * @property displayName Optional filename or label, including references from function responses.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -21,6 +22,7 @@ import kotlin.js.JsExport
 data class FileData(
     val mimeType: String,
     val fileUri: String,
+    val displayName: String? = null,
 )
 
 /**
@@ -37,6 +39,9 @@ class FileDataBuilder {
      */
     lateinit var fileUri: String
 
+    /** Optional filename or label for the referenced file. */
+    var displayName: String? = null
+
     /**
      * Builds and returns a FileData object with the current state of the builder.
      *
@@ -45,7 +50,7 @@ class FileDataBuilder {
     fun build(): FileData {
         require(::mimeType.isInitialized) { "mimeType must be set before building FileData." }
         require(::fileUri.isInitialized) { "fileUri must be set before building FileData." }
-        return FileData(mimeType, fileUri)
+        return FileData(mimeType, fileUri, displayName)
     }
 }
 

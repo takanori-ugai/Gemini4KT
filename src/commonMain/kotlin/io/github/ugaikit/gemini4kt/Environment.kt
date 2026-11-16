@@ -11,4 +11,6 @@ import kotlin.js.JsExport
 enum class Environment {
     ENVIRONMENT_UNSPECIFIED,
     ENVIRONMENT_BROWSER,
+    ENVIRONMENT_MOBILE,
+    ENVIRONMENT_DESKTOP,
 }

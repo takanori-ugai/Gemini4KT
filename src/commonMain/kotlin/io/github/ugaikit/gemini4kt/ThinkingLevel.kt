@@ -14,4 +14,5 @@ enum class ThinkingLevel {
     LOW,
     MEDIUM,
     HIGH,
+    XHIGH,
 }
