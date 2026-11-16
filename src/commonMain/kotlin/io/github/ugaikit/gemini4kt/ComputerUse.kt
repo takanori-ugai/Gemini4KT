@@ -10,6 +10,9 @@ import kotlin.js.JsExport
  *
  * @property environment The environment being operated.
  * @property excludedPredefinedFunctions Predefined functions to explicitly exclude.
+ * @property enablePromptInjectionDetection Whether screenshot prompt injection detection is enabled.
+ * @property disabledSafetyPolicies Optional safety policy names to disable, using Generate Content's
+ * uppercase names such as `DATA_MODIFICATION`. Omit to retain the API defaults.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -18,6 +21,8 @@ data class ComputerUse(
     val environment: Environment? = null,
     @SerialName("excluded_predefined_functions")
     val excludedPredefinedFunctions: Array<String>? = null,
+    val enablePromptInjectionDetection: Boolean? = null,
+    val disabledSafetyPolicies: Array<String>? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -27,6 +32,8 @@ data class ComputerUse(
 
         if (environment != other.environment) return false
         if (!excludedPredefinedFunctions.contentEquals(other.excludedPredefinedFunctions)) return false
+        if (enablePromptInjectionDetection != other.enablePromptInjectionDetection) return false
+        if (!disabledSafetyPolicies.contentEquals(other.disabledSafetyPolicies)) return false
 
         return true
     }
@@ -34,12 +41,16 @@ data class ComputerUse(
     override fun hashCode(): Int {
         var result = environment?.hashCode() ?: 0
         result = 31 * result + (excludedPredefinedFunctions?.contentHashCode() ?: 0)
+        result = 31 * result + (enablePromptInjectionDetection?.hashCode() ?: 0)
+        result = 31 * result + (disabledSafetyPolicies?.contentHashCode() ?: 0)
         return result
     }
 
     override fun toString(): String =
         "ComputerUse(environment=$environment, " +
-            "excludedPredefinedFunctions=${excludedPredefinedFunctions?.contentToString()})"
+            "excludedPredefinedFunctions=${excludedPredefinedFunctions?.contentToString()}, " +
+            "enablePromptInjectionDetection=$enablePromptInjectionDetection, " +
+            "disabledSafetyPolicies=${disabledSafetyPolicies?.contentToString()})"
 }
 
 /**
@@ -50,6 +61,12 @@ class ComputerUseBuilder {
      * Holds the environment.
      */
     var environment: Environment? = null
+
+    /** Enables or disables screenshot prompt injection detection. */
+    var enablePromptInjectionDetection: Boolean? = null
+
+    /** Optional uppercase Generate Content safety policy names to disable. */
+    var disabledSafetyPolicies: Array<String>? = null
 
     /**
      * Holds the excluded predefined functions.
@@ -80,6 +97,8 @@ class ComputerUseBuilder {
     fun build() =
         ComputerUse(
             environment = environment,
+            enablePromptInjectionDetection = enablePromptInjectionDetection,
+            disabledSafetyPolicies = disabledSafetyPolicies,
             excludedPredefinedFunctions =
                 if (excludedPredefinedFunctions.isEmpty()) {
                     null

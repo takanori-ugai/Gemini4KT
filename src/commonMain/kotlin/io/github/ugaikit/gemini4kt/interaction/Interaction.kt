@@ -441,6 +441,7 @@ data class InteractionModalityTokenCount(
  * @property thinkingLevel Optional reasoning depth preset.
  * @property thinkingSummaries Optional reasoning summary mode.
  * @property maxOutputTokens Optional output token limit.
+ * @property videoConfig Optional Omni video task override.
  * @property speechConfig Optional speech configuration.
  */
 @OptIn(ExperimentalJsExport::class)
@@ -456,6 +457,7 @@ data class InteractionGenerationConfig(
     @SerialName("thinking_summaries") val thinkingSummaries: ThinkingSummaries? = null,
     @SerialName("max_output_tokens") val maxOutputTokens: Int? = null,
     @SerialName("speech_config") val speechConfig: SpeechConfig? = null,
+    @SerialName("video_config") val videoConfig: InteractionVideoConfig? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -466,17 +468,13 @@ data class InteractionGenerationConfig(
         if (temperature != other.temperature) return false
         if (topP != other.topP) return false
         if (seed != other.seed) return false
-        if (stopSequences != null) {
-            if (other.stopSequences == null) return false
-            if (!stopSequences.contentEquals(other.stopSequences)) return false
-        } else if (other.stopSequences != null) {
-            return false
-        }
+        if (!stopSequences.contentEquals(other.stopSequences)) return false
         if (toolChoice != other.toolChoice) return false
         if (thinkingLevel != other.thinkingLevel) return false
         if (thinkingSummaries != other.thinkingSummaries) return false
         if (maxOutputTokens != other.maxOutputTokens) return false
         if (speechConfig != other.speechConfig) return false
+        if (videoConfig != other.videoConfig) return false
 
         return true
     }
@@ -491,6 +489,7 @@ data class InteractionGenerationConfig(
         result = 31 * result + (thinkingSummaries?.hashCode() ?: 0)
         result = 31 * result + (maxOutputTokens ?: 0)
         result = 31 * result + (speechConfig?.hashCode() ?: 0)
+        result = 31 * result + (videoConfig?.hashCode() ?: 0)
         return result
     }
 }

@@ -15,7 +15,9 @@ import kotlin.js.JsExport
  * @property args A list of strings representing the values or arguments returned
  * by the function. These are typically the result of the function's execution,
  * formatted as strings for uniformity and ease of handling.
- * @property parts Optional multimodal parts associated with the function response (Gemini 3+).
+ * @property parts Optional multimodal results: images, documents (including Office and
+ * OpenDocument), audio, and video, using inline data or Files API URIs. Parts can include
+ * display names, and video parts can set [Part.mediaProcessing].
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport

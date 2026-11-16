@@ -27,6 +27,7 @@ import kotlin.js.JsExport
  * @property toolCall Predicted server-side tool call details.
  * @property toolResponse Execution response of a predicted server-side tool call.
  * @property videoMetadata Video start/end offset config.
+ * @property mediaProcessing Optional video understanding strategy, including in function responses.
  */
 @OptIn(ExperimentalJsExport::class, kotlinx.serialization.ExperimentalSerializationApi::class)
 @JsExport
@@ -47,6 +48,7 @@ data class Part(
     val toolCall: ToolCall? = null,
     val toolResponse: ToolResponse? = null,
     val videoMetadata: VideoMetadata? = null,
+    val mediaProcessing: MediaProcessing? = null,
 )
 
 /**
@@ -136,6 +138,9 @@ class PartBuilder {
      * Holds the video metadata.
      */
     private var videoMetadata: VideoMetadata? = null
+
+    /** Video understanding strategy for inline data or file data. */
+    private var mediaProcessing: MediaProcessing? = null
 
     /**
      * Handles text.
@@ -247,6 +252,9 @@ class PartBuilder {
      */
     fun videoMetadata(init: () -> VideoMetadata?) = apply { videoMetadata = init() }
 
+    /** Sets the video understanding strategy. */
+    fun mediaProcessing(init: () -> MediaProcessing?) = apply { mediaProcessing = init() }
+
     /**
      * Handles build.
      */
@@ -266,6 +274,7 @@ class PartBuilder {
             toolCall = toolCall,
             toolResponse = toolResponse,
             videoMetadata = videoMetadata,
+            mediaProcessing = mediaProcessing,
         ).also {
             val activePayloadCount =
                 listOfNotNull(

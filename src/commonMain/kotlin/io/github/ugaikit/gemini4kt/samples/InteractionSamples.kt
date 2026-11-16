@@ -56,7 +56,7 @@ object InteractionSamples {
                     ),
                 )
             var pollAttempts = 0
-            while (interaction.status == InteractionStatus.IN_PROGRESS) {
+            while (interaction.status == InteractionStatus.IN_PROGRESS || interaction.status == InteractionStatus.QUEUED) {
                 check(pollAttempts < MAX_VIDEO_POLL_ATTEMPTS) {
                     "Interaction ${interaction.id} did not complete after $MAX_VIDEO_POLL_ATTEMPTS polls."
                 }

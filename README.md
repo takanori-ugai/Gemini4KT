@@ -55,6 +55,234 @@ and the [October 26 release notes](https://aistudio.google.com/docs/changelog#10
 such as `sources`, `type`, or `network` can use `agent.inlineEnvironment` or
 `request.inlineEnvironment` and should handle `null` when the API returns an environment ID.
 
+### Gemini 4 Hydrogen and `xhigh` thinking
+
+Use `model = "gemini-4-hydrogen"` with either generation API. Hydrogen supports
+`low`, `medium`, `high` (the server default), and `xhigh`. Generate Content uses
+`ThinkingConfig(thinkingLevel = ThinkingLevel.XHIGH)`; Interactions uses
+`InteractionGenerationConfig(thinkingLevel = io.github.ugaikit.gemini4kt.interaction.ThinkingLevel.XHIGH)`:
+
+```kotlin
+val response = geminiAI.createInteraction(
+    CreateInteractionRequest(
+        model = "gemini-4-hydrogen",
+        input = "Review this migration design for concurrency problems.",
+        generationConfig = InteractionGenerationConfig(
+            thinkingLevel = io.github.ugaikit.gemini4kt.interaction.ThinkingLevel.XHIGH,
+        ),
+    ),
+)
+```
+
+When migrating from Gemini 3.8 Flash, omit `minimal`, legacy thinking budgets,
+explicit `cachedContent`, and sampling overrides (`temperature`, `topP`, `topK`).
+The shared 1,048,576-token context includes input, thinking, and output. Synchronous
+requests are limited to 65,536 tokens per hop; use Interactions `background = true`
+with a larger `maxOutputTokens` for longer outputs. The library leaves output caps
+and thinking depth unset unless configured by the caller.
+
+The Managed Agents Antigravity default is selected by the service and now uses
+Hydrogen. Existing `antigravity-preview-09-2026` requests inherit it when no model
+override is supplied; `InteractionAgentConfig.model` and `AgentConfig.model` also
+accept `gemini-4-hydrogen` explicitly. See the
+[Hydrogen migration guide](https://aistudio.google.com/docs/whats-new-gemini-4-hydrogen)
+and [model card and pricing](https://aistudio.google.com/docs/models/gemini-4-hydrogen).
+
+### Decisions API (Gemini Decision 1)
+
+`GeminiAI.createDecision` evaluates typed questions over shared input and returns
+calibrated probabilities without generated text tokens:
+
+```kotlin
+import io.github.ugaikit.gemini4kt.decisions.*
+
+val decision = geminiAI.createDecision(
+    CreateDecisionRequest(
+        input = "The item arrived broken and I need a replacement.",
+        questions = mapOf(
+            "damaged" to DecisionQuestion.Noul("Did the item arrive damaged?"),
+            "route" to DecisionQuestion.Choice(
+                "Which team should handle this?",
+                mapOf("support" to "Product problems", "billing" to "Payment problems"),
+            ),
+            "severity" to DecisionQuestion.Score(
+                "How severe is this issue?",
+                listOf("Minor", "Workaround available", "Blocked"),
+            ),
+        ),
+    ),
+)
+val damaged = decision.answers.getValue("damaged") as DecisionAnswer.Noul
+println("Probability of yes: ${damaged.noul}; confidence: ${damaged.confidence}")
+```
+
+The default model is `gemini-decision-1`. `DecisionInput(InteractionContent(...))`
+or `DecisionInput(listOf(...))` accepts text, image, audio, video, and PDF document
+blocks using inline data or URI references. Question instructions also accept
+`DecisionInput`, restricted to text blocks. Binary questions optionally accept
+`NoulCriteria`; categorical answers expose `choice` and `probabilities`; rubric
+answers expose `score`, `probabilities`, and `legend`. `decision.usage` reports token
+counts, including zero output tokens. API errors use the existing `GeminiException`.
+
+See the [Decisions API guide](https://aistudio.google.com/docs/decisions-api),
+[pricing](https://aistudio.google.com/docs/pricing#gemini-decision), and
+[rate limits](https://aistudio.google.com/docs/rate-limits#gemini-decision).
+
+### Gemini Omni 1.2 Flash video generation
+
+Use `OmniVideoSample.request()` with `GeminiAI.createInteraction` to generate a
+video with `gemini-omni-1.2-flash`:
+
+```kotlin
+val video = geminiAI.createInteraction(
+    OmniVideoSample.request("Generate a 15-second video of a marble rolling along a wooden track."),
+)
+// Once the first interaction has completed, continue with an edit or extension:
+val extended = geminiAI.createInteraction(
+    OmniVideoSample.request(
+        prompt = "Extend the video by 5 seconds as the marble reaches the finish line.",
+        task = InteractionVideoTask.EXTEND,
+        previousInteractionId = video.id,
+    ),
+)
+```
+
+The sample's optional `media` accepts `InteractionContent` images or video. Pass
+up to six reference images for reference-to-video, or first/last images for
+interpolation. `InteractionGenerationConfig.videoConfig` and `InteractionVideoTask`
+provide optional task overrides for text-to-video, image-to-video,
+reference-to-video, editing, and extension. Otherwise the model infers the task.
+Describe durations and media roles in natural language: general generation supports
+up to 15 seconds; interpolation and each extension support 3–10 seconds, with
+extended videos up to 30 seconds total. Generated media is available in
+`interaction.outputVideo`.
+
+The service automatically routes `gemini-omni-1.1-flash` to 1.2 starting December 3,
+2026. New examples use 1.2 explicitly. Pricing and paid-tier quota changes are
+service-side; see the [Omni guide](https://aistudio.google.com/docs/omni),
+[pricing](https://aistudio.google.com/docs/pricing#gemini-omni-1.2-flash), and
+[rate limits](https://aistudio.google.com/docs/rate-limits).
+
+### Office files and multimodal function results
+
+Office and OpenDocument MIME types work with `InlineData`, `FileData`, and
+Interactions `InteractionContent(type = "document", ...)` using `data` or `uri`.
+The expanded formats include:
+
+| Format | MIME type | Model input |
+| --- | --- | --- |
+| DOC | `application/msword` | Rendered page images |
+| PPT | `application/vnd.ms-powerpoint` | Rendered slide images |
+| ODP | `application/vnd.oasis.opendocument.presentation` | Rendered slide images |
+| ODS | `application/vnd.oasis.opendocument.spreadsheet` | First sheet's data and formulas |
+
+DOCX, DOTX, ODT, PPTX, XLSX, and XLS retain their existing processing behavior.
+MIME types remain strings, so uploads accept the expanded formats without a new
+file-type restriction. See [Office and OpenDocument files](https://aistudio.google.com/docs/document-processing#office-documents).
+
+Generate Content `FunctionResponse.parts` accepts inline or URI-based documents,
+audio, and video as well as image, PDF, and text results. Both `InlineData` and
+`FileData` support `displayName`. Video parts can specify `MediaProcessing.STATIC`
+or `MediaProcessing.AGENTIC`:
+
+```kotlin
+val result = FunctionResponse(
+    name = "read_video",
+    response = buildJsonObject { },
+    parts = arrayOf(
+        Part(
+            fileData = FileData("video/mp4", uploadedVideoUri, displayName = "walkthrough"),
+            mediaProcessing = MediaProcessing.AGENTIC,
+        ),
+    ),
+)
+```
+
+For Interactions, put typed media blocks into a `function_result` step's JSON
+`result`. Existing image and text blocks continue to work alongside the new types:
+
+```kotlin
+val resultStep = InteractionStep(
+    type = "function_result",
+    name = "read_files",
+    callId = functionCallId,
+    result = Json.encodeToJsonElement(
+        arrayOf(
+            InteractionContent(type = "document", uri = documentUri, mimeType = "application/vnd.ms-powerpoint"),
+            InteractionContent(type = "audio", data = audioBase64, mimeType = "audio/wav"),
+            InteractionContent(
+                type = "video", uri = videoUri, mimeType = "video/mp4",
+                processing = InteractionVideoProcessing.AGENTIC,
+            ),
+        ),
+    ),
+)
+```
+
+Submit the step through `InteractionInput.StepList`. Interactions video results
+use the v1beta endpoint already used by this library. See
+[multimodal function responses](https://aistudio.google.com/docs/function-calling#multimodal).
+
+### Computer Use (GA)
+
+Computer Use is available through both APIs. For Generate Content, configure the
+existing tool DSL with a browser, mobile, or desktop environment:
+
+```kotlin
+val request = generateContentRequest {
+    content { part { text { "Search for Gemini API documentation." } } }
+    tool {
+        computerUse {
+            environment = Environment.ENVIRONMENT_BROWSER
+            enablePromptInjectionDetection = true
+        }
+    }
+    store = false
+}
+val response = gemini.generateContent(request, model = "gemini-4-hydrogen")
+```
+
+For Interactions, use `InteractionTool(type = "computer_use", environment = "browser",
+enablePromptInjectionDetection = true)` in `CreateInteractionRequest.tools`.
+Use `"mobile"` or `"desktop"` for the other environments. Both tool types expose
+`disabledSafetyPolicies`; Generate Content uses uppercase policy names such as
+`DATA_MODIFICATION`, while Interactions uses lowercase names such as `data_modification`.
+Leaving the option unset retains the API's safety policies.
+
+`ComputerUseSample.run()` demonstrates Interactions and
+`ComputerUseSample.runGenerateContent()` demonstrates Generate Content, using
+`gemini-4-hydrogen` by default. Both accept a model override. These samples request
+actions; applications supply screenshots, execute allowed actions, handle
+`safety_decision` confirmations, and return action results. See the
+[Computer Use guide](https://aistudio.google.com/docs/computer-use) for supported
+models and the action loop.
+
+### Voice remixing for Gemini 3.8 TTS
+
+Create an independent stored voice from a prebuilt voice name, a catalog voice ID,
+or an existing designed/remixed `voice_...` ID:
+
+```kotlin
+val remixed = geminiAI.createRemixedVoice(
+    baseVoice = "Puck",
+    instructions = "Make the delivery softer and slightly lower in pitch.",
+    displayName = "Soft narrator",
+)
+val speech = geminiAI.generateSpeech(
+    text = "Welcome to the next chapter.",
+    voice = remixed.id,
+    model = "gemini-3.8-flash-lite-tts",
+)
+```
+
+Remixing uses `POST /v1beta/voices` with `gemini-3.8-flash-tts` and `store=true`.
+It creates a new voice without modifying the source. The returned ID supports both
+`gemini-3.8-flash-tts` and `gemini-3.8-flash-lite-tts` for synthesis. The response
+includes `sampleAudio` when available, `prompted.baseVoice` and `prompted.input`
+for lineage, and `expireTime` for retention metadata. The existing `getVoice`,
+`listVoices`, and `deleteVoice` methods also work with remixed voices. See the
+[Voice remixing guide](https://aistudio.google.com/docs/voice-remixing).
+
 ### Gemini API CLI for scripts and CI
 
 [Gemini API CLI (`gemini-api`)](https://aistudio.google.com/docs/cli) is Google's

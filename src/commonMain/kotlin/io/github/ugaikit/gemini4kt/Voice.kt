@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
-/** A catalog, designed, or replicated Gemini voice. */
+/** A catalog, designed, remixed, or replicated Gemini voice. */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
@@ -23,6 +23,17 @@ data class Voice(
     val contexts: Array<String>? = null,
     val description: String? = null,
     @SerialName("sample_audio") val sampleAudio: InteractionAudioContent? = null,
+    val prompted: PromptedVoiceConfig? = null,
+    @SerialName("expire_time") val expireTime: String? = null,
+)
+
+/** Prompt and optional source voice returned for designed and remixed voices. */
+@OptIn(ExperimentalJsExport::class)
+@JsExport
+@Serializable
+data class PromptedVoiceConfig(
+    val input: String? = null,
+    @SerialName("base_voice") val baseVoice: String? = null,
 )
 
 /** Paginated response from `GET /v1beta/voices`. */

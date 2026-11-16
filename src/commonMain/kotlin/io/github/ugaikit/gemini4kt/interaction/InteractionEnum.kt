@@ -12,6 +12,9 @@ import kotlin.js.JsExport
 @JsExport
 @Serializable
 enum class InteractionStatus {
+    @SerialName("queued")
+    QUEUED,
+
     @SerialName("in_progress")
     IN_PROGRESS,
 
@@ -46,6 +49,9 @@ enum class ThinkingLevel {
 
     @SerialName("high")
     HIGH,
+
+    @SerialName("xhigh")
+    XHIGH,
 }
 
 /**

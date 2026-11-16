@@ -3,6 +3,8 @@ package io.github.ugaikit.gemini4kt
 import io.github.ugaikit.gemini4kt.agent.Agent
 import io.github.ugaikit.gemini4kt.agent.CreateAgentRequest
 import io.github.ugaikit.gemini4kt.agent.ListAgentsResponse
+import io.github.ugaikit.gemini4kt.decisions.CreateDecisionRequest
+import io.github.ugaikit.gemini4kt.decisions.DecisionResponse
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.webhooks.CreateWebhookRequest
@@ -196,6 +198,38 @@ class GeminiAI(
         return createVoice(voice, store = true)
     }
 
+    /**
+     * Creates an independent stored voice by modifying a prebuilt or existing prompted voice.
+     *
+     * @param baseVoice Prebuilt voice name, catalog ID, or stored prompted `voice_...` ID.
+     * @param instructions Natural-language description of the relative changes to make.
+     * @param displayName Optional name for the new voice.
+     * @param model Voice creation model; the resulting ID also supports Flash-Lite TTS synthesis.
+     */
+    @JsName("createRemixedVoice")
+    suspend fun createRemixedVoice(
+        baseVoice: String,
+        instructions: String,
+        displayName: String? = null,
+        model: String = "gemini-3.8-flash-tts",
+    ): Voice {
+        require(baseVoice.isNotBlank()) { "baseVoice must not be blank." }
+        require(instructions.isNotBlank()) { "instructions must not be blank." }
+        require(displayName == null || displayName.isNotBlank()) { "displayName must not be blank." }
+        require(model.isNotBlank()) { "model must not be blank." }
+        val voice =
+            buildJsonObject {
+                put("model", model)
+                put("type", "prompted")
+                displayName?.let { put("display_name", it) }
+                putJsonObject("prompted") {
+                    put("base_voice", baseVoice)
+                    put("input", instructions)
+                }
+            }
+        return createVoice(voice, store = true)
+    }
+
     /** Creates a replicated voice from base64 WAV source and consent recordings. */
     @JsName("createReplicatedVoice")
     suspend fun createReplicatedVoice(
@@ -273,6 +307,21 @@ class GeminiAI(
         if (!response.status.isSuccess()) {
             throw GeminiException(parseError(response.bodyAsText(), response.status.value))
         }
+    }
+
+    /** Evaluates typed binary, categorical, and rubric questions without generating text tokens. */
+    @JsName("createDecision")
+    suspend fun createDecision(request: CreateDecisionRequest): DecisionResponse {
+        val response =
+            httpClient.post(buildUrl(baseUrl, listOf("decisions"))) {
+                header("x-goog-api-key", getApiKey())
+                contentType(ContentType.Application.Json)
+                setBody(json.encodeToString(CreateDecisionRequest.serializer(), request))
+            }
+        if (!response.status.isSuccess()) {
+            throw GeminiException(parseError(response.bodyAsText(), response.status.value))
+        }
+        return json.decodeFromString(DecisionResponse.serializer(), response.bodyAsText())
     }
 
     @JsName("createInteraction")

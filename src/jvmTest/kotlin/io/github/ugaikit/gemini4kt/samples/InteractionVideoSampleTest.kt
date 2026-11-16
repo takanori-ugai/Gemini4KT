@@ -72,11 +72,29 @@ class InteractionVideoSampleTest {
                 client.createInteraction(
                     match { request ->
                         (request.input as InteractionInput.InteractionContentList)
-                            .value[0].uri == "files/custom-video"
+                            .value[0]
+                            .uri == "files/custom-video"
                     },
                 )
             }
             coVerify(exactly = 0) { client.getInteraction(any()) }
+        }
+
+    @Test
+    fun runVideoInputPollsQueuedInteractions() =
+        runTest {
+            val client = mockk<GeminiAI>(relaxed = true)
+            coEvery { client.createInteraction(any()) } returns
+                Interaction(id = "queued-video", status = InteractionStatus.QUEUED)
+            coEvery { client.getInteraction("queued-video") } returnsMany
+                listOf(
+                    Interaction(id = "queued-video", status = InteractionStatus.IN_PROGRESS),
+                    Interaction(id = "queued-video", status = InteractionStatus.COMPLETED),
+                )
+
+            InteractionSamples.runVideoInput(client = client)
+
+            coVerify(exactly = 2) { client.getInteraction("queued-video") }
         }
 
     @Test
