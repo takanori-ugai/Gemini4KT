@@ -7,10 +7,12 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -264,13 +266,15 @@ class LiveMusicSession(
      * HttpClient if this session owns it.
      */
     suspend fun close() {
-        try {
-            session.close()
-        } finally {
-            listenerJob.cancelAndJoin()
-            incomingMessages.close()
-            if (ownsClient) {
-                httpClient.close()
+        withContext(NonCancellable) {
+            try {
+                session.close()
+            } finally {
+                listenerJob.cancelAndJoin()
+                incomingMessages.close()
+                if (ownsClient) {
+                    httpClient.close()
+                }
             }
         }
     }

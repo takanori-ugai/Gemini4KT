@@ -159,7 +159,7 @@ class FileSearchTest {
         runTest {
             val storeName = "fileSearchStores/123"
             val request = ImportFileRequest(fileName = "files/abc")
-            val expectedResponse = Operation(name = "operations/import-op", done = false)
+            val expectedResponse = Operation(name = "fileSearchStores/123/operations/import-op", done = false)
             val responseString = json.encodeToString(expectedResponse)
 
             fileSearch =
@@ -180,7 +180,29 @@ class FileSearchTest {
     @Test
     fun testGetFileSearchStoreOperation() =
         runTest {
-            val opName = "operations/import-op"
+            val opName = "fileSearchStores/123/operations/import-op"
+            val expectedResponse = Operation(name = opName, done = true)
+            val responseString = json.encodeToString(expectedResponse)
+
+            fileSearch =
+                createFileSearch { request ->
+                    assertEquals(HttpMethod.Get, request.method)
+                    assertEquals("$bUrl/$opName", request.url.toString())
+                    respond(responseString, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val result = fileSearch.getFileSearchStoreOperation(opName)
+
+            assertEquals(expectedResponse, result)
+        }
+
+    /**
+     * Tests polling an upload operation using its full resource name.
+     */
+    @Test
+    fun testGetFileSearchStoreUploadOperation() =
+        runTest {
+            val opName = "fileSearchStores/123/upload/operations/upload-op"
             val expectedResponse = Operation(name = opName, done = true)
             val responseString = json.encodeToString(expectedResponse)
 

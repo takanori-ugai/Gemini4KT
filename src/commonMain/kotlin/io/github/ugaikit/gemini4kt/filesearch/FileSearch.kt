@@ -170,7 +170,7 @@ class FileSearch(
      * @return The [Operation] object.
      */
     suspend fun getFileSearchStoreOperation(name: String): Operation {
-        val urlString = buildUrl(bUrl, listOf("operations") + normalizeResourcePathSegments(name, "operations"))
+        val urlString = buildUrl(bUrl, normalizeResourcePathSegments(name))
         return json.decodeFromString<Operation>(
             getContent(urlString),
         )
