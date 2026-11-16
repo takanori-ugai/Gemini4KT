@@ -7,15 +7,72 @@ import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.interaction.InteractionContent
 import io.github.ugaikit.gemini4kt.interaction.InteractionInput
+import io.github.ugaikit.gemini4kt.interaction.InteractionStatus
 import io.github.ugaikit.gemini4kt.interaction.InteractionTool
+import io.github.ugaikit.gemini4kt.interaction.InteractionVideoProcessing
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
 private const val MODEL = "gemma-4-26b-a4b-it"
+private const val VIDEO_MODEL = "gemini-3.8-flash"
+private const val MAX_VIDEO_POLL_ATTEMPTS = 120
 
 object InteractionSamples {
+    /**
+     * Summarizes a video URL with agentic video processing.
+     *
+     * Long-running video requests use background execution and are polled until completion.
+     * The default URL is a public YouTube video; callers can provide a Files API URI instead.
+     */
+    suspend fun runVideoInput(
+        videoUri: String = "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+        client: GeminiAI? = null,
+    ) {
+        val ai = client ?: GeminiAI(apiKey = getApiKey())
+        try {
+            println("--- Video Input ---")
+            var interaction =
+                ai.createInteraction(
+                    CreateInteractionRequest(
+                        model = VIDEO_MODEL,
+                        input =
+                            InteractionInput.InteractionContentList(
+                                arrayOf(
+                                    InteractionContent(
+                                        type = "video",
+                                        uri = videoUri,
+                                        processing = InteractionVideoProcessing.AGENTIC,
+                                    ),
+                                    InteractionContent(
+                                        type = "text",
+                                        text = "Summarize this video and mention its key moments with timestamps.",
+                                    ),
+                                ),
+                            ),
+                        background = true,
+                    ),
+                )
+            var pollAttempts = 0
+            while (interaction.status == InteractionStatus.IN_PROGRESS) {
+                check(pollAttempts < MAX_VIDEO_POLL_ATTEMPTS) {
+                    "Interaction ${interaction.id} did not complete after $MAX_VIDEO_POLL_ATTEMPTS polls."
+                }
+                pollAttempts++
+                delay(5_000)
+                interaction = ai.getInteraction(interaction.id)
+            }
+            printInteractionResult(interaction)
+        } finally {
+            if (client == null) {
+                ai.close()
+            }
+        }
+    }
+
+    /** Runs a short text-only interaction request. */
     suspend fun runSimple(client: GeminiAI? = null) {
         val ai = client ?: GeminiAI(apiKey = getApiKey())
         try {
