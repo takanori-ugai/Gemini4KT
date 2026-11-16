@@ -1,5 +1,6 @@
 package io.github.ugaikit.gemini4kt
 
+import io.github.ugaikit.gemini4kt.interaction.InteractionAudioContent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -14,6 +15,7 @@ import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -124,6 +126,40 @@ class GeminiAIVoiceRemixingTest {
                 assertEquals("AQID", speech.outputAudio?.data)
             }
             assertEquals(models, requestedModels)
+        }
+
+    @Test
+    fun getAndListVoicesPreserveRemixMetadata() =
+        runTest {
+            val expected =
+                Voice(
+                    id = "voice_remixed",
+                    displayName = "Narrator",
+                    type = "prompted",
+                    model = "gemini-3.8-flash-tts",
+                    gender = "female",
+                    languageCode = "en-US",
+                    accent = "American",
+                    pitch = "low",
+                    persona = "calm",
+                    description = "A calm narrator",
+                    sampleAudio = InteractionAudioContent(data = "AQID", mimeType = "audio/wav"),
+                    prompted = PromptedVoiceConfig(input = "Speak more softly.", baseVoice = "Puck"),
+                    expireTime = "2027-11-16T00:00:00Z",
+                )
+            val voiceJson = Json.encodeToString(expected)
+            val ai =
+                createClient { request ->
+                    val body =
+                        if (request.url.encodedPath.endsWith("/voice_remixed")) {
+                            voiceJson
+                        } else {
+                            """{"voices":[$voiceJson]}"""
+                        }
+                    respond(body, headers = headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+            assertEquals(expected, ai.getVoice("voice_remixed"))
+            assertEquals(expected, ai.listVoices().voices?.single())
         }
 
     @Test

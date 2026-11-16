@@ -59,6 +59,32 @@ class DecisionSerializationTest {
     }
 
     @Test
+    fun typedAnswersCanBePersistedAndRestoredWithoutLosingProbabilities() {
+        val response =
+            DecisionResponse(
+                answers =
+                    mapOf(
+                        "binary" to DecisionAnswer.Noul(noul = 0.03, confidence = 0.97),
+                        "category" to
+                            DecisionAnswer.Choice(
+                                choice = "billing",
+                                probabilities = mapOf("billing" to 0.75, "other" to 0.25),
+                                confidence = 0.75,
+                            ),
+                        "rubric" to
+                            DecisionAnswer.Score(
+                                score = 0.8,
+                                probabilities = mapOf("0" to 0.2, "1" to 0.8),
+                                legend = mapOf("0" to "Low", "1" to "High"),
+                                confidence = 0.8,
+                            ),
+                    ),
+            )
+        val encoded = Json.encodeToString(response)
+        assertEquals(response, Json.decodeFromString<DecisionResponse>(encoded))
+    }
+
+    @Test
     fun invalidQuestionCountsAndKeysAreRejected() {
         val question = DecisionQuestion.Noul("Is it relevant?")
         assertFailsWith<IllegalArgumentException> { CreateDecisionRequest("Hello", emptyMap()) }

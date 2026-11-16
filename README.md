@@ -123,6 +123,8 @@ blocks using inline data or URI references. Question instructions also accept
 `NoulCriteria`; categorical answers expose `choice` and `probabilities`; rubric
 answers expose `score`, `probabilities`, and `legend`. `decision.usage` reports token
 counts, including zero output tokens. API errors use the existing `GeminiException`.
+For media URIs, use the Files API or public/signed HTTPS URLs; the Decisions API
+does not accept YouTube URLs or direct `gs://` references.
 
 See the [Decisions API guide](https://aistudio.google.com/docs/decisions-api),
 [pricing](https://aistudio.google.com/docs/pricing#gemini-decision), and
