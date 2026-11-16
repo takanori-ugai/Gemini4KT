@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt.live.music
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.ugaikit.gemini4kt.live.closeLiveWebSocket
 import io.github.ugaikit.gemini4kt.live.openLiveConnection
 import io.ktor.client.HttpClient
 import io.ktor.websocket.Frame
@@ -268,7 +269,7 @@ class LiveMusicSession(
     suspend fun close() {
         withContext(NonCancellable) {
             try {
-                session.close()
+                session.closeLiveWebSocket()
             } finally {
                 listenerJob.cancelAndJoin()
                 incomingMessages.close()

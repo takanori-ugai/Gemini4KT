@@ -224,7 +224,7 @@ class GeminiLiveSession(
     suspend fun close() {
         withContext(NonCancellable) {
             try {
-                session.close()
+                session.closeLiveWebSocket()
             } finally {
                 listenerJob.cancelAndJoin()
                 incomingMessages.close()
