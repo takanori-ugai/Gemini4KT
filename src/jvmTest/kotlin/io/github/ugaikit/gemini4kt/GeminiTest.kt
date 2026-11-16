@@ -725,10 +725,52 @@ class GeminiTest {
         }
 
     @Test
+    fun `generateContent sends the final tool result at the iteration limit`() =
+        runTest {
+            var requestCount = 0
+            var handlerCount = 0
+            gemini =
+                createGemini { request ->
+                    requestCount++
+                    val response =
+                        if (requestCount == 1) {
+                            """{"candidates":[{"content":{"parts":[{"functionCall":{"name":"lookup","args":{}}}]}}]}"""
+                        } else {
+                            val body = request.body as TextContent
+                            assertTrue(body.text.contains("functionResponse"))
+                            assertTrue(body.text.contains("found"))
+                            """{"candidates":[{"content":{"parts":[{"text":"Done"}]}}]}"""
+                        }
+                    respond(response, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+
+            val response =
+                gemini.generateContent(
+                    request =
+                        GenerateContentRequest(contents = arrayOf(Content(parts = arrayOf(Part(text = "lookup"))))),
+                    functionHandlers =
+                        mapOf(
+                            "lookup" to {
+                                handlerCount++
+                                FunctionResponse("lookup", buildJsonObject { put("result", "found") })
+                            },
+                        ),
+                    maxIterations = 1,
+                )
+
+            assertEquals("Done", response.getText())
+            assertEquals(2, requestCount)
+            assertEquals(1, handlerCount)
+        }
+
+    @Test
     fun `generateContent with handlers throws when maxIterations exceeded`() =
         runTest {
+            var requestCount = 0
+            var handlerCount = 0
             gemini =
                 createGemini {
+                    requestCount++
                     respond(
                         content =
                             """
@@ -764,6 +806,7 @@ class GeminiTest {
                         functionHandlers =
                             mapOf(
                                 "loop" to {
+                                    handlerCount++
                                     FunctionResponse(name = "loop", response = buildJsonObject { put("ok", true) })
                                 },
                             ),
@@ -774,6 +817,8 @@ class GeminiTest {
                     e
                 }
 
+            assertEquals(2, requestCount)
+            assertEquals(1, handlerCount)
             assertNotNull(exception)
             assertEquals("Automatic function calling exceeded maxIterations=1.", exception!!.message)
         }

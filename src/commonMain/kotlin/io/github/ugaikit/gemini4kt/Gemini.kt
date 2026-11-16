@@ -52,7 +52,8 @@ class Gemini(
      * @param request Initial request containing user contents and tool declarations.
      * @param functionHandlers Map of function name to handler implementation.
      * @param model The model to use.
-     * @param maxIterations Maximum number of tool turns before failing.
+     * @param maxIterations Maximum number of tool turns. A final model request submits the last
+     * tool results without executing further function calls.
      * @return Final [GenerateContentResponse] produced by the model.
      * @throws IllegalArgumentException If `maxIterations` is not positive or a handler is missing.
      * @throws IllegalStateException If function-calling does not finish within `maxIterations`.
@@ -66,7 +67,8 @@ class Gemini(
         require(maxIterations > 0) { "maxIterations must be greater than 0." }
 
         var currentRequest = request
-        repeat(maxIterations) {
+        var completedToolTurns = 0
+        while (true) {
             val response = generateContent(currentRequest, model)
             val candidate = response.candidates.firstOrNull() ?: return response
             val modelParts: Array<Part> = candidate.content.parts ?: emptyArray()
@@ -74,6 +76,10 @@ class Gemini(
 
             if (functionCalls.isEmpty()) {
                 return response
+            }
+
+            check(completedToolTurns < maxIterations) {
+                "Automatic function calling exceeded maxIterations=$maxIterations."
             }
 
             val functionResponseParts =
@@ -98,11 +104,8 @@ class Gemini(
                 currentRequest.copy(
                     contents = currentRequest.contents + arrayOf(modelContent, functionContent),
                 )
+            completedToolTurns++
         }
-
-        throw IllegalStateException(
-            "Automatic function calling exceeded maxIterations=$maxIterations.",
-        )
     }
 
     /**
