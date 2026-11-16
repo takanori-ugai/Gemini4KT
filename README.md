@@ -21,6 +21,33 @@ source .env
 
 `.env` is ignored by git so your key stays local. Look at `src/commonTest/kotlin/io/github/ugaikit/gemini4kt/samples` for sample usage.
 
+### Generate Content request storage
+
+For paid-tier projects created on or after October 26, 2026, the Generate Content API
+stores requests by default. Older projects retain their existing setting. Gemini4KT
+leaves `store` unspecified by default so the project's setting applies.
+
+Set `store = false` to disable storage for an individual request, or `store = true`
+to explicitly enable it:
+
+```kotlin
+val request = generateContentRequest {
+    content { part { text { "Hello" } } }
+    store = false
+}
+val response = gemini.generateContent(request)
+```
+
+The constructor also accepts `GenerateContentRequest(contents = contents, store = false)`.
+The same setting applies when the request is passed to `streamGenerateContent`, used
+for automatic function calling, or included in a batch with `batchItemRequest { request(request) }`.
+For file-backed batches, include `"store": false` in each Generate Content request in
+the input JSONL file; Gemini4KT does not rewrite uploaded files.
+
+You can also change the project default in the Logs and Datasets dashboard's Settings
+panel. See [Logs and datasets](https://aistudio.google.com/docs/logs-datasets#configure-logging)
+and the [October 26 release notes](https://aistudio.google.com/docs/changelog#10-26-2026).
+
 ### Managed agent environment migration
 
 `Agent.baseEnvironment` and `CreateAgentRequest.baseEnvironment` accept either an inline
