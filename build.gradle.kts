@@ -169,7 +169,7 @@ kotlin {
         val jvmTest =
             getByName("jvmTest") {
                 dependencies {
-                    implementation("io.mockk:mockk:1.14.11")
+                    implementation("io.mockk:mockk:1.14.12")
                 }
             }
 //        val wasmJsMain by getting {
