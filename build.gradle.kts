@@ -132,7 +132,7 @@ kotlin {
                     implementation("io.ktor:ktor-serialization-kotlinx-json:3.6.1")
                     implementation("io.ktor:ktor-client-logging:3.6.1")
                     implementation("io.ktor:ktor-client-websockets:3.6.1")
-                    implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.9.1")
+                    implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.9.3")
                 }
                 buildConfig {
                     packageName("io.github.ugaikit.gemini4kt")
