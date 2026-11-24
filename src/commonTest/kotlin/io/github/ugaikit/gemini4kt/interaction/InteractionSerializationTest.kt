@@ -29,6 +29,35 @@ class InteractionSerializationTest {
         }
 
     @Test
+    fun voiceEditingUsesNestedSmartMode() {
+        val config =
+            InteractionGenerationConfig(
+                transcriptionConfig =
+                    InteractionTranscriptionConfig(
+                        mode =
+                            InteractionTranscriptionMode(
+                                type = InteractionTranscriptionModeType.SMART,
+                                sourceText = "元の文章",
+                            ),
+                    ),
+            )
+        val encoded = json.encodeToString(config)
+        val expected = """{"transcription_config":{"mode":{"type":"smart","source_text":"元の文章"}}}"""
+        assertEquals(json.parseToJsonElement(expected), json.parseToJsonElement(encoded))
+        assertEquals(config, json.decodeFromString<InteractionGenerationConfig>(encoded))
+    }
+
+    @Test
+    fun smartDictationCanStartWithoutSourceText() {
+        val config = json.decodeFromString<InteractionGenerationConfig>("""{"transcription_config":{"mode":"smart"}}""")
+        val smart = InteractionTranscriptionMode(InteractionTranscriptionModeType.SMART)
+        assertEquals(smart, config.transcriptionConfig?.mode)
+        val encoded = json.encodeToString(config)
+        val expected = """{"transcription_config":{"mode":{"type":"smart"}}}"""
+        assertEquals(json.parseToJsonElement(expected), json.parseToJsonElement(encoded))
+    }
+
+    @Test
     fun interactionContentSerializesCorrectly() {
         val content =
             InteractionContent(

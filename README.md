@@ -88,6 +88,66 @@ accept `gemini-4-hydrogen` explicitly. See the
 [Hydrogen migration guide](https://aistudio.google.com/docs/whats-new-gemini-4-hydrogen)
 and [model card and pricing](https://aistudio.google.com/docs/models/gemini-4-hydrogen).
 
+### Voice editing with Gemini 3.5 Transcribe
+
+Use Smart mode to dictate and edit in the same recording, or pass `sourceText`
+to apply spoken edits to existing text. The API accepts up to 64 KiB of UTF-8
+source text. Omit `sourceText` to start from dictation.
+
+For the Interactions API, pass the recording as audio input. To apply another
+spoken edit, send the new recording and use the preceding response's
+`outputText` as `sourceText`.
+
+```kotlin
+val result = geminiAI.createInteraction(
+    CreateInteractionRequest(
+        model = "gemini-3.5-transcribe",
+        input = interactionContentInput(
+            arrayOf(InteractionContent(type = "audio", uri = audioUri, mimeType = "audio/mpeg")),
+        ),
+        generationConfig = InteractionGenerationConfig(
+            transcriptionConfig = InteractionTranscriptionConfig(
+                mode = InteractionTranscriptionMode(
+                    type = InteractionTranscriptionModeType.SMART,
+                    sourceText = "The review starts at noon.",
+                ),
+            ),
+        ),
+    ),
+)
+println(result.outputText)
+```
+
+For Live transcription, set the initial text during WebSocket setup and send
+PCM audio with `sendRealtimeInput`. When `serverContent.inputTranscription`
+arrives, replace the editor text with its `text.orEmpty()`. Use
+`interimInputTranscription` to preview the spoken instruction. The server carries
+the latest finalized text across spoken turns. Reconnect with updated source text
+after a manual edit.
+This example uses manual turn boundaries. Send `ActivityStart` before the first
+audio chunk and `ActivityEnd` after the final chunk of each turn.
+
+```kotlin
+val live = GeminiLive(
+    apiKey = apiKey,
+    model = "gemini-3.5-transcribe-live",
+    config = LiveConnectConfig(
+        responseModalities = arrayOf(Modality.TEXT),
+        inputAudioTranscription = AudioTranscriptionConfig(
+            mode = AudioTranscriptionMode.SMART,
+            sourceText = "The review starts at noon.",
+        ),
+        realtimeInputConfig = RealtimeInputConfig(
+            automaticActivityDetection = AutomaticActivityDetection(disabled = true),
+        ),
+    ),
+)
+val session = live.connect()
+```
+
+See the [Audio transcription](https://aistudio.google.com/docs/transcribe#voice-editing)
+and [Live transcription](https://aistudio.google.com/docs/live-api/live-transcribe#voice-editing) guides.
+
 ### Decisions API (Gemini Decision 1)
 
 `GeminiAI.createDecision` evaluates typed questions over shared input and returns

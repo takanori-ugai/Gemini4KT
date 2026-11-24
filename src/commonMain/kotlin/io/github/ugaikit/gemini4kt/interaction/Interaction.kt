@@ -443,6 +443,7 @@ data class InteractionModalityTokenCount(
  * @property maxOutputTokens Optional output token limit.
  * @property videoConfig Optional Omni video task override.
  * @property speechConfig Optional speech configuration.
+ * @property transcriptionConfig Optional configuration for dedicated transcription models.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -458,6 +459,7 @@ data class InteractionGenerationConfig(
     @SerialName("max_output_tokens") val maxOutputTokens: Int? = null,
     @SerialName("speech_config") val speechConfig: SpeechConfig? = null,
     @SerialName("video_config") val videoConfig: InteractionVideoConfig? = null,
+    @SerialName("transcription_config") val transcriptionConfig: InteractionTranscriptionConfig? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -475,6 +477,7 @@ data class InteractionGenerationConfig(
         if (maxOutputTokens != other.maxOutputTokens) return false
         if (speechConfig != other.speechConfig) return false
         if (videoConfig != other.videoConfig) return false
+        if (transcriptionConfig != other.transcriptionConfig) return false
 
         return true
     }
@@ -490,6 +493,7 @@ data class InteractionGenerationConfig(
         result = 31 * result + (maxOutputTokens ?: 0)
         result = 31 * result + (speechConfig?.hashCode() ?: 0)
         result = 31 * result + (videoConfig?.hashCode() ?: 0)
+        result = 31 * result + (transcriptionConfig?.hashCode() ?: 0)
         return result
     }
 }
