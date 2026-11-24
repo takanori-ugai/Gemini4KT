@@ -114,6 +114,8 @@ class GeminiLive(
                         generationConfig = generationConfig,
                         systemInstruction = config?.systemInstruction,
                         tools = config?.tools,
+                        inputAudioTranscription = config?.inputAudioTranscription,
+                        realtimeInputConfig = config?.realtimeInputConfig,
                     )
                 }
 
