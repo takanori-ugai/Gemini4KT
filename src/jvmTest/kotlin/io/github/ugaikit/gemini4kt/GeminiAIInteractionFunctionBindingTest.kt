@@ -1,6 +1,7 @@
 package io.github.ugaikit.gemini4kt
 
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
+import io.github.ugaikit.gemini4kt.interaction.InteractionStatus
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -16,6 +17,7 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @GeminiFunction(description = "Add two integers for an interaction function-binding test")
@@ -38,7 +40,11 @@ class GeminiAIInteractionFunctionBindingTest {
             )
             try {
                 val interaction = ai.createInteraction(
-                    CreateInteractionRequest(model = "test-model", input = "Add 2 and 3"),
+                    CreateInteractionRequest(
+                        model = "test-model",
+                        continuationToken = "old-token",
+                        previousInteractionId = "previous",
+                    ),
                     ::addInteractionNumbers,
                     maxIterations = 1,
                 )
@@ -47,9 +53,33 @@ class GeminiAIInteractionFunctionBindingTest {
                 assertEquals(2, requestBodies.size)
                 assertTrue(requestBodies.first().contains("\"name\":\"addInteractionNumbers\""))
                 assertTrue(requestBodies[1].contains("\"previous_interaction_id\":\"initial\""))
+                assertTrue(requestBodies.first().contains("\"continuation_token\":\"old-token\""))
+                assertFalse(requestBodies[1].contains("\"continuation_token\""))
                 assertTrue(requestBodies[1].contains("\"type\":\"function_result\""))
                 assertTrue(requestBodies[1].contains("\"call_id\":\"call-1\""))
                 assertTrue(requestBodies[1].contains("\"result\":{\"result\":5}"))
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
+    fun leavesContinuationToCallerBeforeExecutingPartialToolCalls() =
+        runTest {
+            val partial =
+                """
+                {"id":"hop","status":"requires_continuation","continuation_token":"next",
+                 "steps":[{"type":"function_call","id":"call-1"}]}
+                """.trimIndent()
+            val (ai, client) = createGeminiAI(responses = listOf(partial))
+            try {
+                val interaction =
+                    ai.createInteraction(
+                        CreateInteractionRequest(model = "test-model", input = "Add numbers"),
+                        ::addInteractionNumbers,
+                    )
+                assertEquals(InteractionStatus.REQUIRES_CONTINUATION, interaction.status)
+                assertEquals("next", interaction.continuationToken)
             } finally {
                 client.close()
             }

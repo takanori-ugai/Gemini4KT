@@ -9,6 +9,7 @@ import io.github.ugaikit.gemini4kt.interaction.InteractionStaticProcessing
 import io.github.ugaikit.gemini4kt.interaction.InteractionStep
 import io.github.ugaikit.gemini4kt.interaction.InteractionVideoProcessing
 import io.github.ugaikit.gemini4kt.interaction.interactionFunctionResult
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -18,6 +19,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 class ExpandedMediaSupportTest {
@@ -173,7 +175,7 @@ class ExpandedMediaSupportTest {
                 },
                 part {
                     fileData { FileData("video/mp4", "files/video") }
-                    videoMetadata { VideoMetadata("1s", "5s", 2.0, listOf("TRANSCRIPT")) }
+                    videoMetadata { VideoMetadata("1s", "5s", 2.5, listOf("TRANSCRIPT")) }
                 },
             )
         val request = GenerateContentRequest(contents = arrayOf(Content(parts = attachments)))
@@ -203,7 +205,7 @@ class ExpandedMediaSupportTest {
         )
         assertEquals(
             Json.parseToJsonElement(
-                """{"startOffset":"1s","endOffset":"5s","fps":2.0,"contentLayers":["TRANSCRIPT"]}""",
+                """{"startOffset":"1s","endOffset":"5s","fps":2.5,"contentLayers":["TRANSCRIPT"]}""",
             ),
             parts[3]["videoMetadata"],
         )
@@ -243,12 +245,45 @@ class ExpandedMediaSupportTest {
                     "sheet_index":2,"visible_cells":"A1:H50","content_layers":["formulas"]
                   }},
                   {"type":"static","start_offset":"10.5s","end_offset":"30s"},
-                  {"type":"static","start_offset":"1s","end_offset":"5s","fps":2.0,"content_layers":["transcript"]}
+                  {"type":"static","start_offset":"1s","end_offset":"5s","fps":2.5,"content_layers":["transcript"]}
                 ]
                 """.trimIndent(),
             )
         assertEquals(expected.jsonArray, input.map { it.jsonObject.getValue("processing") })
         assertEquals(prompt, Json.decodeFromString<CreateInteractionRequest>(Json.encodeToString(prompt)))
+    }
+
+    @Test
+    fun rejectsUnsupportedStructuredInteractionProcessing() {
+        val agentic =
+            Json.decodeFromString<InteractionContent>("""{"type":"video","processing":{"type":"agentic"}}""")
+        assertEquals(InteractionVideoProcessing.AGENTIC, agentic.processing)
+        for (processing in listOf("""{"type":"unknown"}""", "[]")) {
+            assertFailsWith<SerializationException> {
+                Json.decodeFromString<InteractionContent>("""{"type":"video","processing":$processing}""")
+            }
+        }
+    }
+
+    @Test
+    fun rejectsSlicingMetadataWithoutMedia() {
+        assertFailsWith<IllegalArgumentException> { part { documentMetadata { DocumentMetadata() } } }
+        assertFailsWith<IllegalArgumentException> { part { spreadsheetMetadata { SpreadsheetMetadata() } } }
+        assertFailsWith<IllegalArgumentException> { part { audioMetadata { AudioMetadata() } } }
+    }
+
+    @Test
+    fun interactionSlicingSupportsEmptyOptionsForServerDefaults() {
+        val pages = InteractionStaticProcessing(pageOptions = InteractionPageOptions())
+        val sheet = InteractionStaticProcessing(spreadsheetOptions = InteractionSpreadsheetOptions())
+        assertEquals(
+            Json.parseToJsonElement("""{"type":"static","page_options":{}}"""),
+            Json.encodeToJsonElement(pages),
+        )
+        assertEquals(
+            Json.parseToJsonElement("""{"type":"static","spreadsheet_options":{}}"""),
+            Json.encodeToJsonElement(sheet),
+        )
     }
 
     private fun slicedInteractionAttachments(): Array<InteractionContent> =
@@ -285,7 +320,7 @@ class ExpandedMediaSupportTest {
                     InteractionStaticProcessing(
                         startOffset = "1s",
                         endOffset = "5s",
-                        fps = 2.0,
+                        fps = 2.5,
                         contentLayers = listOf("transcript"),
                     ),
             ),

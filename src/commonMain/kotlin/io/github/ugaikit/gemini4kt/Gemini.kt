@@ -71,6 +71,7 @@ class Gemini(
         while (true) {
             val response = generateContent(currentRequest, model)
             val candidate = response.candidates.firstOrNull() ?: return response
+            if (candidate.finishReason == "CONTINUATION") return response
             val modelParts: Array<Part> = candidate.content.parts ?: emptyArray()
             val functionCalls = modelParts.mapNotNull { it.functionCall }
 
@@ -103,6 +104,7 @@ class Gemini(
             currentRequest =
                 currentRequest.copy(
                     contents = currentRequest.contents + arrayOf(modelContent, functionContent),
+                    continuationToken = null,
                 )
             completedToolTurns++
         }

@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.interaction.InteractionInput
+import io.github.ugaikit.gemini4kt.interaction.InteractionStatus
 import io.github.ugaikit.gemini4kt.interaction.InteractionStep
 import io.github.ugaikit.gemini4kt.interaction.InteractionTool
 import kotlinx.serialization.encodeToString
@@ -40,6 +41,7 @@ suspend fun GeminiAI.createInteraction(
 
     repeat(maxIterations) {
         val interaction = createInteraction(nextRequest)
+        if (interaction.status == InteractionStatus.REQUIRES_CONTINUATION) return interaction
         val functionCalls = interaction.steps.orEmpty().filter { it.type == "function_call" }
         if (functionCalls.isEmpty()) return interaction
 
@@ -62,11 +64,14 @@ suspend fun GeminiAI.createInteraction(
         nextRequest = nextRequest.copy(
             input = InteractionInput.StepList(results.toTypedArray()),
             previousInteractionId = interaction.id,
+            continuationToken = null,
         )
     }
 
     val finalInteraction = createInteraction(nextRequest)
-    if (finalInteraction.steps.orEmpty().none { it.type == "function_call" }) {
+    if (finalInteraction.status == InteractionStatus.REQUIRES_CONTINUATION ||
+        finalInteraction.steps.orEmpty().none { it.type == "function_call" }
+    ) {
         return finalInteraction
     }
 

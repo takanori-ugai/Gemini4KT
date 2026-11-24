@@ -493,6 +493,7 @@ class GeminiTest {
                     val body = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
                     assertEquals(JsonPrimitive(false), body["store"])
                     callCount += 1
+                    assertEquals(if (callCount == 1) JsonPrimitive("old-token") else null, body["continuationToken"])
 
                     if (callCount == 2) {
                         val body = (request.body as TextContent).text
@@ -550,6 +551,7 @@ class GeminiTest {
                     contents = arrayOf(Content(role = "user", parts = arrayOf(Part(text = "What is 123 plus 456?")))),
                     tools = emptyArray(),
                     store = false,
+                    continuationToken = "old-token",
                 )
 
             val handlers =
@@ -575,6 +577,29 @@ class GeminiTest {
                     ?.firstOrNull()
                     ?.text,
             )
+        }
+
+    @Test
+    fun `generateContent leaves continuation to caller before executing partial tool calls`() =
+        runTest {
+            gemini =
+                createGemini {
+                    respond(
+                        content =
+                            """
+                            {"candidates":[{"finishReason":"CONTINUATION","continuationToken":"next",
+                             "content":{"parts":[{"functionCall":{"name":"add","args":{}}}]}}]}
+                            """.trimIndent(),
+                        headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                    )
+                }
+            val request = generateContentRequest { content { part { text { "Add numbers" } } } }
+            val response =
+                gemini.generateContent(
+                    request,
+                    functionHandlers = mapOf("add" to { error("A partial tool call must not execute.") }),
+                )
+            assertEquals("next", response.candidates.single().continuationToken)
         }
 
     @Test
