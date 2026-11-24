@@ -51,7 +51,10 @@ class HydrogenSupportTest {
         assertEquals(JsonPrimitive(256), oldBudget["thinking_budget"])
     }
 
-    private fun createClient(onRequest: () -> Unit): HttpClient {
+    private fun createClient(
+        model: String,
+        onRequest: () -> Unit,
+    ): HttpClient {
         val json = Json { ignoreUnknownKeys = true }
         return HttpClient(MockEngine) {
             engine {
@@ -59,7 +62,7 @@ class HydrogenSupportTest {
                     onRequest()
                     val body = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
                     if (request.url.encodedPath.endsWith("interactions")) {
-                        assertEquals(JsonPrimitive("gemini-4-hydrogen"), body["model"])
+                        assertEquals(JsonPrimitive(model), body["model"])
                         val config = body.getValue("generation_config").jsonObject
                         assertEquals(JsonPrimitive("xhigh"), config["thinking_level"])
                         respond(
@@ -82,7 +85,7 @@ class HydrogenSupportTest {
                             )
                         } else {
                             assertEquals(
-                                "/v1beta/models/gemini-4-hydrogen:generateContent",
+                                "/v1beta/models/$model:generateContent",
                                 request.url.encodedPath,
                             )
                             respond(
@@ -98,29 +101,32 @@ class HydrogenSupportTest {
     }
 
     @Test
-    fun hydrogenRequestsWorkAcrossBothApisAndStreaming() =
+    fun hydrogenAndNeonRequestsWorkAcrossBothApisAndStreaming() =
         runTest {
-            var calls = 0
-            val client = createClient { calls++ }
-            try {
-                val request =
-                    generateContentRequest {
-                        content { part { text { "Review this migration." } } }
-                        generationConfig { thinkingConfig = ThinkingConfig(thinkingLevel = ThinkingLevel.XHIGH) }
-                    }
-                val gemini = Gemini("test-key", client = client)
-                gemini.generateContent(request, model = "gemini-4-hydrogen")
-                assertEquals(1, gemini.streamGenerateContent(request, model = "gemini-4-hydrogen").toList().size)
-                GeminiAI(client = client, apiKey = "test-key").createInteraction(
-                    CreateInteractionRequest(
-                        model = "gemini-4-hydrogen",
-                        input = "Review this migration.",
-                        generationConfig = InteractionGenerationConfig(thinkingLevel = InteractionThinkingLevel.XHIGH),
-                    ),
-                )
-                assertEquals(3, calls)
-            } finally {
-                client.close()
+            for (model in listOf("gemini-4-hydrogen", "gemini-4-neon")) {
+                var calls = 0
+                val client = createClient(model) { calls++ }
+                try {
+                    val request =
+                        generateContentRequest {
+                            content { part { text { "Review this migration." } } }
+                            generationConfig { thinkingConfig = ThinkingConfig(thinkingLevel = ThinkingLevel.XHIGH) }
+                        }
+                    val gemini = Gemini("test-key", client = client)
+                    gemini.generateContent(request, model = model)
+                    assertEquals(1, gemini.streamGenerateContent(request, model = model).toList().size)
+                    GeminiAI(client = client, apiKey = "test-key").createInteraction(
+                        CreateInteractionRequest(
+                            model = model,
+                            input = "Review this migration.",
+                            generationConfig =
+                                InteractionGenerationConfig(thinkingLevel = InteractionThinkingLevel.XHIGH),
+                        ),
+                    )
+                    assertEquals(3, calls)
+                } finally {
+                    client.close()
+                }
             }
         }
 

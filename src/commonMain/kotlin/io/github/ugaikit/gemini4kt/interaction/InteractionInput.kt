@@ -11,6 +11,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
@@ -18,6 +19,7 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
@@ -304,3 +306,16 @@ fun interactionStepsInput(value: Array<InteractionStep>): InteractionInput = Int
  * Creates a typed input from interaction turns.
  */
 fun interactionTurnsInput(value: Array<InteractionTurn>): InteractionInput = InteractionInput.TurnList(value)
+
+/** Builds a function result containing text or media slices for a subsequent interaction. */
+fun interactionFunctionResult(
+    callId: String,
+    name: String,
+    content: Array<InteractionContent>,
+): InteractionStep =
+    InteractionStep(
+        type = "function_result",
+        callId = callId,
+        name = name,
+        result = Json.encodeToJsonElement(content),
+    )

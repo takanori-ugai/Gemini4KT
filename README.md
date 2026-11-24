@@ -108,6 +108,61 @@ accept `gemini-4-hydrogen` explicitly. See the
 [Hydrogen migration guide](https://aistudio.google.com/docs/whats-new-gemini-4-hydrogen)
 and [model card and pricing](https://aistudio.google.com/docs/models/gemini-4-hydrogen).
 
+### Gemini 4 Neon and multimodal file slicing
+
+Select `model = "gemini-4-neon"` with either generation API on a paid project.
+Neon uses the same `XHIGH` setting and long-decode flow as Hydrogen. Its default
+thinking level is `high` and its 1,048,576-token context is shared by input,
+thinking, and output. For more than 65,536 generated tokens, set a larger output
+budget and use background execution or continuation. See the
+[Neon migration guide](https://aistudio.google.com/docs/whats-new-gemini-4-neon).
+
+Attach Office or OpenDocument files directly with the file's MIME type. The
+existing Files API and inline data inputs support Word, PowerPoint, and Excel
+formats, as well as OpenDocument text, presentations, and spreadsheets.
+
+For Interactions, attach a file in an `InteractionContent` block and set
+`processing = InteractionStaticProcessing(...)`. This example selects a range
+from the second worksheet. Use `pageOptions` for page or slide ranges, or
+`startOffset` and `endOffset` for an audio or video clip. Video also supports
+`fps` and `contentLayers` such as `transcript`.
+
+```kotlin
+val sheet = InteractionContent(
+    type = "document",
+    uri = workbookUri,
+    mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    processing = InteractionStaticProcessing(
+        spreadsheetOptions = InteractionSpreadsheetOptions(
+            sheetIndex = 2,
+            visibleCells = "A1:H50",
+            contentLayers = listOf("data", "formulas"),
+        ),
+    ),
+)
+val request = CreateInteractionRequest(
+    model = "gemini-4-neon",
+    input = interactionContentInput(
+        arrayOf(sheet, InteractionContent(type = "text", text = "Summarize this range.")),
+    ),
+)
+```
+
+To return that same slice from a function, use
+`interactionStepsInput(arrayOf(interactionFunctionResult(callId, "inspect", arrayOf(sheet))))`
+as the next request's input and pass the previous interaction's ID.
+
+For Generate Content, set `documentMetadata`, `spreadsheetMetadata`,
+`videoMetadata`, or `audioMetadata` on a `Part` with `fileData` or `inlineData`.
+Generate Content layer values are uppercase, for example
+`DocumentMetadata(startPage = 3, endPage = 7, contentLayers = listOf("PAGE_TEXT"))`.
+The same metadata can be used on attachments in `FunctionResponse.parts`.
+
+See the [document](https://aistudio.google.com/docs/document-processing#customize-document-processing),
+[video](https://aistudio.google.com/docs/video-understanding#customize-video-processing),
+[audio](https://aistudio.google.com/docs/audio#clipping-intervals), and
+[function response](https://aistudio.google.com/docs/function-calling#file-inspection-options) guides.
+
 ### Decisions API (Gemini Decision 1)
 
 `GeminiAI.createDecision` evaluates typed questions over shared input and returns

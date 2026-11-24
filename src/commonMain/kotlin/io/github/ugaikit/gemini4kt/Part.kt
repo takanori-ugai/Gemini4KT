@@ -26,7 +26,10 @@ import kotlin.js.JsExport
  * @property mediaResolution Media resolution configurations.
  * @property toolCall Predicted server-side tool call details.
  * @property toolResponse Execution response of a predicted server-side tool call.
- * @property videoMetadata Video start/end offset config.
+ * @property videoMetadata Video clipping, sampling, and layer selection.
+ * @property documentMetadata Document page and layer selection.
+ * @property spreadsheetMetadata Worksheet, cell range, and layer selection.
+ * @property audioMetadata Audio clipping options.
  * @property mediaProcessing Optional video understanding strategy, including in function responses.
  */
 @OptIn(ExperimentalJsExport::class, kotlinx.serialization.ExperimentalSerializationApi::class)
@@ -49,6 +52,9 @@ data class Part(
     val toolResponse: ToolResponse? = null,
     val videoMetadata: VideoMetadata? = null,
     val mediaProcessing: MediaProcessing? = null,
+    val documentMetadata: DocumentMetadata? = null,
+    val spreadsheetMetadata: SpreadsheetMetadata? = null,
+    val audioMetadata: AudioMetadata? = null,
 )
 
 /**
@@ -141,6 +147,10 @@ class PartBuilder {
 
     /** Video understanding strategy for inline data or file data. */
     private var mediaProcessing: MediaProcessing? = null
+
+    private var documentMetadata: DocumentMetadata? = null
+    private var spreadsheetMetadata: SpreadsheetMetadata? = null
+    private var audioMetadata: AudioMetadata? = null
 
     /**
      * Handles text.
@@ -252,6 +262,15 @@ class PartBuilder {
      */
     fun videoMetadata(init: () -> VideoMetadata?) = apply { videoMetadata = init() }
 
+    /** Selects pages and content layers from a document. */
+    fun documentMetadata(init: () -> DocumentMetadata?) = apply { documentMetadata = init() }
+
+    /** Selects a worksheet, cell range, or content layers. */
+    fun spreadsheetMetadata(init: () -> SpreadsheetMetadata?) = apply { spreadsheetMetadata = init() }
+
+    /** Clips the attached audio. */
+    fun audioMetadata(init: () -> AudioMetadata?) = apply { audioMetadata = init() }
+
     /** Sets the video understanding strategy. */
     fun mediaProcessing(init: () -> MediaProcessing?) = apply { mediaProcessing = init() }
 
@@ -275,6 +294,9 @@ class PartBuilder {
             toolResponse = toolResponse,
             videoMetadata = videoMetadata,
             mediaProcessing = mediaProcessing,
+            documentMetadata = documentMetadata,
+            spreadsheetMetadata = spreadsheetMetadata,
+            audioMetadata = audioMetadata,
         ).also {
             val activePayloadCount =
                 listOfNotNull(
@@ -291,8 +313,13 @@ class PartBuilder {
             require(activePayloadCount <= 1) {
                 "Part builders support at most one primary payload field at a time."
             }
-            require(videoMetadata == null || inlineData != null || fileData != null) {
+            val hasFile = inlineData != null || fileData != null
+            require(videoMetadata == null || hasFile) {
                 "videoMetadata can only be set when inlineData or fileData is present."
+            }
+            val hasSliceMetadata = documentMetadata != null || spreadsheetMetadata != null || audioMetadata != null
+            require(!hasSliceMetadata || hasFile) {
+                "Media metadata requires inlineData or fileData."
             }
         }
 }

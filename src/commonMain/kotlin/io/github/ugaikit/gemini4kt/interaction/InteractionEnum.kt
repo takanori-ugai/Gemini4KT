@@ -97,7 +97,7 @@ enum class InteractionResponseModality {
 @OptIn(ExperimentalJsExport::class)
 @JsExport
 @Serializable
-enum class InteractionVideoProcessing {
+enum class InteractionVideoProcessing : InteractionMediaProcessing {
     @SerialName("static")
     STATIC,
 
