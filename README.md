@@ -98,6 +98,10 @@ caller controls each request:
   for example `request.copy(continuationToken = candidate.continuationToken)`.
   Combine output parts across hops in order to preserve thought signatures when replaying history.
 
+Automatic function-calling helpers return a response that requires continuation so
+the caller can resume generation. A request submitting a tool result starts a
+new turn and omits the previous generation hop's token.
+
 See the long decode guides for [Interactions](https://aistudio.google.com/docs/long-decode)
 and [Generate Content](https://aistudio.google.com/docs/long-decode?generate-content=true).
 
