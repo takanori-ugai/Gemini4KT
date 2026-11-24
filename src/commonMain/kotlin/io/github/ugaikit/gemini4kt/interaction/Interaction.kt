@@ -82,13 +82,14 @@ data class Interaction(
     val allOutputText: String?
         get() =
             steps
-                ?.asSequence()
-                ?.filter { it.type == "model_output" }
-                ?.flatMap { it.content.orEmpty().asSequence() }
-                ?.filter { it.type == "text" }
-                ?.mapNotNull { it.text }
-                ?.joinToString("")
-                ?.takeIf(String::isNotEmpty)
+                .orEmpty()
+                .asSequence()
+                .filter { it.type == "model_output" }
+                .flatMap { it.content.orEmpty().asSequence() }
+                .filter { it.type == "text" }
+                .mapNotNull { it.text }
+                .joinToString("")
+                .takeIf(String::isNotEmpty)
                 ?: outputTextRaw
 
     override fun equals(other: Any?): Boolean {
