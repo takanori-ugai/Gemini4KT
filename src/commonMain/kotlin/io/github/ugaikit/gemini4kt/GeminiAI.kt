@@ -5,6 +5,11 @@ import io.github.ugaikit.gemini4kt.agent.CreateAgentRequest
 import io.github.ugaikit.gemini4kt.agent.ListAgentsResponse
 import io.github.ugaikit.gemini4kt.decisions.CreateDecisionRequest
 import io.github.ugaikit.gemini4kt.decisions.DecisionResponse
+import io.github.ugaikit.gemini4kt.genie.GenieSession
+import io.github.ugaikit.gemini4kt.genie.GenieTransport
+import io.github.ugaikit.gemini4kt.genie.GenieWebRtcPeer
+import io.github.ugaikit.gemini4kt.genie.InteractionAuthToken
+import io.github.ugaikit.gemini4kt.genie.openGenieWebSocket
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.Interaction
 import io.github.ugaikit.gemini4kt.webhooks.CreateWebhookRequest
@@ -26,16 +31,21 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
@@ -322,6 +332,88 @@ class GeminiAI(
             throw GeminiException(parseError(response.bodyAsText(), response.status.value))
         }
         return json.decodeFromString(DecisionResponse.serializer(), response.bodyAsText())
+    }
+
+    /** Create an idle Genie 4 world. Send its initial prompt over the connected transport. */
+    @JsName("createGenieInteraction")
+    suspend fun createGenieInteraction(): Interaction =
+        postGenieRequest(
+            buildUrl(baseUrl, listOf("interactions")),
+            getApiKey(),
+            buildJsonObject { put("model", "genie-4") },
+        )
+
+    /** Mint a credential scoped to one interaction for a browser or other delegated client. */
+    @JsName("createInteractionAuthToken")
+    suspend fun createInteractionAuthToken(id: String): InteractionAuthToken =
+        postGenieRequest(
+            buildUrl(baseUrl, listOf("interactions", genieInteractionId(id), "auth_tokens")),
+            getApiKey(),
+            buildJsonObject {},
+        )
+
+    /** Connect to Genie 4 and receive media as base64 video and audio deltas. */
+    @JsName("connectGenieWebSocket")
+    suspend fun connectGenieWebSocket(
+        id: String,
+        authToken: InteractionAuthToken? = null,
+        timeoutMs: Long = 30_000,
+    ): GenieSession =
+        withTimeout(timeoutMs) {
+            httpClient.openGenieWebSocket(genieInteractionId(id), authToken?.authToken ?: getApiKey(), json)
+        }
+
+    /** Exchange SDP and connect a platform WebRTC peer. Media plays through its native tracks. */
+    @JsName("connectGenieWebRtc")
+    suspend fun connectGenieWebRtc(
+        id: String,
+        peer: GenieWebRtcPeer,
+        authToken: InteractionAuthToken? = null,
+        timeoutMs: Long = 30_000,
+    ): GenieSession {
+        val interactionId = genieInteractionId(id)
+        var connected = false
+        try {
+            withTimeout(timeoutMs) {
+                val offer = peer.createOffer()
+                val answer =
+                    postGenieRequest<GenieSdpAnswer>(
+                        buildUrl(baseUrl, listOf("interactions", interactionId)) + ":webrtc",
+                        authToken?.authToken ?: getApiKey(),
+                        buildJsonObject { put("offer_sdp", offer) },
+                        sendRevision = false,
+                    )
+                peer.acceptAnswer(answer.sdp)
+            }
+            val session = GenieSession(interactionId, GenieTransport(peer.events, peer::send, peer::close), json)
+            connected = true
+            return session
+        } finally {
+            if (!connected) withContext(NonCancellable) { runCatching { peer.close() } }
+        }
+    }
+
+    private fun genieInteractionId(id: String): String =
+        requireNotNull(normalizeResourcePathSegments(id, "interactions").singleOrNull()) {
+            "Expected an interaction ID or interactions/{id} resource name."
+        }
+
+    private suspend inline fun <reified T> postGenieRequest(
+        url: String,
+        credential: String,
+        payload: JsonElement,
+        sendRevision: Boolean = true,
+    ): T {
+        val response =
+            httpClient.post(url) {
+                header("x-goog-api-key", credential)
+                if (sendRevision) header("Api-Revision", API_REVISION)
+                contentType(ContentType.Application.Json)
+                setBody(payload.toString())
+            }
+        val body = response.bodyAsText()
+        if (!response.status.isSuccess()) throw GeminiException(parseError(body, response.status.value))
+        return json.decodeFromString<T>(body)
     }
 
     @JsName("createInteraction")
@@ -670,3 +762,8 @@ class GeminiAI(
         }
     }
 }
+
+@Serializable
+private data class GenieSdpAnswer(
+    @SerialName("answer_sdp") val sdp: String,
+)

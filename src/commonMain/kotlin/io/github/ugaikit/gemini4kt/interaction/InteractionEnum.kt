@@ -29,6 +29,9 @@ enum class InteractionStatus {
 
     @SerialName("cancelled")
     CANCELLED,
+
+    @SerialName("idle")
+    IDLE,
 }
 
 /**

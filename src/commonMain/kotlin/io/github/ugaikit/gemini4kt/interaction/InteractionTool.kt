@@ -24,6 +24,8 @@ import kotlin.js.JsExport
  * @property enablePromptInjectionDetection Optional screenshot prompt injection detection flag.
  * @property disabledSafetyPolicies Optional lowercase Computer Use safety policy names to disable.
  * Omit to retain the API defaults.
+ * @property deferLoading When true, load the function or remote MCP schemas on demand through server tool search.
+ * @property execution Where tool search runs. Use "client" for a caller-managed registry.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -44,6 +46,8 @@ data class InteractionTool(
     @SerialName("metadata_filter") val metadataFilter: String? = null,
     @SerialName("enable_prompt_injection_detection") val enablePromptInjectionDetection: Boolean? = null,
     @SerialName("disabled_safety_policies") val disabledSafetyPolicies: Array<String>? = null,
+    @SerialName("defer_loading") val deferLoading: Boolean? = null,
+    val execution: String? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -66,6 +70,9 @@ data class InteractionTool(
         if (enablePromptInjectionDetection != other.enablePromptInjectionDetection) return false
         if (!disabledSafetyPolicies.contentEquals(other.disabledSafetyPolicies)) return false
 
+        if (deferLoading != other.deferLoading) return false
+        if (execution != other.execution) return false
+
         return true
     }
 
@@ -84,6 +91,8 @@ data class InteractionTool(
         result = 31 * result + (metadataFilter?.hashCode() ?: 0)
         result = 31 * result + (enablePromptInjectionDetection?.hashCode() ?: 0)
         result = 31 * result + (disabledSafetyPolicies?.contentHashCode() ?: 0)
+        result = 31 * result + deferLoading.hashCode()
+        result = 31 * result + execution.hashCode()
         return result
     }
 }

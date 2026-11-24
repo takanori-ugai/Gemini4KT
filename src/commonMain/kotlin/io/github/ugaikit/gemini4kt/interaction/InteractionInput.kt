@@ -11,6 +11,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
@@ -18,11 +19,21 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
 private val interactionStepTypes =
-    setOf("thought", "processing_call", "processing_result", "model_output", "user_input", "assistant_output")
+    setOf(
+        "thought",
+        "processing_call",
+        "processing_result",
+        "model_output",
+        "user_input",
+        "assistant_output",
+        "tool_search_call",
+        "tool_search_result",
+    )
 
 /**
  * Checks whether an input object represents an interaction step.
@@ -304,3 +315,16 @@ fun interactionStepsInput(value: Array<InteractionStep>): InteractionInput = Int
  * Creates a typed input from interaction turns.
  */
 fun interactionTurnsInput(value: Array<InteractionTurn>): InteractionInput = InteractionInput.TurnList(value)
+
+/** Return the function schemas selected by a client-side tool search call. */
+fun interactionToolSearchResult(
+    callId: String,
+    name: String,
+    tools: Array<InteractionTool>,
+): InteractionStep =
+    InteractionStep(
+        type = "function_result",
+        callId = callId,
+        name = name,
+        result = Json.encodeToJsonElement(tools),
+    )
