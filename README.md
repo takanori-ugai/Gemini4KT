@@ -81,6 +81,26 @@ requests are limited to 65,536 tokens per hop; use Interactions `background = tr
 with a larger `maxOutputTokens` for longer outputs. The library leaves output caps
 and thinking depth unset unless configured by the caller.
 
+For background generation, poll with `getInteraction(id)` while the status is
+`QUEUED` or `IN_PROGRESS`, then read `allOutputText` to concatenate text from all
+model output steps. To resume a stored stream, collect
+`resumeInteractionStream(id, lastEventId)` using the latest received `event_id`.
+
+For foreground long decode, Gemini4KT exposes the REST continuation tokens so the
+caller controls each request:
+
+- **Interactions**: On `REQUIRES_CONTINUATION`, create the next request with the
+  same model and generation settings, the hop's `continuationToken`, and its ID
+  as `previousInteractionId`. Omit `input` for a stored interaction. For
+  `store = false`, resend the original input and omit `previousInteractionId`.
+- **Generate Content**: On `finishReason == "CONTINUATION"`, resend the same
+  request with the candidate's `continuationToken` at the request top level,
+  for example `request.copy(continuationToken = candidate.continuationToken)`.
+  Combine output parts across hops in order to preserve thought signatures when replaying history.
+
+See the long decode guides for [Interactions](https://aistudio.google.com/docs/long-decode)
+and [Generate Content](https://aistudio.google.com/docs/long-decode?generate-content=true).
+
 The Managed Agents Antigravity default is selected by the service and now uses
 Hydrogen. Existing `antigravity-preview-09-2026` requests inherit it when no model
 override is supplied; `InteractionAgentConfig.model` and `AgentConfig.model` also
