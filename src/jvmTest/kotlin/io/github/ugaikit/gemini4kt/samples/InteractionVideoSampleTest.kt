@@ -35,7 +35,7 @@ class InteractionVideoSampleTest {
             coVerify(exactly = 1) {
                 client.createInteraction(
                     match { request ->
-                        request.model == "gemini-3.8-flash" &&
+                        request.model == "gemini-4-hydrogen" &&
                             request.background == true &&
                             request.input ==
                             InteractionInput.InteractionContentList(
