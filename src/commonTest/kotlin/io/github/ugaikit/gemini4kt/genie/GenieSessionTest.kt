@@ -129,12 +129,12 @@ class GenieSessionTest {
     fun decodesOptionalEventFieldsAndRoundTripsTypedEvents() {
         val audio =
             """
-                {
-                  "event_type":"step.delta",
-                  "index":3,
-                  "delta":{"type":"audio","data":"AQID","rate":48000},
-                  "metadata":{"total_usage":{"total_tokens":42}}
-                }
+            {
+              "event_type":"step.delta",
+              "index":3,
+              "delta":{"type":"audio","data":"AQID","rate":48000},
+              "metadata":{"total_usage":{"total_tokens":42}}
+            }
             """.trimIndent()
         val expected =
             GenieEvent(
