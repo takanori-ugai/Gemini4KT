@@ -351,6 +351,15 @@ class InteractionSerializationTest {
         assertTrue(encoded.contains("\"speech_config\":{"))
     }
 
+    @Test
+    fun mediaProcessingRejectsNonJsonDecoders() {
+        val failure =
+            assertFailsWith<SerializationException> {
+                InteractionMediaProcessingSerializer.deserialize(NonJsonDecoder)
+            }
+        assertEquals("Media processing requires JSON.", failure.message)
+    }
+
     private object NonJsonDecoder : AbstractDecoder() {
         override val serializersModule: SerializersModule = SerializersModule {}
 

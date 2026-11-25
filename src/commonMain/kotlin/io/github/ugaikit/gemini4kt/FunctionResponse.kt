@@ -17,7 +17,7 @@ import kotlin.js.JsExport
  * formatted as strings for uniformity and ease of handling.
  * @property parts Optional multimodal results: images, documents (including Office and
  * OpenDocument), audio, and video, using inline data or Files API URIs. Parts can include
- * display names, and video parts can set [Part.mediaProcessing].
+ * display names and media slicing metadata. Video parts can also set [Part.mediaProcessing].
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport

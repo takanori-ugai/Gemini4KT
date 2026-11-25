@@ -10,6 +10,7 @@ import kotlin.js.JsExport
  * @property startOffset The start offset of the video.
  * @property endOffset The end offset of the video.
  * @property fps The frame rate of the video sent to the model.
+ * @property contentLayers Optional `FRAMES`, `AUDIO`, or `TRANSCRIPT` layers.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -18,4 +19,5 @@ data class VideoMetadata(
     val startOffset: String? = null,
     val endOffset: String? = null,
     val fps: Double? = null,
+    val contentLayers: List<String>? = null,
 )
