@@ -45,4 +45,27 @@ class GeminiLiveConfigTest {
         assertTrue(json.configuration.encodeDefaults)
         assertTrue(json.configuration.ignoreUnknownKeys)
     }
+
+    @Test
+    fun defaultSetupCarriesVoiceEditingConfiguration() {
+        val transcription = AudioTranscriptionConfig(AudioTranscriptionMode.SMART, "Original")
+        val realtime = RealtimeInputConfig(automaticActivityDetection = AutomaticActivityDetection(disabled = true))
+        val live =
+            GeminiLive(
+                apiKey = "key",
+                model = "gemini-3.5-transcribe-live",
+                config = LiveConnectConfig(inputAudioTranscription = transcription, realtimeInputConfig = realtime),
+            )
+
+        val setup = live.defaultSetup()
+        assertEquals(transcription, setup.inputAudioTranscription)
+        assertEquals(realtime, setup.realtimeInputConfig)
+    }
+
+    @Test
+    fun defaultSetupLeavesVoiceEditingSettingsUnsetByDefault() {
+        val setup = GeminiLive(apiKey = "key", model = "gemini-live").defaultSetup()
+        assertEquals(null, setup.inputAudioTranscription)
+        assertEquals(null, setup.realtimeInputConfig)
+    }
 }
