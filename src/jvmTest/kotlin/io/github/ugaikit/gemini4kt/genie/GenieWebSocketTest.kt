@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt.genie
 import io.github.ugaikit.gemini4kt.GeminiAI
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
@@ -13,6 +14,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -22,6 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class GenieWebSocketTest {
     @Test
@@ -39,15 +42,7 @@ class GenieWebSocketTest {
                     assertEquals("/v1beta/interactions/live", request.url.encodedPath)
                     assertEquals("auth_tokens/scoped", request.url.parameters["auth_token"])
                     assertEquals(null, request.headers["x-goog-api-key"])
-                    val response = respond("", HttpStatusCode.SwitchingProtocols)
-                    HttpResponseData(
-                        response.statusCode,
-                        response.requestTime,
-                        response.headers,
-                        response.version,
-                        socket,
-                        response.callContext,
-                    )
+                    upgrade(socket)
                 }
             try {
                 HttpClient(engine).use { client ->
@@ -97,6 +92,43 @@ class GenieWebSocketTest {
         assertEquals(listOf("step.delta", "interaction.cancelled"), events.map { it.eventType })
         assertEquals("AQID", events.first().delta?.data)
         assertEquals("image/jpeg", events.first().delta?.mimeType)
+    }
+
+    @Test
+    fun cancelsUpgradedSocketWhenSendingConnectFrameFails() =
+        runTest {
+            val socketJob = Job()
+            val socket = mockk<DefaultWebSocketSession>(relaxed = true)
+            val failure = IllegalStateException("Could not send interaction.connect")
+            every { socket.coroutineContext } returns socketJob
+            coEvery { socket.send(any()) } throws failure
+            val engine = MockEngine { upgrade(socket) }
+            try {
+                HttpClient(engine).use { client ->
+                    val api = GeminiAI(client = client, apiKey = "server-key")
+                    val thrown =
+                        assertFailsWith<IllegalStateException> {
+                            withContext(Dispatchers.Default) { api.connectGenieWebSocket("world") }
+                        }
+                    assertEquals(failure.message, thrown.message)
+                    assertTrue(socketJob.isCancelled)
+                }
+            } finally {
+                socketJob.cancel()
+                engine.close()
+            }
+        }
+
+    private fun MockRequestHandleScope.upgrade(socket: DefaultWebSocketSession): HttpResponseData {
+        val response = respond("", HttpStatusCode.SwitchingProtocols)
+        return HttpResponseData(
+            response.statusCode,
+            response.requestTime,
+            response.headers,
+            response.version,
+            socket,
+            response.callContext,
+        )
     }
 
     @Test

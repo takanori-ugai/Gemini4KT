@@ -3,6 +3,7 @@ package io.github.ugaikit.gemini4kt.genie
 import io.github.ugaikit.gemini4kt.GeminiAI
 import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.interaction.InteractionStatus
+import io.github.ugaikit.gemini4kt.interaction.InteractionUsage
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -112,9 +113,62 @@ class GenieSessionTest {
         }
 
     @Test
-    fun rejectedWebRtcOfferClosesPeerAndPreservesServerError() =
+    fun blankWorldPromptIsOmittedWhenAnImageIsPresent() =
         runTest {
             val peer = TestPeer()
+            val session = GenieSession("world", GenieTransport(peer.events, peer::send, peer::close), Json)
+            session.setupWorld(text = " ", referenceImage = GenieReferenceImage("image/png", "AQID"))
+
+            assertEquals(
+                """{"event_type":"world_setup","reference_image":{"mime_type":"image/png","data":"AQID"}}""",
+                peer.sent.single(),
+            )
+        }
+
+    @Test
+    fun decodesOptionalEventFieldsAndRoundTripsTypedEvents() {
+        val audio =
+            """
+                {
+                  "event_type":"step.delta",
+                  "index":3,
+                  "delta":{"type":"audio","data":"AQID","rate":48000},
+                  "metadata":{"total_usage":{"total_tokens":42}}
+                }
+            """.trimIndent()
+        val expected =
+            GenieEvent(
+                eventType = "step.delta",
+                index = 3,
+                delta = GenieMediaDelta(type = "audio", data = "AQID", rate = 48_000),
+                metadata = GenieEventMetadata(InteractionUsage(totalTokens = 42)),
+            )
+        val decoded = Json.decodeFromString<GenieEvent>(audio)
+        assertEquals(expected, decoded)
+        assertEquals(3, decoded.index)
+        assertEquals("audio", decoded.delta?.type)
+        assertEquals(48_000, decoded.delta?.rate)
+        assertEquals(Json.parseToJsonElement(audio), Json.parseToJsonElement(Json.encodeToString(expected)))
+
+        val text =
+            Json.decodeFromString<GenieEvent>(
+                """{"event_type":"step.delta","delta":{"type":"text","text":"Ready"}}""",
+            )
+        assertEquals("Ready", text.delta?.text)
+        val completed =
+            Json.decodeFromString<GenieEvent>(
+                """{"event_type":"interaction.completed","interaction":{"id":"world","status":"completed"}}""",
+            )
+        assertEquals(JsonPrimitive("world"), completed.interaction?.get("id"))
+        val error = Json.decodeFromString<GenieEvent>("""{"event_type":"error","error":{"message":"Access denied"}}""")
+        assertEquals(JsonPrimitive("Access denied"), error.error?.get("message"))
+        assertEquals(GenieEventMetadata(), Json.decodeFromString<GenieEventMetadata>("{}"))
+    }
+
+    @Test
+    fun rejectedWebRtcOfferClosesPeerAndPreservesServerError() =
+        runTest {
+            val peer = TestPeer(closeFailure = IllegalStateException("Peer close failed"))
             val engine =
                 MockEngine { request ->
                     assertEquals("/v1beta/interactions/world:webrtc", request.url.encodedPath)
@@ -156,7 +210,9 @@ class GenieSessionTest {
             }
         }
 
-    private class TestPeer : GenieWebRtcPeer {
+    private class TestPeer(
+        private val closeFailure: IllegalStateException? = null,
+    ) : GenieWebRtcPeer {
         val sent = mutableListOf<String>()
         var answer: String? = null
         var closed = false
@@ -184,6 +240,7 @@ class GenieSessionTest {
 
         override suspend fun close() {
             closed = true
+            closeFailure?.let { throw it }
         }
     }
 }
