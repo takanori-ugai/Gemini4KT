@@ -3,8 +3,13 @@ package io.github.ugaikit.gemini4kt
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.InteractionContent
 import io.github.ugaikit.gemini4kt.interaction.InteractionInput
+import io.github.ugaikit.gemini4kt.interaction.InteractionPageOptions
+import io.github.ugaikit.gemini4kt.interaction.InteractionSpreadsheetOptions
+import io.github.ugaikit.gemini4kt.interaction.InteractionStaticProcessing
 import io.github.ugaikit.gemini4kt.interaction.InteractionStep
 import io.github.ugaikit.gemini4kt.interaction.InteractionVideoProcessing
+import io.github.ugaikit.gemini4kt.interaction.interactionFunctionResult
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -14,6 +19,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 class ExpandedMediaSupportTest {
@@ -147,4 +153,176 @@ class ExpandedMediaSupportTest {
             }
         }
     }
+
+    @Test
+    fun generateContentSerializesSlicingInInputsAndFunctionResponseParts() {
+        val attachments =
+            arrayOf(
+                part {
+                    fileData { FileData("application/msword", "files/report") }
+                    documentMetadata { DocumentMetadata(3, 7, listOf("PAGE_TEXT")) }
+                },
+                part {
+                    fileData { FileData("application/vnd.ms-excel", "files/sheet") }
+                    spreadsheetMetadata { SpreadsheetMetadata(2, "A1:H50", listOf("FORMULAS")) }
+                },
+                part {
+                    inlineData {
+                        mimeType { "audio/wav" }
+                        data { "AQID" }
+                    }
+                    audioMetadata { AudioMetadata("10.5s", "30s") }
+                },
+                part {
+                    fileData { FileData("video/mp4", "files/video") }
+                    videoMetadata { VideoMetadata("1s", "5s", 2.5, listOf("TRANSCRIPT")) }
+                },
+            )
+        val request = GenerateContentRequest(contents = arrayOf(Content(parts = attachments)))
+        val input =
+            Json
+                .encodeToJsonElement(request)
+                .jsonObject
+                .getValue("contents")
+                .jsonArray
+                .single()
+                .jsonObject
+        val response = FunctionResponse("inspect", buildJsonObject { }, attachments)
+        assertEquals(input["parts"], Json.encodeToJsonElement(response).jsonObject["parts"])
+
+        val parts = input.getValue("parts").jsonArray.map { it.jsonObject }
+        assertEquals(
+            Json.parseToJsonElement("""{"startPage":3,"endPage":7,"contentLayers":["PAGE_TEXT"]}"""),
+            parts[0]["documentMetadata"],
+        )
+        assertEquals(
+            Json.parseToJsonElement("""{"sheetIndex":2,"visibleCells":"A1:H50","contentLayers":["FORMULAS"]}"""),
+            parts[1]["spreadsheetMetadata"],
+        )
+        assertEquals(
+            Json.parseToJsonElement("""{"startOffset":"10.5s","endOffset":"30s"}"""),
+            parts[2]["audioMetadata"],
+        )
+        assertEquals(
+            Json.parseToJsonElement(
+                """{"startOffset":"1s","endOffset":"5s","fps":2.5,"contentLayers":["TRANSCRIPT"]}""",
+            ),
+            parts[3]["videoMetadata"],
+        )
+    }
+
+    @Test
+    fun interactionsSerializeSlicingInInputsAndFunctionResults() {
+        val attachments = slicedInteractionAttachments()
+        val prompt =
+            CreateInteractionRequest(
+                model = "gemini-4-neon",
+                input = InteractionInput.InteractionContentList(attachments),
+            )
+        val encodedPrompt = Json.encodeToJsonElement(prompt).jsonObject
+        val input = encodedPrompt.getValue("input").jsonArray
+        val result = interactionFunctionResult("call_1", "inspect", attachments)
+        val followUp =
+            prompt.copy(
+                input = InteractionInput.StepList(arrayOf(result)),
+                previousInteractionId = "interaction_1",
+            )
+        val encodedFollowUp = Json.encodeToJsonElement(followUp).jsonObject
+        val step =
+            encodedFollowUp
+                .getValue("input")
+                .jsonArray
+                .single()
+                .jsonObject
+        assertEquals(input, step["result"])
+        assertEquals(JsonPrimitive("call_1"), step["call_id"])
+        val expected =
+            Json.parseToJsonElement(
+                """
+                [
+                  {"type":"static","page_options":{"start_page":3,"end_page":7,"content_layers":["page_text"]}},
+                  {"type":"static","spreadsheet_options":{
+                    "sheet_index":2,"visible_cells":"A1:H50","content_layers":["formulas"]
+                  }},
+                  {"type":"static","start_offset":"10.5s","end_offset":"30s"},
+                  {"type":"static","start_offset":"1s","end_offset":"5s","fps":2.5,"content_layers":["transcript"]}
+                ]
+                """.trimIndent(),
+            )
+        assertEquals(expected.jsonArray, input.map { it.jsonObject.getValue("processing") })
+        assertEquals(prompt, Json.decodeFromString<CreateInteractionRequest>(Json.encodeToString(prompt)))
+    }
+
+    @Test
+    fun rejectsUnsupportedStructuredInteractionProcessing() {
+        val agentic =
+            Json.decodeFromString<InteractionContent>("""{"type":"video","processing":{"type":"agentic"}}""")
+        assertEquals(InteractionVideoProcessing.AGENTIC, agentic.processing)
+        for (processing in listOf("""{"type":"unknown"}""", "[]")) {
+            assertFailsWith<SerializationException> {
+                Json.decodeFromString<InteractionContent>("""{"type":"video","processing":$processing}""")
+            }
+        }
+    }
+
+    @Test
+    fun rejectsSlicingMetadataWithoutMedia() {
+        assertFailsWith<IllegalArgumentException> { part { documentMetadata { DocumentMetadata() } } }
+        assertFailsWith<IllegalArgumentException> { part { spreadsheetMetadata { SpreadsheetMetadata() } } }
+        assertFailsWith<IllegalArgumentException> { part { audioMetadata { AudioMetadata() } } }
+    }
+
+    @Test
+    fun interactionSlicingSupportsEmptyOptionsForServerDefaults() {
+        val pages = InteractionStaticProcessing(pageOptions = InteractionPageOptions())
+        val sheet = InteractionStaticProcessing(spreadsheetOptions = InteractionSpreadsheetOptions())
+        assertEquals(
+            Json.parseToJsonElement("""{"type":"static","page_options":{}}"""),
+            Json.encodeToJsonElement(pages),
+        )
+        assertEquals(
+            Json.parseToJsonElement("""{"type":"static","spreadsheet_options":{}}"""),
+            Json.encodeToJsonElement(sheet),
+        )
+    }
+
+    private fun slicedInteractionAttachments(): Array<InteractionContent> =
+        arrayOf(
+            InteractionContent(
+                type = "document",
+                uri = "files/report",
+                mimeType = "application/vnd.oasis.opendocument.text",
+                processing =
+                    InteractionStaticProcessing(
+                        pageOptions = InteractionPageOptions(3, 7, listOf("page_text")),
+                    ),
+            ),
+            InteractionContent(
+                type = "document",
+                uri = "files/sheet",
+                mimeType = "application/vnd.oasis.opendocument.spreadsheet",
+                processing =
+                    InteractionStaticProcessing(
+                        spreadsheetOptions = InteractionSpreadsheetOptions(2, "A1:H50", listOf("formulas")),
+                    ),
+            ),
+            InteractionContent(
+                type = "audio",
+                data = "AQID",
+                mimeType = "audio/wav",
+                processing = InteractionStaticProcessing(startOffset = "10.5s", endOffset = "30s"),
+            ),
+            InteractionContent(
+                type = "video",
+                uri = "files/video",
+                mimeType = "video/mp4",
+                processing =
+                    InteractionStaticProcessing(
+                        startOffset = "1s",
+                        endOffset = "5s",
+                        fps = 2.5,
+                        contentLayers = listOf("transcript"),
+                    ),
+            ),
+        )
 }

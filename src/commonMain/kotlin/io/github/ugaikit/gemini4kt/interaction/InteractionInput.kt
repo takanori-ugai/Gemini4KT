@@ -316,6 +316,19 @@ fun interactionStepsInput(value: Array<InteractionStep>): InteractionInput = Int
  */
 fun interactionTurnsInput(value: Array<InteractionTurn>): InteractionInput = InteractionInput.TurnList(value)
 
+/** Builds a function result containing text or media slices for a subsequent interaction. */
+fun interactionFunctionResult(
+    callId: String,
+    name: String,
+    content: Array<InteractionContent>,
+): InteractionStep =
+    InteractionStep(
+        type = "function_result",
+        callId = callId,
+        name = name,
+        result = Json.encodeToJsonElement(content),
+    )
+
 /** Return the function schemas selected by a client-side tool search call. */
 fun interactionToolSearchResult(
     callId: String,
