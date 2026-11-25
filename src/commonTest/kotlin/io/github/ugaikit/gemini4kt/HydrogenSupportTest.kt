@@ -85,6 +85,10 @@ class HydrogenSupportTest {
                         assertEquals(JsonPrimitive("XHIGH"), config["thinking_level"])
                         assertFalse(config.containsKey("thinking_budget"))
                         if (request.url.encodedPath.endsWith(":streamGenerateContent")) {
+                            assertEquals(
+                                "/v1beta/models/$model:streamGenerateContent",
+                                request.url.encodedPath,
+                            )
                             respond(
                                 "data: {\"candidates\":[]}\n\n",
                                 headers = headersOf(HttpHeaders.ContentType, "text/event-stream"),
