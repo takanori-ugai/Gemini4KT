@@ -6,6 +6,7 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpResponseData
+import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.websocket.DefaultWebSocketSession
 import io.ktor.websocket.Frame
@@ -13,8 +14,12 @@ import io.ktor.websocket.readText
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -25,6 +30,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 class GenieWebSocketTest {
     @Test
@@ -93,6 +99,37 @@ class GenieWebSocketTest {
         assertEquals("AQID", events.first().delta?.data)
         assertEquals("image/jpeg", events.first().delta?.mimeType)
     }
+
+    @Test
+    fun cancellingConnectionStopsPendingHandshakeAndKeepsParentClientUsable() =
+        runTest(timeout = 10.seconds) {
+            val handshakeStarted = CompletableDeferred<Unit>()
+            val handshakeStopped = CompletableDeferred<Unit>()
+            val engine =
+                MockEngine { request ->
+                    if (request.url.encodedPath == "/v1beta/interactions/live") {
+                        try {
+                            handshakeStarted.complete(Unit)
+                            awaitCancellation()
+                        } finally {
+                            handshakeStopped.complete(Unit)
+                        }
+                    }
+                    respond("OK")
+                }
+            try {
+                HttpClient(engine).use { client ->
+                    val api = GeminiAI(client = client, apiKey = "server-key")
+                    val connection = async(Dispatchers.Default) { api.connectGenieWebSocket("world") }
+                    handshakeStarted.await()
+                    connection.cancelAndJoin()
+                    handshakeStopped.await()
+                    assertEquals(HttpStatusCode.OK, client.get("https://example.test/health").status)
+                }
+            } finally {
+                engine.close()
+            }
+        }
 
     @Test
     fun cancelsUpgradedSocketWhenSendingConnectFrameFails() =

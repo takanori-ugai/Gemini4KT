@@ -31,8 +31,7 @@ internal suspend fun HttpClient.openGenieWebSocket(
         )
     val client = config { install(WebSockets) }
     var connectingSocket: DefaultClientWebSocketSession? = null
-    var connected = false
-    try {
+    return try {
         val socket =
             client.webSocketSession(url) {
                 if (token == null) header("x-goog-api-key", credential)
@@ -63,13 +62,12 @@ internal suspend fun HttpClient.openGenieWebSocket(
                     }
                 },
             )
-        val session = GenieSession(id, transport, json)
-        connected = true
-        return session
-    } finally {
-        if (!connected) {
-            connectingSocket?.cancel()
-            client.close()
-        }
+        GenieSession(id, transport, json)
+    } catch (failure: Throwable) {
+        connectingSocket?.cancel()
+        // The handshake runs in the derived client's scope.
+        client.coroutineContext.cancel()
+        client.close()
+        throw failure
     }
 }

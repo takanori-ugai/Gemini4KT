@@ -373,8 +373,7 @@ class GeminiAI(
         timeoutMs: Long = 30_000,
     ): GenieSession {
         val interactionId = genieInteractionId(id)
-        var connected = false
-        try {
+        return try {
             withTimeout(timeoutMs) {
                 val offer = peer.createOffer()
                 val answer =
@@ -386,11 +385,10 @@ class GeminiAI(
                     )
                 peer.acceptAnswer(answer.sdp)
             }
-            val session = GenieSession(interactionId, GenieTransport(peer.events, peer::send, peer::close), json)
-            connected = true
-            return session
-        } finally {
-            if (!connected) withContext(NonCancellable) { runCatching { peer.close() } }
+            GenieSession(interactionId, GenieTransport(peer.events, peer::send, peer::close), json)
+        } catch (failure: Throwable) {
+            withContext(NonCancellable) { runCatching { peer.close() } }
+            throw failure
         }
     }
 
