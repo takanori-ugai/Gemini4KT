@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -237,5 +238,14 @@ class LiveTypesTest {
         assertTrue(encoded.contains("\"contextWindowCompression\""))
         assertTrue(encoded.contains("\"targetTokens\":512"))
         assertTrue(encoded.contains("\"proactivity\""))
+    }
+
+    @Test
+    fun sourceTextRequiresSmartMode() {
+        for (mode in listOf(null, AudioTranscriptionMode.VERBATIM)) {
+            assertFailsWith<IllegalArgumentException> {
+                AudioTranscriptionConfig(mode = mode, sourceText = "Original")
+            }
+        }
     }
 }

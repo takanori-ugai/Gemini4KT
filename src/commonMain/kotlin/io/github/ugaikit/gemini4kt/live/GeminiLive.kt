@@ -85,41 +85,7 @@ class GeminiLive(
 
         try {
             // Send Setup Message
-            val setupMessage =
-                setup ?: run {
-                    val generationConfig =
-                        when {
-                            config?.generationConfig != null ->
-                                config.generationConfig.copy(
-                                    responseModalities =
-                                        config.responseModalities
-                                            ?: config.generationConfig.responseModalities,
-                                    speechConfig = config.speechConfig ?: config.generationConfig.speechConfig,
-                                )
-                            config?.responseModalities != null || config?.speechConfig != null -> {
-                                val connectConfig = requireNotNull(config)
-                                io.github.ugaikit.gemini4kt.GenerationConfig(
-                                    responseModalities = connectConfig.responseModalities,
-                                    speechConfig = connectConfig.speechConfig,
-                                )
-                            }
-                            else -> null
-                        }
-
-                    // Ensure model has "models/" prefix if not present
-                    val modelName = if (model.startsWith("models/")) model else "models/$model"
-
-                    BidiGenerateContentSetup(
-                        model = modelName,
-                        generationConfig = generationConfig,
-                        systemInstruction = config?.systemInstruction,
-                        tools = config?.tools,
-                        inputAudioTranscription = config?.inputAudioTranscription,
-                        realtimeInputConfig = config?.realtimeInputConfig,
-                    )
-                }
-
-            val clientMessage = BidiGenerateContentClientMessage(setup = setupMessage)
+            val clientMessage = BidiGenerateContentClientMessage(setup = setup ?: defaultSetup())
             val jsonMessage = json.encodeToString(clientMessage)
             logger.debug { "Sending setup message (${jsonMessage.length} chars)" }
             connection.session.send(Frame.Text(jsonMessage))
@@ -153,6 +119,39 @@ class GeminiLive(
             }
             throw e
         }
+    }
+
+    internal fun defaultSetup(): BidiGenerateContentSetup {
+        val generationConfig =
+            when {
+                config?.generationConfig != null ->
+                    config.generationConfig.copy(
+                        responseModalities =
+                            config.responseModalities
+                                ?: config.generationConfig.responseModalities,
+                        speechConfig = config.speechConfig ?: config.generationConfig.speechConfig,
+                    )
+                config?.responseModalities != null || config?.speechConfig != null -> {
+                    val connectConfig = requireNotNull(config)
+                    io.github.ugaikit.gemini4kt.GenerationConfig(
+                        responseModalities = connectConfig.responseModalities,
+                        speechConfig = connectConfig.speechConfig,
+                    )
+                }
+                else -> null
+            }
+
+        // Ensure model has "models/" prefix if not present
+        val modelName = if (model.startsWith("models/")) model else "models/$model"
+
+        return BidiGenerateContentSetup(
+            model = modelName,
+            generationConfig = generationConfig,
+            systemInstruction = config?.systemInstruction,
+            tools = config?.tools,
+            inputAudioTranscription = config?.inputAudioTranscription,
+            realtimeInputConfig = config?.realtimeInputConfig,
+        )
     }
 }
 
