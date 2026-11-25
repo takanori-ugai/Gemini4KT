@@ -6,6 +6,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class ToolRetrievalTest {
@@ -24,8 +25,12 @@ class ToolRetrievalTest {
             )
         val client = InteractionTool(type = "tool_search", name = "search_registry", execution = "client")
         for (tool in arrayOf(server, deferredFunction, deferredMcp, client)) {
-            assertEquals(tool, json.decodeFromString<InteractionTool>(json.encodeToString(tool)))
+            val decoded = json.decodeFromString<InteractionTool>(json.encodeToString(tool))
+            assertEquals(tool, decoded)
+            assertEquals(tool.hashCode(), decoded.hashCode())
         }
+        assertNotEquals(deferredFunction, deferredFunction.copy(deferLoading = false))
+        assertNotEquals(client, client.copy(execution = null))
         assertEquals("""{"type":"tool_search"}""", json.encodeToString(server))
         val deferredFields = json.parseToJsonElement(json.encodeToString(deferredMcp)).jsonObject
         assertEquals(JsonPrimitive(true), deferredFields["defer_loading"])

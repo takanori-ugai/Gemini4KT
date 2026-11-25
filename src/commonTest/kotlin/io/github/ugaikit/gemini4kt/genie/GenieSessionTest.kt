@@ -1,11 +1,13 @@
 package io.github.ugaikit.gemini4kt.genie
 
 import io.github.ugaikit.gemini4kt.GeminiAI
+import io.github.ugaikit.gemini4kt.GeminiException
 import io.github.ugaikit.gemini4kt.interaction.InteractionStatus
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
@@ -17,7 +19,9 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class GenieSessionTest {
     @Test
@@ -78,6 +82,7 @@ class GenieSessionTest {
                     GenieTransport(peer.events, peer::send, peer::close),
                     Json { ignoreUnknownKeys = true },
                 )
+            assertFailsWith<IllegalArgumentException> { session.setupWorld(text = " ") }
             session.setupWorld(referenceImage = GenieReferenceImage("image/jpeg", "AQID"))
             session.sendKey(GenieKey.W, GenieKeyAction.DOWN)
             session.sendKey(GenieKey.W, GenieKeyAction.UP)
@@ -101,6 +106,54 @@ class GenieSessionTest {
             assertEquals(48_000, received[0].delta?.sampleRate)
             assertEquals(2, received[0].delta?.channels)
             assertEquals("interaction.completed", received[1].eventType)
+            assertEquals("done", received[1].eventId)
+            assertEquals(42, received[1].metadata?.totalUsage?.totalTokens)
+            assertEquals(received, Json.decodeFromString<List<GenieEvent>>(Json.encodeToString(received)))
+        }
+
+    @Test
+    fun rejectedWebRtcOfferClosesPeerAndPreservesServerError() =
+        runTest {
+            val peer = TestPeer()
+            val engine =
+                MockEngine { request ->
+                    assertEquals("/v1beta/interactions/world:webrtc", request.url.encodedPath)
+                    assertEquals("server-key", request.headers["x-goog-api-key"])
+                    respond(
+                        """{"error":{"code":403,"message":"Access denied","status":"PERMISSION_DENIED"}}""",
+                        HttpStatusCode.Forbidden,
+                    )
+                }
+            try {
+                HttpClient(engine).use { client ->
+                    val api = GeminiAI(client = client, apiKey = "server-key")
+                    val error =
+                        assertFailsWith<GeminiException> {
+                            withContext(Dispatchers.Default) { api.connectGenieWebRtc("world", peer) }
+                        }
+                    assertTrue(error.message.orEmpty().contains("Access denied"))
+                    assertNull(peer.answer)
+                    assertTrue(peer.closed)
+                }
+            } finally {
+                engine.close()
+            }
+        }
+
+    @Test
+    fun rejectsNestedInteractionIdBeforeConnecting() =
+        runTest {
+            val engine = MockEngine { error("Invalid IDs must be rejected before making a request.") }
+            try {
+                HttpClient(engine).use { client ->
+                    val api = GeminiAI(client = client, apiKey = "server-key")
+                    assertFailsWith<IllegalArgumentException> {
+                        api.connectGenieWebSocket("interactions/world/nested")
+                    }
+                }
+            } finally {
+                engine.close()
+            }
         }
 
     private class TestPeer : GenieWebRtcPeer {
@@ -113,7 +166,9 @@ class GenieSessionTest {
                 """
                 {"event_type":"step.delta","delta":{"type":"audio","data":"AQID","sample_rate":48000,"channels":2}}
                 """.trimIndent(),
-                """{"event_type":"interaction.completed"}""",
+                """
+                {"event_type":"interaction.completed","event_id":"done","metadata":{"total_usage":{"total_tokens":42}}}
+                """.trimIndent(),
                 """{"event_type":"unused"}""",
             )
 
