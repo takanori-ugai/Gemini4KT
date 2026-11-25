@@ -10,6 +10,8 @@ import io.github.ugaikit.gemini4kt.SpeechConfig
 import io.github.ugaikit.gemini4kt.Tool
 import io.github.ugaikit.gemini4kt.UrlContextMetadata
 import io.github.ugaikit.gemini4kt.UsageMetadata
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -147,7 +149,10 @@ class BidiGenerateContentSetupComplete
  * @property turnComplete Indicates the current response turn has completed.
  * @property interrupted Indicates generation was interrupted.
  * @property groundingMetadata Optional grounding metadata associated with the output.
- * @property inputTranscription Optional transcript for input audio.
+ * @property inputTranscription Finalized transcript for input audio. In Smart mode, this is the
+ * full replacement text. An absent text value in a finalized transcript means the text was cleared.
+ * @property interimInputTranscription Partial recognition of the spoken audio, including literal
+ * edit instructions in Smart mode.
  * @property outputTranscription Optional transcript for model output audio.
  * @property urlContextMetadata Optional metadata for URL-context tools.
  * @property modelTurn Optional model turn content.
@@ -162,6 +167,7 @@ data class BidiGenerateContentServerContent(
     val outputTranscription: BidiGenerateContentTranscription? = null,
     val urlContextMetadata: UrlContextMetadata? = null,
     val modelTurn: Content? = null,
+    val interimInputTranscription: BidiGenerateContentTranscription? = null,
 )
 
 /**
@@ -337,10 +343,33 @@ data class SlidingWindow(
 )
 
 /**
- * Marker configuration enabling audio transcription.
+ * Enables audio transcription. Set [mode] to [AudioTranscriptionMode.SMART] to enable voice editing
+ * on the dedicated Live transcription model.
+ *
+ * @property sourceText Optional initial text to edit, up to 64 KiB in UTF-8. Only supported on
+ * input audio transcription with Smart mode. The server carries finalized edits across turns.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-class AudioTranscriptionConfig
+data class AudioTranscriptionConfig(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val mode: AudioTranscriptionMode? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val sourceText: String? = null,
+) {
+    init {
+        require(sourceText == null || mode == AudioTranscriptionMode.SMART) {
+            "sourceText requires Smart transcription mode."
+        }
+    }
+}
+
+/** Transcription modes for the dedicated Live transcription model. */
+@Serializable
+enum class AudioTranscriptionMode {
+    SMART,
+    VERBATIM,
+}
 
 /**
  * Proactivity configuration for live interactions.
@@ -371,6 +400,8 @@ data class BidiGenerateContentTranscription(
  * @property tools Optional tools to register for model use.
  * @property generationConfig Optional generation configuration.
  * @property enableAffectiveDialog Optional helper flag for API variants that support it.
+ * @property inputAudioTranscription Optional configuration for input transcription.
+ * @property realtimeInputConfig Optional realtime input handling configuration.
  */
 @Serializable
 data class LiveConnectConfig(
@@ -380,4 +411,6 @@ data class LiveConnectConfig(
     val tools: Array<Tool>? = null,
     val generationConfig: GenerationConfig? = null,
     val enableAffectiveDialog: Boolean? = null,
+    val inputAudioTranscription: AudioTranscriptionConfig? = null,
+    val realtimeInputConfig: RealtimeInputConfig? = null,
 )
