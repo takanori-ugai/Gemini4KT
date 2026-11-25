@@ -24,7 +24,16 @@ import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
 private val interactionStepTypes =
-    setOf("thought", "processing_call", "processing_result", "model_output", "user_input", "assistant_output")
+    setOf(
+        "thought",
+        "processing_call",
+        "processing_result",
+        "model_output",
+        "user_input",
+        "assistant_output",
+        "tool_search_call",
+        "tool_search_result",
+    )
 
 /**
  * Checks whether an input object represents an interaction step.
@@ -318,4 +327,17 @@ fun interactionFunctionResult(
         callId = callId,
         name = name,
         result = Json.encodeToJsonElement(content),
+    )
+
+/** Return the function schemas selected by a client-side tool search call. */
+fun interactionToolSearchResult(
+    callId: String,
+    name: String,
+    tools: Array<InteractionTool>,
+): InteractionStep =
+    InteractionStep(
+        type = "function_result",
+        callId = callId,
+        name = name,
+        result = Json.encodeToJsonElement(tools),
     )

@@ -112,6 +112,49 @@ accept `gemini-4-hydrogen` explicitly. See the
 [Hydrogen migration guide](https://aistudio.google.com/docs/whats-new-gemini-4-hydrogen)
 and [model card and pricing](https://aistudio.google.com/docs/models/gemini-4-hydrogen).
 
+### Genie 4 interactive worlds
+
+Use a paid Gemini API project to create a world with `createGenieInteraction()`.
+For browsers, mint a scoped credential on the server with
+`createInteractionAuthToken(interaction.id)` and give the browser the interaction
+ID and token. Keep the long-lived API key on the server.
+
+- **WebSocket** — `connectGenieWebSocket(id, authToken)` receives JPEG video and
+  48 kHz stereo PCM audio as base64 data in `step.delta` events. A backend can
+  omit the scoped token and use its configured API key.
+- **WebRTC** — `connectGenieWebRtc(id, peer, authToken)` negotiates the media and
+  control channel with a platform peer. Kotlin/JS browsers can pass
+  `BrowserGenieWebRtcPeer(videoElement)` for playback on a
+  `<video autoplay playsinline>` element. Other platforms can supply their own
+  implementation of `GenieWebRtcPeer`.
+
+Once connected, call `setupWorld(text, referenceImage)` once with text, an
+inline base64 16:9 JPEG/PNG, or both. Use `sendKey(GenieKey.W, GenieKeyAction.DOWN)`
+and the matching `UP` to move, arrow keys to look around, and `sendText(...)` to
+change the scene. Collect `receive()` for media and lifecycle events.
+When finished, call `complete()` and read the terminal event before calling
+`close()`. To abort generation, send `cancel()`. Closing the transport alone
+can leave server generation and billing active.
+
+See [Genie 4](https://aistudio.google.com/docs/genie),
+[prompts and controls](https://aistudio.google.com/docs/genie-prompting), and
+[rate limits](https://aistudio.google.com/docs/rate-limits#genie-4).
+
+### Tool retrieval in Interactions
+
+For server-side retrieval on Gemini 3.6 and later, include
+`InteractionTool(type = "tool_search")` alongside the function declarations or
+remote MCP servers you want to defer. Set `deferLoading = true` on those tools
+and keep the tool list on follow-up requests.
+
+For client-managed retrieval, declare `InteractionTool(type = "tool_search",
+execution = "client", name = "search_registry", description = "...", parameters = schema)`.
+Handle the search `function_call` by selecting matching declarations locally.
+Return `interactionToolSearchResult(callId, "search_registry", matches)` inside
+`interactionStepsInput(...)` with the previous interaction ID. In stateless
+conversations, preserve the original search steps in order, including their
+signatures. See [Tool retrieval](https://aistudio.google.com/docs/tool-retrieval).
+
 ### Gemini 4 Neon and multimodal file slicing
 
 Select `model = "gemini-4-neon"` with either generation API on a paid project.

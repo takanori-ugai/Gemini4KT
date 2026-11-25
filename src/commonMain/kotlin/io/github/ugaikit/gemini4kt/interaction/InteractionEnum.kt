@@ -35,6 +35,9 @@ enum class InteractionStatus {
 
     @SerialName("incomplete")
     INCOMPLETE,
+
+    @SerialName("idle")
+    IDLE,
 }
 
 /**
