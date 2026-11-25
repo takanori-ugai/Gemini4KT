@@ -2,12 +2,17 @@ package io.github.ugaikit.gemini4kt
 
 import io.github.ugaikit.gemini4kt.interaction.CreateInteractionRequest
 import io.github.ugaikit.gemini4kt.interaction.Interaction
+import io.github.ugaikit.gemini4kt.interaction.InteractionContent
 import io.github.ugaikit.gemini4kt.interaction.InteractionGenerationConfig
+import io.github.ugaikit.gemini4kt.interaction.InteractionStatus
+import io.github.ugaikit.gemini4kt.interaction.InteractionStep
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
@@ -19,7 +24,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import io.github.ugaikit.gemini4kt.interaction.ThinkingLevel as InteractionThinkingLevel
 
 class HydrogenSupportTest {
@@ -117,6 +125,166 @@ class HydrogenSupportTest {
                     ),
                 )
                 assertEquals(3, calls)
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
+    fun interactionsExposeContinuationAndJoinBackgroundOutput() {
+        val response =
+            Json.decodeFromString<Interaction>(
+                """
+                {
+                  "id": "hop1",
+                  "status": "requires_continuation",
+                  "continuation_token": "next",
+                  "steps": [
+                    {"type": "model_output", "content": [{"type": "text", "text": "First "}]},
+                    {"type": "thought", "content": [{"type": "text", "text": "ignored"}]},
+                    {"type": "model_output", "content": [{"type": "text", "text": "second"}]}
+                  ]
+                }
+                """.trimIndent(),
+            )
+        assertEquals(InteractionStatus.REQUIRES_CONTINUATION, response.status)
+        assertEquals("second", response.outputText)
+        assertEquals("First second", response.allOutputText)
+        val request =
+            CreateInteractionRequest(
+                model = "gemini-4-hydrogen",
+                previousInteractionId = response.id,
+                continuationToken = response.continuationToken,
+            )
+        val fields = Json.parseToJsonElement(Json.encodeToString(request)).jsonObject
+        assertEquals(JsonPrimitive("hop1"), fields["previous_interaction_id"])
+        assertEquals(JsonPrimitive("next"), fields["continuation_token"])
+        assertFalse(fields.containsKey("input"))
+        assertEquals(
+            InteractionStatus.INCOMPLETE,
+            Json.decodeFromString<Interaction>("""{"id":"hop2","status":"incomplete"}""").status,
+        )
+    }
+
+    @Test
+    fun generateContentExposesAndResendsCandidateContinuationToken() {
+        val response =
+            Json.decodeFromString<GenerateContentResponse>(
+                """
+                {
+                  "candidates": [{
+                    "content": {"parts": [{"text": ""}]},
+                    "finishReason": "CONTINUATION",
+                    "continuationToken": "next"
+                  }]
+                }
+                """.trimIndent(),
+            )
+        val candidate = response.candidates.single()
+        assertEquals("CONTINUATION", candidate.finishReason)
+        val request =
+            generateContentRequest {
+                content { part { text { "Write a report." } } }
+                generationConfig { maxOutputTokens = 131_072 }
+                continuationToken = candidate.continuationToken
+            }
+        val fields = Json.parseToJsonElement(Json.encodeToString(request)).jsonObject
+        assertEquals(JsonPrimitive("next"), fields["continuationToken"])
+        assertEquals(JsonPrimitive(131_072), fields.getValue("generationConfig").jsonObject["maxOutputTokens"])
+    }
+
+    @Test
+    fun resumesInteractionStreamAfterLastEvent() =
+        runTest {
+            val client =
+                HttpClient(
+                    MockEngine { request ->
+                        assertEquals(HttpMethod.Get, request.method)
+                        assertEquals("/v1beta/interactions/hop1", request.url.encodedPath)
+                        assertEquals("true", request.url.parameters["stream"])
+                        assertEquals("event/+1", request.url.parameters["last_event_id"])
+                        assertEquals("test-key", request.headers["x-goog-api-key"])
+                        assertEquals("2026-05-20", request.headers["Api-Revision"])
+                        respond(
+                            "data:  \n\ndata: {\"event_type\":\"interaction.completed\"}\n\ndata: [DONE]\n\n",
+                            headers = headersOf(HttpHeaders.ContentType, "text/event-stream"),
+                        )
+                    },
+                )
+            try {
+                val events =
+                    GeminiAI(client = client, apiKey = "test-key")
+                        .resumeInteractionStream("interactions/hop1", "event/+1")
+                        .toList()
+                assertEquals(JsonPrimitive("interaction.completed"), events.single().jsonObject["event_type"])
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
+    fun fullOutputFallsBackWhenThereAreNoTextParts() {
+        val response = Interaction(id = "done", status = InteractionStatus.COMPLETED, outputTextRaw = "fallback")
+        val nonText =
+            InteractionStep(
+                type = "model_output",
+                content = arrayOf(InteractionContent(type = "audio"), InteractionContent(type = "text")),
+            )
+        assertEquals("fallback", response.allOutputText)
+        assertEquals("fallback", response.copy(steps = arrayOf(nonText)).allOutputText)
+        assertNull(response.copy(outputTextRaw = null, steps = arrayOf(nonText)).allOutputText)
+    }
+
+    @Test
+    fun continuationTokensArePreservedByConstructorsAndValueSemantics() {
+        val response = Interaction(id = "hop", status = InteractionStatus.REQUIRES_CONTINUATION)
+        val pending = response.copy(continuationToken = "next")
+        assertNotEquals(response, pending)
+        val decoded = Json.decodeFromString<Interaction>(Json.encodeToString(pending))
+        assertEquals(pending, decoded)
+        assertEquals(pending.hashCode(), decoded.hashCode())
+        assertEquals(response.hashCode(), response.copy().hashCode())
+
+        val request = CreateInteractionRequest(model = "gemini-4-hydrogen", continuationToken = "next")
+        val ordinary = request.copy(continuationToken = null)
+        assertNotEquals(request, ordinary)
+        assertEquals(ordinary.hashCode(), ordinary.copy().hashCode())
+        val withContent = CreateInteractionRequest(input = Content(role = "user"), continuationToken = "next")
+        assertEquals("next", withContent.continuationToken)
+        for (item in listOf(request, withContent)) {
+            val replay = Json.decodeFromString<CreateInteractionRequest>(Json.encodeToString(item))
+            assertEquals(item, replay)
+            assertEquals(item.hashCode(), replay.hashCode())
+        }
+
+        val candidate = candidate {
+            content { part { text { "" } } }
+            finishReason = "CONTINUATION"
+            continuationToken = "next"
+        }
+        assertEquals("next", candidate.continuationToken)
+    }
+
+    @Test
+    fun streamErrorsPropagateForInitialAndResumedInteractions() =
+        runTest {
+            val client =
+                HttpClient(
+                    MockEngine { request ->
+                        assertNull(request.url.parameters["last_event_id"])
+                        respond(
+                            """{"error":{"code":403,"message":"Forbidden","status":"PERMISSION_DENIED"}}""",
+                            status = HttpStatusCode.Forbidden,
+                        )
+                    },
+                ) {
+                    install(ContentNegotiation) { json() }
+                }
+            try {
+                val ai = GeminiAI(client = client, apiKey = "test-key")
+                val request = CreateInteractionRequest(model = "gemini-4-hydrogen", input = "Hello", stream = true)
+                assertFailsWith<GeminiException> { ai.streamInteraction(request).toList() }
+                assertFailsWith<GeminiException> { ai.resumeInteractionStream("hop").toList() }
             } finally {
                 client.close()
             }

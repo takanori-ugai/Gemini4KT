@@ -34,6 +34,7 @@ import kotlin.js.JsExport
  * for flexibility in cases where default configurations are sufficient.
  * @property store Optional request logging override. Set false to disable storage or true to
  * enable it. When null, the field is omitted and the project's logging setting applies.
+ * @property continuationToken Token from a previous generation checkpoint.
  */
 @OptIn(ExperimentalJsExport::class, ExperimentalSerializationApi::class)
 @JsExport
@@ -51,6 +52,7 @@ data class GenerateContentRequest(
     val cachedContent: String? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     val store: Boolean? = null,
+    val continuationToken: String? = null,
 )
 
 /**
@@ -96,6 +98,9 @@ class GenerateContentRequestBuilder {
      * Overrides request storage. Null uses the project's logging setting.
      */
     var store: Boolean? = null
+
+    /** Token from a previous generation checkpoint. */
+    var continuationToken: String? = null
 
     /**
      * Handles content.
@@ -165,6 +170,7 @@ class GenerateContentRequestBuilder {
             generationConfig = generationConfig,
             cachedContent = cachedContent,
             store = store,
+            continuationToken = continuationToken,
         )
     }
 }

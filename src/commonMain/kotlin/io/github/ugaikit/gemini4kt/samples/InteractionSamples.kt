@@ -17,7 +17,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
 private const val MODEL = "gemma-4-26b-a4b-it"
-private const val VIDEO_MODEL = "gemini-3.8-flash"
+private const val VIDEO_MODEL = "gemini-4-hydrogen"
 private const val MAX_VIDEO_POLL_ATTEMPTS = 120
 
 object InteractionSamples {

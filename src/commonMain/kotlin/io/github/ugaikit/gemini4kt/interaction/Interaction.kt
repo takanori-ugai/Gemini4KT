@@ -35,6 +35,7 @@ import kotlin.js.JsName
  * @property outputTextRaw Optional plain-text aggregate output as returned by the API.
  * @property outputText Derived plain-text aggregate output, falling back to the last model step.
  * @property steps Optional step-level execution details.
+ * @property continuationToken Token for resuming generation.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -70,9 +71,26 @@ data class Interaction(
     @SerialName("output_audio") val outputAudio: InteractionAudioContent? = null,
     @SerialName("output_video") val outputVideo: InteractionVideoContent? = null,
     val steps: Array<InteractionStep>? = null,
+    @SerialName("continuation_token") val continuationToken: String? = null,
 ) {
     val outputText: String?
         get() = outputTextRaw ?: steps?.resolvedOutputText()
+
+    /**
+     * Joins text from all model output steps in order, including background continuation hops.
+     */
+    val allOutputText: String?
+        get() =
+            steps
+                .orEmpty()
+                .asSequence()
+                .filter { it.type == "model_output" }
+                .flatMap { it.content.orEmpty().asSequence() }
+                .filter { it.type == "text" }
+                .mapNotNull { it.text }
+                .joinToString("")
+                .takeIf(String::isNotEmpty)
+                ?: outputTextRaw
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -123,6 +141,7 @@ data class Interaction(
         if (outputImage != other.outputImage) return false
         if (outputAudio != other.outputAudio) return false
         if (outputVideo != other.outputVideo) return false
+        if (continuationToken != other.continuationToken) return false
         if (steps != null) {
             if (other.steps == null) return false
             if (!steps.contentEquals(other.steps)) return false
@@ -163,6 +182,7 @@ data class Interaction(
         result = 31 * result + (outputAudio?.hashCode() ?: 0)
         result = 31 * result + (outputVideo?.hashCode() ?: 0)
         result = 31 * result + (steps?.contentHashCode() ?: 0)
+        result = 31 * result + (continuationToken?.hashCode() ?: 0)
         return result
     }
 }
@@ -185,6 +205,7 @@ data class Interaction(
  * @property responseModalities Optional response modalities requested.
  * @property previousInteractionId Optional prior interaction ID for continuity.
  * @property environment Optional environment payload.
+ * @property continuationToken Token from the previous generation hop.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -192,7 +213,7 @@ data class Interaction(
 data class CreateInteractionRequest(
     val model: String? = null,
     val agent: String? = null,
-    val input: InteractionInput,
+    val input: InteractionInput? = null,
     @SerialName("system_instruction") val systemInstruction: String? = null,
     val tools: Array<InteractionTool>? = null,
     @SerialName("response_format") val responseFormat: ResponseFormat? = null,
@@ -205,6 +226,7 @@ data class CreateInteractionRequest(
     @SerialName("response_modalities") val responseModalities: Array<InteractionResponseModality>? = null,
     @SerialName("previous_interaction_id") val previousInteractionId: String? = null,
     val environment: InteractionEnvironment? = null,
+    @SerialName("continuation_token") val continuationToken: String? = null,
 ) {
     @JsName("fromTextInput")
     constructor(
@@ -223,6 +245,7 @@ data class CreateInteractionRequest(
         responseModalities: Array<InteractionResponseModality>? = null,
         previousInteractionId: String? = null,
         environment: InteractionEnvironment? = null,
+        continuationToken: String? = null,
     ) : this(
         model = model,
         agent = agent,
@@ -239,6 +262,7 @@ data class CreateInteractionRequest(
         responseModalities = responseModalities,
         previousInteractionId = previousInteractionId,
         environment = environment,
+        continuationToken = continuationToken,
     )
 
     @JsName("fromContentInput")
@@ -258,6 +282,7 @@ data class CreateInteractionRequest(
         responseModalities: Array<InteractionResponseModality>? = null,
         previousInteractionId: String? = null,
         environment: InteractionEnvironment? = null,
+        continuationToken: String? = null,
     ) : this(
         model = model,
         agent = agent,
@@ -274,6 +299,7 @@ data class CreateInteractionRequest(
         responseModalities = responseModalities,
         previousInteractionId = previousInteractionId,
         environment = environment,
+        continuationToken = continuationToken,
     )
 
     override fun equals(other: Any?): Boolean {
@@ -307,6 +333,7 @@ data class CreateInteractionRequest(
         }
         if (previousInteractionId != other.previousInteractionId) return false
         if (environment != other.environment) return false
+        if (continuationToken != other.continuationToken) return false
 
         return true
     }
@@ -314,7 +341,7 @@ data class CreateInteractionRequest(
     override fun hashCode(): Int {
         var result = model?.hashCode() ?: 0
         result = 31 * result + (agent?.hashCode() ?: 0)
-        result = 31 * result + input.hashCode()
+        result = 31 * result + (input?.hashCode() ?: 0)
         result = 31 * result + (systemInstruction?.hashCode() ?: 0)
         result = 31 * result + (tools?.contentHashCode() ?: 0)
         result = 31 * result + (responseFormat?.hashCode() ?: 0)
@@ -327,6 +354,7 @@ data class CreateInteractionRequest(
         result = 31 * result + (responseModalities?.contentHashCode() ?: 0)
         result = 31 * result + (previousInteractionId?.hashCode() ?: 0)
         result = 31 * result + (environment?.hashCode() ?: 0)
+        result = 31 * result + (continuationToken?.hashCode() ?: 0)
         return result
     }
 }
@@ -443,6 +471,7 @@ data class InteractionModalityTokenCount(
  * @property maxOutputTokens Optional output token limit.
  * @property videoConfig Optional Omni video task override.
  * @property speechConfig Optional speech configuration.
+ * @property transcriptionConfig Optional configuration for dedicated transcription models.
  */
 @OptIn(ExperimentalJsExport::class)
 @JsExport
@@ -458,6 +487,7 @@ data class InteractionGenerationConfig(
     @SerialName("max_output_tokens") val maxOutputTokens: Int? = null,
     @SerialName("speech_config") val speechConfig: SpeechConfig? = null,
     @SerialName("video_config") val videoConfig: InteractionVideoConfig? = null,
+    @SerialName("transcription_config") val transcriptionConfig: InteractionTranscriptionConfig? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -475,6 +505,7 @@ data class InteractionGenerationConfig(
         if (maxOutputTokens != other.maxOutputTokens) return false
         if (speechConfig != other.speechConfig) return false
         if (videoConfig != other.videoConfig) return false
+        if (transcriptionConfig != other.transcriptionConfig) return false
 
         return true
     }
@@ -490,6 +521,7 @@ data class InteractionGenerationConfig(
         result = 31 * result + (maxOutputTokens ?: 0)
         result = 31 * result + (speechConfig?.hashCode() ?: 0)
         result = 31 * result + (videoConfig?.hashCode() ?: 0)
+        result = 31 * result + (transcriptionConfig?.hashCode() ?: 0)
         return result
     }
 }

@@ -19,6 +19,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class InteractionSerializationTest {
@@ -27,6 +28,35 @@ class InteractionSerializationTest {
             ignoreUnknownKeys = true
             encodeDefaults = false
         }
+
+    @Test
+    fun voiceEditingUsesNestedSmartMode() {
+        val config =
+            InteractionGenerationConfig(
+                transcriptionConfig =
+                    InteractionTranscriptionConfig(
+                        mode =
+                            InteractionTranscriptionMode(
+                                type = InteractionTranscriptionModeType.SMART,
+                                sourceText = "元の文章",
+                            ),
+                    ),
+            )
+        val encoded = json.encodeToString(config)
+        val expected = """{"transcription_config":{"mode":{"type":"smart","source_text":"元の文章"}}}"""
+        assertEquals(json.parseToJsonElement(expected), json.parseToJsonElement(encoded))
+        assertEquals(config, json.decodeFromString<InteractionGenerationConfig>(encoded))
+    }
+
+    @Test
+    fun smartDictationCanStartWithoutSourceText() {
+        val config = json.decodeFromString<InteractionGenerationConfig>("""{"transcription_config":{"mode":"smart"}}""")
+        val smart = InteractionTranscriptionMode(InteractionTranscriptionModeType.SMART)
+        assertEquals(smart, config.transcriptionConfig?.mode)
+        val encoded = json.encodeToString(config)
+        val expected = """{"transcription_config":{"mode":{"type":"smart"}}}"""
+        assertEquals(json.parseToJsonElement(expected), json.parseToJsonElement(encoded))
+    }
 
     @Test
     fun interactionContentSerializesCorrectly() {
@@ -656,5 +686,59 @@ class InteractionSerializationTest {
         kotlin.test.assertNotEquals(request1, requestDiffModel)
         kotlin.test.assertNotEquals(request1, requestDiffInput)
         kotlin.test.assertNotEquals(request1, requestDiffEnv)
+    }
+
+    @Test
+    fun verbatimTranscriptionRoundTripsWordTimestampsAndSpeakerLabels() {
+        val payload =
+            """
+            {
+              "mode": {
+                "type": "verbatim",
+                "timestamp_granularities": ["word"],
+                "diarization_mode": "speaker"
+              }
+            }
+            """.trimIndent()
+        val decoded = json.decodeFromString<InteractionTranscriptionConfig>(payload)
+        assertEquals(
+            InteractionTranscriptionMode(
+                type = InteractionTranscriptionModeType.VERBATIM,
+                timestampGranularities = listOf("word"),
+                diarizationMode = "speaker",
+            ),
+            decoded.mode,
+        )
+        assertEquals(json.parseToJsonElement(payload), json.parseToJsonElement(json.encodeToString(decoded)))
+    }
+
+    @Test
+    fun transcriptionModeRejectsOptionsForOtherModes() {
+        assertFailsWith<IllegalArgumentException> {
+            InteractionTranscriptionMode(InteractionTranscriptionModeType.VERBATIM, sourceText = "Original")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            InteractionTranscriptionMode(InteractionTranscriptionModeType.SMART, timestampGranularities = listOf("word"))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            InteractionTranscriptionMode(InteractionTranscriptionModeType.SMART, diarizationMode = "speaker")
+        }
+    }
+
+    @Test
+    fun transcriptionModeRejectsNumericShorthand() {
+        assertFailsWith<SerializationException> {
+            json.decodeFromString<InteractionTranscriptionConfig>("""{"mode":42}""")
+        }
+    }
+
+    @Test
+    fun generationConfigEqualityAndHashCodeIncludeTranscription() {
+        val original = InteractionGenerationConfig()
+        val transcription =
+            InteractionTranscriptionConfig(mode = InteractionTranscriptionMode(InteractionTranscriptionModeType.SMART))
+        val updated = original.copy(transcriptionConfig = transcription)
+        assertNotEquals(original, updated)
+        assertEquals(original.hashCode() + transcription.hashCode(), updated.hashCode())
     }
 }

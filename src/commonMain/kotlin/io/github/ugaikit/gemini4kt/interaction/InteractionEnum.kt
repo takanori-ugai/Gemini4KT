@@ -30,6 +30,12 @@ enum class InteractionStatus {
     @SerialName("cancelled")
     CANCELLED,
 
+    @SerialName("requires_continuation")
+    REQUIRES_CONTINUATION,
+
+    @SerialName("incomplete")
+    INCOMPLETE,
+
     @SerialName("idle")
     IDLE,
 }

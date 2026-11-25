@@ -21,6 +21,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.prepareGet
 import io.ktor.client.request.preparePost
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -446,17 +447,42 @@ class GeminiAI(
                     contentType(ContentType.Application.Json)
                     setBody(request)
                 }.execute { response ->
-                    if (!response.status.isSuccess()) {
-                        val errorBody = response.bodyAsText()
-                        throw GeminiException(parseError(errorBody, response.status.value))
-                    }
-
-                    response.bodyAsChannel().consumeServerSentEvents { payload ->
-                        if (payload.isBlank() || payload == "[DONE]") return@consumeServerSentEvents
-                        send(json.decodeFromString<JsonElement>(payload))
-                    }
+                    response.consumeInteractionEvents { send(it) }
                 }
         }
+
+    /**
+     * Reads a stored interaction's event stream, optionally resuming after the given event ID.
+     */
+    @JsName("resumeInteractionStream")
+    fun resumeInteractionStream(
+        id: String,
+        lastEventId: String? = null,
+    ): Flow<JsonElement> =
+        channelFlow {
+            val query = mutableMapOf("stream" to "true")
+            lastEventId?.let { query["last_event_id"] = it }
+            val path = listOf("interactions") + normalizeResourcePathSegments(id, "interactions")
+            val apiKey = getApiKey()
+            httpClient
+                .prepareGet(buildUrl(baseUrl, path, query)) {
+                    header("x-goog-api-key", apiKey)
+                    header("Api-Revision", API_REVISION)
+                }.execute { response ->
+                    response.consumeInteractionEvents { send(it) }
+                }
+        }
+
+    private suspend fun HttpResponse.consumeInteractionEvents(emit: suspend (JsonElement) -> Unit) {
+        if (!status.isSuccess()) {
+            throw GeminiException(parseError(bodyAsText(), status.value))
+        }
+
+        bodyAsChannel().consumeServerSentEvents { payload ->
+            if (payload.isBlank() || payload == "[DONE]") return@consumeServerSentEvents
+            emit(json.decodeFromString<JsonElement>(payload))
+        }
+    }
 
     @JsName("getInteraction")
     suspend fun getInteraction(id: String): Interaction {

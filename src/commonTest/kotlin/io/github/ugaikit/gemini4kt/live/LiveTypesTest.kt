@@ -5,8 +5,10 @@ import io.github.ugaikit.gemini4kt.GenerationConfig
 import io.github.ugaikit.gemini4kt.Part
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -22,6 +24,46 @@ class LiveTypesTest {
             ignoreUnknownKeys = true
             encodeDefaults = true
         }
+
+    @Test
+    fun voiceEditingUsesSmartModeAndSourceTextInSetup() {
+        val setup =
+            BidiGenerateContentSetup(
+                model = "models/gemini-3.5-transcribe-live",
+                inputAudioTranscription = AudioTranscriptionConfig(AudioTranscriptionMode.SMART, "元の文章"),
+            )
+        val fields = json.parseToJsonElement(json.encodeToString(setup)).jsonObject
+        assertEquals(
+            json.parseToJsonElement("""{"mode":"SMART","sourceText":"元の文章"}"""),
+            fields["inputAudioTranscription"],
+        )
+    }
+
+    @Test
+    fun transcriptionConfigOmitsUnsetFieldsWithLiveDefaults() {
+        assertEquals("{}", json.encodeToString(AudioTranscriptionConfig()))
+        val smart = AudioTranscriptionConfig(AudioTranscriptionMode.SMART)
+        assertEquals("""{"mode":"SMART"}""", json.encodeToString(smart))
+    }
+
+    @Test
+    fun voiceEditingDistinguishesInterimSpeechFromAConfirmedDeletion() {
+        val interim =
+            json.decodeFromString<BidiGenerateContentServerMessage>(
+                """{"serverContent":{"interimInputTranscription":{"text":"Delete everything"}}}""",
+            )
+        val interimContent = assertNotNull(interim.serverContent)
+        assertEquals("Delete everything", interimContent.interimInputTranscription?.text)
+        assertEquals(null, interimContent.inputTranscription)
+
+        val final =
+            json.decodeFromString<BidiGenerateContentServerMessage>(
+                """{"serverContent":{"inputTranscription":{},"turnComplete":true}}""",
+            )
+        val finalContent = assertNotNull(final.serverContent)
+        assertEquals("", assertNotNull(finalContent.inputTranscription).text.orEmpty())
+        assertEquals(true, finalContent.turnComplete)
+    }
 
     /**
      * Tests test bidi generate content setup serialization.
@@ -196,5 +238,14 @@ class LiveTypesTest {
         assertTrue(encoded.contains("\"contextWindowCompression\""))
         assertTrue(encoded.contains("\"targetTokens\":512"))
         assertTrue(encoded.contains("\"proactivity\""))
+    }
+
+    @Test
+    fun sourceTextRequiresSmartMode() {
+        for (mode in listOf(null, AudioTranscriptionMode.VERBATIM)) {
+            assertFailsWith<IllegalArgumentException> {
+                AudioTranscriptionConfig(mode = mode, sourceText = "Original")
+            }
+        }
     }
 }

@@ -81,6 +81,30 @@ requests are limited to 65,536 tokens per hop; use Interactions `background = tr
 with a larger `maxOutputTokens` for longer outputs. The library leaves output caps
 and thinking depth unset unless configured by the caller.
 
+For background generation, poll with `getInteraction(id)` while the status is
+`QUEUED` or `IN_PROGRESS`, then read `allOutputText` to concatenate text from all
+model output steps. To resume a stored stream, collect
+`resumeInteractionStream(id, lastEventId)` using the latest received `event_id`.
+
+For foreground long decode, Gemini4KT exposes the REST continuation tokens so the
+caller controls each request:
+
+- **Interactions**: On `REQUIRES_CONTINUATION`, create the next request with the
+  same model and generation settings, the hop's `continuationToken`, and its ID
+  as `previousInteractionId`. Omit `input` for a stored interaction. For
+  `store = false`, resend the original input and omit `previousInteractionId`.
+- **Generate Content**: On `finishReason == "CONTINUATION"`, resend the same
+  request with the candidate's `continuationToken` at the request top level,
+  for example `request.copy(continuationToken = candidate.continuationToken)`.
+  Combine output parts across hops in order to preserve thought signatures when replaying history.
+
+Automatic function-calling helpers return a response that requires continuation so
+the caller can resume generation. A request submitting a tool result starts a
+new turn and omits the previous generation hop's token.
+
+See the long decode guides for [Interactions](https://aistudio.google.com/docs/long-decode)
+and [Generate Content](https://aistudio.google.com/docs/long-decode?generate-content=true).
+
 The Managed Agents Antigravity default is selected by the service and now uses
 Hydrogen. Existing `antigravity-preview-09-2026` requests inherit it when no model
 override is supplied; `InteractionAgentConfig.model` and `AgentConfig.model` also
@@ -130,6 +154,66 @@ Return `interactionToolSearchResult(callId, "search_registry", matches)` inside
 `interactionStepsInput(...)` with the previous interaction ID. In stateless
 conversations, preserve the original search steps in order, including their
 signatures. See [Tool retrieval](https://aistudio.google.com/docs/tool-retrieval).
+
+### Voice editing with Gemini 3.5 Transcribe
+
+Use Smart mode to dictate and edit in the same recording, or pass `sourceText`
+to apply spoken edits to existing text. The API accepts up to 64 KiB of UTF-8
+source text. Omit `sourceText` to start from dictation.
+
+For the Interactions API, pass the recording as audio input. To apply another
+spoken edit, send the new recording and use the preceding response's
+`outputText` as `sourceText`.
+
+```kotlin
+val result = geminiAI.createInteraction(
+    CreateInteractionRequest(
+        model = "gemini-3.5-transcribe",
+        input = interactionContentInput(
+            arrayOf(InteractionContent(type = "audio", uri = audioUri, mimeType = "audio/mpeg")),
+        ),
+        generationConfig = InteractionGenerationConfig(
+            transcriptionConfig = InteractionTranscriptionConfig(
+                mode = InteractionTranscriptionMode(
+                    type = InteractionTranscriptionModeType.SMART,
+                    sourceText = "The review starts at noon.",
+                ),
+            ),
+        ),
+    ),
+)
+println(result.outputText)
+```
+
+For Live transcription, set the initial text during WebSocket setup and send
+PCM audio with `sendRealtimeInput`. When `serverContent.inputTranscription`
+arrives, replace the editor text with its `text.orEmpty()`. Use
+`interimInputTranscription` to preview the spoken instruction. The server carries
+the latest finalized text across spoken turns. Reconnect with updated source text
+after a manual edit.
+This example uses manual turn boundaries. Send `ActivityStart` before the first
+audio chunk and `ActivityEnd` after the final chunk of each turn.
+
+```kotlin
+val live = GeminiLive(
+    apiKey = apiKey,
+    model = "gemini-3.5-transcribe-live",
+    config = LiveConnectConfig(
+        responseModalities = arrayOf(Modality.TEXT),
+        inputAudioTranscription = AudioTranscriptionConfig(
+            mode = AudioTranscriptionMode.SMART,
+            sourceText = "The review starts at noon.",
+        ),
+        realtimeInputConfig = RealtimeInputConfig(
+            automaticActivityDetection = AutomaticActivityDetection(disabled = true),
+        ),
+    ),
+)
+val session = live.connect()
+```
+
+See the [Audio transcription](https://aistudio.google.com/docs/transcribe#voice-editing)
+and [Live transcription](https://aistudio.google.com/docs/live-api/live-transcribe#voice-editing) guides.
 
 ### Decisions API (Gemini Decision 1)
 

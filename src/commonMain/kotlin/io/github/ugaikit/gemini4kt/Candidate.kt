@@ -19,6 +19,7 @@ import kotlinx.serialization.Serializable
  * @property groundingMetadata Grounding metadata returned by tools like Search.
  * @property urlContextMetadata Metadata of extracted URL contexts.
  * @property finishMessage An optional message explaining the finish reason.
+ * @property continuationToken Token for resuming this candidate from a generation checkpoint.
  */
 @Serializable
 data class Candidate(
@@ -34,6 +35,7 @@ data class Candidate(
     val groundingMetadata: GroundingMetadata? = null,
     val urlContextMetadata: UrlContextMetadata? = null,
     val finishMessage: String? = null,
+    val continuationToken: String? = null,
 )
 
 /**
@@ -100,6 +102,9 @@ class CandidateBuilder {
      */
     var finishMessage: String? = null
 
+    /** Token for resuming generation. */
+    var continuationToken: String? = null
+
     /**
      * Handles content.
      *
@@ -146,6 +151,7 @@ class CandidateBuilder {
             groundingMetadata,
             urlContextMetadata,
             finishMessage,
+            continuationToken,
         )
 }
 
