@@ -1,5 +1,8 @@
 package io.github.ugaikit.gemini4kt
 
+import io.github.ugaikit.gemini4kt.decisions.CreateDecisionRequest
+import io.github.ugaikit.gemini4kt.decisions.DecisionAnswer
+import io.github.ugaikit.gemini4kt.decisions.DecisionQuestion
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.addJsonObject
@@ -12,6 +15,7 @@ import java.io.File
 import java.util.Base64
 import java.util.Properties
 import kotlin.test.Test
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -117,6 +121,34 @@ class ITIntegrationTest {
                         model = embedModel,
                     )
                 assertTrue(batchEmbedResponse.embeddings.isNotEmpty())
+            } catch (error: GeminiException) {
+                handleQuotaError(error)
+            } catch (error: HttpRequestTimeoutException) {
+                handleRequestTimeout(error)
+            } finally {
+                gemini.close()
+            }
+        }
+
+    @Test
+    fun testGeminiDecision1() =
+        runBlocking {
+            val apiKey = getApiKey()
+            Assumptions.assumeTrue(!apiKey.isNullOrBlank(), "API key not found. Skipping integration test.")
+
+            val gemini = GeminiAI(apiKey = apiKey!!)
+            try {
+                val questionId = "is_delivery_question"
+                val request =
+                    CreateDecisionRequest(
+                        input = "My package has shipped. When will it arrive?",
+                        questions =
+                            mapOf(questionId to DecisionQuestion.Noul("Is the customer asking when a package will arrive?")),
+                    )
+                val response = gemini.createDecision(request)
+                val answer = assertIs<DecisionAnswer.Noul>(response.answers[questionId])
+                assertTrue(answer.noul > 0.5 && answer.noul <= 1.0, "Expected a yes decision, got ${answer.noul}")
+                assertTrue(answer.confidence in 0.0..1.0, "Confidence was outside the expected range: ${answer.confidence}")
             } catch (error: GeminiException) {
                 handleQuotaError(error)
             } catch (error: HttpRequestTimeoutException) {
